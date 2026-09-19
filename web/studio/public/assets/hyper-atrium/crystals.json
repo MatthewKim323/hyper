@@ -1,0 +1,74 @@
+{
+  "templates": [
+    {
+      "id": "accounts-payable",
+      "url": "/assets/hyper-atrium/crystal-accounts-payable.glb",
+      "width": 2.7,
+      "height": 4.18,
+      "labelHeight": 1.4975
+    },
+    {
+      "id": "wallet-identity",
+      "url": "/assets/hyper-atrium/crystal-wallet-identity.glb",
+      "width": 2.0,
+      "height": 3.88,
+      "labelHeight": 1.415
+    },
+    {
+      "id": "audit-evidence",
+      "url": "/assets/hyper-atrium/crystal-audit-evidence.glb",
+      "width": 2.0,
+      "height": 3.88,
+      "labelHeight": 1.415
+    },
+    {
+      "id": "training-arena",
+      "url": "/assets/hyper-atrium/crystal-training-arena.glb",
+      "width": 2.2,
+      "height": 3.88,
+      "labelHeight": 1.415
+    },
+    {
+      "id": "approvals",
+      "url": "/assets/hyper-atrium/crystal-approvals.glb",
+      "width": 2.5,
+      "height": 3.93,
+      "labelHeight": 1.42875
+    },
+    {
+      "id": "crystal-tall",
+      "url": "/assets/hyper-atrium/crystal-crystal-tall.glb",
+      "width": 1.8,
+      "height": 4.48,
+      "labelHeight": 1.58
+    },
+    {
+      "id": "crystal-wide",
+      "url": "/assets/hyper-atrium/crystal-crystal-wide.glb",
+      "width": 2.7,
+      "height": 3.88,
+      "labelHeight": 1.415
+    },
+    {
+      "id": "crystal-orbit",
+      "url": "/assets/hyper-atrium/crystal-crystal-orbit.glb",
+      "width": 2.1,
+      "height": 4.13,
+      "labelHeight": 1.4837500000000001
+    },
+    {
+      "id": "crystal-stack",
+      "url": "/assets/hyper-atrium/crystal-crystal-stack.glb",
+      "width": 2.0,
+      "height": 3.73,
+      "labelHeight": 1.37375
+    },
+    {
+      "id": "crystal-clear",
+      "url": "/assets/hyper-atrium/crystal-crystal-clear.glb",
+      "width": 2.2,
+      "height": 4.08,
+      "labelHeight": 1.4700000000000002
+    }
+  ]
+}

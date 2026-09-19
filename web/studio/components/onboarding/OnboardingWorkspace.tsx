@@ -7,6 +7,7 @@ import { store } from "@/lib/engine/core/store";
 import { isOnboardingComplete, isOnboardingPresentation, ONBOARDING_EVENTS, setOnboardingComplete, subscribeOnboardingCompletion, type OnboardingPresentation } from "@/lib/onboarding/interface";
 import { OnboardingVoiceClient, type VoiceConnection } from "@/lib/onboarding/voice-client";
 import OnboardingSurface from "./OnboardingSurface";
+import AtriumPreview from "../atrium/AtriumPreview";
 
 const subscribeHydration = () => () => {};
 const clientSnapshot = () => true;
@@ -210,5 +211,6 @@ export default function OnboardingWorkspace() {
     }
   }, [complete, pathname, sceneReady]);
 
-  return hydrated && pathname === "/projects" && sceneReady && !complete ? <OnboardingSession onSkip={() => setSkipped(true)} /> : null;
+  if (!(hydrated && pathname === "/projects" && sceneReady)) return null;
+  return complete ? <AtriumPreview /> : <OnboardingSession onSkip={() => setSkipped(true)} />;
 }

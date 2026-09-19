@@ -1,0 +1,1220 @@
+{
+  "url": "/assets/hyper-atrium/environment.glb",
+  "source": "assets/blender/hyper-atrium/hyper-atrium.blend",
+  "coordinates": {
+    "source": "Blender Z-up meters",
+    "glb": "glTF Y-up meters",
+    "conversion": "[x, z, -y]",
+    "scale": 1
+  },
+  "camera": {
+    "position": [
+      0.0,
+      -21.0,
+      3.9000000953674316
+    ],
+    "target": [
+      0,
+      2,
+      2.4
+    ],
+    "lens": 35.0,
+    "sensorWidth": 36.0,
+    "near": 0.1,
+    "far": 300
+  },
+  "width": 2560,
+  "height": 1441,
+  "lighting": [
+    {
+      "name": "Light | broad ivory sky fill",
+      "type": "area",
+      "position": [
+        0.0,
+        -8.0,
+        10.0
+      ],
+      "direction": [
+        0.0,
+        0.7808687686920166,
+        -0.6246950626373291
+      ],
+      "colorLinear": [
+        0.9200000166893005,
+        0.9200000166893005,
+        1.0
+      ],
+      "blenderEnergy": 180.0,
+      "size": 14.0
+    },
+    {
+      "name": "Light | warm diagonal sun",
+      "type": "area",
+      "position": [
+        7.5,
+        10.0,
+        11.0
+      ],
+      "direction": [
+        -0.38425034284591675,
+        -0.8089479804039001,
+        -0.4449211359024048
+      ],
+      "colorLinear": [
+        1.0,
+        0.7900000214576721,
+        0.7200000286102295
+      ],
+      "blenderEnergy": 5800.0,
+      "size": 1.5
+    },
+    {
+      "name": "Light | central window",
+      "type": "area",
+      "position": [
+        0.0,
+        9.0,
+        8.0
+      ],
+      "direction": [
+        6.991710677084484e-08,
+        -0.8804711699485779,
+        -0.4740997552871704
+      ],
+      "colorLinear": [
+        1.0,
+        0.9100000262260437,
+        0.8700000047683716
+      ],
+      "blenderEnergy": 2600.0,
+      "size": 5.0
+    },
+    {
+      "name": "Light | left lavender window",
+      "type": "area",
+      "position": [
+        -7.0,
+        9.0,
+        6.0
+      ],
+      "direction": [
+        0.23076920211315155,
+        -0.9230769276618958,
+        -0.3076922297477722
+      ],
+      "colorLinear": [
+        0.7799999713897705,
+        0.8299999833106995,
+        1.0
+      ],
+      "blenderEnergy": 1300.0,
+      "size": 3.0
+    },
+    {
+      "name": "Light | right pearl window",
+      "type": "area",
+      "position": [
+        7.0,
+        9.0,
+        6.0
+      ],
+      "direction": [
+        -0.23076920211315155,
+        -0.9230769276618958,
+        -0.3076922297477722
+      ],
+      "colorLinear": [
+        1.0,
+        0.8600000143051147,
+        0.8199999928474426
+      ],
+      "blenderEnergy": 1600.0,
+      "size": 3.0
+    },
+    {
+      "name": "Light | sun shadows",
+      "type": "sun",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "direction": [
+        -0.3806169033050537,
+        -0.7929519414901733,
+        -0.4757709503173828
+      ],
+      "colorLinear": [
+        1.0,
+        0.8299999833106995,
+        0.7300000190734863
+      ],
+      "blenderEnergy": 2.0,
+      "size": null
+    }
+  ],
+  "sky": {
+    "runtime": "procedural sky dome and PMREM",
+    "horizonSRGB": [
+      0.9,
+      0.85,
+      0.9
+    ],
+    "zenithSRGB": [
+      0.57,
+      0.68,
+      0.88
+    ],
+    "sunElevationDegrees": 28,
+    "sunAzimuthDegrees": 130
+  },
+  "water": [
+    {
+      "id": "atrium",
+      "sourceName": "Water | flooded atrium",
+      "center": [
+        0,
+        3.5,
+        0
+      ],
+      "size": [
+        50,
+        63
+      ],
+      "depth": 0.42,
+      "amplitudeScale": 1,
+      "threeCenter": [
+        0,
+        0,
+        -3.5
+      ]
+    },
+    {
+      "id": "basin",
+      "sourceName": "Water | central reflecting basin",
+      "center": [
+        0,
+        0,
+        0.61
+      ],
+      "radius": 4.36,
+      "depth": 0.3,
+      "amplitudeScale": 0.68,
+      "threeCenter": [
+        0,
+        0.61,
+        0
+      ]
+    }
+  ],
+  "anchors": {
+    "heroSphere": {
+      "name": "Hyper | floating pearl marble sphere",
+      "center": [
+        0,
+        1.5,
+        3.1
+      ],
+      "radius": 1.45
+    },
+    "orbit": {
+      "name": "Hyper | delicate orbital ring",
+      "center": [
+        0,
+        1.5,
+        3.07
+      ]
+    },
+    "basin": {
+      "name": "Hero pool | pale stone annular wall",
+      "center": [
+        0,
+        0,
+        0.52
+      ],
+      "outerRadius": 4.9,
+      "innerRadius": 4.42,
+      "height": 0.57
+    }
+  },
+  "materials": [
+    {
+      "name": "Garden | blush petals with vertex colors",
+      "principled": {
+        "Base Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Roughness": 0.7200000286102295,
+        "Metallic": 0.0,
+        "Transmission Weight": 0.0,
+        "IOR": 1.5,
+        "Coat Weight": 0.0,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "foliage",
+      "vertexColorAttribute": "PetalColor"
+    },
+    {
+      "name": "Garden | lilac flowering canopies with vertex colors",
+      "principled": {
+        "Base Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Roughness": 0.8399999737739563,
+        "Metallic": 0.0,
+        "Transmission Weight": 0.0,
+        "IOR": 1.5,
+        "Coat Weight": 0.0,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "foliage",
+      "vertexColorAttribute": "PetalColor"
+    },
+    {
+      "name": "Garden | rose earth with vertex colors",
+      "principled": {
+        "Base Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Roughness": 0.9200000166893005,
+        "Metallic": 0.0,
+        "Transmission Weight": 0.0,
+        "IOR": 1.5,
+        "Coat Weight": 0.0,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "foliage",
+      "vertexColorAttribute": "PetalColor"
+    },
+    {
+      "name": "Hero | graduated rose quartz and pearl",
+      "principled": {
+        "Base Color": [
+          0.9300000071525574,
+          0.8299999833106995,
+          0.7799999713897705,
+          1.0
+        ],
+        "Roughness": 0.12999999523162842,
+        "Metallic": 0.03999999910593033,
+        "Transmission Weight": 0.41999998688697815,
+        "IOR": 1.4500000476837158,
+        "Coat Weight": 0.30000001192092896,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "pearl",
+      "vertexColorAttribute": null
+    },
+    {
+      "name": "Hyper | blush ivory honed limestone",
+      "principled": {
+        "Base Color": [
+          0.7677687406539917,
+          0.5870163440704346,
+          0.5542217493057251,
+          1.0
+        ],
+        "Roughness": 0.3400000035762787,
+        "Metallic": 0.0,
+        "Transmission Weight": 0.0,
+        "IOR": 1.5,
+        "Coat Weight": 0.0,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "marble",
+      "vertexColorAttribute": null
+    },
+    {
+      "name": "Hyper | luminous ivory pearl",
+      "principled": {
+        "Base Color": [
+          0.8900054097175598,
+          0.7874122858047485,
+          0.7293471097946167,
+          1.0
+        ],
+        "Roughness": 0.20000000298023224,
+        "Metallic": 0.07500000298023224,
+        "Transmission Weight": 0.20000000298023224,
+        "IOR": 1.4600000381469727,
+        "Coat Weight": 0.47999998927116394,
+        "Coat Roughness": 0.09000000357627869,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "pearl",
+      "vertexColorAttribute": null
+    },
+    {
+      "name": "Hyper | pale champagne satin metal",
+      "principled": {
+        "Base Color": [
+          0.5870163440704346,
+          0.4919050335884094,
+          0.3931231200695038,
+          1.0
+        ],
+        "Roughness": 0.1899999976158142,
+        "Metallic": 0.7300000190734863,
+        "Transmission Weight": 0.0,
+        "IOR": 1.5,
+        "Coat Weight": 0.30000001192092896,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "metal",
+      "vertexColorAttribute": null
+    },
+    {
+      "name": "Hyper | submerged pale lavender limestone",
+      "principled": {
+        "Base Color": [
+          0.5542217493057251,
+          0.5225215554237366,
+          0.5382355451583862,
+          1.0
+        ],
+        "Roughness": 0.4000000059604645,
+        "Metallic": 0.0,
+        "Transmission Weight": 0.0,
+        "IOR": 1.5,
+        "Coat Weight": 0.0,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "marble",
+      "vertexColorAttribute": null
+    },
+    {
+      "name": "Hyper | warm ivory seam light",
+      "principled": {
+        "Base Color": [
+          1.0,
+          0.7105664610862732,
+          0.47699978947639465,
+          1.0
+        ],
+        "Roughness": 0.30000001192092896,
+        "Metallic": 0.0,
+        "Transmission Weight": 0.0,
+        "IOR": 1.5,
+        "Coat Weight": 0.0,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          0.7293471097946167,
+          0.5382355451583862,
+          1.0
+        ],
+        "Emission Strength": 3.5
+      },
+      "runtimeSurface": "emissive",
+      "vertexColorAttribute": null
+    },
+    {
+      "name": "Portals | optically clear rose crystal",
+      "principled": {
+        "Base Color": [
+          0.9850000143051147,
+          0.9470000267028809,
+          0.9340000152587891,
+          1.0
+        ],
+        "Roughness": 0.054999999701976776,
+        "Metallic": 0.0,
+        "Transmission Weight": 1.0,
+        "IOR": 1.4299999475479126,
+        "Coat Weight": 0.30000001192092896,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "glass",
+      "vertexColorAttribute": null
+    }
+  ],
+  "objects": [
+    {
+      "name": "Walkway | left water curve",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Walkway | right water curve",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Landscape | rolling rose garden ridges",
+      "sourceType": "MESH",
+      "materials": [
+        "Garden | rose earth with vertex colors"
+      ]
+    },
+    {
+      "name": "Landscape | layered lilac flowering canopies",
+      "sourceType": "MESH",
+      "materials": [
+        "Garden | lilac flowering canopies with vertex colors"
+      ]
+    },
+    {
+      "name": "Landscape | blush five petal blossoms",
+      "sourceType": "MESH",
+      "materials": [
+        "Garden | blush petals with vertex colors"
+      ]
+    },
+    {
+      "name": "Atrium | inset pilaster",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | pilaster foot",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | inset pilaster.001",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | pilaster foot.001",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | inset pilaster.002",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | pilaster foot.002",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | inset pilaster.003",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | pilaster foot.003",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | inset pilaster.004",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | pilaster foot.004",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | inset pilaster.005",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | pilaster foot.005",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atrium | monolithic blush limestone",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Water | submerged limestone floor",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | submerged pale lavender limestone"
+      ]
+    },
+    {
+      "name": "Water | central basin floor",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | submerged pale lavender limestone"
+      ]
+    },
+    {
+      "name": "Hero pool | pale stone annular wall",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Hero pool | illuminated lower reveal",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | warm ivory seam light"
+      ]
+    },
+    {
+      "name": "Hero pool | underwater footing",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Hyper | floating pearl marble sphere",
+      "sourceType": "MESH",
+      "materials": [
+        "Hero | graduated rose quartz and pearl"
+      ]
+    },
+    {
+      "name": "Hyper | delicate orbital ring",
+      "sourceType": "CURVE",
+      "materials": [
+        "Hyper | pale champagne satin metal"
+      ]
+    },
+    {
+      "name": "Hyper | floating pearl light at lower pole",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | warm ivory seam light"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 00",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 01",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 02",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 03",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 04",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 05",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 06",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 07",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 08",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 09",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 10",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 11",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 12",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 13",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 14",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 15",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 16",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 17",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 18",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 19",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 20",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 21",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 22",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 23",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 24",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 25",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 26",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 27",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 28",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 29",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 30",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 31",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 32",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 33",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 34",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 35",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 36",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 37",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 38",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 39",
+      "sourceType": "MESH",
+      "materials": [
+        "Portals | optically clear rose crystal"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 40",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Hyper | suspended satellite 41",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | luminous ivory pearl"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 00",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 01",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 02",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 03",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 04",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 05",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 06",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 07",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 08",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 09",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Atmosphere | floating mineral 10",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Ground | weathered marble 00",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Ground | weathered marble 01",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Ground | weathered marble 02",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Ground | weathered marble 03",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Ground | weathered marble 04",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    },
+    {
+      "name": "Ground | weathered marble 05",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
+    }
+  ],
+  "excluded": {
+    "stationRoots": [
+      "Station | Accounts Payable",
+      "Station | Wallet Identity",
+      "Station | Audit and Evidence",
+      "Station | Training Arena",
+      "Station | Approvals",
+      "Station | accounts-payable",
+      "Station | wallet-identity",
+      "Station | audit-evidence",
+      "Station | training-arena",
+      "Station | approvals",
+      "Station | crystal-tall",
+      "Station | crystal-wide",
+      "Station | crystal-orbit",
+      "Station | crystal-stack",
+      "Station | crystal-clear"
+    ],
+    "surfaces": [
+      "Atmosphere | atrium air",
+      "Water | central reflecting basin",
+      "Water | flooded atrium"
+    ],
+    "decorativeTextRemoved": [],
+    "typography": "All non-station FONT objects and decorative rules are excluded. Station labels and icons are preserved in the original source/library."
+  },
+  "stats": {
+    "objects": 85,
+    "meshes": 85,
+    "primitives": 85,
+    "vertices": 181941,
+    "triangles": 197588,
+    "bytes": 7133744
+  },
+  "glbObjectNames": [
+    "Walkway | left water curve",
+    "Walkway | right water curve",
+    "Landscape | rolling rose garden ridges",
+    "Landscape | layered lilac flowering canopies",
+    "Landscape | blush five petal blossoms",
+    "Atrium | inset pilaster",
+    "Atrium | pilaster foot",
+    "Atrium | inset pilaster.001",
+    "Atrium | pilaster foot.001",
+    "Atrium | inset pilaster.002",
+    "Atrium | pilaster foot.002",
+    "Atrium | inset pilaster.003",
+    "Atrium | pilaster foot.003",
+    "Atrium | inset pilaster.004",
+    "Atrium | pilaster foot.004",
+    "Atrium | inset pilaster.005",
+    "Atrium | pilaster foot.005",
+    "Atrium | monolithic blush limestone",
+    "Water | submerged limestone floor",
+    "Water | central basin floor",
+    "Hero pool | pale stone annular wall",
+    "Hero pool | illuminated lower reveal",
+    "Hero pool | underwater footing",
+    "Hyper | floating pearl marble sphere",
+    "Hyper | delicate orbital ring",
+    "Hyper | floating pearl light at lower pole",
+    "Hyper | suspended satellite 00",
+    "Hyper | suspended satellite 01",
+    "Hyper | suspended satellite 02",
+    "Hyper | suspended satellite 03",
+    "Hyper | suspended satellite 04",
+    "Hyper | suspended satellite 05",
+    "Hyper | suspended satellite 06",
+    "Hyper | suspended satellite 07",
+    "Hyper | suspended satellite 08",
+    "Hyper | suspended satellite 09",
+    "Hyper | suspended satellite 10",
+    "Hyper | suspended satellite 11",
+    "Hyper | suspended satellite 12",
+    "Hyper | suspended satellite 13",
+    "Hyper | suspended satellite 14",
+    "Hyper | suspended satellite 15",
+    "Hyper | suspended satellite 16",
+    "Hyper | suspended satellite 17",
+    "Hyper | suspended satellite 18",
+    "Hyper | suspended satellite 19",
+    "Hyper | suspended satellite 20",
+    "Hyper | suspended satellite 21",
+    "Hyper | suspended satellite 22",
+    "Hyper | suspended satellite 23",
+    "Hyper | suspended satellite 24",
+    "Hyper | suspended satellite 25",
+    "Hyper | suspended satellite 26",
+    "Hyper | suspended satellite 27",
+    "Hyper | suspended satellite 28",
+    "Hyper | suspended satellite 29",
+    "Hyper | suspended satellite 30",
+    "Hyper | suspended satellite 31",
+    "Hyper | suspended satellite 32",
+    "Hyper | suspended satellite 33",
+    "Hyper | suspended satellite 34",
+    "Hyper | suspended satellite 35",
+    "Hyper | suspended satellite 36",
+    "Hyper | suspended satellite 37",
+    "Hyper | suspended satellite 38",
+    "Hyper | suspended satellite 39",
+    "Hyper | suspended satellite 40",
+    "Hyper | suspended satellite 41",
+    "Atmosphere | floating mineral 00",
+    "Atmosphere | floating mineral 01",
+    "Atmosphere | floating mineral 02",
+    "Atmosphere | floating mineral 03",
+    "Atmosphere | floating mineral 04",
+    "Atmosphere | floating mineral 05",
+    "Atmosphere | floating mineral 06",
+    "Atmosphere | floating mineral 07",
+    "Atmosphere | floating mineral 08",
+    "Atmosphere | floating mineral 09",
+    "Atmosphere | floating mineral 10",
+    "Ground | weathered marble 00",
+    "Ground | weathered marble 01",
+    "Ground | weathered marble 02",
+    "Ground | weathered marble 03",
+    "Ground | weathered marble 04",
+    "Ground | weathered marble 05"
+  ]
+}

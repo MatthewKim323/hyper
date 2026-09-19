@@ -1,4 +1,4 @@
-import { Color, Group, Matrix4, PlaneGeometry, RingGeometry, ShaderMaterial, Vector2, Vector3, Vector4, type BufferGeometry } from "three";
+import { Color, Group, Matrix4, PlaneGeometry, RingGeometry, ShaderMaterial, UniformsLib, Vector2, Vector3, Vector4, type BufferGeometry } from "three";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { createWaterRipples, type WaterRipples } from "./ripples";
 
@@ -54,6 +54,7 @@ const vertexShader = `
   varying vec2 vGradient;
   #include <common>
   #include <logdepthbuf_pars_vertex>
+  #include <shadowmap_pars_vertex>
 
   float ripple(vec2 point) {
     vec2 packedHeight = texture2D(uRipples, clamp(point, vec2(0.0), vec2(1.0))).rg;
@@ -73,9 +74,13 @@ const vertexShader = `
     float height = result.x + disturbance * uRippleAmplitude;
     vec3 displaced = position + vec3(0.0, 0.0, height);
     vGradient = gradient * uRippleAmplitude;
-    vWorld = (modelMatrix * vec4(displaced, 1.0)).xyz;
+    vec4 worldPosition = modelMatrix * vec4(displaced, 1.0);
+    vWorld = worldPosition.xyz;
     vReflection = textureMatrix * vec4(displaced, 1.0);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
+    vec2 geometricGradient = result.yz + gradient * uRippleAmplitude;
+    vec3 transformedNormal = mat3(viewMatrix) * normalize(vec3(-geometricGradient.x, 1.0, -geometricGradient.y));
+    #include <shadowmap_vertex>
     #include <logdepthbuf_vertex>
   }
 `;
@@ -86,12 +91,16 @@ const fragmentShader = `
   uniform float uTime;
   uniform float uAmplitude;
   uniform vec3 uSunDirection;
+  uniform bool receiveShadow;
   uniform vec2 uReflectionTexel;
   varying vec4 vReflection;
   varying vec3 vWorld;
   varying vec2 vGradient;
   #include <common>
+  #include <packing>
   #include <logdepthbuf_pars_fragment>
+  #include <shadowmap_pars_fragment>
+  #include <shadowmask_pars_fragment>
 
   ${waveFunction}
   float hash(vec2 point) {
@@ -144,15 +153,19 @@ const fragmentShader = `
     float distribution = alphaSquared / max(PI * denominator * denominator, 0.00001);
     float sunFresnel = 0.02037 + 0.97963 * pow(1.0 - max(dot(view, halfDirection), 0.0), 5.0);
     float highlight = distribution * sunFresnel * lightFacing / max(4.0 * facing * lightFacing, 0.15);
-    vec3 surface = mix(color * 0.9, reflected, 0.48 + fresnel * 0.52);
-    surface += vec3(1.0, 0.82, 0.70) * min(highlight, 2.0) * 0.55;
+    float shadow = getShadowMask();
+    // Occlusion removes direct floor illumination and the sun lobe. Reflected
+    // light comes from the captured scene and already contains its own shadows.
+    vec3 shallow = color * 0.9 * mix(0.52, 1.0, shadow);
+    vec3 surface = mix(shallow, reflected, 0.48 + fresnel * 0.52);
+    surface += vec3(1.0, 0.82, 0.70) * min(highlight, 2.0) * 0.55 * shadow;
     // Some floor light passes through the water; grazing angles become reflective.
-    gl_FragColor = vec4(surface, 0.78 + fresnel * 0.2);
+    gl_FragColor = vec4(surface, 0.70 + fresnel * 0.24);
     #include <encodings_fragment>
   }
 `;
 
-type Surface = { reflector: Reflector; material: ShaderMaterial; ripples: WaterRipples; bounds: Vector4; captured: boolean };
+type Surface = { reflector: Reflector; material: ShaderMaterial; ripples: WaterRipples; bounds: Vector4 };
 
 /** Live geometry and scene reflections. Add group to the scene before rendering. */
 export function createAtriumWater(options: { reflectionSize?: number; sunDirection?: Vector3 } = {}): AtriumWater {
@@ -178,6 +191,7 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
       color: new Color(0xc2b5bc).convertSRGBToLinear(),
       shader: {
         uniforms: {
+          ...UniformsLib.lights,
           color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: new Matrix4() },
           uTime: { value: 0 }, uAmplitude: { value: amplitude }, uRippleAmplitude: { value: amplitude * 0.07 },
           uSunDirection: { value: sunDirection },
@@ -193,16 +207,20 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
     reflector.rotation.x = -Math.PI / 2;
     reflector.position.set(0, y, z);
     reflector.frustumCulled = false;
+    reflector.receiveShadow = true;
     reflector.renderOrder = -2;
     const material = reflector.material as ShaderMaterial;
     material.uniforms.uRipples.value = ripples.texture;
     material.toneMapped = false;
+    material.lights = true;
     material.transparent = true;
     material.depthWrite = false;
-    const surface = { reflector, material, ripples, bounds, captured: false };
+    const surface = { reflector, material, ripples, bounds };
     const capture = reflector.onBeforeRender;
     reflector.onBeforeRender = (renderer, scene, camera, geometry, material, renderGroup) => {
-      if (disposed || reflecting || (paused && surface.captured)) return;
+      // Pausing freezes the wave clock, not reflection correctness. Explicit
+      // renders can still follow a resize, station update, or camera reset.
+      if (disposed || reflecting) return;
       const wasVisible = group.visible;
       const reflectorVisible = reflector.visible;
       const target = renderer.getRenderTarget();
@@ -213,7 +231,6 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
       group.visible = false;
       try {
         capture.call(reflector, renderer, scene, camera, geometry, material, renderGroup);
-        surface.captured = true;
       } finally {
         renderer.setRenderTarget(target);
         renderer.xr.enabled = xrEnabled;
@@ -257,7 +274,6 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
       for (const surface of surfaces) {
         surface.reflector.getRenderTarget().setSize(w, h);
         surface.material.uniforms.uReflectionTexel.value.set(1 / w, 1 / h);
-        surface.captured = false;
       }
     },
     dispose() {
