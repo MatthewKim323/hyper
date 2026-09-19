@@ -1,0 +1,337 @@
+// FingerController: hand landmarks in, a precise cursor out.
+// Camera-rate work (filtering, gestures) happens in onFrame; display-rate work (prediction,
+// pointer events, drawing) happens in render, so a 30 fps camera still gives a smooth cursor.
+import { OneEuro2D } from "./one-euro";
+import { VirtualPointer } from "./pointer";
+import type { HandFrame } from "./tracker";
+
+type P2 = { x: number; y: number };
+type P3 = { x: number; y: number; z: number };
+
+export type FingerState = "lost" | "point" | "pinch" | "drag" | "scroll" | "hold";
+
+// Share of the camera frame that maps to the whole screen, so the arm never has to reach the edges.
+const BOX_WIDTH = 0.5;
+const BOX_CENTER = { x: 0.5, y: 0.56 };
+// Pointing anchor: mostly the index knuckle, which barely moves during a pinch, plus some fingertip.
+const TIP_WEIGHT = 0.3;
+// Filter tuned for coordinates where 1 is a full screen width.
+const MIN_CUTOFF = 1.1;
+const BETA = 0.05;
+// Pinch ratio (thumb tip to index tip over palm length) with hysteresis.
+const PINCH_ON = 0.38;
+const PINCH_OFF = 0.58;
+const PINCH_FRAMES = 2;
+// The cursor slows to a stop as a pinch closes, so the click lands where the user was aiming.
+const FREEZE_FROM = 0.7;
+const FREEZE_FULL = 0.44;
+const DRAG_THRESHOLD = 0.028;
+const FIST_MS = 150;
+const LOST_HOLD_MS = 220;
+const PREDICT_S = 0.036;
+const MAGNET_RADIUS = 72;
+const MAGNET_PULL = 0.34;
+const SCROLL_GAIN = 2.4;
+
+const CONNECTIONS = [
+  [0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12],
+  [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17],
+];
+
+const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+const smoothstep = (a: number, b: number, v: number) => {
+  const t = clamp((v - a) / (b - a));
+  return t * t * (3 - 2 * t);
+};
+const dist3 = (a: P3, b: P3) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+
+export class FingerController {
+  state: FingerState = "lost";
+  /** 0 open, 1 fully pinched. Drives the ring. */
+  pinchStrength = 0;
+  /** Last thumb to index distance over palm length, for tuning. */
+  pinchRatio = 1;
+  onState?: (state: FingerState) => void;
+
+  private pointer = new VirtualPointer();
+  private filter = new OneEuro2D(MIN_CUTOFF, BETA, 1);
+  private ctx: CanvasRenderingContext2D;
+  private raf = 0;
+
+  private lastT = 0;
+  private lastSeen = 0;
+  private prev: P2 | null = null;
+  private offset: P2 = { x: 0, y: 0 };
+  private sample = { pos: { x: 0.5, y: 0.5 }, vel: { x: 0, y: 0 }, t: 0 };
+  private pinchCount = 0;
+  private pinched = false;
+  private dragging = false;
+  private pinchTravel = 0;
+  private fistSince = 0;
+  private scrollVel = 0;
+  private hand: P2[] = [];
+  private px: P2 = { x: -100, y: -100 };
+  private trail: P2[] = [];
+  private pops: { x: number; y: number; t: number }[] = [];
+  private alpha = 0;
+  private magnets: DOMRect[] = [];
+  private magnetsAt = 0;
+
+  constructor(private canvas: HTMLCanvasElement) {
+    this.ctx = canvas.getContext("2d")!;
+    this.resize();
+    window.addEventListener("resize", this.resize);
+    this.raf = requestAnimationFrame(this.render);
+  }
+
+  destroy() {
+    cancelAnimationFrame(this.raf);
+    window.removeEventListener("resize", this.resize);
+    this.pointer.cancel();
+  }
+
+  private resize = () => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.canvas.width = window.innerWidth * dpr;
+    this.canvas.height = window.innerHeight * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+
+  private setState(next: FingerState) {
+    if (next === this.state) return;
+    this.state = next;
+    this.onState?.(next);
+  }
+
+  onLost = () => {
+    if (this.state === "lost") return;
+    if (performance.now() - this.lastSeen < LOST_HOLD_MS) return;
+    // Never leave a button held when the hand leaves the frame.
+    this.pointer.cancel();
+    this.pinched = this.dragging = false;
+    this.pinchCount = 0;
+    this.prev = null;
+    this.scrollVel = 0;
+    this.filter.reset();
+    this.sample.vel = { x: 0, y: 0 };
+    this.setState("lost");
+  };
+
+  onFrame = (f: HandFrame) => {
+    const now = performance.now();
+    const dt = this.lastT ? clamp((f.t - this.lastT) / 1000, 1 / 240, 0.2) : 1 / 30;
+    this.lastT = f.t;
+    this.lastSeen = now;
+
+    // Mirror, then map the active box to the screen. Box height follows the screen aspect so motion is isotropic.
+    const lm = f.landmarks.map((p) => ({ x: 1 - p.x, y: p.y }));
+    const boxH = clamp((BOX_WIDTH * f.aspect) / (window.innerWidth / window.innerHeight), 0.2, 0.85);
+    const ax = lm[5].x * (1 - TIP_WEIGHT) + lm[8].x * TIP_WEIGHT;
+    const ay = lm[5].y * (1 - TIP_WEIGHT) + lm[8].y * TIP_WEIGHT;
+    const raw = { x: (ax - (BOX_CENTER.x - BOX_WIDTH / 2)) / BOX_WIDTH, y: (ay - (BOX_CENTER.y - boxH / 2)) / boxH };
+    const filt = this.filter.filter(raw.x, raw.y, dt);
+
+    // Gestures use world landmarks (meters), so they hold up when the hand tilts or moves in depth.
+    const w = f.world;
+    const palm = Math.max(dist3(w[0], w[9]), 1e-4);
+    const ratio = dist3(w[4], w[8]) / palm;
+    this.pinchRatio = ratio;
+    const extended = (tip: number, pip: number) => dist3(w[tip], w[0]) > dist3(w[pip], w[0]) * 1.12;
+    const index = extended(8, 6);
+    const middle = extended(12, 10);
+    const ring = extended(16, 14);
+    const pinky = extended(20, 18);
+    const fist = !index && !middle && !ring && !pinky && ratio > PINCH_OFF * 0.6;
+    const scrollPose = index && middle && !ring && !pinky && ratio > PINCH_OFF && dist3(w[8], w[12]) / palm < 0.42;
+
+    // Pinch with hysteresis; entering needs consecutive frames, leaving is immediate.
+    if (!this.pinched) {
+      this.pinchCount = ratio < PINCH_ON ? this.pinchCount + 1 : 0;
+      if (this.pinchCount >= PINCH_FRAMES) {
+        this.pinched = true;
+        this.dragging = false;
+        this.pinchTravel = 0;
+        this.commit(now);
+        this.pointer.down();
+        this.pops.push({ x: this.px.x, y: this.px.y, t: now });
+      }
+    } else if (ratio > PINCH_OFF) {
+      this.pinched = this.dragging = false;
+      this.pinchCount = 0;
+      this.pointer.up();
+    }
+    this.pinchStrength = 1 - smoothstep(PINCH_ON, 0.95, ratio);
+
+    if (fist) this.fistSince ||= now;
+    else this.fistSince = 0;
+    const holding = !this.pinched && this.fistSince > 0 && now - this.fistSince > FIST_MS;
+    const scrolling = !this.pinched && !holding && scrollPose;
+
+    // Gain: how much of the hand's motion reaches the cursor. Whatever is withheld goes into
+    // an offset, so re-engaging never makes the cursor jump.
+    let gain = smoothstep(FREEZE_FULL, FREEZE_FROM, ratio);
+    if (holding || scrolling) gain = 0;
+    if (this.pinched) gain = this.dragging ? 1 : 0;
+    const delta = this.prev ? { x: filt.x - this.prev.x, y: filt.y - this.prev.y } : { x: 0, y: 0 };
+    this.prev = filt;
+    if (this.pinched && !this.dragging) {
+      this.pinchTravel += Math.hypot(delta.x, delta.y);
+      if (this.pinchTravel > DRAG_THRESHOLD) this.dragging = true;
+    }
+    this.offset.x -= delta.x * (1 - gain);
+    this.offset.y -= delta.y * (1 - gain);
+    const vel = this.filter.velocity;
+    const speed = Math.hypot(vel.x, vel.y);
+    if (gain === 1 && !this.pinched) {
+      // Bleed the offset away while the hand is moving fast, where the correction is invisible.
+      const k = clamp(speed * 1.6 * dt);
+      this.offset.x *= 1 - k;
+      this.offset.y *= 1 - k;
+    }
+    const pos = { x: clamp(filt.x + this.offset.x), y: clamp(filt.y + this.offset.y) };
+    // Hitting a screen edge re-anchors too, so there is no dead travel coming back.
+    this.offset = { x: pos.x - filt.x, y: pos.y - filt.y };
+    this.sample = { pos, vel: { x: vel.x * gain, y: vel.y * gain }, t: now };
+
+    if (scrolling) this.scrollVel = -delta.y * window.innerHeight * SCROLL_GAIN * (1 / dt / 60);
+
+    // Ghost hand, drawn around the cursor at a fixed on-screen size.
+    const toPx = (p: P2) => ({ x: p.x * f.aspect, y: p.y });
+    const anchor = toPx({ x: ax, y: ay });
+    const scale = 64 / Math.max(Math.hypot((lm[0].x - lm[9].x) * f.aspect, lm[0].y - lm[9].y), 1e-4);
+    const next = lm.map((p) => ({ x: (toPx(p).x - anchor.x) * scale, y: (toPx(p).y - anchor.y) * scale }));
+    this.hand = this.hand.length ? next.map((p, i) => ({ x: this.hand[i].x + (p.x - this.hand[i].x) * 0.55, y: this.hand[i].y + (p.y - this.hand[i].y) * 0.55 })) : next;
+
+    this.setState(this.pinched ? (this.dragging ? "drag" : "pinch") : holding ? "hold" : scrolling ? "scroll" : "point");
+  };
+
+  /** Predicted cursor position in pixels for a given display time. */
+  private predict(now: number): P2 {
+    const { pos, vel, t } = this.sample;
+    const speed = Math.hypot(vel.x, vel.y);
+    // Prediction scales with speed: none at rest (it would amplify jitter), full when moving fast.
+    const ahead = Math.min((now - t) / 1000, 0.05) + PREDICT_S * smoothstep(0.12, 0.9, speed);
+    let x = clamp(pos.x + vel.x * ahead) * window.innerWidth;
+    let y = clamp(pos.y + vel.y * ahead) * window.innerHeight;
+    if (this.state === "point") {
+      if (now - this.magnetsAt > 400) {
+        this.magnetsAt = now;
+        this.magnets = Array.from(document.querySelectorAll<HTMLElement>("a, button, [data-magnetic]"))
+          .map((el) => el.getBoundingClientRect())
+          .filter((r) => r.width > 0 && r.height > 0 && Math.max(r.width, r.height) < 260);
+      }
+      let best: { d: number; cx: number; cy: number } | null = null;
+      for (const r of this.magnets) {
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const d = Math.hypot(cx - x, cy - y);
+        if (d < MAGNET_RADIUS && (!best || d < best.d)) best = { d, cx, cy };
+      }
+      if (best) {
+        const pull = MAGNET_PULL * (1 - smoothstep(0, MAGNET_RADIUS, best.d));
+        x += (best.cx - x) * pull;
+        y += (best.cy - y) * pull;
+      }
+    }
+    return { x, y };
+  }
+
+  /** Bring the virtual pointer to where the cursor is drawn right now. */
+  private commit(now: number) {
+    const p = this.predict(now);
+    this.px = p;
+    this.pointer.move(p.x, p.y);
+  }
+
+  private render = (now: number) => {
+    this.raf = requestAnimationFrame(this.render);
+    const live = this.state !== "lost";
+    this.alpha += ((live ? 1 : 0) - this.alpha) * 0.18;
+    if (live) {
+      const p = this.state === "pinch" ? this.px : this.predict(now);
+      if (Math.hypot(p.x - this.pointer.x, p.y - this.pointer.y) > 0.15) this.pointer.move(p.x, p.y);
+      this.px = p;
+      if (Math.abs(this.scrollVel) > 0.4) {
+        this.pointer.scroll(0, this.scrollVel);
+        if (this.state !== "scroll") this.scrollVel *= 0.93;
+      }
+      this.trail.push({ x: p.x, y: p.y });
+      if (this.trail.length > 16) this.trail.shift();
+    } else if (this.trail.length) this.trail.shift();
+    this.draw(now);
+  };
+
+  private draw(now: number) {
+    const c = this.ctx;
+    c.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    if (this.alpha < 0.01) return;
+    const { x, y } = this.px;
+    c.lineCap = c.lineJoin = "round";
+
+    for (let i = 1; i < this.trail.length; i++) {
+      const t = i / this.trail.length;
+      c.strokeStyle = `rgba(255,255,255,${0.35 * t * t * this.alpha})`;
+      c.lineWidth = 1 + 5 * t;
+      c.beginPath();
+      c.moveTo(this.trail[i - 1].x, this.trail[i - 1].y);
+      c.lineTo(this.trail[i].x, this.trail[i].y);
+      c.stroke();
+    }
+
+    if (this.hand.length) {
+      c.save();
+      c.translate(x, y);
+      c.shadowColor = "rgba(190,170,255,0.9)";
+      c.shadowBlur = 10 + 14 * this.pinchStrength;
+      c.strokeStyle = `rgba(255,255,255,${(0.42 + 0.3 * this.pinchStrength) * this.alpha})`;
+      c.lineWidth = 1.6;
+      c.beginPath();
+      for (const [a, b] of CONNECTIONS) {
+        c.moveTo(this.hand[a].x, this.hand[a].y);
+        c.lineTo(this.hand[b].x, this.hand[b].y);
+      }
+      c.stroke();
+      c.fillStyle = `rgba(255,255,255,${0.85 * this.alpha})`;
+      for (const i of [4, 8, 12, 16, 20]) {
+        c.beginPath();
+        c.arc(this.hand[i].x, this.hand[i].y, i === 4 || i === 8 ? 3.2 : 2.2, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+    }
+
+    // Ring closes as the pinch closes: feedforward for the click.
+    const pressed = this.state === "pinch" || this.state === "drag";
+    const radius = pressed ? 7 : 24 - 15 * this.pinchStrength;
+    c.strokeStyle = `rgba(255,255,255,${0.9 * this.alpha})`;
+    c.lineWidth = pressed ? 3 : 1.5;
+    if (this.state === "hold") c.setLineDash([3, 5]);
+    c.beginPath();
+    c.arc(x, y, radius, 0, Math.PI * 2);
+    c.stroke();
+    c.setLineDash([]);
+    if (this.state === "scroll") {
+      c.beginPath();
+      c.moveTo(x, y - 34);
+      c.lineTo(x, y + 34);
+      c.moveTo(x - 5, y - 29);
+      c.lineTo(x, y - 34);
+      c.lineTo(x + 5, y - 29);
+      c.moveTo(x - 5, y + 29);
+      c.lineTo(x, y + 34);
+      c.lineTo(x + 5, y + 29);
+      c.stroke();
+    }
+
+    this.pops = this.pops.filter((p) => now - p.t < 420);
+    for (const p of this.pops) {
+      const t = clamp((now - p.t) / 420);
+      const ease = 1 - Math.pow(1 - t, 3);
+      c.strokeStyle = `rgba(255,255,255,${(1 - t) * 0.8})`;
+      c.lineWidth = 2 * (1 - t) + 0.5;
+      c.beginPath();
+      c.arc(p.x, p.y, 8 + 46 * ease, 0, Math.PI * 2);
+      c.stroke();
+    }
+  }
+}

@@ -7,6 +7,7 @@ import "./styles/gallery-nav.css";
 import "./styles/timeline.css";
 import "./styles/timeline-carousel.css";
 import "./styles/onboarding.css";
+import "./styles/finger.css";
 import "./styles/benchmarks-tw.css";
 import "./styles/benchmarks.css";
 import "./styles/workspace.css";
@@ -17,6 +18,7 @@ import BenchmarksWorkspace from "@/components/benchmarks/BenchmarksWorkspace";
 import WorkspaceSections from "@/components/workspace/WorkspaceSections";
 import { ALWAYS_ONBOARD } from "@/lib/onboarding/interface";
 import OnboardingWorkspace from "@/components/onboarding/OnboardingWorkspace";
+import FingerCursor from "@/components/finger/FingerCursor";
 
 export const metadata: Metadata = {
   title: "hyper. | HackMIT 2026",
@@ -49,6 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <BenchmarksWorkspace />
         <WorkspaceSections />
         <OnboardingWorkspace />
+        <FingerCursor />
         <EngineRoot />
       </body>
     </html>

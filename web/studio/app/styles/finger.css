@@ -1,0 +1,132 @@
+/* Hand cursor: full-screen overlay for the ring, trail and ghost hand, plus the dock with the toggle and camera preview. */
+.finger-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  mix-blend-mode: difference;
+}
+
+.finger-dock {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 2147482000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  font-family: Neue Montreal, sans-serif;
+  color: #212121;
+}
+
+.finger-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px 0 11px;
+  border: 1px solid rgba(33, 33, 33, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+
+.finger-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.finger-toggle[aria-pressed="true"] {
+  background: #212121;
+  color: #fff;
+}
+
+.finger-toggle:focus-visible {
+  outline: 2px solid #212121;
+  outline-offset: 3px;
+}
+
+.finger-preview {
+  width: 168px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(33, 33, 33, 0.18);
+  background: #212121;
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transform-origin: bottom left;
+  transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.finger-dock:not([data-status="live"]) .finger-preview {
+  position: absolute;
+  visibility: hidden;
+}
+
+.finger-dock[data-status="live"] .finger-preview {
+  opacity: 1;
+  transform: none;
+}
+
+.finger-dock[data-gesture="lost"] .finger-preview {
+  opacity: 0.55;
+}
+
+.finger-preview video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.finger-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 240px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.finger-hint strong {
+  font-weight: 400;
+  font-size: 13px;
+}
+
+.finger-hint span {
+  opacity: 0.6;
+}
+
+.finger-hint--error {
+  color: #8a1f1f;
+}
+
+/* The finger ring stands in for the site's own cursor ring while the hand is driving. */
+html[data-finger="on"] .cursor {
+  opacity: 0;
+}
+
+@media (max-width: 809.98px) {
+  .finger-dock {
+    display: none;
+  }
+}
