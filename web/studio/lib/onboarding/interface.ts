@@ -20,8 +20,15 @@ export const ONBOARDING_EVENTS = {
 export const ONBOARDING_STORAGE_KEY = "hyper.onboarding.v1";
 let sessionCompletion: boolean | undefined;
 
+// Testing default: every page load starts in onboarding, whatever an earlier visit saved.
+// Finishing (or skipping) still opens the workspace for that page session, so the handoff
+// can be exercised; it just is not remembered. Set NEXT_PUBLIC_ALWAYS_ONBOARD=0 to restore
+// the remembered behaviour.
+export const ALWAYS_ONBOARD = process.env.NEXT_PUBLIC_ALWAYS_ONBOARD !== "0" && process.env.NODE_ENV !== "test";
+
 export function isOnboardingComplete(): boolean {
   if (typeof window === "undefined") return false;
+  if (ALWAYS_ONBOARD) return sessionCompletion ?? false;
   if (sessionCompletion !== undefined) return sessionCompletion;
   try { return localStorage.getItem(ONBOARDING_STORAGE_KEY) === "complete"; }
   catch { return sessionCompletion ?? false; }
@@ -29,6 +36,11 @@ export function isOnboardingComplete(): boolean {
 
 /** UI persistence only. Call after the conversation service confirms completion. */
 export function setOnboardingComplete(complete: boolean) {
+  if (ALWAYS_ONBOARD) {
+    sessionCompletion = complete;
+    window.dispatchEvent(new Event(ONBOARDING_EVENTS.completion));
+    return;
+  }
   try {
     if (complete) localStorage.setItem(ONBOARDING_STORAGE_KEY, "complete");
     else localStorage.removeItem(ONBOARDING_STORAGE_KEY);
@@ -39,6 +51,7 @@ export function setOnboardingComplete(complete: boolean) {
 
 export function subscribeOnboardingCompletion(update: () => void) {
   const onStorage = (event: StorageEvent) => {
+    if (ALWAYS_ONBOARD) return;
     if (event.key === ONBOARDING_STORAGE_KEY || event.key === null) {
       sessionCompletion = undefined;
       update();

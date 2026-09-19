@@ -13,6 +13,7 @@ import Shell, { ShellPost } from "@/components/Shell";
 import EngineRoot from "@/components/EngineRoot";
 import TimelineWorkspace from "@/components/timeline/TimelineWorkspace";
 import BenchmarksWorkspace from "@/components/benchmarks/BenchmarksWorkspace";
+import { ALWAYS_ONBOARD } from "@/lib/onboarding/interface";
 import OnboardingWorkspace from "@/components/onboarding/OnboardingWorkspace";
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ else if(p==="/contact")c="page-template-home-contact";
 else if(p==="/projects")c="archive post-type-archive post-type-archive-project";
 else c="error404 dark";
 document.body.className=c;
-var done=false;try{done=localStorage.getItem("hyper.onboarding.v1")==="complete";}catch(e){}
+var done=false;if(!${ALWAYS_ONBOARD}){try{done=localStorage.getItem("hyper.onboarding.v1")==="complete";}catch(e){}}
 document.documentElement.dataset.onboarding=done?"complete":"required";})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
