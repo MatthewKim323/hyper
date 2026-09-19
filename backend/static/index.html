@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Hyper onboarding test console</title>
+<style>body{max-width:850px;margin:40px auto;font:16px system-ui;padding:20px}button,input{padding:12px;margin:5px}input{width:65%}pre{white-space:pre-wrap;background:#f5f5f5;padding:16px}#log{max-height:320px;overflow:auto}</style>
+<h1>What do you want taken off your plate?</h1><p>Development console · synthetic Meridian data · read-only</p>
+<button id="start">Start / resume demo</button><button id="mic" disabled>Enable microphone</button><button id="stop" disabled>Mute microphone</button>
+<form id="form"><input id="text" placeholder="Describe the task…" required><button>Send</button></form>
+<p id="status">Not connected</p><pre id="log"></pre><h2>Company context</h2><pre id="context">{}</pre><h2>Readiness</h2><pre id="ready">Not evaluated</pre>
+<script>
+let ws, capture, stream, worklet, playback, nextAudio=0, generation=0, nodes=[];
+const $=id=>document.getElementById(id);
+function clearAudio(){nodes.forEach(n=>{try{n.stop()}catch{}});nodes=[];nextAudio=0;}
+function send(x){if(ws?.readyState===1) ws.send(JSON.stringify(x));}
+function append(t){$('log').textContent+=t+'\n';$('log').scrollTop=$('log').scrollHeight;}
+$('start').onclick=async()=>{
+ if(ws?.readyState===1)return;
+ playback??=new AudioContext();await playback.resume();
+ let saved=JSON.parse(sessionStorage.getItem('onboarding')||'null');
+ if(!saved){const r=await fetch('/sessions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({demo:true})});const v=await r.json();saved={id:v.session.id,token:v.token};sessionStorage.setItem('onboarding',JSON.stringify(saved));}
+ ws=new WebSocket(`${location.protocol==='https:'?'wss':'ws'}://${location.host}/sessions/${saved.id}/stream`);
+ ws.onopen=()=>{send({token:saved.token});$('status').textContent='Connected';$('mic').disabled=false;};
+ ws.onclose=()=>{$('status').textContent='Disconnected — click start to resume';$('mic').disabled=true;stopMic();clearAudio();};
+ ws.onmessage=async e=>{const v=JSON.parse(e.data);
+  if(v.type==='session'){ $('log').textContent=''; v.session.transcript.forEach(t=>append(`${t.role}: ${t.text}`));$('context').textContent=JSON.stringify(v.session.context,null,2);$('ready').textContent=JSON.stringify(v.session.readiness,null,2);}
+  if(v.type==='interrupt'){generation=v.generation;clearAudio();}
+  if(v.type==='transcript'&&v.final)append((v.role==='assistant'?'agent: ':'you: ')+v.text);
+  if(v.type==='context')$('context').textContent=JSON.stringify(v.context,null,2);
+  if(v.type==='readiness')$('ready').textContent=JSON.stringify(v,null,2);
+  if(v.type==='error'||v.type==='status')$('status').textContent=v.message||v.text;
+  if(v.type==='voice.ready')await startMic();
+  if(v.type==='connection.closed')ws.close();
+  if(v.type==='audio'&&v.generation===generation){playback??=new AudioContext();await playback.resume();if(v.generation!==generation)return;const b=Uint8Array.from(atob(v.pcm),x=>x.charCodeAt(0));const view=new DataView(b.buffer);const buf=playback.createBuffer(1,b.length/2,v.sample_rate);const out=buf.getChannelData(0);for(let i=0;i<out.length;i++)out[i]=view.getInt16(i*2,true)/32768;const src=playback.createBufferSource();src.buffer=buf;src.connect(playback.destination);nextAudio=Math.max(nextAudio,playback.currentTime);src.start(nextAudio);nextAudio+=buf.duration;nodes.push(src);src.onended=()=>nodes=nodes.filter(n=>n!==src);}
+ };
+};
+$('form').onsubmit=e=>{e.preventDefault();if(ws?.readyState!==1)return;send({type:'text',id:crypto.randomUUID(),text:$('text').value});$('text').value='';};
+$('mic').onclick=async()=>{playback??=new AudioContext();await playback.resume();send({type:'voice.start'});};
+function stopMic(){stream?.getTracks().forEach(t=>t.stop());capture?.close();capture=null;stream=null;$('stop').disabled=true;}
+$('stop').onclick=()=>{send({type:'voice.stop'});stopMic();};
+async function startMic(){try{if(stream)return;stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});capture=new AudioContext({sampleRate:16000});await capture.audioWorklet.addModule('/audio-worklet.js');worklet=new AudioWorkletNode(capture,'pcm');capture.createMediaStreamSource(stream).connect(worklet);worklet.connect(capture.destination);worklet.port.onmessage=e=>{if(ws?.readyState===1&&ws.bufferedAmount<64000)ws.send(e.data);};$('stop').disabled=false;$('status').textContent='Listening';}catch(e){send({type:'voice.stop'});stopMic();$('status').textContent='Microphone unavailable; use typing.';}}
+</script></html>
