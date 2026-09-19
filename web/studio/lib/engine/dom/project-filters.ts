@@ -10,7 +10,7 @@ import { ensureProjects } from "../scenes/project-menu/projects-data";
 const $ = (sel: string, ctx: ParentNode = document) => ctx.querySelector(sel) as HTMLElement;
 const $$ = (sel: string, ctx: ParentNode = document) => Array.from(ctx.querySelectorAll(sel)) as HTMLElement[];
 
-type SectionKey = "overview" | "cases" | "evidence" | "activity" | "review" | "timeline";
+type SectionKey = "overview" | "cases" | "evidence" | "activity" | "review" | "timeline" | "benchmarks";
 
 export class ProjectFilters {
   static get selector() {
@@ -91,7 +91,7 @@ export class ProjectFilters {
       chevron: $$(".js-project-filters\\:chevron"),
     };
     // These sections only select a shell state until workspace views are connected.
-    this.items = { overview: [], cases: [], evidence: [], activity: [], review: [], timeline: [] };
+    this.items = { overview: [], cases: [], evidence: [], activity: [], review: [], timeline: [], benchmarks: [] };
     E.on("click", this.dom.filterBtn, this.handleFilterClick);
     E.on("click", this.dom.toggle, this.manageDropdownState);
     E.on("click", this.dom.overlay, this.manageDropdownState);
