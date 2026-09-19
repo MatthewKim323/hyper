@@ -1,0 +1,54 @@
+{
+  "library": "project-menu.blend",
+  "preparation": "Imported and organized from existing runtime GLBs.",
+  "blender_version": "4.5.13 LTS",
+  "sources": [
+    {
+      "source": "public/theme/models/project-menu/arch-dc.glb",
+      "sha256": "d75bfb920806a1f9e1811033c04201aafb184969094cbc4b9505f6c25393cd4e",
+      "collection": "arch-dc",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v3.3.32",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "arch-dc.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/project-menu/butterfly.glb",
+      "sha256": "7ae23343ffc50a97118d24d36e50787c4650aae599330d7eba0d317097a8524a",
+      "collection": "butterfly",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v4.2.69",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "butterfly.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/project-menu/floor-dc.glb",
+      "sha256": "c0e11584815c1f6dcbc02d72906dc6ebec169b6ceeeccd46559ac53df21cbd8e",
+      "collection": "floor-dc",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v3.3.32",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "floor-dc.glb.gltf.json"
+    }
+  ],
+  "counts": {
+    "objects": 3,
+    "meshes": 3,
+    "mesh_objects": 3,
+    "collections": 4,
+    "materials": 1,
+    "armatures": 0,
+    "actions": 0,
+    "vertices": 8562,
+    "polygons": 16542
+  }
+}
