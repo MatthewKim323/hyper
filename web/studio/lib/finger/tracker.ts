@@ -17,6 +17,8 @@ const MODEL = "/mediapipe/hand_landmarker.task";
 
 export class HandTracker {
   video: HTMLVideoElement;
+  /** Frame rate the camera actually agreed to. */
+  fps = 0;
   private stream: MediaStream | null = null;
   private hands: HandLandmarker | null = null;
   private running = false;
@@ -36,7 +38,7 @@ export class HandTracker {
     // Camera and model load in parallel; the model is the slower of the two on first use.
     const camera = navigator.mediaDevices.getUserMedia({
       audio: false,
-      video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60 }, facingMode: "user" },
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 120, min: 24 }, facingMode: "user" },
     });
     const model = (async () => {
       const { FilesetResolver, HandLandmarker } = await import("@mediapipe/tasks-vision");
@@ -63,6 +65,7 @@ export class HandTracker {
       void model.then((m) => m.close()).catch(() => {});
       throw error;
     }
+    this.fps = this.stream.getVideoTracks()[0]?.getSettings().frameRate ?? 0;
     this.video.srcObject = this.stream;
     await this.video.play();
     this.running = true;

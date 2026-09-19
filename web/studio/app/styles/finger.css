@@ -120,9 +120,15 @@
   color: #8a1f1f;
 }
 
-/* The finger ring stands in for the site's own cursor ring while the hand is driving. */
-html[data-finger="on"] .cursor {
-  opacity: 0;
+/* Exactly one cursor at a time: while a hand is tracked the finger ring is the only one,
+   and the site ring plus the system pointer come back the moment the hand leaves. */
+html[data-finger="tracking"] .cursor {
+  display: none !important;
+}
+
+html[data-finger="tracking"],
+html[data-finger="tracking"] * {
+  cursor: none !important;
 }
 
 @media (max-width: 809.98px) {

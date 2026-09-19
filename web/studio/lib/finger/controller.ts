@@ -22,6 +22,9 @@ const BETA = 0.07;
 const GLIDE_SLOW_S = 0.14;
 const GLIDE_FAST_S = 0.022;
 const REST_PX = 2.2;
+// Pointer events go out on their own fast clock (browser timers floor at 4 ms, so about 250 Hz),
+// independent of both the camera and the display.
+const POLL_MS = 4;
 // Pinch ratio (thumb tip to index tip over palm length) with hysteresis.
 const PINCH_ON = 0.38;
 const PINCH_OFF = 0.58;
@@ -56,6 +59,7 @@ export class FingerController {
   private filter = new OneEuro2D(MIN_CUTOFF, BETA, 1);
   private ctx: CanvasRenderingContext2D;
   private raf = 0;
+  private poll = 0;
 
   private lastT = 0;
   private lastSeen = 0;
@@ -81,10 +85,12 @@ export class FingerController {
     this.resize();
     window.addEventListener("resize", this.resize);
     this.raf = requestAnimationFrame(this.render);
+    this.poll = window.setInterval(this.tick, POLL_MS);
   }
 
   destroy() {
     cancelAnimationFrame(this.raf);
+    clearInterval(this.poll);
     window.removeEventListener("resize", this.resize);
     this.pointer.cancel();
   }
@@ -230,7 +236,7 @@ export class FingerController {
 
   /** Ease the drawn cursor toward its target. Smooths the camera-rate steps and any residual shake. */
   private glide(target: P2, now: number): P2 {
-    const dt = clamp((now - this.lastRender) / 1000, 1 / 240, 0.1);
+    const dt = clamp((now - this.lastRender) / 1000, 1 / 1000, 0.1);
     this.lastRender = now;
     if (this.px.x < 0) return target;
     const dx = target.x - this.px.x;
@@ -252,19 +258,27 @@ export class FingerController {
     this.pointer.move(p.x, p.y);
   }
 
+  /** Pointer clock: advance the cursor and emit mouse events. */
+  private tick = () => {
+    if (this.state === "lost") return;
+    const now = performance.now();
+    const p = this.state === "pinch" ? this.px : this.glide(this.predict(now), now);
+    if (Math.hypot(p.x - this.pointer.x, p.y - this.pointer.y) > 0.1) this.pointer.move(p.x, p.y);
+    this.px = p;
+  };
+
   private render = (now: number) => {
     this.raf = requestAnimationFrame(this.render);
     const live = this.state !== "lost";
     this.alpha += ((live ? 1 : 0) - this.alpha) * 0.18;
     if (live) {
-      const p = this.state === "pinch" ? this.px : this.glide(this.predict(now), now);
-      if (Math.hypot(p.x - this.pointer.x, p.y - this.pointer.y) > 0.15) this.pointer.move(p.x, p.y);
-      this.px = p;
+      // Timers are throttled in background tabs; the frame loop keeps the cursor honest either way.
+      this.tick();
       if (Math.abs(this.scrollVel) > 0.4) {
         this.pointer.scroll(0, this.scrollVel);
         if (this.state !== "scroll") this.scrollVel *= 0.93;
       }
-      this.trail.push({ x: p.x, y: p.y });
+      this.trail.push({ x: this.px.x, y: this.px.y });
       if (this.trail.length > 16) this.trail.shift();
     } else if (this.trail.length) this.trail.shift();
     this.draw(now);
