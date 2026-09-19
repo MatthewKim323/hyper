@@ -2,7 +2,7 @@
 
 Deepgram Voice Agent API owns the complete listening → reasoning → tool-calling → speaking loop over one upstream WebSocket. FastAPI bridges browser audio, executes application tools, and stores state. Jev independently evaluates readiness through Vercel AI SDK.
 
-There is no custom chat-completions loop, separate LLM API key, Devin session, or agent framework in this version. Deepgram's managed default LLM is used unless explicitly overridden.
+There is no custom chat-completions loop, separate LLM API key, Devin session, or agent framework in this version. Deepgram-managed `gpt-4o-mini` is used unless explicitly overridden.
 
 ## Run locally
 
@@ -25,7 +25,9 @@ uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 Open http://127.0.0.1:8000. Start/resume loads the demo session; type or enable the microphone. The provider connection starts on the first typed message or microphone activation. Both modes use Deepgram. Typing is an alternative to the microphone, **not** a fallback during a Deepgram outage. Refresh and Start/resume restores saved conversation and function history. Microphone access requires localhost or HTTPS.
 
-Optional DEEPGRAM_THINK_PROVIDER and DEEPGRAM_THINK_MODEL select a supported Deepgram-managed model. Leave blank to use the managed default. This may change with Deepgram's configuration. Credentials remain on the backend; `.env` is ignored.
+Optional DEEPGRAM_THINK_PROVIDER and DEEPGRAM_THINK_MODEL select a supported Deepgram-managed model. With no override, the server explicitly selects `open_ai` / `gpt-4o-mini`, a [documented Deepgram-managed model](https://developers.deepgram.com/docs/voice-agent-llm-models). Deepgram manages the LLM connection, so no separate OpenAI key is required. Credentials remain on the backend; `.env` is ignored.
+
+The product interface runs separately from `web/studio` with `bun run dev` at http://localhost:3888. It proxies `/api/onboarding/*` to this server for both HTTP and WebSocket traffic, so the browser uses one origin. `ONBOARDING_BACKEND_URL` in the Next server environment can override the default `http://127.0.0.1:8000`; restart Next after changing it. Keep the actual frontend origin in the backend's `ALLOWED_ORIGINS` list. The example includes both localhost and 127.0.0.1 on port 3888. Never put provider keys in `NEXT_PUBLIC_*` variables or browser code. Hosting must support persistent WebSocket proxy connections.
 
 ## Responsibilities
 
@@ -71,9 +73,9 @@ uv run pytest -q
 npm test --prefix evaluator
 ```
 
-Automated tests simulate Deepgram protocol events and Jev responses. They cover managed settings/history, voice/text bridging, scoped tool access, cancellations, stale evaluation protection, duplicate text IDs, full-transcript evaluation, persistence, authentication, and provider errors. Live provider/microphone behavior remains unverified without credentials.
+Automated tests simulate Deepgram protocol events and Jev responses. They cover managed settings/history, voice/text bridging, scoped tool access, cancellations, stale evaluation protection, duplicate text IDs, full-transcript evaluation, persistence, authentication, and provider errors. A credentialed local integration check verified session creation and authenticated WebSocket traffic through the product interface's same-origin proxy, followed by `voice.ready`, the real greeting transcript, nonzero 24 kHz PCM, and `audio.done`. It used no microphone or audio input; actual microphone capture still needs an interactive browser check.
 
-Run one Uvicorn worker: session ownership is process-local. This is a local development backend, not a public multi-tenant service. Production identity, quotas, multiworker coordination, and durable background jobs are not implemented. Nor are public web research, arbitrary uploads, live connectors, product UI integration, or execution of a ready brief in `resolve/`.
+Run one Uvicorn worker: session ownership is process-local. This is a local development backend, not a public multi-tenant service. Production identity, quotas, multiworker coordination, and durable background jobs are not implemented. Nor are public web research, arbitrary uploads, live connectors, or execution of a ready brief in `resolve/`.
 
 ## References
 

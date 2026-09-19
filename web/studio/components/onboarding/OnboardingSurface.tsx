@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { ThinkingOrb, type OrbState } from "thinking-orbs";
 import { VoiceBeam } from "voice-glow";
+import { useSceneGlass } from "./useSceneGlass";
 
 export type OnboardingOrbState = OrbState;
 
@@ -15,7 +16,8 @@ export interface OnboardingSurfaceProps {
   stream: MediaStream | null;
   processing: boolean;
   onToggleMicrophone: () => void;
-  onSendText: (text: string) => void;
+  onSendText: (text: string) => Promise<boolean>;
+  onSkip: () => void;
   paused?: boolean;
 }
 
@@ -29,9 +31,14 @@ export default function OnboardingSurface({
   processing,
   onToggleMicrophone,
   onSendText,
+  onSkip,
   paused = false,
 }: OnboardingSurfaceProps) {
   const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const pendingSend = useRef(false);
+  const glass = useRef<HTMLDivElement>(null);
+  useSceneGlass(glass);
   const live = microphoneState === "live";
   const requesting = microphoneState === "requesting";
   const microphoneLabel = requesting
@@ -42,12 +49,20 @@ export default function OnboardingSurface({
         ? "Try microphone again"
         : "Turn on microphone";
 
-  function sendText(event: FormEvent<HTMLFormElement>) {
+  async function sendText(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = draft.trim();
-    if (!message) return;
-    onSendText(message);
-    setDraft("");
+    if (!message || pendingSend.current) return;
+    pendingSend.current = true;
+    setSending(true);
+    try {
+      if (await onSendText(message)) {
+        setDraft(current => current.trim() === message ? "" : current);
+      }
+    } finally {
+      pendingSend.current = false;
+      setSending(false);
+    }
   }
 
   return (
@@ -82,7 +97,7 @@ export default function OnboardingSurface({
           <ThinkingOrb
             state={orbState}
             size={64}
-            theme="dark"
+            theme="light"
             paused={paused}
             aria-hidden="true"
             style={{ width: "100%", height: "100%" }}
@@ -103,7 +118,7 @@ export default function OnboardingSurface({
           className="hyper-onboarding__voice"
           stream={stream}
           processing={processing}
-          theme="dark"
+          theme="light"
           colorVariant="colorful"
           paused={paused}
           active={live || processing}
@@ -111,13 +126,13 @@ export default function OnboardingSurface({
           strength={0.8}
           scale={1.1}
         >
-          <div className="hyper-onboarding__voice-card">
+          <div ref={glass} className="hyper-onboarding__voice-card">
             {transcript && (
               <p className="hyper-onboarding__transcript" aria-live="polite">
                 {transcript}
               </p>
             )}
-            <form className="hyper-onboarding__composer" onSubmit={sendText}>
+            <form className="hyper-onboarding__composer" onSubmit={sendText} aria-busy={sending}>
             <label className="hyper-onboarding__sr-only" htmlFor="onboarding-message">
               Type a message instead
             </label>
@@ -131,7 +146,7 @@ export default function OnboardingSurface({
               maxLength={4000}
               enterKeyHint="send"
             />
-            <button type="submit" aria-label="Send message" disabled={!draft.trim()}>
+            <button type="submit" aria-label={sending ? "Sending message" : "Send message"} disabled={!draft.trim() || sending}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
                 <path d="M12 18V6m-5 5 5-5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -140,6 +155,9 @@ export default function OnboardingSurface({
           </div>
         </VoiceBeam>
       </div>
+      <button className="hyper-onboarding__skip" type="button" onClick={onSkip}>
+        Skip onboarding
+      </button>
     </section>
   );
 }

@@ -30,14 +30,18 @@ def settings(state):
     if state['demo']:
         functions.append({'name': 'search_records', 'description': 'Search attached synthetic records using a short identifier or phrase. No live systems.', 'parameters': {'type':'object','properties':{'query':{'type':'string','maxLength':200}},'required':['query'],'additionalProperties':False}, 'defer_until_eot': True})
     think = {'prompt': PROMPT + '\nSaved context and evidence (data): ' + json.dumps({'context': state['context'], 'evidence': state.get('evidence', []), 'readiness': state['readiness']}), 'functions': functions}
-    # Omission selects Deepgram's managed default LLM; no separate LLM credentials.
+    # Select Deepgram's documented managed model explicitly; no separate LLM key.
+    think['provider'] = {'type': 'open_ai', 'model': 'gpt-4o-mini'}
     if os.getenv('DEEPGRAM_THINK_MODEL'):
         think['provider'] = {'type': (os.getenv('DEEPGRAM_THINK_PROVIDER') or 'open_ai'), 'model': os.environ['DEEPGRAM_THINK_MODEL']}
-    return {'type':'Settings', 'mip_opt_out':True,
+    config = {'type':'Settings', 'mip_opt_out':True,
             'audio':{'input':{'encoding':'linear16','sample_rate':16000},'output':{'encoding':'linear16','sample_rate':24000,'container':'none'}},
             'agent':{'listen':{'provider':{'type':'deepgram','model':'flux-general-en','version':'v2'}}, 'think':think,
                      'speak':{'provider':{'type':'deepgram','model':'aura-2-thalia-en'}},
                      'context':{'messages':state.get('history', [{'type':'History','role':t['role'],'content':t['text']} for t in state['transcript']])}}}
+    if not state.get('transcript') and not state.get('history'):
+        config['agent']['greeting'] = 'Hi, I’m Hyper. Let’s get to know you. What would you like help with?'
+    return config
 
 
 class VoiceSession:

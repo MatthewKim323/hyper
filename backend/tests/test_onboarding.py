@@ -159,11 +159,34 @@ async def test_settings_restores_history_and_managed_default(tmp_path,monkeypatc
     s,_=bridge(tmp_path)
     await s.user_text('Review payables','one')
     cfg=voice.settings(s.state)
-    assert 'provider' not in cfg['agent']['think']
+    assert cfg['agent']['think']['provider']=={'type':'open_ai','model':'gpt-4o-mini'}
     assert cfg['agent']['context']['messages'][0]['content']=='Review payables'
     assert all(f['defer_until_eot'] for f in cfg['agent']['think']['functions'])
     assert cfg['audio']['input']['sample_rate']==16000
     assert cfg['mip_opt_out'] is True
+
+def test_settings_preserves_explicit_managed_provider_override(tmp_path,monkeypatch):
+    monkeypatch.setenv('DEEPGRAM_THINK_PROVIDER','anthropic')
+    monkeypatch.setenv('DEEPGRAM_THINK_MODEL','claude-haiku-4-5')
+    s,_=bridge(tmp_path)
+    think=voice.settings(s.state)['agent']['think']
+    assert think['provider']=={'type':'anthropic','model':'claude-haiku-4-5'}
+    assert 'endpoint' not in think
+
+def test_new_conversation_has_provider_greeting_without_injected_history(tmp_path):
+    s,_=bridge(tmp_path)
+    before=json.dumps(s.state,sort_keys=True)
+    cfg=voice.settings(s.state)
+    assert cfg['agent']['greeting']=='Hi, I’m Hyper. Let’s get to know you. What would you like help with?'
+    assert cfg['agent']['context']['messages']==[]
+    assert json.dumps(s.state,sort_keys=True)==before
+    assert s.socket.sent==[]
+
+@pytest.mark.parametrize('saved_field',['transcript','history'])
+def test_resumed_conversation_does_not_repeat_greeting(tmp_path,saved_field):
+    s,_=bridge(tmp_path)
+    s.state[saved_field]=[{'role':'assistant','text':'Saved introduction','content':'Saved introduction'}]
+    assert 'greeting' not in voice.settings(s.state)['agent']
 
 async def test_interrupt_cancels_readiness_before_commit(tmp_path,monkeypatch):
     s,events=bridge(tmp_path);entered=asyncio.Event()

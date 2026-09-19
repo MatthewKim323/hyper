@@ -17,6 +17,7 @@ import {
   Texture,
   TextureFilter,
   Vector2,
+  Vector4,
   VideoTexture,
   WebGLRenderer,
   WebGLRenderTarget,
@@ -231,6 +232,11 @@ export class Gl {
         u_maxDistort: { value: 0.4 },
         u_bendAmount: { value: -0.15 },
         u_vignetteStrength: { value: store.urlParams.has("novignette") ? 0 : 0.05 },
+        // Glass bounds use CSS pixels, independent of renderer pixel ratio.
+        u_glassRect: { value: new Vector4() },
+        u_glassRadius: { value: 24 },
+        u_glassStrength: { value: 0 },
+        u_glassViewport: { value: new Vector2(store.window.w, store.window.fullHeight) },
       },
       fragmentShader: postScreenfxChromaticBarrelVignetteGrainFrag,
       vertexShader: commonFullscreenUvVert,
@@ -275,6 +281,7 @@ export class Gl {
     this.renderer.setSize(store.window.w, store.window.fullHeight);
     this.composer.setSize(store.window.w, store.window.fullHeight);
     this.cssRenderer.setSize(store.window.w, store.window.fullHeight);
+    this.screenFxPass?.uniforms.u_glassViewport.value.set(store.window.w, store.window.fullHeight);
     this.globalUniforms.u_resolution.value.set(
       store.window.w * this.renderer.getPixelRatio(),
       store.window.fullHeight * this.renderer.getPixelRatio(),

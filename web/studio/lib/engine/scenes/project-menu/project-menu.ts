@@ -56,13 +56,13 @@ export type ProjectGroup = any;
 
 const $ = (sel: string) => document.querySelector(sel) as HTMLElement;
 
-// Charcoal surfaces keep the hall's depth while the onboarding orb stays brightest.
+// Original light surfaces and warm rays keep the hall bright behind the dark orb.
 const SCENE_PALETTE = {
-  background: "#05070a",
-  arches: "#525b63",
-  floor: "#30373e",
-  butterflies: "#697984",
-  light: "#9daebe",
+  background: "#e5e5e5",
+  arches: "#e5e5e5",
+  floor: "#e5e5e5",
+  butterflies: "#ffffff",
+  light: "#ffe5c0",
 };
 
 export class ProjectMenu {
@@ -625,7 +625,7 @@ export class ProjectMenu {
           fogNear: { value: (this.scene.fog as Fog).near },
           fogFar: { value: (this.scene.fog as Fog).far },
           uDirection: { value: new Vector2(-100, -150) },
-          uStrength: { value: 0.06 },
+          uStrength: { value: 0.25 },
           uLength: { value: 0.4 },
           uFadeSmoothness: { value: 0.7 },
           uScale: { value: 0.26 },
