@@ -107,7 +107,9 @@ export class PointerContext {
 function describeElement(el: HTMLElement | SVGElement): Referent {
   const r = el.getBoundingClientRect();
   const pointable = el.getAttribute("data-pointable") ?? "";
-  const [kind, id] = pointable.includes(":") ? pointable.split(/:(.*)/s) : [pointable || null, null];
+  const cut = pointable.indexOf(":");
+  const kind = cut < 0 ? pointable : pointable.slice(0, cut);
+  const id = cut < 0 ? "" : pointable.slice(cut + 1);
   let data: unknown = null;
   const raw = el.getAttribute("data-pointable-data");
   if (raw) {
