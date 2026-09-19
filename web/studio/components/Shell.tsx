@@ -380,6 +380,7 @@ const WORKSPACE_SECTIONS: [string, string][] = [
   ["evidence", "Evidence"],
   ["activity", "Activity"],
   ["review", "Review"],
+  ["timeline", "Timeline"],
 ];
 
 // Post-main globals. Gl creates the CSS3D layer and appends it to <body>.

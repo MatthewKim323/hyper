@@ -4,8 +4,11 @@ import "./styles/cursor.css";
 import "./styles/intro.css";
 import "./styles/theme.css";
 import "./styles/gallery-nav.css";
+import "./styles/timeline.css";
+import "./styles/timeline-carousel.css";
 import Shell, { ShellPost } from "@/components/Shell";
 import EngineRoot from "@/components/EngineRoot";
+import TimelineWorkspace from "@/components/timeline/TimelineWorkspace";
 
 export const metadata: Metadata = {
   title: "hyper. | HackMIT 2026",
@@ -32,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </div>
         <ShellPost />
+        <TimelineWorkspace />
         <EngineRoot />
       </body>
     </html>
