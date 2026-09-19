@@ -17,3 +17,5 @@ reference/
 
 # Temporary Blender review render.
 assets/blender/hyper-atrium/review.png
+.dev/
+.next-dev-backend/

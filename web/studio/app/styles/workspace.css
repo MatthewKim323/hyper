@@ -1,0 +1,78 @@
+/* Workspace sections (Cases, Evidence, Activity, Review). Same paper and ink as Timeline and Benchmarks. */
+.workspace { position: fixed; inset: 6.5rem 0 0; z-index: 62; overflow: auto; overscroll-behavior: contain; color: #252321;
+  background: linear-gradient(180deg, rgb(246 242 240 / 84%), rgb(246 242 240 / 97%) 40%); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  -webkit-user-select: text; user-select: text; scrollbar-width: thin; font-variant-numeric: tabular-nums; }
+.ws-content { max-width: 1080px; margin: auto; padding: 1.5rem 3rem 6rem; }
+.workspace button, .workspace input { font: inherit; color: inherit; }
+.workspace :focus-visible { outline: 2px solid #555044; outline-offset: 3px; }
+.ws-back { padding: 0.4rem 0; border: 0; background: none; font-size: 0.8rem; color: #716860; cursor: pointer; }
+.ws-eyebrow { display: block; font-size: 0.72rem; line-height: 1.4; letter-spacing: 0.1em; text-transform: uppercase; }
+.ws-heading { padding: 0.75rem 0 1.5rem; }
+.ws-heading h2, .ws-gate h2 { margin: 0.6rem 0 0.5rem; font-weight: 400; font-size: clamp(1.5rem, 2.4vw, 2.4rem); line-height: 1.1; letter-spacing: -0.045em; text-wrap: balance; }
+.ws-heading h2 em { font-family: Saol Display, Georgia, serif; font-weight: 300; }
+.workspace p { max-width: 66ch; margin: 0.5rem 0; font-size: 0.92rem; line-height: 1.5; }
+.ws-heading p, .ws-note, .workspace small, .workspace time { color: #716860; font-size: 0.8rem; line-height: 1.5; }
+.ws-warning { padding: 0.5rem 0.8rem; border-left: 2px solid #892d2d; color: #892d2d; }
+.ws-empty { padding: 1.5rem; border: 1px dashed #cfc6bf; border-radius: 0.9rem; color: #63574e; }
+.ws-link { padding: 0; border: 0; background: none; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-size: inherit; }
+.ws-stack { display: grid; gap: 1rem; }
+.ws-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 3rem; }
+.ws-section { padding: 1.5rem 0; border-top: 1px solid #cfc6bf; min-width: 0; }
+.ws-section--detail { position: relative; }
+.ws-section--detail > .ws-link { position: absolute; top: 1.5rem; right: 0; font-size: 0.8rem; }
+
+.ws-card { padding: 1.5rem; border: 1px solid rgb(37 35 33 / 12%); border-radius: 1rem; background: rgb(255 255 255 / 60%); }
+.ws-card--decision { border-color: rgb(37 35 33 / 28%); }
+.ws-card header, .ws-card footer { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.78rem; color: #716860; }
+.ws-card footer { margin-top: 1.25rem; padding-top: 0.9rem; border-top: 1px solid #e4dbd5; flex-wrap: wrap; justify-content: flex-start; }
+.ws-card h3 { margin: 0.7rem 0 0.3rem; font-size: 1.35rem; font-weight: 400; line-height: 1.2; letter-spacing: -0.025em; }
+.ws-chip { display: inline-flex; align-items: center; gap: 0.4rem; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.7rem; }
+.ws-chip i { width: 0.55rem; height: 0.55rem; border-radius: 2px; }
+
+.ws-options { display: grid; gap: 0.5rem; margin: 1.1rem 0 0.75rem; padding: 0; list-style: none; counter-reset: option; }
+.ws-options button { display: grid; gap: 0.25rem; width: 100%; padding: 0.9rem 1rem 0.9rem 2.6rem; position: relative; text-align: left; border: 1px solid rgb(37 35 33 / 15%); border-radius: 0.8rem; background: rgb(255 255 255 / 70%); cursor: pointer; transition: background 160ms, transform 160ms; }
+.ws-options button::before { counter-increment: option; content: counter(option); position: absolute; left: 1rem; top: 0.95rem; font-size: 0.8rem; color: #9a8379; }
+.ws-options button:hover:not(:disabled) { background: #eee4df; }
+.ws-options button:active:not(:disabled) { transform: scale(0.995); }
+.ws-options button:disabled { opacity: 0.5; cursor: default; }
+.ws-options strong { font-weight: 500; font-size: 0.95rem; }
+.ws-options span { font-size: 0.86rem; line-height: 1.45; }
+.ws-options em { font-style: normal; font-size: 0.75rem; color: #8a4b1d; }
+.ws-inline { display: flex; gap: 0.5rem; }
+.ws-inline input { flex: 1; min-width: 0; min-height: 42px; padding: 0.6rem 0.9rem; border: 1px solid #d6cec8; border-radius: 0.7rem; background: rgb(255 255 255 / 70%); font-size: 0.88rem; }
+.ws-inline button, .ws-gate button { min-height: 42px; padding: 0.55rem 1.1rem; border: 1px solid #252321; border-radius: 99px; color: #fff; background: #252321; font-size: 0.82rem; cursor: pointer; }
+.ws-inline button:disabled { opacity: 0.35; cursor: default; }
+.ws-inline--search { margin-bottom: 1.5rem; }
+
+.ws-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1rem; }
+.ws-list ul { margin: 0.4rem 0 0; padding-left: 1.05rem; font-size: 0.86rem; line-height: 1.5; }
+.ws-list[data-tone="unknown"] ul { color: #8a4b1d; }
+.ws-rows { margin: 0.75rem 0 0; padding: 0; list-style: none; }
+.ws-rows li { padding: 0.9rem 0; border-top: 1px solid #ddd5cf; }
+.ws-rows--tight li { padding: 0.6rem 0; }
+.ws-rows li > div { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; font-size: 0.9rem; }
+.ws-rows strong { font-weight: 500; }
+.ws-rows p { font-size: 0.85rem; }
+.ws-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.74rem !important; overflow-wrap: anywhere; white-space: pre-wrap; color: #4b443e; }
+.ws-chart { position: relative; width: 100%; margin-top: 1rem; }
+.ws-chart svg { overflow: visible; }
+.ws-chart svg text { font-family: inherit; }
+
+.ws-feed { margin: 0; padding: 0; list-style: none; }
+.ws-feed li { display: grid; grid-template-columns: 8.5rem 1fr auto; gap: 1.25rem; align-items: start; padding: 0.95rem 0; border-top: 1px solid #ddd5cf; }
+.ws-feed small { display: block; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.68rem; }
+.ws-feed strong { display: block; margin-top: 0.15rem; font-weight: 500; font-size: 0.95rem; }
+.ws-feed strong::first-letter { text-transform: uppercase; }
+.ws-feed .ws-link { font-size: 0.8rem; color: #716860; }
+
+.ws-gate { max-width: 38rem; padding: 3rem 0; }
+.ws-gate button { margin-top: 1rem; }
+.ws-strip { position: fixed; left: 50%; bottom: 1.5rem; z-index: 61; display: flex; align-items: center; gap: 1.1rem; padding: 0.6rem 1.1rem; transform: translateX(-50%);
+  border-radius: 99px; color: #252321; background: rgb(246 242 240 / 82%); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgb(37 35 33 / 10%); font-size: 0.8rem; white-space: nowrap; }
+.ws-strip strong { font-weight: 500; }
+.ws-strip button { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ws-strip button[data-alert] { color: #8a2d2d; font-weight: 500; }
+
+@media (max-width: 900px) { .ws-grid, .ws-columns { grid-template-columns: 1fr; gap: 0; } .ws-columns { gap: 1rem; } .ws-feed li { grid-template-columns: 1fr; gap: 0.25rem; } }
+@media (max-width: 767px) { .workspace { top: 6rem; } .ws-content { padding: 1.25rem 1.25rem 5rem; } .ws-strip { max-width: calc(100vw - 2rem); overflow-x: auto; } }
+@media (prefers-reduced-motion: reduce) { .ws-options button { transition: none; } }

@@ -12,7 +12,7 @@ const $$ = (sel: string, ctx: ParentNode = document) => Array.from(ctx.querySele
 
 type SectionKey = "overview" | "cases" | "evidence" | "activity" | "review" | "timeline" | "benchmarks";
 // Sections that cover the scene with a DOM workspace, so the scene must not take pointer control.
-const OVERLAY_SECTIONS = new Set<SectionKey>(["timeline", "benchmarks"]);
+const OVERLAY_SECTIONS = new Set<SectionKey>(["cases", "evidence", "activity", "review", "timeline", "benchmarks"]);
 
 export class ProjectFilters {
   static get selector() {

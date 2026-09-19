@@ -5,6 +5,8 @@ const onboardingBackend = (process.env.ONBOARDING_BACKEND_URL ?? "http://127.0.0
 const nextConfig: NextConfig = {
   // The engine boots once and owns the DOM imperatively; strict-mode double mount would double-boot it.
   reactStrictMode: false,
+  // A second dev server (for example one pointed at tools/dev_backend.py) needs its own build folder.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   devIndicators: false,
   turbopack: { root: __dirname },
   outputFileTracingRoot: __dirname,

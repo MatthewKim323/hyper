@@ -11,6 +11,7 @@
   "dependencies": {
     "@ashthornton/asscroll": "^2.0.11",
     "@base-ui/react": "^1.8.0",
+    "@clerk/clerk-js": "^6.32.1",
     "@number-flow/react": "^0.6.2",
     "@svgdotjs/svg.js": "^3.2.8",
     "@visx/curve": "4.0.1-alpha.0",

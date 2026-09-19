@@ -1,3 +1,4 @@
+import { getAuthState, getBackendToken } from "@/lib/backend/auth";
 import type { OnboardingPresentation } from "./interface";
 
 export type VoiceConnection = "idle" | "connecting" | "connected" | "disconnected" | "error";
@@ -159,6 +160,7 @@ export class OnboardingVoiceClient {
   private context: AudioContext | null = null;
   private sources = new Set<AudioBufferSourceNode>();
   private audioClock = 0;
+  private authRefresh: ReturnType<typeof setInterval> | null = null;
   private playbackTap: MediaStreamAudioDestinationNode | null = null;
   private playbackShared = false;
   private microphone: MediaStream | null = null;
@@ -212,7 +214,39 @@ export class OnboardingVoiceClient {
     }
   }
 
+  // Signed-in protocol (backend 8089ee0 onward): the login token authorizes the session, no
+  // capability token is issued, and the workspace remembers the latest session to resume.
+  private async getSignedInSession(bearer: string): Promise<Capability> {
+    const headers = { Authorization: `Bearer ${bearer}` };
+    const known = this.capability?.id;
+    if (known) {
+      const response = await this.request(`/sessions/${encodeURIComponent(known)}`, { headers });
+      if (response.ok) return { id: known, token: bearer };
+      if (response.status === 401) throw new Error("Your sign-in expired. Sign in again to continue.");
+    }
+    const workspace = await this.request("/me/workspace", { headers });
+    if (workspace.status === 401) throw new Error("Sign in to talk to your agent.");
+    if (!workspace.ok) throw new Error("The onboarding service is unavailable. Tap the orb or send a message to retry.");
+    const profile: unknown = await workspace.json();
+    const latest = record(profile) && record(profile.organization) ? profile.organization.latest_session_id : null;
+    if (typeof latest === "string" && /^[\w-]{1,128}$/.test(latest)) {
+      const response = await this.request(`/sessions/${encodeURIComponent(latest)}`, { headers });
+      if (response.ok) return { id: latest, token: bearer };
+    }
+    const created = await this.request("/sessions", { method: "POST", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ demo: false }) });
+    if (!created.ok) throw new Error("The onboarding service is unavailable. Tap the orb or send a message to retry.");
+    const data: unknown = await created.json();
+    if (!record(data) || !record(data.session) || typeof data.session.id !== "string" || !/^[\w-]{1,128}$/.test(data.session.id)) throw new Error("The onboarding service returned an invalid session.");
+    return { id: data.session.id, token: bearer };
+  }
+
   private async getCapability(version: number): Promise<Capability> {
+    if (getAuthState().mode !== "unconfigured") {
+      const bearer = await getBackendToken();
+      if (!bearer) throw new Error("Sign in to talk to your agent.");
+      return this.getSignedInSession(bearer);
+    }
+    // Legacy anonymous protocol, kept for a backend that predates sign-in.
     let saved = this.capability;
     if (!saved) {
       try {
@@ -238,6 +272,21 @@ export class OnboardingVoiceClient {
       try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(saved)); } catch { /* In-memory fallback. */ }
     }
     return saved;
+  }
+
+  /** The server closes the socket (1008) when the login token expires, so hand it a fresh one every 20 s. */
+  private keepLoginFresh(socket: WebSocket) {
+    if (this.authRefresh) clearInterval(this.authRefresh);
+    this.authRefresh = null;
+    if (getAuthState().mode !== "clerk") return;
+    this.authRefresh = setInterval(() => {
+      if (this.disposed || this.socket !== socket || socket.readyState !== WebSocket.OPEN) {
+        if (this.authRefresh) clearInterval(this.authRefresh);
+        this.authRefresh = null;
+        return;
+      }
+      void getBackendToken().then(token => { if (token && this.socket === socket) this.send({ type: "auth.refresh", token }); }).catch(() => {});
+    }, 20000);
   }
 
   private canConnect() {
@@ -308,6 +357,7 @@ export class OnboardingVoiceClient {
                 this.authenticated = true;
                 this.reconnectAttempts = 0;
                 this.notifyConnection("connected");
+                this.keepLoginFresh(socket);
                 settle();
               }
               this.receive(event);

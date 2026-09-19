@@ -9,10 +9,12 @@ import "./styles/timeline-carousel.css";
 import "./styles/onboarding.css";
 import "./styles/benchmarks-tw.css";
 import "./styles/benchmarks.css";
+import "./styles/workspace.css";
 import Shell, { ShellPost } from "@/components/Shell";
 import EngineRoot from "@/components/EngineRoot";
 import TimelineWorkspace from "@/components/timeline/TimelineWorkspace";
 import BenchmarksWorkspace from "@/components/benchmarks/BenchmarksWorkspace";
+import WorkspaceSections from "@/components/workspace/WorkspaceSections";
 import { ALWAYS_ONBOARD } from "@/lib/onboarding/interface";
 import OnboardingWorkspace from "@/components/onboarding/OnboardingWorkspace";
 
@@ -45,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ShellPost />
         <TimelineWorkspace />
         <BenchmarksWorkspace />
+        <WorkspaceSections />
         <OnboardingWorkspace />
         <EngineRoot />
       </body>
