@@ -1,6 +1,6 @@
 # Elastic Financial Evidence Engine
 
-Status: researched implementation proposal; no Serverless deployment or Agent Builder integration implemented by this document.
+Status: implementation underway. The retrieval upgrade, durable investigation API/worker, scoped Agent Builder definitions, and Workflow provisioning are implemented; see ../ELASTIC.md. Cloud credentials are not configured, so Serverless/Jina/Agent Builder execution remains unverified. Structured activity indexing, automatic case merging, and retrieval benchmarking remain planned.
 
 ## Outcome
 

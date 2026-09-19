@@ -209,3 +209,14 @@ agent_attempts = Table('agent_attempts', metadata,
     Column('target_id', Text, nullable=False), Column('operation', Text, nullable=False),
     Column('status', Text, nullable=False), Column('details', json_type, nullable=False),
     Column('created_at', BigInteger, nullable=False))
+
+elastic_investigations = Table('elastic_investigations', metadata,
+    Column('id', Text, primary_key=True),
+    Column('organization_id', Text, ForeignKey('organizations.id'), nullable=False),
+    Column('request_key', Text, nullable=False), Column('source_id', Text, nullable=False),
+    Column('question', Text, nullable=False), Column('status', Text, nullable=False),
+    Column('created_at', BigInteger, nullable=False), Column('updated_at', BigInteger, nullable=False),
+    Column('lease_until', BigInteger, nullable=False, default=0), Column('claim_token', Text),
+    Column('execution_id', Text), Column('context', json_type), Column('result', json_type),
+    Column('concern_id', Text), Column('error', Text),
+    UniqueConstraint('organization_id', 'request_key'))

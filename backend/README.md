@@ -121,3 +121,7 @@ Clerk implementation references: [JWT verification](https://clerk.com/docs/guide
 See [CONCERNS_API.md](CONCERNS_API.md) for persistent anomaly cards, Jev evaluation, user responses, and leased agent-resolution tools.
 
 See [ARTIFACTS_API.md](ARTIFACTS_API.md) for json-render financial charts and scenario projections, and [DEVIN_API.md](DEVIN_API.md) for persistent coordinator/worker execution.
+
+## Elastic evidence investigator
+
+See [ELASTIC.md](ELASTIC.md) for Jina reranking, the persistent investigation API, organization-scoped Agent Builder tools, and Elastic Workflow provisioning. Run `uv run python -m app.elastic_setup check` to check capabilities, and `uv run python -m app.elastic_worker` to process queued investigations. Cloud execution requires separate Kibana credentials and a provisioned Workflow; local search alone does not enable it.

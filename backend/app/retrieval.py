@@ -9,7 +9,8 @@ class ElasticSearch:
         self.index = os.getenv('ELASTICSEARCH_INDEX','hyper-evidence-v1')
         self.inference_id = os.getenv('ELASTIC_INFERENCE_ID','')
         self.search_inference_id = os.getenv('ELASTIC_SEARCH_INFERENCE_ID','')
-        self.mode = 'hybrid' if self.inference_id else 'keyword'
+        self.rerank_id = os.getenv('ELASTIC_RERANK_INFERENCE_ID', '')
+        self.mode = ('hybrid' if self.inference_id else 'keyword') + ('+rerank' if self.rerank_id else '')
         self.headers = {}
         if os.getenv('ELASTICSEARCH_API_KEY'):
             self.headers['Authorization']='ApiKey '+os.environ['ELASTICSEARCH_API_KEY']
@@ -29,7 +30,10 @@ class ElasticSearch:
             'organization_id':{'type':'keyword'},'source_id':{'type':'keyword'},
             'chunk_id':{'type':'keyword'},'dataset':{'type':'keyword'},
             'filename':{'type':'keyword'},'locator':{'type':'keyword'},
-            'content':{'type':'text'}}}
+            'content':{'type':'text'},
+            'source_key':{'type':'keyword'}, 'source_version':{'type':'integer'},
+            'content_hash':{'type':'keyword'}, 'observed_at':{'type':'date','format':'epoch_millis'},
+            'currency':{'type':'keyword'}, 'document_type':{'type':'keyword'}}}
         if self.inference_id:
             mapping['properties']['semantic']={'type':'semantic_text','inference_id':self.inference_id}
             if self.search_inference_id:
@@ -40,18 +44,26 @@ class ElasticSearch:
             if e.response.status_code!=404:raise
             self.request('PUT',self.index,json={'mappings':mapping})
             return
-        fields=existing[self.index]['mappings'].get('properties',{})
+        if len(existing) != 1:
+            raise ValueError('Evidence alias must resolve to one index')
+        fields=next(iter(existing.values()))['mappings'].get('properties',{})
         actual=fields.get('semantic',{}).get('inference_id','')
         actual_search=fields.get('semantic',{}).get('search_inference_id',actual)
         if (bool(fields.get('semantic')) != bool(self.inference_id) or (self.inference_id and actual!=self.inference_id)
                 or (self.search_inference_id and actual_search!=self.search_inference_id)):
             raise ValueError('Search mapping changed; use a new ELASTICSEARCH_INDEX and reindex sources')
+        missing={k:v for k,v in mapping['properties'].items() if k not in fields}
+        if missing:self.request('PUT',f'{self.index}/_mapping',json={'properties':missing})
 
     def index_chunks(self, source, rows):
         lines=[]
         for row in rows:
             document={'organization_id':source['organization_id'],'source_id':source['id'],
                       'chunk_id':row['id'],'dataset':source['dataset'] or '',
+                      'source_key':source.get('source_key',source['id']),
+                      'source_version':source.get('version',1),'content_hash':source.get('sha256',''),
+                      'observed_at':source.get('created_at',0),'currency':source.get('currency') or '',
+                      'document_type':source.get('content_type','application/octet-stream'),
                       'filename':source['filename'],'locator':row['locator'],
                       'content':f"Source: {source['filename']} | Dataset: {source['dataset'] or 'document'} | Currency: {source.get('currency') or 'unspecified'} | {row['locator']}\n"+row['content']}
             # Structured ledger rows use exact SQL/BM25. Embed prose documents, not every debit.
@@ -67,14 +79,20 @@ class ElasticSearch:
         self.request('POST',f'{self.index}/_refresh')
 
     def search(self, oid, source_ids, query, limit):
+        if not source_ids:return []
         filters=[{'term':{'organization_id':oid}},{'terms':{'source_id':source_ids}}]
         def branch(field):
             return {'standard':{'query':{'bool':{'filter':filters,'must':[{'match':{field:query}}]}}}}
         body={'size':limit,'_source':['source_id','chunk_id','locator']}
         if self.inference_id:
-            body['retriever']={'rrf':{'retrievers':[branch('content'),branch('semantic')],'rank_window_size':50}}
+            body['retriever']={'rrf':{'retrievers':[branch('content'),branch('semantic')],'rank_window_size':max(50,limit)}}
         else:
             body['query']=branch('content')['standard']['query']
+        if self.rerank_id:
+            candidate=body.pop('retriever',None) or {'standard':{'query':body.pop('query')}}
+            body['retriever']={'text_similarity_reranker':{
+                'retriever':candidate,'field':'content','inference_id':self.rerank_id,
+                'inference_text':query,'rank_window_size':max(50,limit)}}
         result=self.request('POST',f'{self.index}/_search',json=body)
         if result.get('timed_out') or result.get('_shards',{}).get('failed'):
             raise RuntimeError('Search returned incomplete results')
