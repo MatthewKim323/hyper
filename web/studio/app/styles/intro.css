@@ -10,7 +10,7 @@
   position: relative;
   bottom: auto;
   opacity: 1;
-  visibility: visible;
+  visibility: inherit;
 }
 
 .loader--minimal .intro-enter:disabled {

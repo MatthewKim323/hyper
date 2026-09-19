@@ -374,12 +374,12 @@ export default function Shell() {
   );
 }
 
-const FILTERS: [string, string][] = [
-  ["all", "All"],
-  ["branding", "Branding"],
-  ["digital", "Digital"],
-  ["motion", "Motion"],
-  ["experiment", "Experiment"],
+const WORKSPACE_SECTIONS: [string, string][] = [
+  ["overview", "Overview"],
+  ["cases", "Cases"],
+  ["evidence", "Evidence"],
+  ["activity", "Activity"],
+  ["review", "Review"],
 ];
 
 // Post-main globals. Gl creates the CSS3D layer and appends it to <body>.
@@ -391,32 +391,40 @@ export function ShellPost() {
       </div>
       <div className="project-filters | js-project-filters" style={{ visibility: "hidden", opacity: 0 }}>
         <div className="project-filters__overlay js-project-filters:overlay"></div>
-        <div className="project-filters__inner | js-project-filters-inner">
-          <h1 className="project-filters__title | t-sans t-offblack t-center t-ls--2">Selected Projects</h1>
+        <nav className="project-filters__inner | js-project-filters-inner" aria-label="Workspace sections">
           <div className="project-filters__filter | js-project-filters:filter">
             <div className="project-filters__filter__bg | pointer-events-none | js-project-filters:filterBg"></div>
-            <button className="project-filters__filter__toggle d-none@md | js-project-filters:toggle">
-              Filter
+            <button
+              type="button"
+              className="project-filters__filter__toggle d-none@md | js-project-filters:toggle"
+              aria-controls="workspace-section-list"
+              aria-expanded="false"
+              aria-label="Workspace sections, selected: Overview"
+            >
+              Sections
               <svg className="project-filters__filter__chevron js-project-filters:chevron">
                 <use href="#chevron-down"></use>
               </svg>
             </button>
-            <div className="project-filters__filter__list | js-project-filters:filterList">
-              {FILTERS.map(([f, label], i) => (
+            <div id="workspace-section-list" className="project-filters__filter__list | js-project-filters:filterList">
+              {WORKSPACE_SECTIONS.map(([f, label], i) => (
                 <button
                   key={f}
+                  id={`workspace-section-${f}`}
+                  type="button"
                   data-filter={f}
+                  data-label={label}
+                  aria-pressed={i === 0}
                   className={
                     "project-filters__filter__button | " + (i === 0 ? "is-active " : "") + "js-project-filters:filterBtn"
                   }
                 >
                   {label}
-                  <div className="js-project-filters:filter:number"></div>
                 </button>
               ))}
             </div>
           </div>
-        </div>
+        </nav>
       </div>
       <PersistentContent />
       <div id="p-cover"></div>

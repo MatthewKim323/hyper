@@ -1,0 +1,10 @@
+/* native cursor hidden while the custom ring is visible (see lib/engine/dom/cursor.ts) */
+html.native-cursor-off,
+html.native-cursor-off * {
+  cursor: none !important;
+}
+
+.cursor {
+  opacity: 0;
+  visibility: hidden;
+}

@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./styles/cursor.css";
 import "./styles/intro.css";
+import "./styles/theme.css";
+import "./styles/gallery-nav.css";
 import Shell, { ShellPost } from "@/components/Shell";
 import EngineRoot from "@/components/EngineRoot";
 
 export const metadata: Metadata = {
-  title: "Hyper | Immersive Web Experience",
+  title: "hyper. | HackMIT 2026",
   description:
-    "Hyper explores interactive 3D scenes, motion, and digital experiences.",
+    "An accounts-payable exception-resolution project by Matthew Kim and Stephen Hung for HackMIT 2026.",
 };
 
 // Route-specific body classes are applied before first paint;

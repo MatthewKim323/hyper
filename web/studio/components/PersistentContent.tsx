@@ -5,12 +5,12 @@ export function PersistentContent() {
     <div className="d-none">
 
       <div className="js-view-projects-btn" style={{ visibility: "hidden" }}>
-        <a href="/projects" title="Enter gallery" className="btn btn--regular btn--fill btn--light js-manager-ignore js-btn" data-btn="fill" data-cursor="hide">
+        <a href="/projects" title="enter" className="btn btn--regular btn--fill btn--light js-manager-ignore js-btn" data-btn="fill" data-cursor="hide">
           <span className="btn__inner js-btn-inner">
             <span className="btn__content js-btn-content">
               <span className="d-flex flex-row items-end">
                 <span className="btn__text">
-                  Enter gallery
+                  enter
                 </span>
                 <svg className="btn__icon d-inline-block js-btn-icon">
                   <use href="#arrow"></use>
@@ -36,12 +36,12 @@ export function PersistentContent() {
           <div className="d-flex flex-column mt-1 mt-2.5@sm">
             <div className="d-flex items-center items-end@sm justify-center justify-start@sm mb-1 mb-2@sm | js-reveal-anim">
               <div className="mr-1 d-flex">
-                <a href="#" title="New Business" className="btn btn--regular btn--border btn--dark js-content-toggle-btn js-btn-selected js-manager-ignore js-btn" data-btn="border" data-togglecontent="new-business" data-router-disabled="" data-audio-enter="audio.hover" data-cursor="hide">
+                <a href="#" title="Project" className="btn btn--regular btn--border btn--dark js-content-toggle-btn js-btn-selected js-manager-ignore js-btn" data-btn="border" data-togglecontent="new-business" data-router-disabled="" data-audio-enter="audio.hover" data-cursor="hide">
                   <span className="btn__inner js-btn-inner">
                     <span className="btn__content js-btn-content">
                       <span className="d-flex flex-row items-end">
                         <span className="btn__text">
-                          New Business
+                          Project
                         </span>
                         <svg className="btn__icon d-inline-block js-btn-icon">
                           <use href="#arrow"></use>
@@ -77,8 +77,8 @@ export function PersistentContent() {
                   <div className="mr-2@sm">
                     <span className="d-block t-uppercase t-base t-small@sm mb-0.25 t-center overflow-hidden t-left@sm">Hyper</span>
                     <p className="t-1.2 t-lh-1.3 t-center overflow-hidden t-left@sm">
-                      Interactive 3D<br />
-                      Motion and digital experiences
+                      Accounts-payable<br />
+                      exception resolution
                     </p>
                   </div>
                   <div>
