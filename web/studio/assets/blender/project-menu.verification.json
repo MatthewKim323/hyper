@@ -1,0 +1,16 @@
+{
+  "library": "project-menu.blend",
+  "reopened": true,
+  "bytes": 550675,
+  "counts": {
+    "objects": 3,
+    "meshes": 3,
+    "mesh_objects": 3,
+    "collections": 4,
+    "materials": 1,
+    "armatures": 0,
+    "actions": 0,
+    "vertices": 8562,
+    "polygons": 16542
+  }
+}

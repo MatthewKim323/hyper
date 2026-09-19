@@ -1,6 +1,6 @@
 .project-filters {
   margin-top: 0;
-  top: calc(env(safe-area-inset-top, 0px) + 6.5rem);
+  top: calc(env(safe-area-inset-top, 0px) + 1.5rem);
   padding-inline: 1rem;
   pointer-events: none;
 }
@@ -40,7 +40,7 @@
 
 @media (max-width: 767px) {
   .project-filters {
-    top: calc(env(safe-area-inset-top, 0px) + 5.5rem);
+    top: calc(env(safe-area-inset-top, 0px) + 1rem);
   }
 
   .project-filters__filter__list {

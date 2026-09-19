@@ -10,7 +10,7 @@ import { ensureProjects } from "../scenes/project-menu/projects-data";
 const $ = (sel: string, ctx: ParentNode = document) => ctx.querySelector(sel) as HTMLElement;
 const $$ = (sel: string, ctx: ParentNode = document) => Array.from(ctx.querySelectorAll(sel)) as HTMLElement[];
 
-type SectionKey = "overview" | "cases" | "evidence" | "activity" | "review";
+type SectionKey = "overview" | "cases" | "evidence" | "activity" | "review" | "timeline" | "benchmarks";
 
 export class ProjectFilters {
   static get selector() {
@@ -19,6 +19,7 @@ export class ProjectFilters {
 
   isAnimating = false;
   toggleOpen = false;
+  selectedSection: SectionKey = "overview";
   dom: {
     filterBtn: HTMLElement[];
     filter: HTMLElement;
@@ -56,6 +57,9 @@ export class ProjectFilters {
       this.dom.toggle.focus();
     }
     const t = target.dataset.filter as SectionKey;
+    this.selectedSection = t;
+    store.ProjectMenu.allowControl = t !== "timeline";
+    window.dispatchEvent(new CustomEvent("hyper:section-change", { detail: { section: t } }));
     if (this.hasProjects) E.emit("ProjectFilters:change", this.items[t]);
   };
 
@@ -66,7 +70,7 @@ export class ProjectFilters {
   };
 
   onResize = () => {
-    if (this.toggleOpen) store.ProjectMenu.allowControl = true;
+    if (this.toggleOpen) store.ProjectMenu.allowControl = this.selectedSection !== "timeline";
     this.reset();
     this.toggleOpen = false;
   };
@@ -87,7 +91,7 @@ export class ProjectFilters {
       chevron: $$(".js-project-filters\\:chevron"),
     };
     // These sections only select a shell state until workspace views are connected.
-    this.items = { overview: [], cases: [], evidence: [], activity: [], review: [] };
+    this.items = { overview: [], cases: [], evidence: [], activity: [], review: [], timeline: [], benchmarks: [] };
     E.on("click", this.dom.filterBtn, this.handleFilterClick);
     E.on("click", this.dom.toggle, this.manageDropdownState);
     E.on("click", this.dom.overlay, this.manageDropdownState);
@@ -141,7 +145,7 @@ export class ProjectFilters {
     this.tl.reverse();
     this.toggleOpen = false;
     this.dom.toggle.setAttribute("aria-expanded", "false");
-    store.ProjectMenu.allowControl = true;
+    store.ProjectMenu.allowControl = this.selectedSection !== "timeline";
   }
 
   reset() {

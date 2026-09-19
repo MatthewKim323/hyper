@@ -13,3 +13,4 @@ next-env.d.ts
 *.log
 public/media/
 *.blend1
+reference/

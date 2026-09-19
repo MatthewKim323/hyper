@@ -14,6 +14,7 @@ uniform sampler2D tLightingMatcap;
 uniform sampler2D tMatcap;
 uniform sampler2D tNormal;
 uniform float uNormalMapStrength;
+uniform vec3 uTint;
 uniform vec3 fogColor;
 uniform float fogNear;
 uniform float fogFar;
@@ -61,7 +62,7 @@ void main() {
 
     // vec3 diffuse = mix(diffuseColor.rgb, matcapColor * 1., 0.9);
     // vec3 diffuse = clamp(vec3(0.5) + matcapColor * 0.5, 0.0, 1.0);
-    vec3 diffuse = matcapColor.rgb;
+    vec3 diffuse = matcapColor.rgb * uTint;
     // diffuse += matcapLighting * 0.9;
     diffuse = clamp(diffuse, 0.0, 1.0);
 

@@ -1,24 +1,93 @@
-.loader.loader--minimal {
+/* Wipe loader: black field, white panel wipes to 70% then 100%, a black end panel
+   wipes over it, then the whole layer fades. Mark and counter sit above in difference blend. */
+.loader.loader--wipe {
   inset: 0;
-  display: grid;
-  place-items: center;
-  height: 100dvh;
+  display: block;
+  height: 100vh;
+  background: transparent;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.loader--wipe .lw-colors {
+  position: absolute;
+  inset: 0;
+}
+
+.loader--wipe .lw-white,
+.loader--wipe .lw-black,
+.loader--wipe .lw-end {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+
+.loader--wipe .lw-white {
+  left: 0;
+  width: 0%;
+  z-index: 2;
+  background: #fff;
+}
+
+.loader--wipe .lw-black {
+  right: 0;
+  width: 100%;
+  z-index: 1;
   background: #000;
 }
 
-.loader--minimal .intro-enter {
-  position: relative;
-  bottom: auto;
-  opacity: 1;
-  visibility: inherit;
+.loader--wipe .lw-end {
+  left: 0;
+  width: 0%;
+  z-index: 5;
+  background: #000;
 }
 
-.loader--minimal .intro-enter:disabled {
-  cursor: wait;
+.loader--wipe .lw-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  width: 121px;
+  height: 121px;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: difference;
 }
 
-.loader--minimal .intro-enter:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 6px;
-  border-radius: 2rem;
+.loader--wipe .lw-spin,
+.loader--wipe .lw-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.loader--wipe .lw-count {
+  position: absolute;
+  top: 50%;
+  left: 62px;
+  z-index: 4;
+  transform: translateY(-50%);
+  mix-blend-mode: difference;
+  color: #fff;
+  font-family: Neue Montreal, sans-serif;
+  font-size: 51px;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1em;
+  white-space: nowrap;
+}
+
+@media (max-width: 809.98px) {
+  .loader--wipe .lw-mark {
+    width: 80px;
+    height: 80px;
+  }
+
+  .loader--wipe .lw-count {
+    top: auto;
+    bottom: 170px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }

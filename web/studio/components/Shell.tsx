@@ -9,29 +9,27 @@ import Sprite from "./Sprite";
 // Cube faces reveal in DOM order 1,2,3,4,6,5, spelling HYPER followed by a separator.
 const CUBE = ["H", "Y", "P", "E", "·", "R"];
 
+// Starburst mark: 16 rays around an open center, drawn on a 121 unit grid.
+const RAYS = Array.from({ length: 16 }, (_, i) => i * 22.5);
+
 function Loader() {
   return (
-    <div className="loader loader--minimal js-loader">
-      <button
-        className="btn btn--regular btn--fill btn--light intro-enter js-manager-ignore js-btn js-enter-btn"
-        type="button"
-        data-btn="fill"
-        data-cursor="hide"
-        disabled
-        aria-busy="true"
-        aria-label="Enter"
-      >
-        <span className="btn__inner js-btn-inner">
-          <span className="btn__content js-btn-content">
-            <span className="d-flex flex-row items-end">
-              <span className="btn__text">Enter</span>
-              <svg className="btn__icon d-inline-block js-btn-icon">
-                <use href="#arrow"></use>
-              </svg>
-            </span>
-          </span>
-        </span>
-      </button>
+    <div className="loader loader--wipe js-loader" role="progressbar" aria-label="Loading" aria-valuemin={0} aria-valuemax={100}>
+      <div className="lw-colors js-loader-colors">
+        <div className="lw-white js-loader-white"></div>
+        <div className="lw-black"></div>
+        <div className="lw-end js-loader-end"></div>
+      </div>
+      <div className="lw-mark js-loader-mark">
+        <div className="lw-spin js-loader-mark-spin">
+          <svg viewBox="0 0 121 121" fill="none" aria-hidden="true">
+            {RAYS.map((deg) => (
+              <rect key={deg} x="57.5" y="0" width="6" height="43" fill="#fff" transform={`rotate(${deg} 60.5 60.5)`} />
+            ))}
+          </svg>
+        </div>
+      </div>
+      <div className="lw-count js-loader-count">0%</div>
     </div>
   );
 }
@@ -380,6 +378,8 @@ const WORKSPACE_SECTIONS: [string, string][] = [
   ["evidence", "Evidence"],
   ["activity", "Activity"],
   ["review", "Review"],
+  ["timeline", "Timeline"],
+  ["benchmarks", "Benchmarks"],
 ];
 
 // Post-main globals. Gl creates the CSS3D layer and appends it to <body>.
