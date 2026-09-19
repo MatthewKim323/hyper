@@ -1,55 +1,163 @@
-import { AdditiveBlending, BufferGeometry, DoubleSide, Float32BufferAttribute, Group, Mesh, Points, ShaderMaterial, Vector3 } from "three";
+import { AdditiveBlending, BufferGeometry, Float32BufferAttribute, Group, Mesh, Points, ShaderMaterial, UniformsLib, UniformsUtils, Vector3 } from "three";
 
-/** Depth-tested shafts follow light entering the actual rear windows. */
-export function createAtriumSunlight(sunDirection: Vector3) {
+type Aperture = { position: [number, number, number]; width: number };
+
+const shadowVertex = `
+  #include <common>
+  #include <logdepthbuf_pars_vertex>
+  #include <shadowmap_pars_vertex>
+  uniform vec3 uSunDirection;
+`;
+const shadowFragment = `
+  uniform bool receiveShadow;
+  #include <common>
+  #include <packing>
+  #include <logdepthbuf_pars_fragment>
+  #include <shadowmap_pars_fragment>
+  #include <shadowmask_pars_fragment>
+`;
+
+/** Layered scattering follows the exported sun through the carved apertures. */
+export function createAtriumSunlight(sunDirection: Vector3, apertures?: Aperture[]) {
   const group = new Group();
   group.name = "Window light and suspended dust";
   const time = { value: 0 };
+  const light = sunDirection.clone();
+  if (![light.x, light.y, light.z].every(Number.isFinite) || light.y < .001) light.set(12, 11.5, -25);
+  light.normalize();
+  const travel = light.clone().negate();
+  const windows = (apertures?.length ? apertures : [[-13.1, 2, 7.5], [-7.1, 2.9, 10.7], [0, 6, 13.3], [7.1, 2.9, 10.7], [13.1, 2, 7.5]].map(([x, width, apex]) => ({ position: [x, 7.45, apex - width * .3] as [number, number, number], width: width * .9 })))
+    .filter(window => window.position.every(Number.isFinite) && Number.isFinite(window.width) && window.width > 0 && window.position[2] > .5);
+
   const material = new ShaderMaterial({
-    transparent: true, depthWrite: false, side: DoubleSide, blending: AdditiveBlending,
-    uniforms: { uTime: time },
-    vertexShader: "varying vec2 vUv; varying vec3 vWorld; void main(){vUv=uv; vWorld=(modelMatrix*vec4(position,1.)).xyz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
-    fragmentShader: `varying vec2 vUv; varying vec3 vWorld; uniform float uTime;
-      void main(){
-        float edge=pow(max(0.,sin(vUv.x*3.14159265)),1.7);
-        float lengthFade=smoothstep(0.,.14,vUv.y)*(1.-smoothstep(.48,1.,vUv.y));
-        float bands=.72+.28*sin(vUv.x*27.+sin(vUv.y*8.+uTime*.13)*.22);
-        float viewFade=.65+.35*abs(normalize(cameraPosition-vWorld).z);
-        gl_FragColor=vec4(vec3(1.,.75,.53),edge*lengthFade*bands*viewFade*.065);
+    transparent: true, depthTest: true, depthWrite: false, blending: AdditiveBlending, lights: true,
+    uniforms: { ...UniformsUtils.clone(UniformsLib.lights), uTime: time, uSunDirection: { value: light } },
+    vertexShader: `${shadowVertex}
+      attribute float layerWeight;
+      varying vec2 vUv; varying vec3 vWorld; varying float vWeight;
+      void main() {
+        vUv=uv; vWeight=layerWeight;
+        vec4 worldPosition=modelMatrix*vec4(position,1.);
+        vWorld=worldPosition.xyz;
+        gl_Position=projectionMatrix*viewMatrix*worldPosition;
+        vec3 transformedNormal=mat3(viewMatrix)*uSunDirection;
+        #include <shadowmap_vertex>
+        #include <logdepthbuf_vertex>
+      }`,
+    fragmentShader: `${shadowFragment}
+      varying vec2 vUv; varying vec3 vWorld; varying float vWeight;
+      uniform float uTime; uniform vec3 uSunDirection;
+      float hash(vec3 p) {
+        p=fract(p*.1031); p+=dot(p,p.yzx+33.33);
+        return fract((p.x+p.y)*p.z);
+      }
+      float airNoise(vec3 p) {
+        vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
+        return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z);
+      }
+      void main() {
+        #include <logdepthbuf_fragment>
+        // Feather the ray bundle instead of repeating stripes across a window.
+        float across=abs(vUv.x*2.-1.);
+        float edge=(1.-smoothstep(.52,1.,across))*exp(-across*across*1.15);
+        float lengthFade=smoothstep(0.,.065,vUv.y)*(1.-smoothstep(.65,1.,vUv.y));
+        vec3 drift=vec3(uTime*.009,-uTime*.004,uTime*.003);
+        float density=.84+.16*airNoise(vWorld*.38+drift);
+        float cosine=dot(-uSunDirection,normalize(cameraPosition-vWorld));
+        // Forward scattering shares the source volume's anisotropy of .52.
+        float phase=.7296/pow(max(.08,1.2704-1.04*cosine),1.5);
+        phase=clamp(phase*.36,.28,1.35);
+        float scattering=edge*lengthFade*density*vWeight*phase*getShadowMask();
+        gl_FragColor=vec4(vec3(1.,.77,.58),scattering*.085);
         #include <tonemapping_fragment>
         #include <encodings_fragment>
       }`,
   });
-  const geometries: BufferGeometry[] = [];
-  const travel = sunDirection.clone().normalize().negate();
-  for (const [x, width, apex] of [[-13.1, 2, 7.5], [-7.1, 2.9, 10.7], [0, 6, 13.3], [7.1, 2.9, 10.7], [13.1, 2, 7.5]]) {
-    // Keep both upper corners inside the circular cap of the actual aperture.
-    const height = apex - width * .3;
-    const origin = new Vector3(x, height, -7.45);
-    const end = origin.clone().addScaledVector(travel, (height - .3) / -travel.y);
-    const geometry = new BufferGeometry();
-    const vertices = [origin.x-width*.45,origin.y,origin.z, origin.x+width*.45,origin.y,origin.z, end.x-width*.45,end.y,end.z, end.x+width*.45,end.y,end.z];
-    geometry.setAttribute("position", new Float32BufferAttribute(vertices, 3));
-    geometry.setAttribute("uv", new Float32BufferAttribute([0,0,1,0,0,1,1,1], 2));
-    geometry.setIndex([0,2,1,1,2,3]);
-    geometries.push(geometry);
-    const shaft = new Mesh(geometry, material); shaft.renderOrder = 4; group.add(shaft);
+
+  const positions: number[] = [], uvs: number[] = [], weights: number[] = [], indices: number[] = [];
+  // Three overlapping, weighted depth layers approximate an illuminated volume.
+  // All five apertures share one geometry and one draw call.
+  for (const window of windows) {
+    const [x, y, height] = window.position;
+    for (const [verticalOffset, widthScale, weight] of [[.06, .87, .30], [-.14, 1.02, .42], [-.35, 1.02, .28]]) {
+      const origin = new Vector3(x, height + verticalOffset * window.width, -y);
+      const length = Math.max(0, (origin.y - .08) / -travel.y);
+      const end = origin.clone().addScaledVector(travel, length);
+      const startWidth = window.width * widthScale * .5;
+      // The source sun subtends .85 degrees, creating a restrained penumbra.
+      const endWidth = startWidth + length * .0074;
+      const offset = positions.length / 3;
+      positions.push(origin.x - startWidth, origin.y, origin.z, origin.x + startWidth, origin.y, origin.z, end.x - endWidth, end.y, end.z, end.x + endWidth, end.y, end.z);
+      uvs.push(0, 0, 1, 0, 0, 1, 1, 1);
+      weights.push(weight, weight, weight, weight);
+      // Opposite winding supports reflected views without r143's transparent
+      // DoubleSide material issuing a separate render pass for each face.
+      indices.push(offset, offset + 2, offset + 1, offset + 1, offset + 2, offset + 3, offset, offset + 1, offset + 2, offset + 1, offset + 3, offset + 2);
+    }
   }
-  const dustGeometry = new BufferGeometry();
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+  geometry.setAttribute("layerWeight", new Float32BufferAttribute(weights, 1));
+  geometry.setIndex(indices);
+  const shafts = new Mesh(geometry, material);
+  shafts.name = "Sunlit aperture volumes";
+  shafts.receiveShadow = true;
+  shafts.renderOrder = 4;
+  group.add(shafts);
+
   const dustPositions: number[] = [];
   let seed = 319;
   const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-  for (let i = 0; i < 200; i++) dustPositions.push((random()-.5)*27,random()*10+.5,(random()-.5)*15);
+  for (let i = 0; i < 160 && windows.length; i++) {
+    const window = windows[i % windows.length];
+    const point = new Vector3(window.position[0] + (random() - .5) * window.width * .75, window.position[2] - random() * window.width * .45, -window.position[1]);
+    point.addScaledVector(travel, (point.y - .2) / -travel.y * (.08 + random() * .78));
+    dustPositions.push(point.x, point.y, point.z);
+  }
+  const dustGeometry = new BufferGeometry();
   dustGeometry.setAttribute("position", new Float32BufferAttribute(dustPositions, 3));
-  geometries.push(dustGeometry);
   const dustMaterial = new ShaderMaterial({
-    transparent: true, depthWrite: false, blending: AdditiveBlending,
-    uniforms: { uTime: time },
-    vertexShader: `uniform float uTime; varying float vLight;
-      void main(){vec3 p=position; p.x+=sin(uTime*.13+p.z)*.07; p.y+=sin(uTime*.19+p.x)*.1;
-      vec4 view=modelViewMatrix*vec4(p,1.); gl_Position=projectionMatrix*view; gl_PointSize=clamp(34./-view.z,1.,2.5); vLight=.25+.2*sin(p.x*3.+uTime*.5);}`,
-    fragmentShader: "varying float vLight; void main(){float point=1.-smoothstep(.08,.5,length(gl_PointCoord-.5)); gl_FragColor=vec4(1.,.89,.78,point*vLight);}",
+    transparent: true, depthTest: true, depthWrite: false, blending: AdditiveBlending, lights: true,
+    uniforms: { ...UniformsUtils.clone(UniformsLib.lights), uTime: time, uSunDirection: { value: light } },
+    vertexShader: `${shadowVertex}
+      uniform float uTime; varying float vLight;
+      void main() {
+        vec3 p=position;
+        p.x+=sin(uTime*.13+p.z)*.07; p.y+=sin(uTime*.19+p.x)*.1;
+        vec4 worldPosition=modelMatrix*vec4(p,1.);
+        vec4 view=viewMatrix*worldPosition;
+        gl_Position=projectionMatrix*view;
+        gl_PointSize=clamp(34./max(1.,-view.z),1.,2.);
+        vLight=.17+.11*sin(p.x*3.+uTime*.3);
+        vec3 transformedNormal=mat3(viewMatrix)*uSunDirection;
+        #include <shadowmap_vertex>
+        #include <logdepthbuf_vertex>
+      }`,
+    fragmentShader: `${shadowFragment}
+      varying float vLight;
+      void main() {
+        #include <logdepthbuf_fragment>
+        float point=1.-smoothstep(.06,.5,length(gl_PointCoord-.5));
+        gl_FragColor=vec4(1.,.86,.72,point*vLight*getShadowMask());
+        #include <tonemapping_fragment>
+        #include <encodings_fragment>
+      }`,
   });
-  group.add(new Points(dustGeometry, dustMaterial));
-  return { group, update(seconds: number) { time.value = seconds; }, dispose() { geometries.forEach(geometry => geometry.dispose()); material.dispose(); dustMaterial.dispose(); } };
+  const dust = new Points(dustGeometry, dustMaterial);
+  dust.name = "Dust within the sunlit air";
+  dust.receiveShadow = true;
+  group.add(dust);
+  let disposed = false;
+  return {
+    group,
+    // The caller supplies a frozen clock for reduced motion and hidden tabs.
+    update(seconds: number) { if (!disposed && Number.isFinite(seconds)) time.value = seconds; },
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      geometry.dispose(); dustGeometry.dispose(); material.dispose(); dustMaterial.dispose();
+      group.clear();
+    },
+  };
 }

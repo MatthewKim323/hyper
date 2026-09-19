@@ -23,7 +23,7 @@ def linear(value):
 
 
 def color(rgb, variation=1.0):
-    return tuple(linear(min(1.0, max(0.0, value * variation))) * 0.65 for value in rgb) + (1.0,)
+    return tuple(linear(min(1.0, max(0.0, value * variation))) * 0.85 for value in rgb) + (1.0,)
 
 
 def height_at(x, y):
@@ -56,16 +56,24 @@ def material(name, roughness, subsurface=0.0):
     if "earth" in name or "canopies" in name:
         coordinates = nodes.new("ShaderNodeTexCoord")
         grain = nodes.new("ShaderNodeTexNoise")
-        grain.inputs["Scale"].default_value = 18 if "earth" in name else 35
+        grain.inputs["Scale"].default_value = 30 if "earth" in name else 90
         grain.inputs["Detail"].default_value = 3
         grain.inputs["Roughness"].default_value = 0.7
         result.node_tree.links.new(coordinates.outputs["Object"], grain.inputs["Vector"])
         bump = nodes.new("ShaderNodeBump")
-        bump.inputs["Strength"].default_value = 0.65
-        bump.inputs["Distance"].default_value = 0.075 if "earth" in name else 0.022
+        bump.inputs["Strength"].default_value = 0.35 if "earth" in name else 0.2
+        bump.inputs["Distance"].default_value = 0.016 if "earth" in name else 0.0013
         result.node_tree.links.new(grain.outputs["Fac"], bump.inputs["Height"])
         result.node_tree.links.new(bump.outputs["Normal"], shader.inputs["Normal"])
     result.node_tree.links.new(shader.outputs["BSDF"], output.inputs["Surface"])
+    if "petals" in name or "canopies" in name:
+        translucent = nodes.new("ShaderNodeBsdfTranslucent")
+        result.node_tree.links.new(vertex.outputs["Color"], translucent.inputs["Color"])
+        mix = nodes.new("ShaderNodeMixShader")
+        mix.inputs[0].default_value = .35 if "petals" in name else .20
+        result.node_tree.links.new(shader.outputs[0], mix.inputs[1])
+        result.node_tree.links.new(translucent.outputs[0], mix.inputs[2])
+        result.node_tree.links.new(mix.outputs[0], output.inputs["Surface"])
     result["runtime_surface"] = "foliage"
     result["vertex_color_attribute"] = COLOR_ATTRIBUTE
     result.diffuse_color = color((0.85, 0.56, 0.68))
@@ -90,110 +98,193 @@ def mesh(name, vertices, faces, colors, surface):
     return obj
 
 
-def build_landscape(seed=20260919):
-    """Create a coherent garden without per-bush objects or texture downloads."""
+def _patch_tint(x, y, rng, leaf=False):
+    """Low-frequency color families avoid random candy-colored confetti."""
+    mix = 0.5 + 0.5 * noise.noise(Vector((x * 0.12, y * 0.10, 3.7)))
+    rose = (0.91, 0.72, 0.78) if not leaf else (0.59, 0.46, 0.51)
+    lilac = (0.78, 0.69, 0.84) if not leaf else (0.54, 0.48, 0.60)
+    tint = tuple(a * (1 - mix) + b * mix for a, b in zip(rose, lilac))
+    depth = min(0.62, max(0.0, (y - 23.0) / 75.0))
+    horizon = (0.87, 0.80, 0.85) if not leaf else (0.73, 0.66, 0.73)
+    tint = tuple(a * (1 - depth) + b * depth for a, b in zip(tint, horizon))
+    variation = rng.uniform(0.94, 1.055)
+    return tuple(min(1.0, channel * variation) for channel in tint)
+
+
+def _plant_positions(count, near, far, rng, wall_y, camera_y, opening_scale, surface_height):
+    """Sample the true five-window sight lines instead of wasting distant detail.
+
+    The vertical distribution is stratified and the transverse sequence is
+    low-discrepancy, avoiding both visible rows and random bare patches.
+    """
+    apertures = ((-13.1, 2.0), (-7.1, 2.9), (0, 6.0), (7.1, 2.9), (13.1, 2.0))
+    apertures = tuple((x * opening_scale, width * opening_scale) for x, width in apertures)
+    total_width = sum(width for _, width in apertures)
+    golden = 0.6180339887498949
+    shift = rng.random()
+    for index in range(count):
+        # A stratified permutation breaks the horizon into overlapping depths.
+        fraction = (index + rng.random()) / count
+        y = math.sqrt((near - camera_y) ** 2 + fraction * ((far - camera_y) ** 2 - (near - camera_y) ** 2)) + camera_y
+        transverse = ((index * golden + shift + rng.uniform(-0.005, 0.005)) % 1) * total_width
+        for arch_x, arch_width in apertures:
+            if transverse <= arch_width:
+                x = (arch_x + (transverse / arch_width - 0.5) * arch_width * 1.16) * (y - camera_y) / (wall_y - camera_y)
+                break
+            transverse -= arch_width
+        z = surface_height(x, y)
+        # Move the few plants on the central water inlet up its riverbank.
+        if z < 0.035:
+            for _ in range(12):
+                y += 0.6
+                z = surface_height(x, y)
+                if z >= 0.035:
+                    break
+        yield Vector((x, y, z - 0.012))
+
+
+def build_landscape(seed=20260919, wall_y=8.0, camera_y=-21.0, opening_scale=1.0, height_scale=1.0):
+    """Build 43,000 botanical sprigs as three merged, vertex-colored meshes.
+
+    Near silhouettes contain cupped petals, crossed stems, and pointed leaves.
+    Far silhouettes simplify those same floral parts. No spheres or rock-like
+    canopy islands are used. The landscape totals 500,000 triangles.
+    """
     rng = random.Random(seed)
-    earth = material(MATERIAL_NAMES[0], 0.92)
-    canopy = material(MATERIAL_NAMES[1], 0.84, 0.045)
-    petal = material(MATERIAL_NAMES[2], 0.72, 0.08)
+    depth_offset = wall_y - 8.0
+    def surface_height(x, y):
+        return height_at(x / opening_scale, y - depth_offset) * height_scale
+    earth = material(MATERIAL_NAMES[0], 0.94)
+    canopy = material(MATERIAL_NAMES[1], 0.85, 0.055)
+    petal = material(MATERIAL_NAMES[2], 0.77, 0.12)
+    petal_shader = petal.node_tree.nodes.get("Principled BSDF")
+    if petal_shader:
+        petal_shader.inputs["Subsurface Radius"].default_value = (0.025, 0.016, 0.01)
+        petal_shader.inputs["Transmission Weight"].default_value = 0.06
+        petal_shader.inputs["IOR"].default_value = 1.35
 
     vertices, faces, colors = [], [], []
     nx, ny = 100, 40
     for j in range(ny + 1):
-        y = 9.0 + 65.0 * j / ny
+        y = depth_offset + 9.0 + 65.0 * j / ny
         for i in range(nx + 1):
-            x = -50 + 100 * i / nx
-            vertices.append((x, y, height_at(x, y)))
-            wash = 0.5 + 0.5 * noise.noise(Vector((x * 0.18, y * 0.18, 4.1)))
-            colors.append(color((0.63 + wash * 0.12, 0.49 + wash * 0.12, 0.52 + wash * 0.12)))
+            x = (-50 + 100 * i / nx) * opening_scale
+            vertices.append((x, y, surface_height(x, y)))
+            wash = 0.5 + 0.5 * noise.noise(Vector((x * 0.32, y * 0.27, 4.1)))
+            # A muted understory rather than bare pink soil between flower heads.
+            tint = (0.68 + wash * 0.10, 0.54 + wash * 0.12, 0.62 + wash * 0.11)
+            depth = min(0.50, max(0.0, (y - 25) / 90))
+            colors.append(color(tuple(c * (1 - depth) + h * depth for c, h in zip(tint, (0.80, 0.72, 0.81)))))
     for j in range(ny):
         for i in range(nx):
             index = j * (nx + 1) + i
             faces.append((index, index + 1, index + nx + 2, index + nx + 1))
     ground = mesh("Landscape | rolling rose garden ridges", vertices, faces, colors, earth)
 
-    # Smooth, low-domed ellipsoids give the garden a flowering canopy silhouette.
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=1)
-    prototype = bpy.context.object
-    ico_vertices = [vertex.co.copy() for vertex in prototype.data.vertices]
-    ico_faces = [tuple(face.vertices) for face in prototype.data.polygons]
-    bpy.data.objects.remove(prototype, do_unlink=True)
-    bush_vertices, bush_faces, bush_colors = [], [], []
-    bloom_vertices, bloom_faces, bloom_colors = [], [], []
-    canopy_palette = ((0.68, 0.48, 0.56), (0.76, 0.55, 0.61), (0.68, 0.53, 0.66), (0.83, 0.65, 0.71), (0.75, 0.58, 0.69))
-    petal_palette = ((0.94, 0.75, 0.81), (0.98, 0.82, 0.85), (0.84, 0.72, 0.88), (0.91, 0.71, 0.79), (0.91, 0.80, 0.94))
+    plant_v, plant_f, plant_c = [], [], []
+    petal_v, petal_f, petal_c = [], [], []
 
-    # Jittered rows avoid large accidental holes while breaking any orchard grid.
-    for row in range(60):
-        for column in range(70):
-            x = -38 + (column + rng.uniform(-0.30, 0.30)) * 76 / 69
-            y = 24.5 + (row + rng.uniform(-0.30, 0.30)) * 43 / 59
-            radius = rng.uniform(0.18, 0.28)
-            tall = radius * rng.uniform(0.58, 0.95)
-            center = Vector((x, y, height_at(x, y) + tall * 0.30))
+    def triangle(target, points, tint, factors=(0.86, 1.0, 1.025)):
+        out_v, out_f, out_c = target
+        index = len(out_v)
+        out_v.extend(tuple(point) for point in points)
+        out_f.append((index, index + 1, index + 2))
+        out_c.extend(color(tint, factor) for factor in factors)
+
+    def quad(target, points, tint, factors=(0.84, 0.97, 1.035, 0.98)):
+        out_v, out_f, out_c = target
+        index = len(out_v)
+        out_v.extend(tuple(point) for point in points)
+        out_f.extend(((index, index + 1, index + 2), (index, index + 2, index + 3)))
+        out_c.extend(color(tint, factor) for factor in factors)
+
+    stems = (plant_v, plant_f, plant_c)
+    petals = (petal_v, petal_f, petal_c)
+    tiers = (
+        # count, depth bounds, head radius, stem height, silhouette detail
+        (21000, 13.0, 31.0, (0.055, 0.095), (0.12, 0.27), "near"),
+        (12000, 31.0, 49.0, (0.070, 0.115), (0.16, 0.30), "middle"),
+        (10000, 49.0, 73.5, (0.085, 0.14), (0.08, 0.15), "far"),
+    )
+    for count, near, far, radii, heights, detail in tiers:
+        for base in _plant_positions(count, near + depth_offset, far + depth_offset, rng, wall_y, camera_y, opening_scale, surface_height):
+            x, y, z = base
             phase = rng.uniform(0, math.tau)
-            swatch = rng.choice(canopy_palette)
-            offset = len(bush_vertices)
-            for point in ico_vertices:
-                # Uniform smooth normals and modest asymmetry, never cone tips.
-                px = point.x * math.cos(phase) - point.y * math.sin(phase)
-                py = point.x * math.sin(phase) + point.y * math.cos(phase)
-                scale = rng.uniform(0.94, 1.06)
-                bush_vertices.append(tuple(center + Vector((px * radius * scale, py * radius * 0.9 * scale, point.z * tall * scale))))
-                bush_colors.append(color(swatch, 0.92 + 0.12 * (point.z + 1) / 2))
-            bush_faces.extend(tuple(offset + index for index in face) for face in ico_faces)
+            radius = rng.uniform(*radii) * opening_scale
+            height = rng.uniform(*heights) * opening_scale
+            # Small lateral bends and layered heights keep the field organic.
+            lean = Vector((math.cos(phase), math.sin(phase), 0))
+            head = base + lean * height * rng.uniform(0.12, 0.32) + Vector((0, 0, height))
+            normal = Vector((rng.uniform(-0.35, 0.35), rng.uniform(-0.85, -0.25), rng.uniform(0.75, 1.15))).normalized()
+            u = normal.cross(Vector((0, 1, 0))).normalized()
+            v = normal.cross(u).normalized()
+            tint = _patch_tint(x, y, rng)
+            foliage_tint = _patch_tint(x, y, rng, leaf=True)
 
-            # Small five-petal flower heads punctuate the distant canopy. These remain actual
-            # geometry in the unified Blender file and the exported live scene.
-            for bloom in range(1 if (row * 70 + column) % 4 == 0 else 0):
-                a = phase + bloom * 2.5
-                head = center + Vector((math.cos(a) * radius * 0.42, math.sin(a) * radius * 0.42, tall * 0.73))
-                normal = Vector((rng.uniform(-0.30, 0.30), rng.uniform(-0.65, -0.15), 1)).normalized()
-                u = normal.cross(Vector((0, 1, 0))).normalized()
-                v = normal.cross(u).normalized()
-                size = rng.uniform(0.065, 0.10)
-                tint = rng.choice(petal_palette)
-                for petal_index in range(5):
-                    angle = phase + petal_index * math.tau / 5
-                    radial = u * math.cos(angle) + v * math.sin(angle)
-                    across = -u * math.sin(angle) + v * math.cos(angle)
-                    offset = len(bloom_vertices)
-                    blossom = (
-                        head + radial * size * 0.06,
-                        head + radial * size * 0.58 - across * size * 0.30 + normal * size * 0.10,
-                        head + radial * size + normal * size * 0.28,
-                        head + radial * size * 0.58 + across * size * 0.30 + normal * size * 0.10,
-                    )
-                    bloom_vertices.extend(tuple(point) for point in blossom)
-                    bloom_colors.extend(color(tint, factor) for factor in (0.80, 0.96, 1.04, 0.96))
-                    bloom_faces.extend(((offset, offset + 1, offset + 2), (offset, offset + 2, offset + 3)))
+            for petal_index in range(5):
+                angle = phase + petal_index * math.tau / 5
+                radial = u * math.cos(angle) + v * math.sin(angle)
+                across = -u * math.sin(angle) + v * math.cos(angle)
+                petal_length = radius * rng.uniform(0.91, 1.07)
+                cup = radius * rng.uniform(0.12, 0.24)
+                if detail == "near":
+                    quad(petals, (
+                        head - normal * radius * 0.04,
+                        head + radial * petal_length * 0.60 - across * radius * 0.47 + normal * cup * 0.25,
+                        head + radial * petal_length + normal * cup,
+                        head + radial * petal_length * 0.60 + across * radius * 0.47 + normal * cup * 0.25,
+                    ), tint)
+                else:
+                    triangle(petals, (
+                        head - normal * radius * 0.04,
+                        head + radial * petal_length * 0.83 - across * radius * 0.47 + normal * cup,
+                        head + radial * petal_length + across * radius * 0.30 + normal * cup * 0.75,
+                    ), tint)
 
-    # Fine vegetation on the visible near slopes, placed inside the five
-    # window sight lines. Its scale stays tiny even beside the nearest arches.
-    for arch_x, arch_width in ((-13.1, 2.0), (-7.1, 2.9), (0, 6.0), (7.1, 2.9), (13.1, 2.0)):
-        for _ in range(180):
-            y = rng.uniform(14.0, 24.0)
-            perspective = (y + 21.0) / 29.0
-            x = (arch_x + rng.uniform(-arch_width * 0.58, arch_width * 0.58)) * perspective
-            radius = rng.uniform(0.08, 0.13)
-            tall = radius * rng.uniform(0.65, 1.0)
-            center = Vector((x, y, height_at(x, y) + tall * 0.25))
-            swatch = rng.choice(canopy_palette)
-            offset = len(bush_vertices)
-            phase = rng.uniform(0, math.tau)
-            for point in ico_vertices:
-                px = point.x * math.cos(phase) - point.y * math.sin(phase)
-                py = point.x * math.sin(phase) + point.y * math.cos(phase)
-                bush_vertices.append(tuple(center + Vector((px * radius, py * radius * 0.9, point.z * tall))))
-                bush_colors.append(color(swatch, 0.94 + 0.10 * (point.z + 1) / 2))
-            bush_faces.extend(tuple(offset + index for index in face) for face in ico_faces)
+            if detail == "near":
+                # Two crossed tapered strips keep even thin stems visible from
+                # the camera and its water reflection without alpha textures.
+                for axis in (Vector((1, 0, 0)), Vector((0, 1, 0))):
+                    thickness = rng.uniform(0.0025, 0.0040)
+                    quad(stems, (base - axis * thickness, base + axis * thickness, head + axis * thickness * 0.35, head - axis * thickness * 0.35), foliage_tint, (0.76, 0.78, 0.95, 0.94))
+                leaf_base = base + (head - base) * 0.42
+                leaf_axis = lean * radius * 1.45 + Vector((0, 0, radius * 0.30))
+                side = Vector((-lean.y, lean.x, 0)) * radius * 0.23
+                quad(stems, (leaf_base, leaf_base + leaf_axis * 0.5 - side, leaf_base + leaf_axis, leaf_base + leaf_axis * 0.5 + side), foliage_tint)
+            elif detail == "middle":
+                triangle(stems, (base - u * 0.003, base + u * 0.003, head), foliage_tint)
+                leaf_base = base + (head - base) * 0.40
+                tip = leaf_base + lean * radius * 1.20 + Vector((0, 0, radius * 0.2))
+                side = Vector((-lean.y, lean.x, 0)) * radius * 0.22
+                quad(stems, (leaf_base, (leaf_base + tip) * 0.5 - side, tip, (leaf_base + tip) * 0.5 + side), foliage_tint)
+            else:
+                # A tiny ivory core separates overlapping distant florets.
+                triangle(petals, (head + u * radius * 0.15, head - u * radius * 0.10 + v * radius * 0.12, head - u * radius * 0.10 - v * radius * 0.12), (0.92, 0.84, 0.83))
 
-    shrubs = mesh("Landscape | layered lilac flowering canopies", bush_vertices, bush_faces, bush_colors, canopy)
-    flowers = mesh("Landscape | blush five petal blossoms", bloom_vertices, bloom_faces, bloom_colors, petal)
-    ground["ridge_height_m"] = 3.0
-    shrubs["canopies"] = 5100
-    flowers["blossoms"] = 1050
+    shrubs = mesh("Landscape | layered lilac flowering canopies", plant_v, plant_f, plant_c, canopy)
+    flowers = mesh("Landscape | blush five petal blossoms", petal_v, petal_f, petal_c, petal)
+    ground["ridge_height_m"] = 3.0 * height_scale
+    ground["wall_y"] = wall_y
+    ground["opening_scale"] = opening_scale
+    shrubs["botanical_stems"] = 33000
+    shrubs["botanical_leaves"] = 33000
+    flowers["blossoms"] = 43000
+    flowers["petals"] = 215000
+    flowers["depth_bands"] = "21000 near, 12000 middle, 10000 far"
     return {"ground": ground, "canopies": shrubs, "blossoms": flowers}
+
+
+def replace_landscape(scene=None, seed=20260919, wall_y=8.0, camera_y=-21.0, opening_scale=1.0, height_scale=1.0):
+    """Replace only garden objects in an already loaded scene; never save it.
+
+    This does not change lights, world, stations, camera, or other materials.
+    Call the separate scene material/lighting refinement after this function.
+    """
+    scene = scene or bpy.context.scene
+    for obj in list(scene.objects):
+        if obj.name.startswith("Landscape | "):
+            bpy.data.objects.remove(obj, do_unlink=True)
+    return build_landscape(seed=seed, wall_y=wall_y, camera_y=camera_y, opening_scale=opening_scale, height_scale=height_scale)
 
 
 def refine_arch_lighting(scene):

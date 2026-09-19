@@ -1,16 +1,19 @@
-import { ACESFilmicToneMapping, AmbientLight, Box3, Color, DirectionalLight, Fog, Group, HemisphereLight, Material, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, Plane, PointLight, Raycaster, Scene, sRGBEncoding, Texture, Vector2, Vector3, WebGLRenderer } from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { ACESFilmicToneMapping, AmbientLight, Box3, Color, DirectionalLight, Fog, Group, HemisphereLight, Material, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, Plane, PointLight, Raycaster, Scene, ShaderChunk, sRGBEncoding, Texture, Vector2, Vector3, WebGLRenderer } from "three";
+import { createAtriumGeometryLoader } from "./geometry-loader";
 import { createAtriumAtmosphere } from "./atmosphere";
 import { createAtriumWater } from "./water";
 import { createAtriumSunlight } from "./sunlight";
 import { createAtriumPipeline } from "./rendering";
+import { createEtherealInteraction } from "./ethereal";
 import { layoutAtriumStations } from "./layout";
 import type { AtriumStation } from "./configuration";
 
 export type AtriumManifest = {
   width: number; height: number;
   camera: { position: [number, number, number]; target: [number, number, number]; lens: number; sensorWidth: number };
-  templates: { id: string; url: string; width?: number; height?: number; labelHeight?: number }[];
+  sunDirection?: [number, number, number];
+  windows?: { position: [number, number, number]; width: number }[];
+  templates: { id: string; url: string; width?: number; height?: number; labelHeight?: number; labelSize?: number; arrowHeight?: number }[];
 };
 export type StationBounds = { station: AtriumStation; depth: number; left: number; top: number; width: number; height: number; labelLeft: number; labelTop: number; arrowTop: number; fontWidth: number };
 export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; dispose(): void };
@@ -43,13 +46,13 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   camera.position.copy(homePosition);
   camera.lookAt(homeTarget);
   camera.updateMatrixWorld();
-  scene.add(new AmbientLight(0xffe9dd, .12), new HemisphereLight(0xf2ecff, 0x9f7769, .35));
-  const sun = new DirectionalLight(0xffe6d5, 2.4);
-  sun.position.set(8, 13, -12);
+  scene.add(new AmbientLight(0xffe9dd, .04), new HemisphereLight(0xf2ecff, 0x9f7769, .22));
+  const sun = new DirectionalLight(0xffe6d5, 3.1);
   sun.target.position.set(1, 0, -3);
+  sun.position.copy(manifest.sunDirection ? fromBlender(manifest.sunDirection).normalize().multiplyScalar(65).add(sun.target.position) : new Vector3(8, 13, -12));
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, { left: -22, right: 22, top: 18, bottom: -18, near: .5, far: 65 });
+  Object.assign(sun.shadow.camera, { left: -36, right: 36, top: 38, bottom: -38, near: .5, far: 150 });
   sun.shadow.normalBias = .025;
   sun.shadow.bias = -.0002;
   sun.shadow.radius = 3;
@@ -58,7 +61,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const atmosphere = createAtriumAtmosphere(renderer, sunDirection);
   scene.add(atmosphere.sky);
   scene.environment = atmosphere.environment;
-  const fill = new DirectionalLight(0xdedfff, .52);
+  const fill = new DirectionalLight(0xffd8c2, .42);
   fill.position.set(8, 5, 10);
   scene.add(fill);
   const rim = new DirectionalLight(0xffdccc, .4);
@@ -69,13 +72,15 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   scene.add(pearlLight);
   const water = createAtriumWater({ reflectionSize: 512, sunDirection });
   scene.add(water.group);
-  const sunlight = createAtriumSunlight(sunDirection);
+  const sunlight = createAtriumSunlight(sunDirection, manifest.windows);
   scene.add(sunlight.group);
+  const ethereal = createEtherealInteraction();
+  scene.add(ethereal.group);
   const stationsGroup = new Group();
   scene.add(stationsGroup);
   const pipeline = createAtriumPipeline(renderer, scene, camera);
   const modelCache = new Map<string, Promise<Object3D>>();
-  const loader = new GLTFLoader();
+  const loader = createAtriumGeometryLoader();
   let room: Object3D | null = null;
   let disposed = false;
   let ready = false;
@@ -103,7 +108,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const orbit = new Group();
   orbit.position.set(0, 3.07, -1.5);
   scene.add(orbit);
-  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; glass: Group; icon: Group; hover: { value: number }; velocity: number; phase: number };
+  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; glass: Group; icon: Group; hover: { value: number }; velocity: number; phase: number };
   let instances: Instance[] = [];
 
   function prepareCrystal(model: Object3D, hover: { value: number }) {
@@ -135,11 +140,15 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
             float phase = vCrystalWorld.y * 1.4 + vCrystalWorld.x * 0.28 - uCrystalTime * 0.38;
             float caustic = pow(0.5 + 0.5 * sin(phase), 18.0);
             outgoingLight += vec3(1.0, 0.88, 0.78) * rim * (0.095 + uCrystalHover * 0.22 + caustic * 0.05);
-            outgoingLight += vec3(1.0,.79,.66) * exp(-max(0.,vCrystalWorld.y-.48)*2.8) * .13;
+            outgoingLight += vec3(1.0,.79,.66) * exp(-max(0.,vCrystalWorld.y-.48)*2.1) * .20;
             #include <output_fragment>
           `);
+          if (/optically clear/.test(material.name)) {
+            shader.fragmentShader = shader.fragmentShader.replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor=mix(.095,.028,smoothstep(.48,1.6,vCrystalWorld.y));");
+            shader.fragmentShader = shader.fragmentShader.replace("#include <transmission_fragment>", ShaderChunk.transmission_fragment.replace("float transmissionFactor = transmission;", "float transmissionFactor = transmission * mix(.65,1.,smoothstep(.48,2.4,vCrystalWorld.y));"));
+          }
         };
-        material.customProgramCacheKey = () => "hyper-crystal-fresnel-v1";
+        material.customProgramCacheKey = () => /optically clear/.test(material.name) ? "hyper-crystal-glass-v3" : "hyper-crystal-edge-v3";
         return material;
       };
       object.material = Array.isArray(object.material) ? object.material.map(polish) : polish(object.material);
@@ -190,7 +199,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
 
   function bounds() {
     if (disposed) return;
-    onBounds(instances.map(({ station, model, scale, labelHeight }) => {
+    onBounds(instances.map(({ station, model, scale, labelHeight, labelSize, arrowHeight }) => {
       const box = new Box3().setFromObject(model);
       const points = [];
       for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) points.push(new Vector3(x, y, z).project(camera));
@@ -199,8 +208,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const right = Math.min(1, Math.max(...points.map(point => (point.x + 1) / 2)));
       const bottom = Math.min(1, Math.max(...points.map(point => (1 - point.y) / 2)));
       const label = new Vector3(model.position.x, labelHeight * scale, model.position.z + 0.15 * scale).project(camera);
-      const arrow = new Vector3(model.position.x, 0.86 * scale, model.position.z + 0.15 * scale).project(camera);
-      const letter = new Vector3(model.position.x, (labelHeight + 0.21) * scale, model.position.z + 0.15 * scale).project(camera);
+      const arrow = new Vector3(model.position.x, arrowHeight * scale, model.position.z + 0.15 * scale).project(camera);
+      const letter = new Vector3(model.position.x, (labelHeight + labelSize) * scale, model.position.z + 0.15 * scale).project(camera);
       const width = Math.max(0.001, right - left);
       const height = Math.max(0.001, bottom - top);
       return { station, depth: model.position.distanceTo(camera.position), left, top, width, height, labelLeft: ((label.x + 1) / 2 - left) / width, labelTop: ((1 - label.y) / 2 - top) / height, arrowTop: ((1 - arrow.y) / 2 - top) / height, fontWidth: Math.abs(letter.y - label.y) / 2 / ratio };
@@ -230,6 +239,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     water.update(elapsed, delta);
     atmosphere.update(elapsed);
     sunlight.update(elapsed);
+    ethereal.update(elapsed, delta);
     animateCrystals(delta);
     animateRoom(delta);
     if (++renderedFrames % 4 === 0) bounds();
@@ -272,10 +282,12 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
           if (/\| (title|enter)/i.test(objectName(object))) object.visible = false;
           const tune = (material: Material) => {
             if (material instanceof MeshPhysicalMaterial && (material.transmission > 0.7 || /optically clear/.test(material.name))) {
-              material.transmission = 1;
+              material.transmission = .90;
               material.roughness = 0.065;
-              material.ior = 1.43;
-              material.thickness = 0.16;
+              material.ior = 1.46;
+              material.thickness = 0.35;
+              material.attenuationColor = new Color(0xffe5d6);
+              material.attenuationDistance = 2.5;
               material.clearcoat = 0.5;
               material.envMapIntensity = 0.7;
               material.color = new Color(0xfff7f1);
@@ -307,8 +319,13 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
         stationsGroup.add(model);
         const hover = { value: 0 };
         const motion = prepareCrystal(model, hover);
-        return { station: placement.station, model, scale: placement.scale, hover, velocity: 0, phase: index * 1.67, ...motion, labelHeight: manifest.templates.find(template => template.id === placement.station.template)?.labelHeight ?? 1.42 };
+        const template = manifest.templates.find(template => template.id === placement.station.template);
+        return { station: placement.station, model, scale: placement.scale, hover, velocity: 0, phase: index * 1.67, ...motion, labelHeight: template?.labelHeight ?? 1.42, labelSize: template?.labelSize ?? .21, arrowHeight: template?.arrowHeight ?? .86 };
       });
+      ethereal.setStations(instances.map(instance => {
+        const template = manifest.templates.find(entry => entry.id === instance.station.template);
+        return { id: instance.station.id, position: instance.model.position.clone(), width: (template?.width ?? 2.2) * instance.scale, height: (template?.height ?? 4) * instance.scale };
+      }));
       scene.updateMatrixWorld(true);
       bounds();
       render();
@@ -317,11 +334,14 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     setPaused(value) {
       paused = value;
       water.setPaused(value);
+      ethereal.update(elapsed, 0, value);
       if (value) { animateCrystals(0, true); animateRoom(0, true); bounds(); }
       resume();
     },
     setHover(id, x = 0, y = 0) {
       hovered = id;
+      canvas.dataset.hoverStation = id ?? "";
+      ethereal.setHover(id);
       hoverPointer.set(Math.max(-1, Math.min(1, x)), Math.max(-1, Math.min(1, y)));
       if (paused) { animateCrystals(0, true); render(); }
     },
@@ -351,12 +371,14 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       canvas.dataset.ready = "false";
       instanceMaterials.forEach(material => material.dispose());
       modelCache.forEach(pending => { void pending.then(disposeModel).catch(() => {}); });
+      loader.dispose();
       if (room) disposeModel(room);
       orbit.traverse(object => { if (object instanceof Mesh) { object.geometry.dispose(); (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => material.dispose()); } });
       sun.shadow.map?.dispose();
       atmosphere.dispose();
       water.dispose();
       sunlight.dispose();
+      ethereal.dispose();
       pipeline.dispose();
       renderer.dispose();
     },

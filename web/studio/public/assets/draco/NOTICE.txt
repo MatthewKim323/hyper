@@ -1,0 +1,16 @@
+Draco glTF decoder runtime
+
+These three decoder files are copied without modification from the installed
+Three.js 0.143.0 distribution at examples/js/libs/draco/gltf/.
+The bundled Draco README identifies its license as Apache License 2.0.
+A complete local copy of those standard license terms is included.
+The Three.js distribution license is also included.
+
+Upstream Draco: https://github.com/google/draco
+Upstream license: https://github.com/google/draco/blob/master/LICENSE
+Three.js: https://github.com/mrdoob/three.js
+
+Runtime files:
+- draco_decoder.js (JavaScript fallback)
+- draco_wasm_wrapper.js
+- draco_decoder.wasm

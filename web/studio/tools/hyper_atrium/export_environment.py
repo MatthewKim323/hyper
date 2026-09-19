@@ -110,6 +110,8 @@ for material in sorted(materials, key=lambda item: item.name):
         vertex_color = link.to_node == shader and link.to_socket.name == 'Base Color' and link.from_node.type == 'VERTEX_COLOR'
         if (link.to_node == shader and not vertex_color) or (link.to_node.type == 'OUTPUT_MATERIAL' and link.to_socket.name == 'Volume'):
             material.node_tree.links.remove(link)
+    for output in (node for node in material.node_tree.nodes if node.type == 'OUTPUT_MATERIAL'):
+        material.node_tree.links.new(shader.outputs['BSDF'], output.inputs['Surface'])
     material_records.append({'name': material.name, 'principled': values, 'runtimeSurface': 'foliage' if material.get('runtime_surface') == 'foliage' else 'pearl' if 'pearl' in material.name or 'quartz' in material.name else 'marble' if 'limestone' in material.name else 'metal' if 'metal' in material.name else 'emissive' if 'seam light' in material.name else 'glass', 'vertexColorAttribute': material.get('vertex_color_attribute')})
 
 camera = scene.camera
@@ -125,7 +127,15 @@ for obj in objects:
     obj.select_set(True)
 bpy.context.view_layer.objects.active = objects[0]
 bpy.context.view_layer.update()
-result = bpy.ops.export_scene.gltf(filepath=str(OUTPUT / 'environment.glb'), export_format='GLB', use_selection=True, export_apply=True, export_yup=True, export_cameras=False, export_lights=False, export_animations=False, export_extras=True)
+result = bpy.ops.export_scene.gltf(
+    filepath=str(OUTPUT / 'environment.glb'), export_format='GLB', use_selection=True,
+    export_apply=True, export_yup=True, export_cameras=False, export_lights=False,
+    export_animations=False, export_extras=True,
+    export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=6,
+    export_draco_position_quantization=20, export_draco_normal_quantization=12,
+    export_draco_texcoord_quantization=12, export_draco_color_quantization=12,
+    export_draco_generic_quantization=12,
+)
 if result != {'FINISHED'}:
     raise RuntimeError('Environment GLB export failed')
 
@@ -143,7 +153,7 @@ record = {
     'url': '/assets/hyper-atrium/environment.glb',
     'source': 'assets/blender/hyper-atrium/hyper-atrium.blend',
     'coordinates': {'source': 'Blender Z-up meters', 'glb': 'glTF Y-up meters', 'conversion': '[x, z, -y]', 'scale': 1},
-    'camera': {'position': list(camera.location), 'target': [0, 2, 2.4], 'lens': camera.data.lens, 'sensorWidth': camera.data.sensor_width, 'near': 0.1, 'far': 300},
+    'camera': {'position': list(camera.location), 'target': list(scene.get('camera_target', [0, 2, 2.4])), 'lens': camera.data.lens, 'sensorWidth': camera.data.sensor_width, 'near': 0.1, 'far': 300},
     'width': scene.render.resolution_x,
     'height': scene.render.resolution_y,
     'lighting': lighting,
@@ -152,11 +162,12 @@ record = {
         {'id': 'atrium', 'sourceName': 'Water | flooded atrium', 'center': [0, 3.5, 0], 'size': [50, 63], 'depth': 0.42, 'amplitudeScale': 1, 'threeCenter': [0, 0, -3.5]},
         {'id': 'basin', 'sourceName': 'Water | central reflecting basin', 'center': [0, 0, 0.61], 'radius': 4.36, 'depth': 0.30, 'amplitudeScale': 0.68, 'threeCenter': [0, 0.61, 0]},
     ],
-    'anchors': {'heroSphere': {'name': 'Hyper | floating pearl marble sphere', 'center': [0, 1.5, 3.1], 'radius': 1.45}, 'orbit': {'name': 'Hyper | delicate orbital ring', 'center': [0, 1.5, 3.07]}, 'basin': {'name': 'Hero pool | pale stone annular wall', 'center': [0, 0, 0.52], 'outerRadius': 4.9, 'innerRadius': 4.42, 'height': 0.57}},
+    'anchors': {'heroSphere': {'name': 'Hyper | floating pearl marble sphere', 'center': list(bpy.data.objects['Hyper | floating pearl marble sphere'].location), 'radius': bpy.data.objects['Hyper | floating pearl marble sphere'].dimensions.x / 2}, 'orbit': {'name': 'Hyper | delicate orbital ring', 'center': [0, 1.5, 3.07]}, 'basin': {'name': 'Hero pool | pale stone annular wall', 'center': [0, 0, 0.52], 'outerRadius': 4.9, 'innerRadius': 4.42, 'height': 0.57}},
     'materials': material_records,
     'objects': [{'name': obj.name, 'sourceType': obj.type, 'materials': [material.name for material in obj.data.materials if material]} for obj in objects],
     'excluded': {'stationRoots': [obj.name for obj in scene.objects if obj.name.startswith('Station | ') and obj.parent is None], 'surfaces': sorted(excluded_surfaces), 'decorativeTextRemoved': removed_text, 'typography': 'All non-station FONT objects and decorative rules are excluded. Station labels and icons are preserved in the original source/library.'},
     'stats': {'objects': len(exported.get('nodes', [])), 'meshes': len(exported.get('meshes', [])), 'primitives': sum(len(mesh['primitives']) for mesh in exported.get('meshes', [])), 'vertices': vertex_count, 'triangles': triangle_count, 'bytes': (OUTPUT / 'environment.glb').stat().st_size},
+    'compression': {'codec': 'KHR_draco_mesh_compression', 'positionBits': 20, 'normalBits': 12, 'colorBits': 12, 'decoder': '/assets/draco/', 'reducesTopology': False},
     'glbObjectNames': [node.get('name') for node in exported.get('nodes', [])],
 }
 (OUTPUT / 'environment.json').write_text(json.dumps(record, indent=2) + '\n')

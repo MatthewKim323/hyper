@@ -1,0 +1,101 @@
+{
+  "referenceSize": [
+    1672,
+    941
+  ],
+  "measurement": "Manually identified visible glass aperture bounds, excluding pedestals. This measures composition only, not photographic fidelity.",
+  "camera": {
+    "position": [
+      0.0,
+      -21.0,
+      3.052323818206787
+    ],
+    "target": [
+      0.0,
+      2.0,
+      2.79158934
+    ]
+  },
+  "stations": [
+    {
+      "station": "accounts-payable",
+      "targetPixels": [
+        61,
+        383,
+        284,
+        669
+      ],
+      "actualPixels": [
+        63.03,
+        383.23,
+        287.89,
+        668.29
+      ],
+      "maxBoundaryErrorPixels": 3.89
+    },
+    {
+      "station": "wallet-identity",
+      "targetPixels": [
+        422,
+        348,
+        563,
+        558
+      ],
+      "actualPixels": [
+        422.58,
+        348.18,
+        563.9,
+        557.83
+      ],
+      "maxBoundaryErrorPixels": 0.9
+    },
+    {
+      "station": "audit-evidence",
+      "targetPixels": [
+        1063,
+        358,
+        1198,
+        554
+      ],
+      "actualPixels": [
+        1062.29,
+        358.15,
+        1197.51,
+        553.84
+      ],
+      "maxBoundaryErrorPixels": 0.71
+    },
+    {
+      "station": "training-arena",
+      "targetPixels": [
+        1257,
+        416,
+        1428,
+        624
+      ],
+      "actualPixels": [
+        1254.68,
+        416.1,
+        1426.73,
+        623.55
+      ],
+      "maxBoundaryErrorPixels": 2.32
+    },
+    {
+      "station": "approvals",
+      "targetPixels": [
+        1438,
+        413,
+        1622,
+        694
+      ],
+      "actualPixels": [
+        1433.25,
+        413.14,
+        1619.7,
+        693.13
+      ],
+      "maxBoundaryErrorPixels": 4.75
+    }
+  ]
+}

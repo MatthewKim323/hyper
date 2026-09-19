@@ -11,12 +11,12 @@
     "position": [
       0.0,
       -21.0,
-      3.9000000953674316
+      3.052323818206787
     ],
     "target": [
-      0,
-      2,
-      2.4
+      0.0,
+      2.0,
+      2.79158934
     ],
     "lens": 35.0,
     "sensorWidth": 36.0,
@@ -40,117 +40,264 @@
         -0.6246950626373291
       ],
       "colorLinear": [
-        0.9200000166893005,
-        0.9200000166893005,
-        1.0
+        1.0,
+        0.6100000143051147,
+        0.47999998927116394
       ],
-      "blenderEnergy": 180.0,
+      "blenderEnergy": 1400.0,
       "size": 14.0
     },
     {
       "name": "Light | warm diagonal sun",
       "type": "area",
       "position": [
-        7.5,
-        10.0,
-        11.0
+        12.719951629638672,
+        29.327587127685547,
+        17.77260398864746
       ],
       "direction": [
-        -0.38425034284591675,
-        -0.8089479804039001,
-        -0.4449211359024048
+        -0.39972254633903503,
+        -0.8327553272247314,
+        -0.38306719064712524
       ],
       "colorLinear": [
         1.0,
-        0.7900000214576721,
-        0.7200000286102295
+        0.8299999833106995,
+        0.7400000095367432
       ],
-      "blenderEnergy": 5800.0,
-      "size": 1.5
+      "blenderEnergy": 13008.6748046875,
+      "size": 2.3743910789489746
     },
     {
       "name": "Light | central window",
       "type": "area",
       "position": [
-        0.0,
-        9.0,
-        8.0
+        -9.5367431640625e-07,
+        28.527587890625,
+        13.044830322265625
       ],
       "direction": [
-        6.991710677084484e-08,
-        -0.8804711699485779,
-        -0.4740997552871704
+        1.0197624789043402e-07,
+        -0.9377715587615967,
+        -0.34725284576416016
       ],
       "colorLinear": [
         1.0,
-        0.9100000262260437,
-        0.8700000047683716
+        0.9200000166893005,
+        0.8899999856948853
       ],
-      "blenderEnergy": 2600.0,
-      "size": 5.0
+      "blenderEnergy": 5026.0791015625,
+      "size": 7.2927727699279785
     },
     {
       "name": "Light | left lavender window",
       "type": "area",
       "position": [
-        -7.0,
-        9.0,
-        6.0
+        -12.041556358337402,
+        28.527587890625,
+        9.330150604248047
       ],
       "direction": [
-        0.23076920211315155,
-        -0.9230769276618958,
-        -0.3076922297477722
+        0.24110828340053558,
+        -0.9452853798866272,
+        -0.21977825462818146
       ],
       "colorLinear": [
-        0.7799999713897705,
-        0.8299999833106995,
+        0.8600000143051147,
+        0.8899999856948853,
         1.0
       ],
-      "blenderEnergy": 1300.0,
-      "size": 3.0
+      "blenderEnergy": 3311.299072265625,
+      "size": 4.748782157897949
     },
     {
       "name": "Light | right pearl window",
       "type": "area",
       "position": [
-        7.0,
-        9.0,
-        6.0
+        12.04155445098877,
+        28.527587890625,
+        9.330150604248047
       ],
       "direction": [
-        -0.23076920211315155,
-        -0.9230769276618958,
-        -0.3076922297477722
+        -0.24110828340053558,
+        -0.9452853798866272,
+        -0.21977826952934265
       ],
       "colorLinear": [
         1.0,
-        0.8600000143051147,
-        0.8199999928474426
+        0.8799999952316284,
+        0.8299999833106995
       ],
-      "blenderEnergy": 1600.0,
-      "size": 3.0
+      "blenderEnergy": 4434.775390625,
+      "size": 4.748782157897949
     },
     {
       "name": "Light | sun shadows",
       "type": "sun",
       "position": [
-        0.0,
-        0.0,
-        0.0
+        20.3519229888916,
+        37.82758712768555,
+        24.526567459106445
       ],
       "direction": [
-        -0.3806169033050537,
-        -0.7929519414901733,
-        -0.4757709503173828
+        -0.39972254633903503,
+        -0.8327553272247314,
+        -0.38306719064712524
       ],
       "colorLinear": [
         1.0,
-        0.8299999833106995,
-        0.7300000190734863
+        0.8399999737739563,
+        0.75
       ],
-      "blenderEnergy": 2.0,
+      "blenderEnergy": 3.0999999046325684,
       "size": null
+    },
+    {
+      "name": "Fidelity | pearl inner illumination",
+      "type": "point",
+      "position": [
+        4.76837158203125e-07,
+        1.4999995231628418,
+        1.947350025177002
+      ],
+      "direction": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "colorLinear": [
+        1.0,
+        0.8700000047683716,
+        0.800000011920929
+      ],
+      "blenderEnergy": 24.0,
+      "size": null
+    },
+    {
+      "name": "Fidelity | portal uplight Accounts Payable",
+      "type": "area",
+      "position": [
+        -7.86269998550415,
+        -1.655900001525879,
+        0.4919999837875366
+      ],
+      "direction": [
+        0.0,
+        1.5099580252808664e-07,
+        1.0
+      ],
+      "colorLinear": [
+        1.0,
+        0.8799999952316284,
+        0.800000011920929
+      ],
+      "blenderEnergy": 42.0,
+      "size": 1.7379778623580933
+    },
+    {
+      "name": "Fidelity | portal uplight Wallet Identity",
+      "type": "area",
+      "position": [
+        -8.3371000289917,
+        18.545499801635742,
+        0.4919999837875366
+      ],
+      "direction": [
+        0.0,
+        1.5099580252808664e-07,
+        1.0
+      ],
+      "colorLinear": [
+        1.0,
+        0.8799999952316284,
+        0.800000011920929
+      ],
+      "blenderEnergy": 42.0,
+      "size": 2.2535040378570557
+    },
+    {
+      "name": "Fidelity | portal uplight Audit and Evidence",
+      "type": "area",
+      "position": [
+        7.428600311279297,
+        20.094799041748047,
+        0.4919999837875366
+      ],
+      "direction": [
+        0.0,
+        1.5099580252808664e-07,
+        1.0
+      ],
+      "colorLinear": [
+        1.0,
+        0.8799999952316284,
+        0.800000011920929
+      ],
+      "blenderEnergy": 42.0,
+      "size": 2.243340015411377
+    },
+    {
+      "name": "Fidelity | portal uplight Training Arena",
+      "type": "area",
+      "position": [
+        7.57480001449585,
+        3.3899998664855957,
+        0.4919999837875366
+      ],
+      "direction": [
+        0.0,
+        1.5099580252808664e-07,
+        1.0
+      ],
+      "colorLinear": [
+        1.0,
+        0.8799999952316284,
+        0.800000011920929
+      ],
+      "blenderEnergy": 42.0,
+      "size": 1.6836597919464111
+    },
+    {
+      "name": "Fidelity | portal uplight Approvals",
+      "type": "area",
+      "position": [
+        7.374000072479248,
+        -3.6480000019073486,
+        0.4919999837875366
+      ],
+      "direction": [
+        0.0,
+        1.5099580252808664e-07,
+        1.0
+      ],
+      "colorLinear": [
+        1.0,
+        0.8799999952316284,
+        0.800000011920929
+      ],
+      "blenderEnergy": 42.0,
+      "size": 1.2840301990509033
+    },
+    {
+      "name": "Fidelity | warm side aperture",
+      "type": "area",
+      "position": [
+        28.831893920898438,
+        -5.0,
+        18.0
+      ],
+      "direction": [
+        -0.7016704678535461,
+        0.6548923254013062,
+        -0.28066787123680115
+      ],
+      "colorLinear": [
+        1.0,
+        0.7099999785423279,
+        0.6000000238418579
+      ],
+      "blenderEnergy": 4500.0,
+      "size": 5.0
     }
   ],
   "sky": {
@@ -211,11 +358,11 @@
     "heroSphere": {
       "name": "Hyper | floating pearl marble sphere",
       "center": [
-        0,
+        0.0,
         1.5,
-        3.1
+        3.1600000858306885
       ],
-      "radius": 1.45
+      "radius": 1.5349992513656616
     },
     "orbit": {
       "name": "Hyper | delicate orbital ring",
@@ -247,10 +394,10 @@
           1.0,
           1.0
         ],
-        "Roughness": 0.7200000286102295,
+        "Roughness": 0.7699999809265137,
         "Metallic": 0.0,
-        "Transmission Weight": 0.0,
-        "IOR": 1.5,
+        "Transmission Weight": 0.05999999865889549,
+        "IOR": 1.350000023841858,
         "Coat Weight": 0.0,
         "Coat Roughness": 0.029999999329447746,
         "Emission Color": [
@@ -273,7 +420,7 @@
           1.0,
           1.0
         ],
-        "Roughness": 0.8399999737739563,
+        "Roughness": 0.8500000238418579,
         "Metallic": 0.0,
         "Transmission Weight": 0.0,
         "IOR": 1.5,
@@ -299,7 +446,7 @@
           1.0,
           1.0
         ],
-        "Roughness": 0.9200000166893005,
+        "Roughness": 0.9399999976158142,
         "Metallic": 0.0,
         "Transmission Weight": 0.0,
         "IOR": 1.5,
@@ -317,20 +464,46 @@
       "vertexColorAttribute": "PetalColor"
     },
     {
+      "name": "Ground | porous warm limestone",
+      "principled": {
+        "Base Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Roughness": 0.7799999713897705,
+        "Metallic": 0.0,
+        "Transmission Weight": 0.0,
+        "IOR": 1.5,
+        "Coat Weight": 0.0,
+        "Coat Roughness": 0.029999999329447746,
+        "Emission Color": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "Emission Strength": 0.0
+      },
+      "runtimeSurface": "marble",
+      "vertexColorAttribute": "RockMinerals"
+    },
+    {
       "name": "Hero | graduated rose quartz and pearl",
       "principled": {
         "Base Color": [
-          0.9300000071525574,
-          0.8299999833106995,
-          0.7799999713897705,
+          0.9331068396568298,
+          0.7874122858047485,
+          0.7199210524559021,
           1.0
         ],
-        "Roughness": 0.1899999976158142,
-        "Metallic": 0.03999999910593033,
-        "Transmission Weight": 0.41999998688697815,
-        "IOR": 1.4500000476837158,
-        "Coat Weight": 0.30000001192092896,
-        "Coat Roughness": 0.15000000596046448,
+        "Roughness": 0.23000000417232513,
+        "Metallic": 0.0,
+        "Transmission Weight": 0.0,
+        "IOR": 1.4600000381469727,
+        "Coat Weight": 0.2199999988079071,
+        "Coat Roughness": 0.17000000178813934,
         "Emission Color": [
           1.0,
           1.0,
@@ -346,12 +519,12 @@
       "name": "Hyper | blush ivory honed limestone",
       "principled": {
         "Base Color": [
-          0.7677687406539917,
-          0.5870163440704346,
-          0.5542217493057251,
+          0.7388446927070618,
+          0.5623173713684082,
+          0.4994581639766693,
           1.0
         ],
-        "Roughness": 0.3400000035762787,
+        "Roughness": 0.46000000834465027,
         "Metallic": 0.0,
         "Transmission Weight": 0.0,
         "IOR": 1.5,
@@ -463,11 +636,11 @@
         "Coat Roughness": 0.029999999329447746,
         "Emission Color": [
           1.0,
-          0.7293471097946167,
-          0.5382355451583862,
+          0.8299999833106995,
+          0.699999988079071,
           1.0
         ],
-        "Emission Strength": 3.5
+        "Emission Strength": 6.5
       },
       "runtimeSurface": "emissive",
       "vertexColorAttribute": null
@@ -476,17 +649,17 @@
       "name": "Portals | optically clear rose crystal",
       "principled": {
         "Base Color": [
-          0.9850000143051147,
-          0.9470000267028809,
-          0.9340000152587891,
+          0.9841497540473938,
+          0.9418700933456421,
+          0.9222199320793152,
           1.0
         ],
-        "Roughness": 0.054999999701976776,
+        "Roughness": 0.03500000014901161,
         "Metallic": 0.0,
-        "Transmission Weight": 1.0,
-        "IOR": 1.4299999475479126,
-        "Coat Weight": 0.30000001192092896,
-        "Coat Roughness": 0.029999999329447746,
+        "Transmission Weight": 0.0,
+        "IOR": 1.4600000381469727,
+        "Coat Weight": 0.1599999964237213,
+        "Coat Roughness": 0.04500000178813934,
         "Emission Color": [
           1.0,
           1.0,
@@ -1057,42 +1230,42 @@
       "name": "Ground | weathered marble 00",
       "sourceType": "MESH",
       "materials": [
-        "Hyper | blush ivory honed limestone"
+        "Ground | porous warm limestone"
       ]
     },
     {
       "name": "Ground | weathered marble 01",
       "sourceType": "MESH",
       "materials": [
-        "Hyper | blush ivory honed limestone"
+        "Ground | porous warm limestone"
       ]
     },
     {
       "name": "Ground | weathered marble 02",
       "sourceType": "MESH",
       "materials": [
-        "Hyper | blush ivory honed limestone"
+        "Ground | porous warm limestone"
       ]
     },
     {
       "name": "Ground | weathered marble 03",
       "sourceType": "MESH",
       "materials": [
-        "Hyper | blush ivory honed limestone"
+        "Ground | porous warm limestone"
       ]
     },
     {
       "name": "Ground | weathered marble 04",
       "sourceType": "MESH",
       "materials": [
-        "Hyper | blush ivory honed limestone"
+        "Ground | porous warm limestone"
       ]
     },
     {
       "name": "Ground | weathered marble 05",
       "sourceType": "MESH",
       "materials": [
-        "Hyper | blush ivory honed limestone"
+        "Ground | porous warm limestone"
       ]
     }
   ],
@@ -1126,9 +1299,17 @@
     "objects": 85,
     "meshes": 85,
     "primitives": 85,
-    "vertices": 185471,
-    "triangles": 206786,
-    "bytes": 7243704
+    "vertices": 1238432,
+    "triangles": 615670,
+    "bytes": 12811676
+  },
+  "compression": {
+    "codec": "KHR_draco_mesh_compression",
+    "positionBits": 20,
+    "normalBits": 12,
+    "colorBits": 12,
+    "decoder": "/assets/draco/",
+    "reducesTopology": false
   },
   "glbObjectNames": [
     "Walkway | left water curve",

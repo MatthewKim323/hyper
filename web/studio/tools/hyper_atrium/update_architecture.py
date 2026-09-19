@@ -7,6 +7,8 @@ import bpy
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "assets/blender/hyper-atrium/hyper-atrium.blend"
 bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
+if bpy.context.scene.get('reference_composition_v2'):
+    raise RuntimeError('This patch targets the original shallow room. Rebuild the current measured composition with build.py.')
 name = "Atrium | monolithic blush limestone"
 original = bpy.data.objects[name]
 material = original.data.materials[0]

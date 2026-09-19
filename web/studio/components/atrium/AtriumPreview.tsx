@@ -229,7 +229,7 @@ export default function AtriumPreview() {
           onBlur={() => { renderer.current?.setHover(null); renderer.current?.setPressed(null); }}
           onClick={event => { event.stopPropagation(); openStation(bound.station); }}
         >
-          <span className={styles.label} style={{ left: `${bound.labelLeft * 100}%`, top: `${bound.labelTop * 100}%` }}>{bound.station.label}</span>
+          <span className={styles.label} style={{ left: `${bound.labelLeft * 100}%`, top: `${bound.labelTop * 100}%` }}>{bound.station.label === "Accounts Payable" ? <>Accounts<br />Payable</> : bound.station.label}</span>
           <span className={styles.arrow} aria-hidden="true" style={{ left: `${bound.labelLeft * 100}%`, top: `${bound.arrowTop * 100}%` }}><span className={styles.arrowGlyph}>→</span></span>
         </button>)}
       </div>

@@ -3,72 +3,92 @@
     {
       "id": "accounts-payable",
       "url": "/assets/hyper-atrium/crystal-accounts-payable.glb",
-      "width": 2.7,
-      "height": 4.18,
-      "labelHeight": 1.4975
+      "width": 2.6333,
+      "height": 3.8697,
+      "labelHeight": 1.4121675,
+      "labelSize": 0.20481222222222223,
+      "arrowHeight": 0.954558
     },
     {
       "id": "wallet-identity",
       "url": "/assets/hyper-atrium/crystal-wallet-identity.glb",
-      "width": 2.0,
-      "height": 3.88,
-      "labelHeight": 1.415
+      "width": 3.4144,
+      "height": 5.575900000000001,
+      "labelHeight": 1.8813725000000001,
+      "labelSize": 0.358512,
+      "arrowHeight": 1.193426
     },
     {
       "id": "audit-evidence",
       "url": "/assets/hyper-atrium/crystal-audit-evidence.glb",
-      "width": 2.0,
-      "height": 3.88,
-      "labelHeight": 1.415
+      "width": 3.399,
+      "height": 5.4232,
+      "labelHeight": 1.83938,
+      "labelSize": 0.35689499999999996,
+      "arrowHeight": 1.1720480000000002
     },
     {
       "id": "training-arena",
       "url": "/assets/hyper-atrium/crystal-training-arena.glb",
-      "width": 2.2,
-      "height": 3.88,
-      "labelHeight": 1.415
+      "width": 2.551,
+      "height": 3.5912,
+      "labelHeight": 1.3355800000000002,
+      "labelSize": 0.24350454545454545,
+      "arrowHeight": 0.915568
     },
     {
       "id": "approvals",
       "url": "/assets/hyper-atrium/crystal-approvals.glb",
-      "width": 2.5,
-      "height": 3.93,
-      "labelHeight": 1.42875
+      "width": 1.9455,
+      "height": 3.467,
+      "labelHeight": 1.301425,
+      "labelSize": 0.163422,
+      "arrowHeight": 0.89818
     },
     {
       "id": "crystal-tall",
       "url": "/assets/hyper-atrium/crystal-crystal-tall.glb",
       "width": 1.8,
       "height": 4.48,
-      "labelHeight": 1.58
+      "labelHeight": 1.58,
+      "labelSize": 0.17181818181818181,
+      "arrowHeight": 1.04
     },
     {
       "id": "crystal-wide",
       "url": "/assets/hyper-atrium/crystal-crystal-wide.glb",
       "width": 2.7,
       "height": 3.88,
-      "labelHeight": 1.415
+      "labelHeight": 1.415,
+      "labelSize": 0.25772727272727275,
+      "arrowHeight": 0.956
     },
     {
       "id": "crystal-orbit",
       "url": "/assets/hyper-atrium/crystal-crystal-orbit.glb",
       "width": 2.1,
       "height": 4.13,
-      "labelHeight": 1.4837500000000001
+      "labelHeight": 1.4837500000000001,
+      "labelSize": 0.1764,
+      "arrowHeight": 0.991
     },
     {
       "id": "crystal-stack",
       "url": "/assets/hyper-atrium/crystal-crystal-stack.glb",
       "width": 2.0,
       "height": 3.73,
-      "labelHeight": 1.37375
+      "labelHeight": 1.37375,
+      "labelSize": 0.1909090909090909,
+      "arrowHeight": 0.935
     },
     {
       "id": "crystal-clear",
       "url": "/assets/hyper-atrium/crystal-crystal-clear.glb",
       "width": 2.2,
       "height": 4.08,
-      "labelHeight": 1.4700000000000002
+      "labelHeight": 1.4700000000000002,
+      "labelSize": 0.21,
+      "arrowHeight": 0.9840000000000001
     }
   ]
 }

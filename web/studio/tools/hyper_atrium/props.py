@@ -234,7 +234,6 @@ def _document_icon(x, y, z, materials, invoice=False):
     if invoice:
         for i in range(3):
             _box("Accounts payable | glass card " + str(i + 1), (x - i * 0.10, y + i * 0.06, z + i * 0.055), (1.28, 0.048, 1.0), paper, 0.055)
-        _text("Accounts payable | miniature mark", "hyper.", (x - 0.34, y - 0.029, z + 0.32), 0.078, materials["white"])
         widths = (0.80, 0.74, 0.81, 0.35)
         for i, width in enumerate(widths):
             _box("Accounts payable | document line " + str(i), (x - 0.39 + width / 2, y - 0.036, z + 0.12 - i * 0.13), (width, 0.009, 0.023), materials["white"], 0.004)
@@ -290,10 +289,13 @@ def _portal(name, x, y, width, height, label, icon, materials):
     _arch_edge(name + " | front polished rim", x, y - 0.073, base + 0.025, width - 0.025, height - 0.018, materials["edge"])
     # Labels and icons are held just in front of the optical face, like etched displays.
     front = y - 0.095
+    nominal_width = {"invoice": 2.7, "ethereum": 2.0, "audit": 2.0, "cubes": 2.2, "rings": 2.5}.get(icon, 2.2)
+    detail_scale = width / nominal_width
     label_z = base + height * 0.275
-    _text(name + " | title", label, (x, front - 0.014, label_z), 0.255 if "\n" in label else 0.230, materials["text"])
-    _arrow(name + " | enter", x, front - 0.02, base + 0.38, materials["text"], radius=0.175)
+    _text(name + " | title", label, (x, front - 0.014, label_z), (0.255 if "\n" in label else 0.230) * detail_scale, materials["text"])
+    _arrow(name + " | enter", x, front - 0.02, base + height * .14, materials["text"], radius=0.175 * detail_scale)
     icon_z = base + height * 0.60
+    before_icon = set(bpy.data.objects)
     if icon == "invoice":
         _document_icon(x, front - 0.10, icon_z, materials, invoice=True)
     elif icon == "ethereum":
@@ -304,6 +306,10 @@ def _portal(name, x, y, width, height, label, icon, materials):
         _cube_icon(x, front - 0.05, icon_z, materials["paper"])
     elif icon == "rings":
         _rings_icon(x, front - 0.05, icon_z, materials)
+    pivot = Vector((x, front, icon_z))
+    for obj in set(bpy.data.objects) - before_icon:
+        obj.location = pivot + (obj.location - pivot) * detail_scale
+        obj.scale *= detail_scale
     parent = bpy.data.objects.new("Station | " + name, None)
     _collection().objects.link(parent)
     parent["station"] = True

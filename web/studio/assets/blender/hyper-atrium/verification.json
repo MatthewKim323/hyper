@@ -17,12 +17,19 @@
   "camera": [
     0.0,
     -21.0,
-    3.9000000953674316
+    3.052323818206787
   ],
   "resolution": [
     2560,
     1441
   ],
   "packed_fonts": 1,
-  "glb_assets_verified": 10
+  "glb_assets_verified": 10,
+  "aperture_sunlight_verified": {
+    "pearl center": true,
+    "pearl left": true,
+    "pearl right": true,
+    "pearl crown": true,
+    "basin center": true
+  }
 }

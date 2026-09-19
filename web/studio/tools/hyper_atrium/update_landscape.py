@@ -8,6 +8,7 @@ import bpy
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from landscape import build_landscape, refine_arch_lighting
+from refine_fidelity_materials import apply as refine_materials
 
 SOURCE = HERE.parents[1] / "assets/blender/hyper-atrium/hyper-atrium.blend"
 bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
@@ -18,8 +19,12 @@ for obj in list(bpy.data.objects):
     if obj.name.startswith("Landscape | "):
         removed.append(obj.name)
         bpy.data.objects.remove(obj, do_unlink=True)
-garden = build_landscape()
-refine_arch_lighting(bpy.context.scene)
+if bpy.context.scene.get('reference_composition_v2'):
+    garden = build_landscape(wall_y=27, camera_y=-21, opening_scale=48/29, height_scale=1.65)
+    refine_materials(bpy.context.scene)
+else:
+    garden = build_landscape()
+    refine_arch_lighting(bpy.context.scene)
 templates_after = sorted(obj.get("station_template") for obj in bpy.data.objects if obj.get("station_template"))
 stations_after = sorted(obj.name for obj in bpy.data.objects if obj.get("station"))
 assert templates_before == templates_after, "The crystal template library changed"

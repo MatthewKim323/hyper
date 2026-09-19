@@ -4,9 +4,11 @@ import sys
 import math
 import json
 import bpy
+from mathutils import Vector
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE))
 import props
+from composition import STATIONS
 ROOT=HERE.parents[1]
 OUT=ROOT/'public/assets/hyper-atrium'
 OUT.mkdir(parents=True,exist_ok=True)
@@ -23,12 +25,16 @@ materials={
  'paper':bpy.data.materials['Icons | milky lilac opal glass'],
  'white':bpy.data.materials['Icons | white enamel lettering'],
 }
+for old_library in list(bpy.data.collections):
+    if old_library.name.startswith('Crystal library | reusable onboarding stations'):
+        for obj in list(old_library.objects):
+            bpy.data.objects.remove(obj, do_unlink=True)
+        bpy.data.collections.remove(old_library)
 library=bpy.data.collections.new('Crystal library | reusable onboarding stations')
 scene.collection.children.link(library)
 variants=[
- ('accounts-payable','invoice',2.7,3.7),('wallet-identity','ethereum',2.0,3.4),
- ('audit-evidence','audit',2.0,3.4),('training-arena','cubes',2.2,3.4),
- ('approvals','rings',2.5,3.45),('crystal-tall',None,1.8,4.0),
+ *[(key,icon,width,height) for key,name,x,y,width,height,label,icon in STATIONS],
+ ('crystal-tall',None,1.8,4.0),
  ('crystal-wide',None,2.7,3.4),('crystal-orbit','rings',2.1,3.65),
  ('crystal-stack','cubes',2.0,3.25),('crystal-clear',None,2.2,3.6),
 ]
@@ -49,10 +55,13 @@ for index,(key,icon,width,height) in enumerate(variants):
     for ob in created:ob.select_set(True)
     bpy.context.view_layer.objects.active=parent
     bpy.ops.export_scene.gltf(filepath=str(OUT/f'crystal-{key}.glb'),export_format='GLB',use_selection=True,export_apply=True,export_yup=True,export_cameras=False,export_lights=False,export_animations=False)
-    manifest.append({'id':key,'url':f'/assets/hyper-atrium/crystal-{key}.glb','width':width,'height':height+.48,'labelHeight':.48+height*.275})
+    nominal_width={'invoice':2.7,'ethereum':2.,'audit':2.,'cubes':2.2,'rings':2.5}.get(icon,2.2)
+    manifest.append({'id':key,'url':f'/assets/hyper-atrium/crystal-{key}.glb','width':width,'height':height+.48,'labelHeight':.48+height*.275,'labelSize':.21*width/nominal_width,'arrowHeight':.48+height*.14})
     parent.location=(30+(index%5)*4, (index//5)*6,0)
 library.hide_render=True
 library.hide_viewport=True
 (OUT/'crystals.json').write_text(json.dumps({'templates':manifest},indent=2)+'\n')
-(OUT/'scene.json').write_text(json.dumps({'width':2560,'height':1441,'camera':{'position':[0,-21,3.9],'target':[0,2,2.4],'lens':35,'sensorWidth':36},'templates':manifest},indent=2)+'\n')
+sun=next((obj for obj in scene.objects if obj.type=='LIGHT' and obj.data.type=='SUN'),None)
+sun_direction=list(sun.rotation_euler.to_quaternion() @ Vector((0,0,1))) if sun else [7,9,13]
+(OUT/'scene.json').write_text(json.dumps({'width':2560,'height':1441,'camera':{'position':list(scene.camera.location),'target':list(scene.get('camera_target',[0,2,2.4])),'lens':scene.camera.data.lens,'sensorWidth':scene.camera.data.sensor_width},'sunDirection':sun_direction,'windows':json.loads(scene.get('atrium_window_apertures','[]')),'templates':manifest},indent=2)+'\n')
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'assets/blender/hyper-atrium/hyper-atrium.blend'),compress=True)

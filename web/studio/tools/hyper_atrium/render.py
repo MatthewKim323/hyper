@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "assets/blender/hyper-atrium"
 parser = argparse.ArgumentParser()
 parser.add_argument("--preview", action="store_true")
+parser.add_argument("--cpu", action="store_true", help="Render on CPU if the local Metal shader compiler is unavailable")
 parser.add_argument("--save-composition", action="store_true", help="Save station visibility and remove obsolete mask outputs before temporary render settings")
 args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
 bpy.ops.wm.open_mainfile(filepath=str(OUT / "hyper-atrium.blend"))
@@ -45,10 +46,13 @@ scene.render.filepath = str(OUT / ("review.png" if args.preview else "hyper-atri
 try:
     preferences = bpy.context.preferences.addons["cycles"].preferences
     preferences.compute_device_type = "METAL"
+    # Generic kernels avoid a macOS Metal pipeline-cache crash during repeated
+    # background previews after changing the scene's shader feature set.
+    preferences.kernel_optimization_level = "OFF"
     preferences.get_devices()
     for device in preferences.devices:
         device.use = device.type == "METAL"
-    scene.cycles.device = "GPU"
+    scene.cycles.device = "CPU" if args.cpu else "GPU"
 except Exception:
     scene.cycles.device = "CPU"
 scene.frame_set(1)

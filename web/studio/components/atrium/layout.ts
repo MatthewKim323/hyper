@@ -5,7 +5,7 @@ export type StationPlacement = { station: AtriumStation; x: number; y: number; s
 /** Blender XY ground coordinates. The central pool and hero remain unobstructed. */
 export function layoutAtriumStations(stations: readonly AtriumStation[]): StationPlacement[] {
   if (stations.length === 5 || stations.length === 6) {
-    const original = [[-8, -2], [-4.7, 2.5], [4.7, 2.5], [6.7, -0.1], [8.1, -2], [-6.7, -0.1]];
+    const original = [[-7.8627, -1.6559], [-8.3371, 18.5455], [7.4286, 20.0948], [7.5748, 3.39], [7.374, -3.648], [-7.5748, 3.39]];
     return stations.map((station, index) => ({ station, x: original[index][0], y: original[index][1], scale: 1 }));
   }
   const leftCount = Math.ceil(stations.length / 2);

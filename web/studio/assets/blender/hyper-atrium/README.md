@@ -8,11 +8,14 @@ An editable Blender reconstruction of the supplied concept image, with the archi
 - `hyper-atrium.png`: 2560×1441 Cycles render of the unified scene.
 - `hotspots.json`: normalized camera projections for the original five-station composition.
 - `verification.json`: saved-scene and reusable-asset checks.
+- `composition-verification.json`: measured reference aperture bounds and the evaluated Blender geometry's projected bounds. This verifies placement, not photographic fidelity.
 - `../../../public/assets/hyper-atrium/`: the live room geometry in `environment.glb`, ten station GLBs, and camera/template manifests. The web experience uses no rendered background image.
 
 The Blender water uses eight small gravity-wave components with finite-depth dispersion, `omega² = g k tanh(k depth)`, and fine capillary normals. Cycles calculates reflection and transmission with an IOR of 1.333. This is an animated analytical surface, not a fluid-solver cache.
 
-The rose garden uses three merged, smooth-shaded meshes: rolling ridges, 5,100 small flowering canopies, and 1,050 five-petal blossoms. Linear vertex colors preserve rose, pink, and lilac variation in both Blender and glTF. Architecture, the garden, and the remaining fixed objects export at approximately 207,000 triangles, including the six rounded ground stones.
+The rose garden uses three merged meshes: rolling ridges, stems and leaves, and 215,000 cupped petals across 43,000 floral sprigs. The garden totals 500,000 triangles. Linear vertex colors preserve rose, pink, and lilac variation in both Blender and glTF. Cycles petals transmit sunlight through thin surfaces; the browser shader approximates that backlighting. Draco compresses the environment's complete topology with 20-bit positions and 12-bit colors/normals. Decoder files and licenses are served locally under `public/assets/draco/`.
+
+The camera's height and pitch match the reference basin ellipse. Rear stations sit at their measured depth, and the carved wall sits behind every station. The five glass aperture bounds project within five pixels of their manually measured targets at 1672 by 941. The browser's sixth station is Benchmarks, added opposite Training Arena.
 
 The browser loads the room and independently configurable crystal models into a single Three.js scene. Procedural sky, animated water, lighting, reflections, and material shaders run live. The crystals are workspace navigation; the old pill navigation is removed. If WebGL cannot start, accessible workspace links remain available.
 
@@ -37,6 +40,8 @@ The preview writes an ignored `review.png` at 1280×720 and 32 samples. The fina
 ```
 
 Rebuilding replaces the authored source, so export the station library afterward to repopulate all ten templates. `update_landscape.py` replaces only the garden and updates directional lighting in the existing saved scene, preserving all stations and templates. Run the environment exporter after changes to the source geometry. No command generates backplates or water masks.
+
+`refine_reference.py` reapplies measured composition, botanical geometry, and physical materials to an existing source. It writes fresh aperture measurements. `refine_fidelity_materials.apply(scene)` is also callable in memory; it never saves or renders on its own. Source volumetric haze, actual portal uplights, limestone pores, and cloudy pearl transmission are editable node graphs.
 
 Use the full macOS executable path. A Homebrew symlink can prevent Blender from locating its bundled Python and color-management resources. Fonts are packed into the blend file; materials and landscape details are procedural.
 

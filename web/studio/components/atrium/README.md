@@ -6,6 +6,10 @@ The rendering pipeline uses physical glass, procedural limestone, a live cloud s
 
 Surface shading is optimized for WebGL. It is not the same renderer as Blender Cycles: browser light shafts approximate volumetric scattering, environment lighting is prefiltered, and water uses analytical waves rather than a fluid simulation.
 
+The environment retains the full 500,000-triangle botanical garden and uses Draco compression. `geometry-loader.ts` shares a two-worker decoder pool, serves decoder files locally, and disposes workers when pending loads settle. Station GLBs can remain uncompressed. Scene camera, sun direction, and rear apertures come from the Blender export rather than separate guessed browser coordinates.
+
+Hovered crystals show a thin warm base arc and a few rising edge glints. These are depth-tested geometry in `ethereal.ts`; the accents fade when hover ends and freeze under reduced motion.
+
 Onboarding owns configuration. No conversation analysis or backend-generated station decisions are simulated. Call the typed entry point before completing onboarding:
 
 ```ts

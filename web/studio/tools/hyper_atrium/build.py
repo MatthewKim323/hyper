@@ -19,6 +19,9 @@ sys.path.insert(0, str(HERE))
 from materials import build_materials, build_water
 from props import build_props
 from landscape import build_landscape, refine_arch_lighting
+from composition import apply as compose_reference, STATIONS
+from refine_fidelity_materials import apply as refine_materials
+from rocks import apply as refine_rocks
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--preview', action='store_true')
@@ -150,7 +153,7 @@ arc_walkway('Walkway | left water curve',-13,-6.0,6.6,.6,-90,85)
 arc_walkway('Walkway | right water curve',13,-5.8,6.8,.6,95,265)
 
 # Three merged, vertex-colored meshes form the distant rose garden.
-build_landscape()
+build_landscape(wall_y=27, camera_y=-21, opening_scale=48/29, height_scale=1.65)
 
 world=bpy.data.worlds.new('Blush morning sky');world.use_nodes=True;scene.world=world
 # The shared lighting setup below authors the physical and visible sky.
@@ -179,6 +182,10 @@ camera.rotation_euler=(Vector((0,2,2.4))-camera.location).to_track_quat('-Z','Y'
 camera_data.lens=35;camera_data.sensor_width=36;camera_data.clip_end=300
 camera_data.dof.use_dof=False
 scene.camera=camera
+compose_reference(scene)
+refine_materials(scene)
+refine_rocks(scene)
+props_data['portals'] = [{'name': name, 'center': (x,y,.48+height/2), 'width': width, 'height': height} for key,name,x,y,width,height,label,icon in STATIONS]
 
 # The environment carries no decorative copy. Keep only functional station labels.
 for obj in list(bpy.data.objects):
