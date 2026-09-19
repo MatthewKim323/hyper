@@ -1,0 +1,22 @@
+{
+  "name": "aircord-fidelity-study",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "dev": "vite --host 127.0.0.1 --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5173"
+  },
+  "dependencies": {
+    "@barba/core": "2.9.7",
+    "canvas-text-wrapper": "0.4.1",
+    "gsap": "3.15.0",
+    "three": "0.154.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "vite": "6.4.3"
+  }
+}

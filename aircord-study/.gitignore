@@ -1,0 +1,6 @@
+node_modules/
+dist/
+work/
+.gstack/
+.sites-runtime/
+.DS_Store
