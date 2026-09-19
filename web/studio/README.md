@@ -19,4 +19,4 @@ Open http://localhost:3888. Production build: `bun run build`.
 - `assets/blender/`: editable Blender libraries assembled from runtime GLBs.
 - `tools/prepare_blender.py`: rebuild the Blender libraries.
 
-The gallery intentionally contains no project cards, portfolio photographs, or video. Texture maps remain necessary for the 3D environment. The separate `../web/` application has its own toolchain.
+The gallery intentionally contains no project cards, portfolio photographs, or video. Texture maps remain necessary for the 3D environment. The parent `web/` application has its own toolchain; run these commands from `web/studio/`.
