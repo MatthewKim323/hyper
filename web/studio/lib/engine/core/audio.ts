@@ -42,6 +42,7 @@ export class Audio {
   html5 = false;
   activeSounds: Record<string, number> = {};
   activeNarration: any = null;
+  private inputActive = false;
 
   constructor() {
     Howler.mute(true);
@@ -52,12 +53,7 @@ export class Audio {
     if (isCatalina && isSafari && version && parseInt(version[1], 10) === 15) this.html5 = true;
     for (const name in this.sprites) this.loadSprite(name);
     this.addDomEvents();
-    document.addEventListener("visibilitychange", () => {
-      if (store.PageLoader && store.PageLoader.hidden) {
-        if (document.hidden) Howler.mute(true);
-        else if (!store.audioMuted) Howler.mute(false);
-      }
-    });
+    document.addEventListener("visibilitychange", () => this.applyMute());
   }
 
   loadSprite(name: string) {
@@ -285,8 +281,19 @@ export class Audio {
   }
 
   muteAll(muted: boolean) {
-    Howler.mute(muted);
+    store.audioMuted = muted;
+    this.applyMute();
     E.emit("AudioMute", muted);
+  }
+
+  setInputActive(active: boolean) {
+    this.inputActive = active;
+    this.applyMute();
+  }
+
+  private applyMute() {
+    // Microphone focus is temporary and must not replace the user's mute preference.
+    Howler.mute(this.inputActive || store.audioMuted || document.hidden || !store.PageLoader?.hidden);
   }
 
   duration(key: string) {

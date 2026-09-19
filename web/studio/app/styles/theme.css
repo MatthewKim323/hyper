@@ -1,5 +1,24 @@
 /* Keep the landing focused on the scene and its central entrance. */
 body.home .header,
-body.home .footer {
+body.home .footer,
+body.home .menu,
+body.post-type-archive-project .header,
+body.post-type-archive-project .footer,
+body.post-type-archive-project .menu {
   display: none;
+}
+
+/* Keep engine layout measurements intact while onboarding owns the screen. */
+html:not([data-onboarding="complete"]) .project-filters,
+html:not([data-onboarding="complete"]) .timeline-workspace {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[data-onboarding="required"] body.post-type-archive-project[data-workspace-ready="true"] .cursor__circle {
+  border-color: #fff;
+}
+
+html[data-onboarding="required"] body.post-type-archive-project[data-workspace-ready="true"] .cursor {
+  mix-blend-mode: difference;
 }

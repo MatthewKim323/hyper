@@ -11,6 +11,8 @@ export class ProjectsRenderer extends BaseRenderer {
   isTransitioningToProject = false;
 
   onEnter() {
+    delete document.body.dataset.workspaceReady;
+    window.dispatchEvent(new Event("hyper:workspace-ready"));
     this.page = this.wrap.lastElementChild;
     super.loadScripts();
     store.ProjectMenu.firstLoad = store.Highway.firstLoad;
@@ -20,6 +22,7 @@ export class ProjectsRenderer extends BaseRenderer {
       if (store.Highway.firstLoad) {
         store.PageLoader.hiddenPromise.then(() => {
           store.ProjectMenu.in();
+          store.ProjectMenu.allowControl = document.documentElement.dataset.onboarding === "complete";
           store.ProjectMenu.addInteractionEvents();
           if (!store.Audio.isPlaying("audio.backing")) {
             store.Audio.play({ key: "audio.backing", fade: { from: 0, to: 1, duration: 1 } });
@@ -57,6 +60,14 @@ export class ProjectsRenderer extends BaseRenderer {
 
   onEnterCompleted() {
     super.onEnterCompleted();
+    document.body.dataset.workspaceReady = "true";
+    window.dispatchEvent(new Event("hyper:workspace-ready"));
+  }
+
+  onLeave() {
+    delete document.body.dataset.workspaceReady;
+    window.dispatchEvent(new Event("hyper:workspace-ready"));
+    super.onLeave();
   }
 
   onLeaveCompleted() {

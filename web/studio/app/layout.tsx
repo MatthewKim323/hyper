@@ -6,9 +6,11 @@ import "./styles/theme.css";
 import "./styles/gallery-nav.css";
 import "./styles/timeline.css";
 import "./styles/timeline-carousel.css";
+import "./styles/onboarding.css";
 import Shell, { ShellPost } from "@/components/Shell";
 import EngineRoot from "@/components/EngineRoot";
 import TimelineWorkspace from "@/components/timeline/TimelineWorkspace";
+import OnboardingWorkspace from "@/components/onboarding/OnboardingWorkspace";
 
 export const metadata: Metadata = {
   title: "hyper. | HackMIT 2026",
@@ -23,11 +25,13 @@ if(p==="/")c="home page-template-home-contact";
 else if(p==="/contact")c="page-template-home-contact";
 else if(p==="/projects")c="archive post-type-archive post-type-archive-project";
 else c="error404 dark";
-document.body.className=c;})();`;
+document.body.className=c;
+var done=false;try{done=localStorage.getItem("hyper.onboarding.v1")==="complete";}catch(e){}
+document.documentElement.dataset.onboarding=done?"complete":"required";})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-GB" className="asscroll-disabled" suppressHydrationWarning>
+    <html lang="en-GB" className="asscroll-disabled" data-onboarding="required" suppressHydrationWarning>
       <body className="home page-template-home-contact" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: BODY_CLASS_SCRIPT }} />
         <Shell />
@@ -36,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </div>
         <ShellPost />
         <TimelineWorkspace />
+        <OnboardingWorkspace />
         <EngineRoot />
       </body>
     </html>
