@@ -9,9 +9,6 @@ import Sprite from "./Sprite";
 // Cube faces reveal in DOM order 1,2,3,4,6,5, spelling HYPER followed by a separator.
 const CUBE = ["H", "Y", "P", "E", "·", "R"];
 
-// Starburst mark: 16 rays around an open center, drawn on a 121 unit grid.
-const RAYS = Array.from({ length: 16 }, (_, i) => i * 22.5);
-
 function Loader() {
   return (
     <div className="loader loader--wipe js-loader" role="progressbar" aria-label="Loading" aria-valuemin={0} aria-valuemax={100}>
@@ -19,15 +16,6 @@ function Loader() {
         <div className="lw-white js-loader-white"></div>
         <div className="lw-black"></div>
         <div className="lw-end js-loader-end"></div>
-      </div>
-      <div className="lw-mark js-loader-mark">
-        <div className="lw-spin js-loader-mark-spin">
-          <svg viewBox="0 0 121 121" fill="none" aria-hidden="true">
-            {RAYS.map((deg) => (
-              <rect key={deg} x="57.5" y="0" width="6" height="43" fill="#fff" transform={`rotate(${deg} 60.5 60.5)`} />
-            ))}
-          </svg>
-        </div>
       </div>
       <div className="lw-count js-loader-count">0%</div>
     </div>

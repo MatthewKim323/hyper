@@ -1,5 +1,5 @@
 /* Wipe loader: black field, white panel wipes to 70% then 100%, a black end panel
-   wipes over it, then the whole layer fades. Mark and counter sit above in difference blend. */
+   wipes over it, then the whole layer fades. The counter sits above in difference blend. */
 .loader.loader--wipe {
   inset: 0;
   display: block;
@@ -44,24 +44,6 @@
   background: #000;
 }
 
-.loader--wipe .lw-mark {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 4;
-  width: 121px;
-  height: 121px;
-  transform: translate(-50%, -50%);
-  mix-blend-mode: difference;
-}
-
-.loader--wipe .lw-spin,
-.loader--wipe .lw-mark svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
 .loader--wipe .lw-count {
   position: absolute;
   top: 50%;
@@ -79,11 +61,6 @@
 }
 
 @media (max-width: 809.98px) {
-  .loader--wipe .lw-mark {
-    width: 80px;
-    height: 80px;
-  }
-
   .loader--wipe .lw-count {
     top: auto;
     bottom: 170px;

@@ -27,8 +27,6 @@ export class PageLoader {
     colors: HTMLElement;
     white: HTMLElement;
     end: HTMLElement;
-    mark: HTMLElement;
-    spin: HTMLElement;
     count: HTMLElement;
   };
   hidden = false;
@@ -39,7 +37,6 @@ export class PageLoader {
   private assetsResolve!: () => void;
   private hidingPromise?: Promise<void>;
   private introDone = false;
-  private spin?: AnimationPlaybackControls;
   private fade?: AnimationPlaybackControls;
 
   constructor() {
@@ -49,8 +46,6 @@ export class PageLoader {
       colors: loader.querySelector(".js-loader-colors")!,
       white: loader.querySelector(".js-loader-white")!,
       end: loader.querySelector(".js-loader-end")!,
-      mark: loader.querySelector(".js-loader-mark")!,
-      spin: loader.querySelector(".js-loader-mark-spin")!,
       count: loader.querySelector(".js-loader-count")!,
     };
     this.hiddenPromise = new Promise((resolve) => {
@@ -78,12 +73,7 @@ export class PageLoader {
   }
 
   private async intro() {
-    const { white, end, colors, mark, count, spin } = this.dom;
-    this.spin = animate(
-      spin,
-      { rotate: [0, 840] },
-      { duration: 4, ease: [0.29, 0.29, 0.56, 1], repeat: Infinity, repeatType: "mirror" },
-    );
+    const { white, end, colors, count } = this.dom;
     animate(white, { width: "70%" }, TO_70);
     const counter = animate(0, 70, {
       duration: COUNT_FIRST,
@@ -100,8 +90,6 @@ export class PageLoader {
 
     await wait(HOLD_FULL);
     animate(end, { width: "100%" }, STAGE);
-    this.spin.stop();
-    mark.style.display = "none";
     count.style.display = "none";
 
     await wait(HOLD_END);
@@ -127,9 +115,9 @@ export class PageLoader {
     this.hidingPromise = undefined;
     this.fade?.stop();
     this.fade = undefined;
-    const { white, end, colors, mark, count } = this.dom;
-    // Curtain state: plain black field, no mark or counter.
-    gsap.set([mark, count], { display: "none" });
+    const { white, end, colors, count } = this.dom;
+    // Curtain state: plain black field, no counter.
+    gsap.set(count, { display: "none" });
     gsap.set([white, end], { width: "0%" });
     gsap.set(colors, { opacity: 1 });
     return new Promise<void>((resolve) => {
