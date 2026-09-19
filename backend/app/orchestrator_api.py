@@ -3,7 +3,7 @@ from pydantic import Field
 from . import auth,data_tools
 from .data_api import service
 from .data_service import StrictModel
-from .orchestrator import AgentService,Page,MODELS,authenticate,execute,ServiceError
+from .orchestrator import AgentService,Page,MODELS,authenticate,execute,ServiceError,Investigation
 router=APIRouter(prefix='/agents',tags=['agents'])
 class Control(StrictModel):enabled:bool
 class Call(StrictModel):
@@ -30,6 +30,12 @@ def control(body:Control,data=Depends(service)):return AgentService(data.store,d
 def cases(data=Depends(service)):return AgentService(data.store,data.oid).list_cases(Page())
 @router.get('/tasks')
 def tasks(data=Depends(service)):return AgentService(data.store,data.oid).list_tasks(Page())
+@router.post('/investigations')
+def investigate(body:Investigation,data=Depends(service)):
+    return invoke(AgentService(data.store,data.oid).start_investigation,body)
+@router.get('/tasks/{task_id}')
+def task(task_id:str,data=Depends(service)):
+    return invoke(AgentService(data.store,data.oid).get_task,task_id)
 @router.get('/tool-definitions')
 def definitions(identity=Depends(machine)):
     tools=data_tools.tool_definitions()+[{'name':name,'parameters':model.model_json_schema()} for name,model in MODELS.items()]

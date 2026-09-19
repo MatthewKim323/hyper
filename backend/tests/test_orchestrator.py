@@ -5,6 +5,10 @@ from app.database import agent_controllers as controllers,agent_tasks as tasks
 from app.devin_worker import run_once
 from test_simulator import setup
 
+@pytest.fixture(autouse=True)
+def legacy_coordinator_mode(monkeypatch):
+    monkeypatch.setenv('DEVIN_COORDINATOR_ENABLED','true')
+
 class Provider:
     def __init__(self):self.sessions={};self.created=[];self.messages=[];self.timeout=False
     def create(self,prompt,key,token):
@@ -110,3 +114,53 @@ def test_launch_budget_and_quota_do_not_spawn_more_sessions(setup,monkeypatch):
     due(store,a.oid);run_once(store,p)
     assert len(p.created)==1
     assert svc.controller()['status']=='blocked'
+
+def test_dashboard_worker_only_dispatch_and_recovery(setup,monkeypatch):
+    from app.orchestrator import Investigation
+    from app import dashboard
+    store,a,b,_,_=setup
+    monkeypatch.setenv('DEVIN_COORDINATOR_ENABLED','false')
+    monkeypatch.setenv('AGENT_PUBLIC_BASE_URL','https://example.test')
+    source=a.data.ingest('evidence.txt',b'Invoice 123: $100')['id']
+    state={'organization_id':a.oid}
+    args={'request_key':'first','title':'Invoice review','objective':'Reconcile invoice 123','source_ids':[source]}
+    task=dashboard.execute(store,state,'start_investigation',args)
+    assert dashboard.execute(store,state,'start_investigation',args)['id']==task['id']
+    svc=AgentService(store,a.oid)
+    with pytest.raises(ServiceError):svc.start_investigation(Investigation(**{**args,'objective':'different'}))
+    with pytest.raises(LookupError):dashboard.execute(store,{'organization_id':b.oid},'get_investigation',{'task_id':task['id']})
+    p=Provider();p.timeout=True
+    run_once(store,p)
+    assert len(p.created)==1 and 'investigator' in p.created[0][0]
+    due(store,a.oid);run_once(store,p)
+    assert len(p.created)==1
+    assert svc.controller()['session_id'] is None
+    worker=authenticate(store,p.created[0][2])
+    assert worker['role']=='worker'
+    execute(store,worker,'report_task_result',{'task_id':task['id'],'outcome':'complete','summary':'Invoice matches','source_ids':[source]})
+    result=dashboard.execute(store,state,'get_investigation',{'task_id':task['id']})
+    assert result['result']['source_ids']==[source] and result['status']=='complete'
+    due(store,a.oid);run_once(store,p)
+    assert len(p.created)==1 # completion/source events never spawn a coordinator
+    svc.enable(False)
+    with pytest.raises(ServiceError):svc.start_investigation(Investigation(**{**args,'request_key':'paused'}))
+
+
+def test_worker_only_limit_and_budget(setup,monkeypatch):
+    from app.orchestrator import Investigation
+    store,a,_,_,_=setup
+    monkeypatch.setenv('DEVIN_COORDINATOR_ENABLED','false')
+    monkeypatch.setenv('AGENT_PUBLIC_BASE_URL','https://example.test')
+    monkeypatch.setenv('DEVIN_MAX_SESSIONS_PER_ORG','2')
+    svc=AgentService(store,a.oid)
+    for i in range(3):svc.start_investigation(Investigation(request_key=str(i),title='Review',objective='Review '+str(i)))
+    p=Provider();run_once(store,p)
+    assert len(p.created)==2 and svc.controller()['session_id'] is None
+    assert sum(t['status']=='queued' for t in svc.list_tasks(Page())['tasks'])==1
+    p.sessions['devin-1']['status']='error'
+    due(store,a.oid);run_once(store,p)
+    assert len(p.created)==2 and svc.controller()['status']=='blocked'
+
+def test_missing_evidence_can_be_reported_but_not_completed():
+    assert Report(task_id='task',outcome='needs_input',summary='No documents available').source_ids==[]
+    with pytest.raises(ValueError):Report(task_id='task',outcome='complete',summary='Done')

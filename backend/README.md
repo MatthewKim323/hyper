@@ -125,3 +125,7 @@ See [ARTIFACTS_API.md](ARTIFACTS_API.md) for json-render financial charts and sc
 ## Elastic evidence investigator
 
 See [ELASTIC.md](ELASTIC.md) for Jina reranking, the persistent investigation API, organization-scoped Agent Builder tools, and Elastic Workflow provisioning. Run `uv run python -m app.elastic_setup check` to check capabilities, and `uv run python -m app.elastic_worker` to process queued investigations. Cloud execution requires separate Kibana credentials and a provisioned Workflow; local search alone does not enable it.
+
+## World dashboard conversation
+
+`POST /world/agent`, `GET /world/agent/transcript`, and `WS /world/agent/stream` expose a persistent dashboard assistant for typed chat and voice, separate from onboarding. See [WORLD_AGENT_API.md](WORLD_AGENT_API.md) for authentication, streaming events, reconnect behavior, and frontend integration.

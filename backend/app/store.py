@@ -64,7 +64,28 @@ class Store:
             value = db.execute(select(sessions.c.state).join(memberships,
                 memberships.c.organization_id==sessions.c.organization_id).where(
                 sessions.c.id==sid,memberships.c.user_id==user_id)).scalar()
-        return json.loads(value) if value else None
+        state = json.loads(value) if value else None
+        if state and state.get('mode') == 'dashboard' and state['created_by'] != user_id:
+            return None
+        return state
+
+    def dashboard(self, user_id):
+        """One durable private conversation per member and organization."""
+        org = self.workspace(user_id)
+        sid = uuid.uuid5(uuid.NAMESPACE_URL, json.dumps(['hyper-dashboard', org['id'], user_id])).hex
+        state = dict(id=sid, mode='dashboard', organization_id=org['id'], created_by=user_id,
+                     organization_context_version=org['context_version'], revision=0, transcript=[],
+                     context=org['context'], readiness={'status':'not_applicable'}, demo=False)
+        with self.connect() as db:
+            insert_ignore(db, sessions, dict(id=sid, state=json.dumps(state), organization_id=org['id'],
+                                            created_by=user_id, created_at=time.time_ns()//1000))
+        state = self.get(sid, user_id)
+        if state is None:
+            raise PermissionError('Workspace access removed')
+        # Refresh company memory without overwriting an active conversation's transcript.
+        state['context'] = org['context']
+        state['organization_context_version'] = org['context_version']
+        return state
 
     def save(self, state):
         with self.connect() as db:

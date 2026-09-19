@@ -82,6 +82,38 @@ def transcript(sid: str, request: Request, after: int = Query(0, ge=0), limit: i
             'has_more':after + len(page) < len(entries)}
 
 
+def dashboard_snapshot(state):
+    return {**{k:v for k,v in state.items() if k not in ('history','evidence','transcript')},
+            'transcript':state['transcript'][-50:], 'transcript_count':len(state['transcript']),
+            'stream_url':'/world/agent/stream', 'transcript_url':'/world/agent/transcript'}
+
+
+@app.post('/world/agent', tags=['world'], summary='Create or resume your persistent dashboard agent')
+def dashboard_agent(identity=Depends(auth.current_user)):
+    try:
+        return {'session':dashboard_snapshot(store.dashboard(identity.user_id))}
+    except PermissionError:
+        raise HTTPException(403, 'Workspace access removed') from None
+
+
+@app.get('/world/agent/transcript', tags=['world'])
+def dashboard_transcript(identity=Depends(auth.current_user), after: int = Query(0, ge=0),
+                         limit: int = Query(100, ge=1, le=500)):
+    try:
+        state = store.dashboard(identity.user_id)
+    except PermissionError:
+        raise HTTPException(403, 'Workspace access removed') from None
+    entries = [{**entry, 'sequence':i+1} for i,entry in enumerate(state['transcript'])]
+    page = entries[after:after+limit]
+    return {'session_id':state['id'], 'messages':page, 'next_after':after+len(page),
+            'has_more':after+len(page)<len(entries)}
+
+
+@app.websocket('/world/agent/stream')
+async def dashboard_stream(ws: WebSocket):
+    await stream(ws, None)
+
+
 @app.websocket('/sessions/{sid}/stream')
 async def stream(ws: WebSocket, sid: str):
     origins = os.getenv('ALLOWED_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000').split(',')
@@ -95,7 +127,15 @@ async def stream(ws: WebSocket, sid: str):
     except Exception:
         await ws.close(code=1008)
         return
-    state = store.get(sid, identity.user_id)
+    try:
+        state = store.dashboard(identity.user_id) if sid is None else store.get(sid, identity.user_id)
+    except PermissionError:
+        await ws.close(code=1008)
+        return
+    if state:
+        sid = state['id']
+        if state.get('mode') == 'dashboard':
+            state['context'] = store.workspace(identity.user_id)['context']
     if not state or sid in active:
         await ws.close(code=1008)
         return
@@ -108,6 +148,9 @@ async def stream(ws: WebSocket, sid: str):
         authorize()
         async with send_lock:
             await ws.send_json(event)
+            if event['type'] == 'connection.closed' and state.get('mode') == 'dashboard':
+                # A dead provider must not leave a seemingly live dashboard socket.
+                await ws.close(code=1012, reason='Reconnect to resume saved conversation')
     bridge = voice.VoiceSession(state, store, emit, authorize)
     started = False
     microphone = False
@@ -118,8 +161,22 @@ async def stream(ws: WebSocket, sid: str):
                 await ws.close(code=1008)
                 return
     watcher = asyncio.create_task(watch_auth())
+    async def watch_investigations():
+        from .orchestrator import AgentService
+        seen = {}
+        while True:
+            await asyncio.sleep(3)
+            if state.get('mode') != 'dashboard':
+                return
+            for task_id in list(state.get('investigation_ids', [])):
+                authorize()
+                task = await asyncio.to_thread(AgentService(store, state['organization_id']).get_task, task_id)
+                if seen.get(task_id) != task:
+                    await emit({'type':'investigation.updated','task':task})
+                    seen[task_id] = task
+    activity_watcher = asyncio.create_task(watch_investigations())
     try:
-        await emit({'type':'session','session':state})
+        await emit({'type':'session','session':dashboard_snapshot(state) if state.get('mode') == 'dashboard' else state})
         await bridge.set_visual_state('idle', 'session_connected')
         while True:
             packet = await ws.receive()
@@ -179,6 +236,9 @@ async def stream(ws: WebSocket, sid: str):
         with contextlib.suppress(Exception):
             await emit({'type':'error','message':'Connection failed. Reconnect to resume saved history.'})
     finally:
+        activity_watcher.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await activity_watcher
         watcher.cancel()
         with contextlib.suppress(asyncio.CancelledError, Exception):
             await watcher

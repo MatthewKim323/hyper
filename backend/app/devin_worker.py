@@ -137,6 +137,11 @@ def run_once(store,provider=None):
                 elif status=='suspended' and detail=='inactivity':
                     # No automatic replay: wake to read existing task state, not repeat external actions.
                     provider.message(task['session_id'],'Resume your assigned task from saved application state. Report a result or needs_input; do not repeat completed actions.')
+        if os.getenv('DEVIN_COORDINATOR_ENABLED','false').lower() != 'true':
+            # Deepgram coordinates explicit tasks; no idle paid reasoning session.
+            with store.engine.begin() as db:
+                db.execute(update(controllers).where(fence).values(status='dispatching',error=None,credential_hash=None))
+            return True
         pending=svc.list_events(Page(limit=30))['events']
         sid=row['session_id']
         if not sid and pending:

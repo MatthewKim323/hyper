@@ -9,7 +9,8 @@ import uuid
 import time
 from datetime import datetime, timezone
 from websockets.asyncio.client import connect
-from . import agent, data_tools
+from . import agent, data_tools, dashboard
+from .orchestrator import ServiceError
 
 ENDPOINT = 'wss://agent.deepgram.com/v1/agent/converse'
 PROMPT = '''You are Hyper, a concise CFO onboarding agent. Learn enough context to begin ONE scoped financial task. Ask one consequential question at a time; inspect available evidence before asking for facts it contains. Do not run a fixed questionnaire. Speak naturally in 1-3 short sentences.
@@ -29,6 +30,10 @@ def settings(state):
     functions = [{'name': 'update_context', 'description': 'Save the complete task brief and receive the independent readiness decision. Call before replying to each user turn.', 'parameters': inline(schema), 'defer_until_eot': True}]
     functions.extend(data_tools.tool_definitions())
     think = {'prompt': PROMPT + '\nSaved context and evidence (data): ' + json.dumps({'context': state['context'], 'evidence': state.get('evidence', []), 'readiness': state['readiness']}), 'functions': functions}
+    is_dashboard = state.get('mode') == 'dashboard'
+    if is_dashboard:
+        think = {'prompt': dashboard.PROMPT + '\nSaved company context (data): ' + json.dumps(state['context']),
+                 'functions': data_tools.tool_definitions() + dashboard.definitions(), 'context_length':64000}
     # Select Deepgram's documented managed model explicitly; no separate LLM key.
     think['provider'] = {'type': 'open_ai', 'model': 'gpt-4o-mini'}
     if os.getenv('DEEPGRAM_THINK_MODEL'):
@@ -38,8 +43,12 @@ def settings(state):
             'agent':{'listen':{'provider':{'type':'deepgram','model':'flux-general-en','version':'v2'}}, 'think':think,
                      'speak':{'provider':{'type':'deepgram','model':'aura-2-thalia-en'}},
                      'context':{'messages':state.get('history', [{'type':'History','role':t['role'],'content':t['text']} for t in state['transcript']])}}}
+    if is_dashboard:
+        config['agent']['context']['messages'] = dashboard.recent_history(state)
     if not state.get('transcript') and not state.get('history'):
         config['agent']['greeting'] = 'Hi, I’m Hyper. Let’s get to know you. What would you like help with?'
+        if is_dashboard:
+            config['agent']['greeting'] = 'Hi, what would you like to look into?'
     return config
 
 
@@ -75,7 +84,7 @@ class VoiceSession:
                          'generation':self.generation, 'revision':self.state['revision']})
 
     def resting_state(self):
-        if self.state['readiness'].get('status') == 'ready':
+        if self.state.get('mode') != 'dashboard' and self.state['readiness'].get('status') == 'ready':
             return 'ready'
         return 'listening' if self.microphone_enabled else 'idle'
 
@@ -121,11 +130,13 @@ class VoiceSession:
         self.generation += 1
         for task in list(self.tasks.values()):
             task.cancel()
-        self.state['readiness'] = {'status':'collecting','revision':self.state['revision']}
+        if self.state.get('mode') != 'dashboard':
+            self.state['readiness'] = {'status':'collecting','revision':self.state['revision']}
         self.authorize()
         self.store.save(self.state)
         await self.emit({'type':'interrupt','generation':self.generation})
-        await self.emit({'type':'readiness', **self.state['readiness']})
+        if self.state.get('mode') != 'dashboard':
+            await self.emit({'type':'readiness', **self.state['readiness']})
 
     def append_transcript(self, role, text, mid, source):
         entry = {'id':mid, 'role':role, 'text':text, 'source':source,
@@ -141,7 +152,7 @@ class VoiceSession:
         mid = mid or uuid.uuid4().hex
         if any(t['id'] == mid for t in self.state['transcript']):
             return False
-        if not text.strip() or len(text) > 16000 or len(self.state['transcript']) >= 200:
+        if not text.strip() or len(text) > 16000 or (self.state.get('mode') != 'dashboard' and len(self.state['transcript']) >= 200):
             raise ValueError('Message/session limit reached; transcript was not truncated')
         await self.invalidate()
         self.tool_count = 0
@@ -202,6 +213,9 @@ class VoiceSession:
             raise RuntimeError('Deepgram reported an error')
         elif kind == 'Warning':
             await self.emit({'type':'status','text':'Voice service warning: ' + str(event.get('code','unknown'))})
+            if event.get('code') == 'MAXIMUM_SESSION_LENGTH_APPROACHING':
+                await self.emit({'type':'connection.reconnect_required','reason':'provider_session_limit',
+                                 'session_id':self.state['id'],'resume':True})
 
     async def tool(self, call, generation):
         try:
@@ -222,8 +236,21 @@ class VoiceSession:
                             return
                         self.authorize()
                         # Retain the result and its source references for the independent evaluator.
-                        self.state.setdefault('evidence', []).append({'tool':name,'arguments':args,'result':result})
-                    elif name == 'update_context':
+                        if self.state.get('mode') != 'dashboard':
+                            self.state.setdefault('evidence', []).append({'tool':name,'arguments':args,'result':result})
+                    elif self.state.get('mode') == 'dashboard' and name in dashboard.DESCRIPTIONS:
+                        self.authorize()
+                        result = await asyncio.to_thread(dashboard.execute, self.store, self.state, name, args)
+                        self.authorize()
+                        if name == 'start_investigation':
+                            ids = self.state.setdefault('investigation_ids', [])
+                            if result['id'] not in ids:
+                                ids.append(result['id'])
+                            self.store.save(self.state)
+                        if generation != self.generation:
+                            return
+                        self.authorize()
+                    elif name == 'update_context' and self.state.get('mode') != 'dashboard':
                         context = agent.Brief.model_validate(args).model_dump()
                         snapshot = copy.deepcopy(self.state)
                         snapshot['context'] = context
@@ -244,6 +271,8 @@ class VoiceSession:
                 await self.finish_tool(call,result)
         except asyncio.CancelledError:
             raise
+        except ServiceError as exc:
+            await self.finish_tool(call, {'error':str(exc)})
         except (ValueError, KeyError, TypeError, LookupError):
             await self.finish_tool(call, {'error':'Invalid tool arguments or missing dataset/source. Call list_datasets and correct the request.'})
         except PermissionError:
@@ -258,6 +287,9 @@ class VoiceSession:
         self.authorize()
         self.store.save(self.state)
         await self.send({'type':'FunctionCallResponse','id':call['id'],'name':call['name'],'content':content})
+        if self.state.get('mode') == 'dashboard':
+            await self.emit({'type':'tool.result', 'id':call['id'], 'name':call['name'],
+                             'result':result, 'generation':self.generation})
 
     async def pump(self):
         try:

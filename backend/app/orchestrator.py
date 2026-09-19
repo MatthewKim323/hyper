@@ -6,7 +6,7 @@ import secrets
 import time
 import uuid
 from typing import Literal
-from pydantic import Field
+from pydantic import Field, model_validator
 from sqlalchemy import select,update,func
 from .database import (agent_controllers as controllers,agent_cases as cases,agent_case_updates as case_updates,
     agent_tasks as tasks,agent_events as events,agent_attempts as attempts,insert_ignore)
@@ -43,10 +43,20 @@ class Delegate(StrictModel):
     objective:str=Field(min_length=1,max_length=8000)
 class TaskID(StrictModel):
     task_id:str
+class Investigation(StrictModel):
+    request_key:str=Field(min_length=1,max_length=128)
+    title:str=Field(min_length=1,max_length=200)
+    objective:str=Field(min_length=1,max_length=8000)
+    source_ids:list[str]=Field(default_factory=list,max_length=30)
 class Report(TaskID):
     outcome:Literal['complete','needs_input','failed']
     summary:str=Field(min_length=1,max_length=8000)
-    source_ids:list[str]=Field(min_length=1,max_length=30)
+    source_ids:list[str]=Field(default_factory=list,max_length=30)
+    @model_validator(mode='after')
+    def require_completion_evidence(self):
+        if self.outcome=='complete' and not self.source_ids:
+            raise ValueError('Completed investigations require source citations')
+        return self
 class Checkpoint(StrictModel):
     summary:str=Field(min_length=1,max_length=12000)
 class ServiceError(ValueError):pass
@@ -55,6 +65,27 @@ class ServiceError(ValueError):pass
 class AgentService:
     def __init__(self,store,oid):self.store,self.engine,self.oid=store,store.engine,oid
     def data(self):return DataService(self.store,self.oid)
+    def start_investigation(self,args):
+        for source_id in args.source_ids:self.data().source(source_id)
+        key='dashboard:'+args.request_key
+        with self.engine.begin() as db:
+            if db.dialect.name=='sqlite':db.exec_driver_sql('BEGIN IMMEDIATE')
+            insert_ignore(db,controllers,dict(organization_id=self.oid,enabled=True,status='pending',checkpoint={},lease_until=0,next_poll_at=0,credential_expires=0,launch_count=0))
+            control=db.execute(select(controllers).where(controllers.c.organization_id==self.oid).with_for_update()).mappings().one()
+            existing=db.execute(select(tasks).where(tasks.c.organization_id==self.oid,tasks.c.request_key==key)).mappings().first()
+            if existing:
+                case=db.execute(select(cases).where(cases.c.id==existing['case_id'])).mappings().one()
+                if existing['objective']!=args.objective or case['title']!=args.title or case['state']['source_ids']!=args.source_ids:
+                    raise ServiceError('Investigation request key reused with different inputs')
+                return public(existing)
+            if not control['enabled']:raise ServiceError('Investigations are paused; resume through agent controls first')
+            cid=uid('case');tid=uid('task');state=CaseState(source_ids=args.source_ids,next_actions=[args.objective]).model_dump()
+            db.execute(cases.insert().values(id=cid,organization_id=self.oid,case_key=key,title=args.title,state=state,version=1,updated_at=now()))
+            db.execute(case_updates.insert().values(id=uid('update'),case_id=cid,version=1,state=state,created_at=now()))
+            db.execute(tasks.insert().values(id=tid,organization_id=self.oid,case_id=cid,request_key=key,objective=args.objective,status='queued',created_at=now(),credential_expires=0,lease_until=0,next_poll_at=0))
+            db.execute(update(controllers).where(controllers.c.organization_id==self.oid).values(next_poll_at=0))
+            emit(db,self.oid,'investigation:'+tid,'task.queued',{'task_id':tid,'case_id':cid})
+        return self.get_task(tid)
     def controller(self):
         with self.engine.connect() as db:
             row=db.execute(select(controllers).where(controllers.c.organization_id==self.oid)).mappings().first()
@@ -145,7 +176,7 @@ def authenticate(store,token):
     hashed=digest(token)
     with store.engine.connect() as db:
         controller=db.execute(select(controllers).where(controllers.c.credential_hash==hashed,controllers.c.credential_expires>now(),controllers.c.enabled.is_(True))).mappings().first()
-        if controller:return {'organization_id':controller['organization_id'],'role':'coordinator','task_id':None}
+        if controller and os.getenv('DEVIN_COORDINATOR_ENABLED','false').lower()=='true':return {'organization_id':controller['organization_id'],'role':'coordinator','task_id':None}
         task=db.execute(select(tasks).join(controllers,tasks.c.organization_id==controllers.c.organization_id).where(
             tasks.c.credential_hash==hashed,tasks.c.credential_expires>now(),tasks.c.status=='running',controllers.c.enabled.is_(True))).mappings().first()
         if task:return {'organization_id':task['organization_id'],'role':'worker','task_id':task['id'],'case_id':task['case_id']}

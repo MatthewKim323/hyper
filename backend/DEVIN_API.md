@@ -1,10 +1,10 @@
-# Persistent Devin Orchestration
+# Deepgram Coordination and Persistent Devin Workers
 
-Implemented: resumable coordinator per application organization, transactionally recorded events, versioned case updates, idempotent task delegation, scoped machine credentials, two concurrent workers per organization, provider launch reconciliation, checkpoint recovery and activity polling. Uses Devin v3 organization APIs. Native child-session links are not assumed: parentage is represented by application organization/case/task records.
+Default: Deepgram coordinates explicit dashboard requests; the durable dispatcher runs Devin investigation workers without a Devin coordinator. Implemented: transactionally recorded events, versioned case updates, idempotent task delegation, scoped machine credentials, two concurrent workers per organization, provider launch reconciliation, checkpoint recovery and activity polling. Uses Devin v3 organization APIs. Native child-session links are not assumed: parentage is represented by application organization/case/task records.
 
 ## Start
 
-Set server-only `DEVIN_API_KEY` and `DEVIN_ORG_ID`; these identify the Devin account, not the customer's application organization. Set `AGENT_PUBLIC_BASE_URL` to this backend's externally reachable **HTTPS** URL. Configure a Devin service role with required API session permissions. Do not enable unrestricted native delegation for the agent if application launch budgets are intended to be exhaustive; native launches bypass the backend's task ledger. Application prompts direct all delegation through `delegate_task`.
+Set server-only `DEVIN_API_KEY` and `DEVIN_ORG_ID`; these identify the Devin account, not the customer's application organization. Set `AGENT_PUBLIC_BASE_URL` to this backend's externally reachable **HTTPS** URL. Configure a Devin service role with required API session permissions. Do not enable unrestricted native delegation for the agent if application launch budgets are intended to be exhaustive; native launches bypass the backend's task ledger. The dashboard uses `start_investigation`; worker credentials cannot delegate.
 
 Run:
 
@@ -16,12 +16,16 @@ The worker loads `backend/.env`; `--once` processes one due organization and exi
 
 With a logged-in user's bearer token:
 
-- `POST /agents/controller` with `{"enabled":true}` enables that organization's coordinator.
+- `POST /agents/controller` with `{"enabled":true}` resumes that organization's dispatcher.
 - `POST /agents/controller` with `{"enabled":false}` pauses dispatch and disables its application machine credentials. This does not terminate already-running cloud sessions; stop those in Devin if immediate compute termination is needed.
 - `GET /agents/controller` returns saved session/checkpoint/status/error.
 - `GET /agents/cases` and `GET /agents/tasks` return the first 50 cases/tasks for the dashboard. Agent tools support pagination.
 
-The first pending event launches a coordinator. `resumable: true` preserves provider state. New events wake suspended sessions where appropriate. Quota or approval suspension is surfaced as blocked. A terminal coordinator is replaced from saved context/checkpoint when events remain. Long-lived credentials expire after seven days; an expired coordinator is replaced. Worker credentials are revoked on result or blocked session.
+`POST /agents/investigations` queues a read-only investigation with `request_key`, `title`, `objective`, and optional `source_ids`. First use initializes an enabled dispatcher; it never unpauses an existing paused organization. Case/task/event creation is atomic. Identical retries return the existing task; changed inputs under the same key return 409. `GET /agents/tasks/{task_id}` retrieves the organization-scoped result.
+
+The dispatcher launches up to two workers per organization and honors the existing cumulative session/ACU limits. No coordinator starts for source events or completed tasks. Background tasks survive browser disconnects. Automatic investigation of new data is not enabled by this change.
+
+`DEVIN_COORDINATOR_ENABLED=false` is the default. The legacy coordinator flow is available only with `true`: pending events launch/resume a coordinator, and checkpoint recovery applies. Existing coordinator application tokens are rejected when disabled; switching modes does not terminate existing cloud sessions. Stop those in Devin if necessary. Worker credentials are revoked on result or blocked session.
 
 ## Agent access
 
@@ -34,7 +38,7 @@ This is an authenticated HTTP tool bridge, not an MCP protocol endpoint. It work
 
 Coordinator tools: existing financial retrieval, concerns (including lease renewal), artifacts, plus `list_events`, `ack_events`, `list_cases`, `get_case`, `update_case`, `delegate_task`, `get_task`, `list_tasks`, `checkpoint`. Worker tools are restricted to organization evidence, its own case/task, concern/artifact creation, and `report_task_result`. Workers cannot delegate, change cases, respond as the user, claim unrelated concern work, or access other organizations. All agent sessions remain read-only with respect to financial execution.
 
-Case update requires `case_key`, `title`, `expected_version` (0 to create) and state with findings/unknowns/next_actions/source_ids/concern_ids. Updates are version-checked and appended to history. Delegation requires stable `request_key`, existing `case_id`, and `objective`. Result requires assigned `task_id`, outcome (`complete`, `needs_input`, `failed`), summary and source IDs. Agent-reported completion is evidence-linked, not an independently verified financial posting.
+Case update requires `case_key`, `title`, `expected_version` (0 to create) and state with findings/unknowns/next_actions/source_ids/concern_ids. Updates are version-checked and appended to history. Delegation requires stable `request_key`, existing `case_id`, and `objective`. Result requires assigned `task_id`, outcome (`complete`, `needs_input`, `failed`), summary and source IDs. A failed/needs_input report may omit citations when no evidence is available; complete reports require at least one valid organization source. Agent-reported completion is evidence-linked, not an independently verified financial posting.
 
 ## Events and recovery
 
