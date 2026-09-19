@@ -1,5 +1,7 @@
 # Aircord Fidelity Study
 
+The Hyper landing experience lives in [`studio/`](studio/README.md). Run `cd studio && bun dev` for its local preview on port 3888. It has its own dependencies and build.
+
 A private, interactive reconstruction of [Aircord](https://aircord.co.jp/en/), preserving its real-time 3D scenes, original content and visual design. See [PROVENANCE.md](PROVENANCE.md) for attribution and reuse details.
 
 ## Run

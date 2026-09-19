@@ -1,0 +1,126 @@
+{
+  "library": "home.blend",
+  "preparation": "Imported and organized from existing runtime GLBs.",
+  "blender_version": "4.5.13 LTS",
+  "sources": [
+    {
+      "source": "public/theme/models/home/chair.glb",
+      "sha256": "185e97d95cbe96f7485120d0e777bd1f1e2af1a5d18afc10e117a3699fe9a503",
+      "collection": "chair",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v3.3.32",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "chair.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/home/grass-simple.glb",
+      "sha256": "f3e8aaf21eede8259ef5779589ee889e0798e4e617f4c72fe4835718287e026a",
+      "collection": "grass-simple",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v1.4.40",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "grass-simple.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/home/land-group.glb",
+      "sha256": "c103d1ee984bbc58fcc425d202a31dc213da9499e2c7be5290f96a0a9345f5a4",
+      "collection": "land-group",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v1.4.40",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "land-group.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/home/objectsData.glb",
+      "sha256": "29abfb84ae78f9e7698675b2a33cf762199089d973dcbe29d5eb4f2f73f92d90",
+      "collection": "objectsData",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v1.4.40",
+        "version": "2.0"
+      },
+      "objects": 19,
+      "mesh_objects": 0,
+      "embedded_metadata": "objectsData.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/home/pillows.glb",
+      "sha256": "9ab23643469b7dee412f1b9beb74e582b343d5a2451ae486ebff32cc53e6a5e4",
+      "collection": "pillows",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v1.4.40",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "pillows.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/home/rocks.glb",
+      "sha256": "5603a12a8014f559772e14bfb41d103d8dd2753bb2693901f35af9ec8727a8d8",
+      "collection": "rocks",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v1.4.40",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "rocks.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/home/room-1.glb",
+      "sha256": "dbe2af44f951e6d943937b6d332ee21e56a8be48042d70cd9b97aff73b3678a1",
+      "collection": "room-1",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v1.4.40",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "room-1.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/home/room-2.glb",
+      "sha256": "397feaba5ed18273420f86043b29a8a2935308cca0dbb348b2c08e8874cea940",
+      "collection": "room-2",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v1.4.40",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "room-2.glb.gltf.json"
+    },
+    {
+      "source": "public/theme/models/home/table-3.glb",
+      "sha256": "5a86f8fd5d47d4fbfc11edbcc2ee4c3cd6b0b8795d45f3fcb8c9ae62ac7ba50d",
+      "collection": "table-3",
+      "original_asset_metadata": {
+        "generator": "Khronos glTF Blender I/O v1.4.40",
+        "version": "2.0"
+      },
+      "objects": 1,
+      "mesh_objects": 1,
+      "embedded_metadata": "table-3.glb.gltf.json"
+    }
+  ],
+  "counts": {
+    "objects": 27,
+    "meshes": 8,
+    "mesh_objects": 8,
+    "collections": 10,
+    "materials": 0,
+    "armatures": 0,
+    "actions": 0,
+    "vertices": 47961,
+    "polygons": 80495
+  }
+}

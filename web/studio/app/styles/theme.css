@@ -1,0 +1,5 @@
+/* Keep the landing focused on the scene and its central entrance. */
+body.home .header,
+body.home .footer {
+  display: none;
+}

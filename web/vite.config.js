@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 function pages(dir = ".") {
   return readdirSync(dir, { withFileTypes: true }).flatMap((item) => {
     if (
-      ["node_modules", "work", "dist", ".git"].includes(item.name) ||
+      ["node_modules", "work", "dist", ".git", "studio"].includes(item.name) ||
       item.name.startsWith(".")
     )
       return [];

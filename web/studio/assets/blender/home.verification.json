@@ -1,0 +1,16 @@
+{
+  "library": "home.blend",
+  "reopened": true,
+  "bytes": 3131752,
+  "counts": {
+    "objects": 27,
+    "meshes": 8,
+    "mesh_objects": 8,
+    "collections": 10,
+    "materials": 0,
+    "armatures": 0,
+    "actions": 0,
+    "vertices": 47961,
+    "polygons": 80495
+  }
+}
