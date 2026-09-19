@@ -1,0 +1,98 @@
+# Run the data stack
+
+From the repository root:
+
+```sh
+docker compose -f backend/compose.yaml up -d
+cd backend
+uv sync
+cp .env.data.example .env.data
+uv run python -m app.data_cli --env-file .env.data init
+```
+
+The local stack provides Postgres on 15432, S3-compatible MinIO on 19000 (console 19001), and Elasticsearch on 19200. Docker volumes persist all three. These loopback-bound development services use local-only credentials and are not a public deployment configuration.
+
+Merge the values from `.env.data` into `.env`, preserving your existing Clerk/Deepgram/Jev credentials. Start the API and worker in separate terminals:
+
+```sh
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
+uv run python -m app.ingestion_worker
+```
+
+The API and worker must use the same DATABASE_URL, Elasticsearch index/inference configuration, and bucket. Use one API worker for the existing voice-session ownership mechanism. Ingestion workers use database leases and can scale separately. `--once` processes one pending job.
+
+## Import the demo
+
+```sh
+uv run python -m app.data_cli --env-file .env.data import-demo
+```
+
+The default creates/seeds the isolated `demo-meridian` organization without creating fake login identities. Put actual Clerk user IDs in `DEMO_USER_IDS` before their first sign-in to access it. Or pass `--user-id user_ACTUAL_CLERK_ID` to seed that user's workspace, or `--organization-id org_EXISTING` to seed an existing organization administratively.
+
+The importer loads the 39 schema-listed top-level financial exports, company metadata, and visible fixture case documents. It does not import private answers, generated narratives, alternate CSV copies, or the duplicate SQLite export. Repeating the import is idempotent.
+
+## Enable semantic search
+
+An empty `ELASTIC_INFERENCE_ID` intentionally uses keyword search. For Elastic Cloud, provision a compatible embedding inference endpoint and use its ID. With the local trial-licensed cluster, an example ELSER endpoint is:
+
+```sh
+curl -X PUT http://127.0.0.1:19200/_inference/sparse_embedding/hyper-elser \
+  -H 'Content-Type: application/json' \
+  -d '{"service":"elasticsearch","service_settings":{"model_id":".elser_model_2","num_allocations":1,"num_threads":4}}'
+```
+
+For concurrent indexing and interactive searches, provision a second endpoint using the same model, e.g. `hyper-elser-query` with two threads, and set `ELASTIC_SEARCH_INFERENCE_ID=hyper-elser-query`. Both endpoints must produce compatible embeddings. The local Compose configuration reserves up to 60% of Docker memory for ML; two ELSER deployments need sufficient memory (tested with approximately 8 GiB allocated to Docker). The worker also limits semantic indexing batches to one chunk, while structured keyword batches remain larger.
+
+The first request downloads a model and can time out while deployment continues. Inspect `GET /_ml/trained_models/.elser_model_2/_stats` and confirm a started deployment before ingestion. Model availability, memory, and licensing depend on the chosen deployment; local Compose enables an Elastic trial.
+
+Set these in both API and worker configuration:
+
+```dotenv
+ELASTIC_INFERENCE_ID=hyper-elser
+ELASTIC_SEARCH_INFERENCE_ID=hyper-elser-query
+ELASTICSEARCH_INDEX=hyper-evidence-hybrid-v1
+# Optional structured datasets with prose worth embedding:
+ELASTIC_SEMANTIC_DATASETS=vendor_agreements,contracts
+```
+
+Use a new index name when changing inference configuration; the backend rejects mismatched mappings. Reinitialize the index and requeue sources:
+
+```sh
+uv run python -m app.data_cli init
+uv run python -m app.data_cli reindex --user-id user_ACTUAL_CLERK_ID
+```
+
+Restart API/worker after configuration changes. RRF combines lexical and semantic results; financial records remain queryable in Postgres independently of indexing/model availability.
+
+## Move existing onboarding state to Postgres
+
+Stop the API while copying so updates are not lost. Keep the original SQLite file as a backup, set the target DATABASE_URL, then:
+
+```sh
+uv run python -m app.data_cli migrate-sqlite --path var/onboarding.sqlite
+```
+
+This copies user IDs, organizations, memberships, and sessions without changing ownership. Existing target IDs are left unchanged, so use an empty destination for a complete cutover. Anonymous legacy rows stay unowned. New schemas are created automatically through SQLAlchemy metadata; the old SQLite session schema receives only additive upgrades.
+
+## Deployment settings
+
+Use managed Postgres, a private S3/R2-compatible bucket, and an authenticated TLS Elastic endpoint. Configure:
+
+- `DATABASE_URL` (Postgres URL, TLS options as required by your host)
+- `S3_BUCKET`, `AWS_REGION`, provider credentials/IAM, optional `S3_ENDPOINT_URL`
+- `ELASTICSEARCH_URL`, `ELASTICSEARCH_API_KEY` (or username/password), `ELASTICSEARCH_INDEX`
+- optional `ELASTICSEARCH_CA_CERT`, `ELASTIC_INFERENCE_ID`, `ELASTIC_SEARCH_INFERENCE_ID`, `ELASTIC_SEMANTIC_DATASETS`
+
+Application requests reach S3 and Elasticsearch only through the backend. Keep DB/S3/Elastic credentials off the frontend. Back up Postgres and original objects; Elasticsearch can be rebuilt.
+
+## Verification
+
+```sh
+uv run pytest -q
+RUN_DATA_INTEGRATION=1 uv run pytest tests/test_data_integration.py -q
+npm test --prefix evaluator
+```
+
+Integration tests read `.env.data`, require actual services, and create/delete only their own temporary database schema, sources, users, objects, and search index. Their job queue is isolated from the running application worker. They verify original bytes, exact large decimal arithmetic, currency separation, durable jobs, Elasticsearch results, and storage restart.
+
+See [DATA_API.md](DATA_API.md) for upload forms, query examples, source citations, and failure behavior.

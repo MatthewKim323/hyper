@@ -1,34 +1,91 @@
-import hashlib
 import json
-import secrets
-import sqlite3
-from pathlib import Path
-
+import os
+import time
+import uuid
+from contextlib import contextmanager
+from sqlalchemy import select, update, case
+from .database import make_engine, initialize, users, organizations, memberships, sessions, insert_ignore
 
 class Store:
-    def __init__(self, path):
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
+    def __init__(self, path=None):
         self.path = path
-        with self.connect() as db:
-            db.execute('CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, token TEXT, state TEXT)')
+        self.engine = make_engine(path)
+        initialize(self.engine)
 
+    @contextmanager
     def connect(self):
-        return sqlite3.connect(self.path)
+        with self.engine.begin() as db:
+            yield db
 
-    def create(self, demo=False):
-        sid, token = secrets.token_urlsafe(18), secrets.token_urlsafe(32)
-        state = dict(id=sid, revision=0, transcript=[], context={}, readiness={'status': 'collecting'}, demo=demo)
+    def workspace(self, user_id):
         with self.connect() as db:
-            db.execute('INSERT INTO sessions VALUES (?,?,?)', (sid, hashlib.sha256(token.encode()).hexdigest(), json.dumps(state)))
-        return state, token
+            # Serialize initial provisioning for this user, including across API workers.
+            if db.dialect.name == 'postgresql':
+                from sqlalchemy import text
+                db.execute(text('SELECT pg_advisory_xact_lock(hashtext(:key))'),{'key':'user:'+user_id})
+            else:
+                db.exec_driver_sql('BEGIN IMMEDIATE')
+            oid = db.execute(select(memberships.c.organization_id).where(
+                memberships.c.user_id==user_id).order_by(memberships.c.organization_id).limit(1)).scalar()
+            if not oid:
+                if db.execute(select(users.c.id).where(users.c.id==user_id)).scalar():
+                    raise PermissionError('Workspace membership removed')
+                shared = user_id in {x.strip() for x in os.getenv('DEMO_USER_IDS','').split(',') if x.strip()}
+                oid = 'demo-meridian' if shared else 'org_' + uuid.uuid4().hex
+                insert_ignore(db, organizations, dict(id=oid,name='Meridian Demo' if shared else 'My company'))
+                db.execute(users.insert().values(id=user_id))
+                db.execute(memberships.insert().values(user_id=user_id,organization_id=oid,role='member' if shared else 'owner'))
+            org = dict(db.execute(select(organizations).where(organizations.c.id==oid)).mappings().one())
+            latest = db.execute(select(sessions.c.id).where(sessions.c.organization_id==oid)
+                                .order_by(sessions.c.created_at.desc(),sessions.c.id.desc()).limit(1)).scalar()
+        org['context'] = json.loads(org['context'])
+        org['onboarding_complete'] = bool(org['onboarding_complete'])
+        org['latest_session_id'] = latest
+        return org
 
-    def get(self, sid, token):
+    def member(self, user_id, oid):
         with self.connect() as db:
-            row = db.execute('SELECT token,state FROM sessions WHERE id=?', (sid,)).fetchone()
-        if not row or not secrets.compare_digest(row[0], hashlib.sha256(token.encode()).hexdigest()):
-            return None
-        return json.loads(row[1])
+            return db.execute(select(memberships.c.user_id).where(
+                memberships.c.user_id==user_id,memberships.c.organization_id==oid)).scalar() is not None
+
+    def create(self, user_id, demo=False):
+        org = self.workspace(user_id)
+        state = dict(id=uuid.uuid4().hex,organization_id=org['id'],created_by=user_id,
+                     organization_context_version=org['context_version'],revision=0,transcript=[],
+                     context={k:org['context'][k] for k in ('company','facts') if k in org['context']},
+                     readiness={'status':'collecting'},demo=demo)
+        with self.connect() as db:
+            db.execute(sessions.insert().values(id=state['id'],state=json.dumps(state),
+                organization_id=org['id'],created_by=user_id,created_at=time.time_ns()//1000))
+        return state
+
+    def get(self, sid, user_id):
+        with self.connect() as db:
+            value = db.execute(select(sessions.c.state).join(memberships,
+                memberships.c.organization_id==sessions.c.organization_id).where(
+                sessions.c.id==sid,memberships.c.user_id==user_id)).scalar()
+        return json.loads(value) if value else None
 
     def save(self, state):
         with self.connect() as db:
-            db.execute('UPDATE sessions SET state=? WHERE id=?', (json.dumps(state), state['id']))
+            db.execute(update(sessions).where(sessions.c.id==state['id'],
+                sessions.c.organization_id==state['organization_id']).values(state=json.dumps(state)))
+
+    def save_context(self, state):
+        with self.connect() as db:
+            ready = int(state['readiness'].get('status')=='ready')
+            result = db.execute(update(organizations).where(organizations.c.id==state['organization_id'],
+                organizations.c.context_version==state['organization_context_version']).values(
+                    context=json.dumps(state['context']),context_version=organizations.c.context_version+1,
+                    onboarding_complete=case((organizations.c.onboarding_complete==1,1),else_=ready)))
+            if result.rowcount != 1:
+                return False
+            state['organization_context_version'] += 1
+            db.execute(update(sessions).where(sessions.c.id==state['id'],
+                sessions.c.organization_id==state['organization_id']).values(state=json.dumps(state)))
+        return True
+
+    def add_member(self, user_id, oid):
+        with self.connect() as db:
+            insert_ignore(db,users,dict(id=user_id))
+            insert_ignore(db,memberships,dict(user_id=user_id,organization_id=oid,role='member'))

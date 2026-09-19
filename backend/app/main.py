@@ -1,17 +1,20 @@
 import asyncio
 import contextlib
 import os
+import time
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parents[1] / '.env')
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, Query
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, Query, Depends
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from .store import Store
-from . import voice
+from . import voice, auth
 
 app = FastAPI(title='Hyper Onboarding')
-store = Store(os.getenv('DATABASE_PATH', 'var/onboarding.sqlite'))
+app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in os.getenv('ALLOWED_ORIGINS','http://127.0.0.1:8000,http://localhost:8000').split(',')], allow_methods=['GET','POST'], allow_headers=['Authorization','Content-Type'])
+store = Store()
 active = set()
 
 class CreateSession(BaseModel):
@@ -40,14 +43,31 @@ def playground():
 def audio_worklet():
     return FileResponse(Path(__file__).resolve().parents[1] / 'static/audio-worklet.js', media_type='text/javascript')
 
+@app.get('/auth/config')
+def auth_config():
+    return {'publishable_key':os.getenv('CLERK_PUBLISHABLE_KEY',''),
+            'frontend_api':os.getenv('CLERK_ISSUER','')}
+
+@app.get('/me/workspace')
+def workspace(identity=Depends(auth.current_user)):
+    try:
+        org = store.workspace(identity.user_id)
+    except PermissionError:
+        raise HTTPException(403, 'Workspace access removed')
+    return {'user_id':identity.user_id, 'organization':org,
+            'next_step':'workspace' if org['onboarding_complete'] else 'onboarding'}
+
 @app.post('/sessions')
-def create(body: CreateSession):
-    state, token = store.create(body.demo)
-    return {'session': state, 'token': token}
+def create(body: CreateSession, identity=Depends(auth.current_user)):
+    try:
+        return {'session':store.create(identity.user_id, body.demo)}
+    except PermissionError:
+        raise HTTPException(403, 'Workspace access removed')
 
 @app.get('/sessions/{sid}')
 def get(sid: str, request: Request):
-    state = store.get(sid, request.headers.get('authorization', '').removeprefix('Bearer '))
+    identity = auth.current_user(request)
+    state = store.get(sid, identity.user_id)
     if not state:
         raise HTTPException(404)
     return state
@@ -70,28 +90,43 @@ async def stream(ws: WebSocket, sid: str):
         return
     await ws.accept()
     try:
-        auth = await asyncio.wait_for(ws.receive_json(), 10)
+        handshake = await asyncio.wait_for(ws.receive_json(), 10)
+        identity = await asyncio.to_thread(auth.verify, handshake['token'])
     except Exception:
         await ws.close(code=1008)
         return
-    state = store.get(sid, str(auth.get('token', ''))) if isinstance(auth, dict) else None
+    state = store.get(sid, identity.user_id)
     if not state or sid in active:
         await ws.close(code=1008)
         return
     active.add(sid)
     send_lock = asyncio.Lock()
+    def authorize():
+        if time.time() >= identity.expires_at or not store.member(identity.user_id, state['organization_id']):
+            raise PermissionError('Login expired or workspace access removed')
     async def emit(event):
+        authorize()
         async with send_lock:
             await ws.send_json(event)
-    bridge = voice.VoiceSession(state, store, emit)
+    bridge = voice.VoiceSession(state, store, emit, authorize)
     started = False
     microphone = False
+    async def watch_auth():
+        while True:
+            await asyncio.sleep(1)
+            if time.time() >= identity.expires_at or not store.member(identity.user_id, state['organization_id']):
+                await ws.close(code=1008)
+                return
+    watcher = asyncio.create_task(watch_auth())
     try:
         await emit({'type':'session','session':state})
         await bridge.set_visual_state('idle', 'session_connected')
         while True:
             packet = await ws.receive()
             if packet['type'] == 'websocket.disconnect':
+                break
+            if time.time() >= identity.expires_at or not store.member(identity.user_id,state['organization_id']):
+                await ws.close(code=1008)
                 break
             if packet.get('bytes') is not None:
                 data = packet['bytes']
@@ -104,7 +139,14 @@ async def stream(ws: WebSocket, sid: str):
                 if not isinstance(msg, dict):
                     raise ValueError('Object required')
                 kind = msg.get('type')
-                if kind in ('text','voice.start'):
+                if kind == 'auth.refresh':
+                    refreshed = await asyncio.to_thread(auth.verify, msg.get('token',''))
+                    if refreshed.user_id != identity.user_id:
+                        await ws.close(code=1008)
+                        break
+                    identity = refreshed
+                    await emit({'type':'auth.refreshed','expires_at':identity.expires_at})
+                elif kind in ('text','voice.start'):
                     typed = TextInput.model_validate(msg) if kind == 'text' else None
                     if not started:
                         await bridge.start()
@@ -123,6 +165,9 @@ async def stream(ws: WebSocket, sid: str):
                         await bridge.set_visual_state(bridge.resting_state(), 'microphone_disabled')
                 else:
                     raise ValueError('Unknown message type')
+            except HTTPException:
+                await ws.close(code=1008)
+                break
             except (ValueError, KeyError, TypeError):
                 await emit({'type':'error','message':'Invalid message or session limit reached.'})
             except Exception:
@@ -134,5 +179,37 @@ async def stream(ws: WebSocket, sid: str):
         with contextlib.suppress(Exception):
             await emit({'type':'error','message':'Connection failed. Reconnect to resume saved history.'})
     finally:
+        watcher.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await watcher
         await bridge.close()
         active.discard(sid)
+
+
+from .data_api import router as data_router
+app.include_router(data_router)
+from .simulator_api import router as simulator_router
+app.include_router(simulator_router)
+from .connectors.api import router as connector_router
+app.include_router(connector_router)
+
+# Connector request bodies can contain provider credentials. Do not echo validation inputs.
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request: Request, exc: RequestValidationError):
+    if request.url.path.startswith('/connections'):
+        return JSONResponse(status_code=422, content={'detail': [
+            {'loc': list(e['loc']), 'msg': e['msg'], 'type': e['type']} for e in exc.errors()]})
+    return await request_validation_exception_handler(request, exc)
+
+from .concern_api import router as concern_router
+app.include_router(concern_router)
+
+from .artifact_api import router as artifact_router
+app.include_router(artifact_router)
+
+from .orchestrator_api import router as orchestrator_router
+app.include_router(orchestrator_router)

@@ -2,6 +2,22 @@
 
 Voice and typed messages use the same session, history, context, and Jev evaluator. The browser does not need microphone permission to type.
 
+## Login and resume
+
+Sign in with Clerk. Obtain the current session JWT using `Clerk.session.getToken()`.
+Every HTTP data endpoint requires `Authorization: Bearer <CLERK_SESSION_JWT>`.
+The backend verifies the signature, issuer, expiry and authorized frontend origin, then checks local organization membership. Session IDs do not grant access.
+
+Call `GET /me/workspace` on each login. First login automatically provisions an organization; subsequent logins return the same organization:
+
+```json
+{"user_id":"user_123","organization":{"id":"org_123","name":"My company","context":{},"context_version":0,"onboarding_complete":false,"latest_session_id":null},"next_step":"onboarding"}
+```
+
+Use `next_step` to choose onboarding or the workspace. Resume `latest_session_id` if present; otherwise create a session. Completed onboarding stays complete across later task conversations. A new session inherits company/facts but evaluates its new task independently. Membership controls access to all conversations in the organization.
+
+`GET /auth/config` exposes only the public Clerk publishable key and Frontend API URL for the development console. The product frontend should use its Clerk SDK.
+
 ## Create a session
 
 `POST /sessions`
@@ -10,15 +26,23 @@ Voice and typed messages use the same session, history, context, and Jev evaluat
 {"demo":true}
 ```
 
-Response includes `session.id` and `token`. Keep the token private.
+Response is `{"session": {...}}`, including `session.id` and `session.organization_id`. No capability token is issued. The organization is derived from the verified login; clients cannot choose an arbitrary organization ID.
 
 ## Open the stream
 
 Connect to `ws://127.0.0.1:8000/sessions/{id}/stream` (use `wss` under HTTPS). First send:
 
 ```json
-{"token":"SESSION_TOKEN"}
+{"token":"CLERK_SESSION_JWT"}
 ```
+
+Refresh the login token during a long connection (for example every 20 seconds), using a fresh SDK token:
+
+```json
+{"type":"auth.refresh","token":"FRESH_CLERK_SESSION_JWT"}
+```
+
+The server replies `{"type":"auth.refreshed","expires_at":1234567890}`. A refresh cannot change users. Expired tokens and removed membership close the socket with code 1008. Reconnect after signing in again.
 
 The server returns a `session` event containing persisted history. This socket carries typed input, binary microphone audio, response audio, and transcript events.
 
@@ -66,7 +90,7 @@ A `reply` event remains as a compatibility alias for assistant segments, using t
 
 `GET /sessions/{id}/transcript?after=0&limit=100`
 
-Requires `Authorization: Bearer SESSION_TOKEN`.
+Requires `Authorization: Bearer CLERK_SESSION_JWT`.
 
 ```json
 {
@@ -94,7 +118,7 @@ Other events include `context`, `readiness`, `status`, `error`, `interrupt`, and
 The backend emits `agent.state` on the existing session WebSocket:
 
 ```json
-{"type":"agent.state","state":"researching","reason":"search_records","generation":2,"revision":1}
+{"type":"agent.state","state":"researching","reason":"search_evidence","generation":2,"revision":1}
 ```
 
 Map `state` to the frontend orb's existing visual presets. No LLM tool call is needed just to animate the orb: these events reflect actual runtime activity.
@@ -109,10 +133,20 @@ Map `state` to the frontend orb's existing visual presets. No LLM tool call is n
 | `ready` | Jev confirms readiness for the scoped initial task |
 | `error` | Provider unavailable/disconnected |
 
-The agent chooses to search by calling `search_records`; the backend consequently emits `researching`. It cannot set `ready` by saying it is ready or by requesting an animation. Jev owns that decision.
+The agent chooses to search by calling `search_evidence`; the backend consequently emits `researching`. It cannot set `ready` by saying it is ready or by requesting an animation. Jev owns that decision.
 
 **Browser playback takes precedence for speaking.** Incoming audio is not proof it is already playing. Set the visual to speaking when local playback starts. Deepgram's `AgentAudioDone` maps to `audio.done` with `generation` and `next_state`; wait until the local audio queue drains before applying that next state. Buffer other non-error state changes while playback continues. On `interrupt`, clear queued audio immediately and apply the new state. On disconnect, clear playback and use an error/disconnected visual. On microphone permission denial, send `voice.stop`.
 
 Ignore audio/state events from outdated generations. Use the readiness event for a persistent completion indicator independent of the orb's transient speaking animation. Map unsupported visual states to the closest existing preset rather than assuming new shader modes exist. Audio amplitude/reaction should come from the browser's actual playback/microphone analyser, not LLM-generated numbers.
 
 The actual orb component is maintained by a teammate and is not in this checkout; these are integration events, not a completed frontend orb hookup.
+
+For organization-owned uploads, financial SQL queries, evidence search, original downloads, and source indexing status, see [DATA_API.md](DATA_API.md).
+
+## Scheduled company simulator
+
+See [SIMULATOR_API.md](SIMULATOR_API.md) for `/simulations` create/list/status/start/pause/tick/events, scheduling semantics, and source retrieval. These routes use the same organization-scoped bearer authentication as the data API.
+
+## Real provider connections
+
+See [CONNECTORS.md](CONNECTORS.md) for `/connections` OAuth, Plaid Link, Ramp credentials, status, sync, disconnect, item originals and job history. These use the same organization-scoped bearer authentication. Google callbacks authenticate their one-use state instead of requiring a Clerk header.

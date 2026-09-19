@@ -20,21 +20,6 @@ class Brief(BaseModel):
     unknowns: list[str] = Field(default_factory=list)
     next_action: str = ''
 
-def search_records(query: str):
-    # No path or SQL supplied by the model; private fixture data is never indexed.
-    words = query.lower().split()[:8]
-    if not words:
-        return []
-    hits = []
-    for path in sorted(VISIBLE.glob('*.jsonl')):
-        with path.open() as f:
-            for line in f:
-                if all(word in line.lower() for word in words):
-                    hits.append({'source': path.name, 'record': json.loads(line)})
-                    if len(hits) == 8:
-                        return hits
-    return hits
-
 async def evaluate(state):
     # Full transcript, never a lossy summary. If too large, fail closed rather than truncate.
     if len(json.dumps(state)) > 1_500_000:

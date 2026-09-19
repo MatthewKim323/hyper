@@ -1,0 +1,55 @@
+"""The same bounded operations serve HTTP clients and the Deepgram agent."""
+from .data_service import DataService, FinancialQuery, EvidenceQuery, SourceQuery
+from .retrieval import ElasticSearch
+from .artifacts import ArtifactService,CreateArtifact,ArtifactID
+from .concerns import ConcernService, RaiseConcern, ConcernID, Finish, ListConcerns, Renew
+
+TOOL_MODELS={'renew_concern_claim':Renew,'create_financial_artifact':CreateArtifact,'get_financial_artifact':ArtifactID,'list_concerns':ListConcerns,'raise_concern':RaiseConcern,'get_concern':ConcernID,'claim_concern':ConcernID,'resolve_concern':Finish,'query_financials':FinancialQuery,'search_evidence':EvidenceQuery,'get_source':SourceQuery}
+DESCRIPTIONS={
+    'renew_concern_claim':'Renew a still-valid concern resolution claim for 15 minutes using its claim token.',
+    'create_financial_artifact':'Queue a saved json-render financial chart with Jev review. Supply a complete aggregate query, units and optional scenario projection months; returns artifact ID and pending status.',
+    'get_financial_artifact':'Read artifact generation status and validated chart specification. Ready artifacts have an authenticated /artifacts/{id}/html view.',
+    'list_concerns':'List organization concerns; filter status queued to find user-selected work, or resolving to recover expired claims.',
+    'raise_concern':'Raise a persistent financial anomaly concern with source IDs and a stable request_key. Generates three Jev-evaluated response choices for the user. Do not claim a card succeeded unless status is awaiting_response.',
+    'get_concern':'Read a concern, user-selected instructions and resolution status. Never infer approval from silence.',
+    'claim_concern':'Claim a user-selected queued concern for investigation for 15 minutes. Returns a claim_token needed to resolve. Does not authorize external actions.',
+    'resolve_concern':'Report the actual investigation result with supporting source IDs and your claim_token. Use needs_input for blockers. Never claim external actions happened without evidence.',
+
+    'list_datasets':'Discover imported financial datasets, column schemas, source IDs, currencies, and units before querying.',
+    'query_financials':'Read financial rows or calculate exact aggregates over all matching active records. Use filters and pagination; never total search snippets. Monetary results remain in imported units and separate currencies. No arbitrary SQL.',
+    'search_evidence':'Find cited evidence using Elasticsearch keyword/semantic search. Results are samples, not complete transaction populations. Check coverage_complete before concluding evidence is absent.',
+    'get_source':'Read paginated original extracted source content using a source_id from another tool. Returns row/page citations and an authenticated download URL.',
+}
+
+def tool_definitions():
+    result=[]
+    for name,description in DESCRIPTIONS.items():
+        model=TOOL_MODELS.get(name)
+        schema=model.model_json_schema() if model else {'type':'object','properties':{},'additionalProperties':False}
+        definitions=schema.pop('$defs',{})
+        def inline(value):
+            if isinstance(value,dict):
+                if '$ref' in value:return inline(definitions[value['$ref'].split('/')[-1]])
+                return {k:inline(v) for k,v in value.items()}
+            return [inline(v) for v in value] if isinstance(value,list) else value
+        result.append({'name':name,'description':description,'parameters':inline(schema),'defer_until_eot':True})
+    return result
+
+def execute(store, oid, name, args):
+    svc=DataService(store,oid,search=ElasticSearch())
+    if name=='list_datasets':
+        if args:raise ValueError('list_datasets takes no arguments')
+        return svc.catalog()
+    model=TOOL_MODELS[name]
+    parsed=model.model_validate(args)
+    if name=='create_financial_artifact':return ArtifactService(svc).create(parsed)
+    if name=='get_financial_artifact':return ArtifactService(svc).get(parsed.artifact_id)
+    if name in ('renew_concern_claim','list_concerns','raise_concern','get_concern','claim_concern','resolve_concern'):
+        concerns=ConcernService(svc)
+        if name=='renew_concern_claim':return concerns.renew(parsed)
+        if name=='list_concerns':return concerns.list(parsed.status,parsed.limit,parsed.offset)
+        if name=='raise_concern':return concerns.raise_concern(parsed)
+        if name=='get_concern':return concerns.get(parsed.concern_id)
+        if name=='claim_concern':return concerns.claim(parsed.concern_id)
+        return concerns.finish(parsed)
+    return getattr(svc,name)(parsed)

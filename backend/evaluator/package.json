@@ -1,1 +1,1 @@
-{"name":"onboarding-readiness","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test"},"dependencies":{"ai":"7.0.105"}}
+{"name":"onboarding-readiness","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test"},"dependencies":{"@json-render/core":"0.21.0","@json-render/react":"0.21.0","ai":"7.0.105","react":"19.3.0","react-dom":"19.3.0","zod":"4.6.5"}}

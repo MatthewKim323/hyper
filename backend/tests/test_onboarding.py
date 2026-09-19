@@ -2,17 +2,11 @@ import asyncio
 import json
 import pytest
 from fastapi.testclient import TestClient
-from app import main, agent, voice
+from app import main, agent, voice, auth
+import time
+import uuid
+from fastapi import HTTPException
 from app.store import Store
-
-def test_record_search_cannot_read_private(tmp_path,monkeypatch):
-    visible=tmp_path/'visible';visible.mkdir()
-    (visible/'invoices.jsonl').write_text(json.dumps({'id':'INV-1','amount':120})+'\n')
-    (tmp_path/'private.jsonl').write_text(json.dumps({'id':'secret-answer'})+'\n')
-    monkeypatch.setattr(agent,'VISIBLE',visible)
-    assert agent.search_records('INV-1')[0]['record']['amount']==120
-    assert agent.search_records('secret-answer')==[]
-    assert agent.search_records('../../private')==[]
 
 async def test_evaluator_fails_closed(monkeypatch):
     monkeypatch.setenv('EVALUATOR_URL','http://127.0.0.1:1')
@@ -78,13 +72,20 @@ class FakeDeepgram:
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(main,'store',Store(str(tmp_path/'state.db')))
     monkeypatch.setenv('DEEPGRAM_API_KEY','test-key')
+    def verify(token):
+        if not token.startswith('test-'): raise HTTPException(401)
+        return auth.Identity(token, int(time.time())+300)
+    monkeypatch.setattr(auth,'verify',verify)
     async def connect(*args,**kwargs):return FakeDeepgram()
     monkeypatch.setattr(voice,'connect',connect)
     async def evaluate(state):return {'status':'ready','revision':state['revision'],'authority':'read_only_investigation'}
     monkeypatch.setattr(agent,'evaluate',evaluate)
     with TestClient(main.app) as c:yield c
 
-def create(client):return client.post('/sessions',json={'demo':True}).json()
+def create(client):
+    token='test-'+uuid.uuid4().hex
+    result=client.post('/sessions',json={'demo':True},headers={'Authorization':'Bearer '+token}).json()
+    return {**result,'token':token}
 
 def receive_until(ws,kind):
     for _ in range(30):
@@ -148,7 +149,7 @@ def test_missing_key_is_visible(client,monkeypatch):
         assert 'Deepgram unavailable' in receive_until(ws,'error')['message']
 
 def bridge(tmp_path):
-    store=Store(str(tmp_path/'unit.db'));state,_=store.create(True);events=[]
+    store=Store(str(tmp_path/'unit.db'));state=store.create('unit-user',True);events=[]
     async def emit(event):events.append(event)
     session=voice.VoiceSession(state,store,emit)
     session.socket=FakeDeepgram()
@@ -214,7 +215,7 @@ async def test_provider_cancels_tool_without_response(tmp_path,monkeypatch):
     with pytest.raises(asyncio.CancelledError):await task
     assert not s.socket.sent
 
-async def test_search_denied_without_demo(tmp_path):
+async def test_legacy_file_search_not_available(tmp_path):
     s,_=bridge(tmp_path);s.state['demo']=False
     await s.tool({'id':'c1','name':'search_records','arguments':'{"query":"invoice"}'},s.generation)
     assert 'not available' in s.socket.sent[0]['content']
@@ -253,7 +254,7 @@ def test_transcript_api_pagination_and_auth(client):
     assert first['messages'][0]['id']=='first' and first['has_more']
     second=client.get(f'/sessions/{sid}/transcript?after=1',headers=headers).json()
     assert second['messages'][0]['id']==assistant['id'] and not second['has_more']
-    assert client.get(f'/sessions/{sid}/transcript').status_code==404
+    assert client.get(f'/sessions/{sid}/transcript').status_code==401
     assert client.get(f'/sessions/{sid}/transcript?after=-1',headers=headers).status_code==422
 
 
@@ -289,6 +290,29 @@ async def test_audio_done_preserves_playback_boundary(tmp_path):
 
 async def test_search_drives_researching_state(tmp_path,monkeypatch):
     s,events=bridge(tmp_path)
-    monkeypatch.setattr(agent,'search_records',lambda q:[])
-    await s.tool({'id':'research','name':'search_records','arguments':'{"query":"invoice"}'},s.generation)
+    monkeypatch.setattr(voice.data_tools,'execute',lambda *args:{'hits':[]})
+    await s.tool({'id':'research','name':'search_evidence','arguments':'{"query":"invoice"}'},s.generation)
     assert any(e.get('state')=='researching' for e in events)
+
+def test_workspace_api_resume_and_refresh(client):
+    a=create(client);headers={'Authorization':'Bearer '+a['token']}
+    workspace=client.get('/me/workspace',headers=headers).json()
+    assert workspace['organization']['latest_session_id']==a['session']['id']
+    assert workspace['next_step']=='onboarding'
+    assert client.post('/sessions',json={}).status_code==401
+    with client.websocket_connect(f"/sessions/{a['session']['id']}/stream") as ws:
+        ws.send_json({'token':a['token']});receive_until(ws,'session')
+        ws.send_json({'type':'auth.refresh','token':a['token']})
+        assert receive_until(ws,'auth.refreshed')['expires_at']>time.time()
+        ws.send_json({'type':'auth.refresh','token':'test-other-user'})
+        assert ws.receive()['code']==1008
+
+async def test_revoked_access_blocks_context_commit(tmp_path,monkeypatch):
+    s,_=bridge(tmp_path)
+    async def evaluate(state):return {'status':'ready'}
+    monkeypatch.setattr(agent,'evaluate',evaluate)
+    def denied():raise PermissionError()
+    s.authorize=denied
+    with pytest.raises(PermissionError):
+        await s.tool({'id':'revoked','name':'update_context','arguments':json.dumps(BRIEF)},s.generation)
+    assert not s.store.workspace('unit-user')['onboarding_complete']
