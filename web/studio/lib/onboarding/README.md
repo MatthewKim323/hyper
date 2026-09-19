@@ -1,6 +1,6 @@
 # Onboarding interface
 
-The landing Enter link keeps the 3D transition into `/projects`. After the renderer signals that the scene is ready, unfinished users see the original scene without a dim overlay, with a white orb and dark voice box. The resting orb state is `composing`. Workspace navigation and the timeline stay hidden and inert until completion. Completed users skip the surface on subsequent visits.
+The landing Enter link keeps the 3D transition into `/projects`. The gallery uses near-black fog, charcoal arches and flooring, and cool butterfly highlights. These are actual scene materials, with no dim overlay. After the renderer signals that the scene is ready, unfinished users see a white orb and dark voice box. The resting orb state is `composing`. Workspace navigation and the timeline stay hidden and inert until completion. Completed users skip the surface on subsequent visits.
 
 This package implements the interface, local microphone visualization, and presentation/completion hooks. It does not connect to Deepgram, transcribe audio, synthesize speech, record audio, or collect a profile. The initial introduction is display copy. The conversation service owns real replies and completion.
 

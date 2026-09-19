@@ -56,6 +56,15 @@ export type ProjectGroup = any;
 
 const $ = (sel: string) => document.querySelector(sel) as HTMLElement;
 
+// Charcoal surfaces keep the hall's depth while the onboarding orb stays brightest.
+const SCENE_PALETTE = {
+  background: "#05070a",
+  arches: "#525b63",
+  floor: "#30373e",
+  butterflies: "#697984",
+  light: "#9daebe",
+};
+
 export class ProjectMenu {
   scene: Scene;
   camera: PerspectiveCamera;
@@ -292,7 +301,7 @@ export class ProjectMenu {
     this.camera.far = 4500;
     this.camera.updateProjectionMatrix();
     this.initialCameraPosition = this.camera.position.clone();
-    this.initialColor = new Color("#e5e5e5").getHex();
+    this.initialColor = new Color(SCENE_PALETTE.background).getHex();
     this.scene.fog = new Fog(this.initialColor, 500, this.camera.far);
     const fog = this.scene.fog as Fog;
     store.Gl.globalUniforms.fogColor.value.copy(fog.color);
@@ -327,7 +336,7 @@ export class ProjectMenu {
     this.buildGodRays();
     this.buildProjects();
     this.buildProjectTextCanvas();
-    this.butterflies.build(this.globalUniforms);
+    this.butterflies.build(new Color(SCENE_PALETTE.butterflies));
     this.scene.add(this.butterflies);
     this.onResize();
     E.on(store.events.RESIZE, this.onResize);
@@ -555,7 +564,7 @@ export class ProjectMenu {
   buildArches() {
     this.archMaterial = new MeshMatcapMaterial({
       matcap: store.Gl.assets.textures.projectModelMatcap,
-      color: this.initialColor,
+      color: SCENE_PALETTE.arches,
     });
     this.arches = new InstancedMesh(this.assets.models.arch.geometry, this.archMaterial, 5);
     this.dummyObject.scale.setScalar(300);
@@ -577,7 +586,7 @@ export class ProjectMenu {
   buildFloor() {
     this.floorMaterial = new MeshMatcapMaterial({
       matcap: store.Gl.assets.textures.projectModelMatcap,
-      color: this.initialColor,
+      color: SCENE_PALETTE.floor,
       transparent: true,
       depthWrite: false,
     });
@@ -616,12 +625,12 @@ export class ProjectMenu {
           fogNear: { value: (this.scene.fog as Fog).near },
           fogFar: { value: (this.scene.fog as Fog).far },
           uDirection: { value: new Vector2(-100, -150) },
-          uStrength: { value: 0.25 },
+          uStrength: { value: 0.06 },
           uLength: { value: 0.4 },
           uFadeSmoothness: { value: 0.7 },
           uScale: { value: 0.26 },
           uSpeed: { value: 0.45 },
-          uLightColor: { value: new Color(16770496) },
+          uLightColor: { value: new Color(SCENE_PALETTE.light) },
         },
         transparent: true,
         depthTest: false,

@@ -2,6 +2,7 @@
 // Butterflies: 120 GPGPU-flocked butterflies drawn as one InstancedMesh.
 import {
   BufferGeometry,
+  Color,
   DoubleSide,
   FloatType,
   InstancedBufferAttribute,
@@ -48,7 +49,7 @@ export class Butterflies extends InstancedMesh<BufferGeometry, Material | Materi
     this.load();
   }
 
-  build(_globalUniforms?: unknown) {
+  build(tint: Color) {
     this.count = 120;
     const positions: number[] = [];
     for (let t = 0, i = 4 * this.count; t < i; t += 4) {
@@ -113,6 +114,7 @@ export class Butterflies extends InstancedMesh<BufferGeometry, Material | Materi
         tPosition: { value: null },
         tVelocity: { value: null },
         uNormalMapStrength: { value: 1 },
+        uTint: { value: tint },
         ...store.Gl.globalUniforms,
       },
       transparent: true,

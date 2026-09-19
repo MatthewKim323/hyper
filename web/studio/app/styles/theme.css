@@ -15,10 +15,10 @@ html:not([data-onboarding="complete"]) .timeline-workspace {
   pointer-events: none !important;
 }
 
-html[data-onboarding="required"] body.post-type-archive-project[data-workspace-ready="true"] .cursor__circle {
+body.post-type-archive-project[data-workspace-ready="true"] .cursor__circle {
   border-color: #fff;
 }
 
-html[data-onboarding="required"] body.post-type-archive-project[data-workspace-ready="true"] .cursor {
+body.post-type-archive-project[data-workspace-ready="true"] .cursor {
   mix-blend-mode: difference;
 }
