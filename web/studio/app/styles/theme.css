@@ -22,3 +22,9 @@ body.post-type-archive-project[data-workspace-ready="true"] .cursor__circle {
 body.post-type-archive-project[data-workspace-ready="true"] .cursor {
   mix-blend-mode: difference;
 }
+
+/* The crystal environment is the workspace navigation. Retain controller hooks
+   for scene transitions while removing the old pill bar from every gallery state. */
+body.post-type-archive-project .project-filters {
+  display: none !important;
+}
