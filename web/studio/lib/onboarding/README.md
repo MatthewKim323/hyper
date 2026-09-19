@@ -10,7 +10,7 @@ The voice card uses clear liquid glass: its curved rim refracts the actual WebGL
 
 ## Run the conversation service
 
-Start the backend and evaluator using `backend/README.md`, then run this app with `bun run dev`. Next proxies `/api/onboarding/*` to `http://127.0.0.1:8000` by default. Override `ONBOARDING_BACKEND_URL` in the Next server environment for a different backend and restart Next. Configure the backend’s `ALLOWED_ORIGINS` for the frontend origin. Provider credentials belong in the backend environment, never browser code or `NEXT_PUBLIC_*` variables.
+Start the backend and evaluator using `backend/README.md`, then run this app with `bun run dev`. Next proxies `/api/onboarding/*` to `http://127.0.0.1:8000` by default. Override `ONBOARDING_BACKEND_URL` in the Next server environment for a different backend and restart Next. Configure the backend’s `ALLOWED_ORIGINS` for the frontend origin. In local development the WebSocket connects straight to `ws://127.0.0.1:8000` instead of going through the Next rewrite, because the dev proxy was observed dropping the upstream socket while the browser waited in CONNECTING; HTTP calls still use the proxy. Set `NEXT_PUBLIC_ONBOARDING_WS_URL=proxy` to force the same-origin socket, or to a `ws(s)://` base for a hosted backend. Provider credentials belong in the backend environment, never browser code or `NEXT_PUBLIC_*` variables.
 
 `OnboardingVoiceClient` opens or resumes a session once the gallery scene is ready. It keeps the session capability in per-tab session storage, restores committed transcript history, and deduplicates the compatibility reply events. A socket connection alone does not start the provider microphone stream.
 

@@ -28,6 +28,23 @@ export interface VoiceProtocolState {
 const STATES = new Set<AgentState>(["idle", "listening", "thinking", "researching", "speaking", "ready", "error"]);
 const SESSION_KEY = "hyper.onboarding.voice-session.v1";
 const BASE = "/api/onboarding";
+
+// HTTP stays on the same-origin proxy. The socket does not: Next's dev rewrite proxy was seen
+// opening the upstream socket and dropping it at once while the browser sat in CONNECTING until
+// the 12 s timeout. In local development the stream therefore goes straight to the backend,
+// which already allows this origin. NEXT_PUBLIC_ONBOARDING_WS_URL overrides it (set it to
+// "proxy" to force the same-origin path, or to a ws(s):// base for a hosted backend).
+function streamUrl(sessionId: string): URL {
+  const path = `/sessions/${encodeURIComponent(sessionId)}/stream`;
+  const configured = process.env.NEXT_PUBLIC_ONBOARDING_WS_URL;
+  const local = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  const direct = configured && configured !== "proxy" ? configured
+    : configured !== "proxy" && process.env.NODE_ENV === "development" && local ? "ws://127.0.0.1:8000" : null;
+  if (direct) return new URL(direct.replace(/\/$/, "") + path);
+  const url = new URL(`${BASE}${path}`, location.href);
+  url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  return url;
+}
 const RECONNECT_DELAYS = [1000, 2000, 4000];
 class TransportError extends Error {}
 const record = (value: unknown): value is WireEvent => !!value && typeof value === "object" && !Array.isArray(value);
@@ -254,9 +271,7 @@ export class OnboardingVoiceClient {
         if (this.disposed || version !== this.connectionVersion) throw new Error("Session closed");
         this.capability = capability;
         await new Promise<void>((resolve, reject) => {
-          const url = new URL(`${BASE}/sessions/${encodeURIComponent(capability.id)}/stream`, location.href);
-          url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
-          const socket = new WebSocket(url);
+          const socket = new WebSocket(streamUrl(capability.id));
           this.socket = socket;
           let accepted = false;
           const current = () => !this.disposed && this.socket === socket;
