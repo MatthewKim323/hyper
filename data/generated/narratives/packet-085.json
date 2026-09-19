@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-085",
+  "documents": [
+    {
+      "document_id": "packet-085-doc-1",
+      "kind": "email",
+      "date": "2026-01-31",
+      "subject": "Question regarding invoice AR-01569",
+      "body": "To: finance93@customer.example\n\nHello Orion Network 093 finance team,\n\nMeridian Ledger Labs, Inc. is reviewing posted monthly invoice AR-01569 for customer CUS-093 under contract CON-093. The invoice date is 2026-01-31, the amount is 439333 cents, and the due date is 2026-03-02. Please provide any explanation or supporting detail needed to reconcile this invoice with the applicable monthly billing terms. If metered usage is relevant, please identify the corresponding records. No payment or approval is established by this request.\n\nRegards,\nMeridian Ledger Labs, Inc.",
+      "source_refs": [
+        "AR-01569",
+        "CUS-093",
+        "CON-093"
+      ]
+    },
+    {
+      "document_id": "packet-085-doc-2",
+      "kind": "chat",
+      "date": "2026-01-31",
+      "subject": "Internal review: AR-01569",
+      "body": "Casey Team05, invoice AR-01569 is posted for Orion Network 093, customer CUS-093, under contract CON-093. The recorded amount is 439333 cents, with a 2026-03-02 due date. Please confirm whether the reconciliation file contains an explanation for the amount relative to the contract\u2019s 430000-cent monthly base and 1-cent usage block price. If supporting usage detail or customer clarification is required, please identify the specific request. The packet does not establish any payment, approval, or final resolution.",
+      "source_refs": [
+        "AR-01569",
+        "CUS-093",
+        "CON-093"
+      ]
+    },
+    {
+      "document_id": "packet-085-doc-3",
+      "kind": "operational_note",
+      "date": "2026-01-31",
+      "subject": "Invoice review note for AR-01569",
+      "body": "Operational review recorded on 2026-01-31: invoice AR-01569 is a posted monthly invoice for customer CUS-093, Orion Network 093, linked to contract CON-093. The recorded amount is 439333 cents, and the stated due date is 2026-03-02. Contract details show monthly arrears billing for hosted access and metered API blocks, with a 430000-cent monthly base and a 1-cent usage block price. Next step: request sufficient detail to explain the invoice composition before treating the item as reconciled.",
+      "source_refs": [
+        "AR-01569",
+        "CUS-093",
+        "CON-093"
+      ]
+    },
+    {
+      "document_id": "packet-085-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-01-31",
+      "subject": "CON-093 service and billing excerpt",
+      "body": "Contract CON-093 is between the service arrangement for customer CUS-093 and Meridian Ledger Labs, Inc. Its effective date is 2025-01-01, and its end date is 2026-12-31. The service is described as hosted access and metered API blocks. Billing is monthly arrears, with a monthly base of 430000 cents and a usage block price of 1 cent. The contract lists terms of 30 days. These details should be compared with posted invoice AR-01569 dated 2026-01-31.",
+      "source_refs": [
+        "CON-093",
+        "CUS-093",
+        "AR-01569"
+      ]
+    },
+    {
+      "document_id": "packet-085-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-01-31",
+      "subject": "Reconciliation question for CUS-093",
+      "body": "For invoice AR-01569, what records support the posted amount of 439333 cents? The invoice is dated 2026-01-31 and is linked to customer CUS-093 and contract CON-093. The contract identifies monthly arrears billing, a 430000-cent monthly base, and a 1-cent price per usage block. Please provide the relevant usage detail, calculation support, or other explanation needed to connect the invoice amount to the contract terms. Please do not assume payment, approval, or resolution until the supporting information is available.",
+      "source_refs": [
+        "AR-01569",
+        "CUS-093",
+        "CON-093"
+      ]
+    },
+    {
+      "document_id": "packet-085-doc-6",
+      "kind": "follow_up",
+      "date": "2026-01-31",
+      "subject": "Follow-up request for AR-01569 support",
+      "body": "Following up on the review of posted invoice AR-01569 for Orion Network 093. The invoice is dated 2026-01-31, references customer CUS-093 and contract CON-093, records 439333 cents, and lists a due date of 2026-03-02. Please send the information needed to explain the invoice composition, including any applicable metered API block detail or reconciliation support. We are keeping the item open for clarification. This follow-up does not confirm payment, approval, acceptance, or a resolved outcome.",
+      "source_refs": [
+        "AR-01569",
+        "CUS-093",
+        "CON-093"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

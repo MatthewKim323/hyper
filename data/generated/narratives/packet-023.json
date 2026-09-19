@@ -1,0 +1,94 @@
+{
+  "packet_id": "packet-023",
+  "documents": [
+    {
+      "document_id": "packet-023-doc-1",
+      "kind": "email",
+      "date": "2025-05-31",
+      "subject": "Invoice AP-00263 review",
+      "body": "Hello Atlas Services 023, Meridian Ledger Labs, Inc. is reviewing invoice AP-00263, which is posted against purchase order PO-00263. The recorded invoice amount is $1,317.93, and the vendor record identifies ap23@supplier.example as the billing contact. Please provide any missing explanation or supporting context needed to reconcile the invoice with the related service receipt. We are treating this as a same-day review and are not assuming that any payment or additional approval has occurred.",
+      "source_refs": [
+        "AP-00263",
+        "PO-00263",
+        "RC-AP-00263",
+        "VEN-023"
+      ]
+    },
+    {
+      "document_id": "packet-023-doc-2",
+      "kind": "chat",
+      "date": "2025-05-31",
+      "subject": "AP-00263 reconciliation thread",
+      "body": "Casey Team05: I am reviewing the posted invoice AP-00263 for Atlas Services 023. The invoice and purchase order both record $1,317.93, and the service receipt lists the same accepted amount. I do not see an established payment or additional approval in the packet. Atlas, can you confirm whether any explanation is needed for the current record? Until that context is available, let us keep the item in review and avoid treating the draft as a resolved payment status.",
+      "source_refs": [
+        "AP-00263",
+        "PO-00263",
+        "RC-AP-00263",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-023-doc-3",
+      "kind": "operational_note",
+      "date": "2025-05-31",
+      "subject": "Accounts payable review note",
+      "body": "Invoice AP-00263 is posted for vendor VEN-023, Atlas Services 023, and is associated with purchase order PO-00263. The recorded invoice amount is $1,317.93. Service receipt RC-AP-00263 records an accepted amount of $1,317.93 and identifies EMP-005 as the accepting employee. The vendor record lists approved recipient SIM-RECIPIENT-023 and thirty-day terms. No additional approval, payment, or explanatory variance is established. Next action: request clarification only if reconciliation requires information absent from the packet.",
+      "source_refs": [
+        "AP-00263",
+        "VEN-023",
+        "PO-00263",
+        "RC-AP-00263",
+        "EMP-005",
+        "SIM-RECIPIENT-023"
+      ]
+    },
+    {
+      "document_id": "packet-023-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-05-31",
+      "subject": "Agreement and service record excerpt",
+      "body": "Agreement reference VA-AP-00263 is associated with purchase order PO-00263 for vendor VEN-023, Atlas Services 023. The purchase order records an amount of $1,317.93. Related service receipt RC-AP-00263 records an accepted amount of $1,317.93 and identifies EMP-005 as the accepting employee. The vendor category is services, the recorded terms are thirty days, and the approved recipient is SIM-RECIPIENT-023. This excerpt states only the recorded references and does not establish additional obligations or outcomes.",
+      "source_refs": [
+        "VA-AP-00263",
+        "PO-00263",
+        "VEN-023",
+        "RC-AP-00263",
+        "EMP-005",
+        "SIM-RECIPIENT-023"
+      ]
+    },
+    {
+      "document_id": "packet-023-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-05-31",
+      "subject": "Question regarding AP-00263",
+      "body": "Can Casey Team05 confirm whether the current records are sufficient to reconcile invoice AP-00263 with purchase order PO-00263 and service receipt RC-AP-00263? Each record shows $1,317.93, while the invoice status is posted and the receipt identifies EMP-005 as the accepting employee. If any explanation is missing, please specify what record or context is needed. Please do not infer a payment, further approval, or completed reconciliation from these draft materials without supporting information.",
+      "source_refs": [
+        "AP-00263",
+        "PO-00263",
+        "RC-AP-00263",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-023-doc-6",
+      "kind": "follow_up",
+      "date": "2025-05-31",
+      "subject": "Follow-up on supplier record review",
+      "body": "Follow-up for Casey Team05: the same-day review concerns Atlas Services 023, vendor VEN-023, invoice AP-00263, and purchase order PO-00263. The invoice is posted for $1,317.93, and service receipt RC-AP-00263 records an accepted amount of $1,317.93. Please confirm whether any clarification should be requested from ap23@supplier.example. The approved recipient remains SIM-RECIPIENT-023. No payment, extra approval, or final reconciliation outcome is established by this follow-up.",
+      "source_refs": [
+        "VEN-023",
+        "AP-00263",
+        "PO-00263",
+        "RC-AP-00263",
+        "SIM-RECIPIENT-023"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

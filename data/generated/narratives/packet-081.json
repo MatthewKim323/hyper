@@ -1,0 +1,75 @@
+{
+  "packet_id": "packet-081",
+  "documents": [
+    {
+      "document_id": "packet-081-doc-1",
+      "kind": "email",
+      "date": "2025-09-30",
+      "subject": "Payroll record and settlement status",
+      "body": "Hello Casey Team05, I am reviewing payroll record PAY-009 for 2025-09-30 under company identifier MERIDIAN-001. The packet lists gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. Please confirm whether any external movement has been confirmed for this record, and identify any missing explanation needed for reconciliation. I am treating proposals separately from settlements in accordance with the stated settlement policy. No payment or additional approval is established by this draft.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-081-doc-2",
+      "kind": "chat",
+      "date": "2025-09-30",
+      "subject": "Payroll review question",
+      "body": "Taylor Team06: I\u2019m checking PAY-009 dated 2025-09-30. The record includes gross payroll, withholding, employer amount, and net payroll, but the packet does not provide an external movement reference or explanation. Casey Team05: Understood. We should request the missing explanation and distinguish any proposal from a confirmed movement. Taylor Team06: Agreed. I\u2019ll keep the review limited to the supplied figures and company identifier MERIDIAN-001. No approval or payment should be treated as established unless the packet supports it.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-081-doc-3",
+      "kind": "operational_note",
+      "date": "2025-09-30",
+      "subject": "PAY-009 review note",
+      "body": "Operational note for 2025-09-30: Payroll record PAY-009 is associated with Meridian Ledger Labs, Inc. and company identifier MERIDIAN-001. Recorded values are gross payroll $438,000.00, withholding $87,600.00, employer amount $35,040.00, and net payroll $350,400.00. The settlement policy states that only confirmed external movements are settled and that proposals are not settlements. The packet does not identify a confirmed movement, payment, approval, or explanation beyond these facts. Request clarification before recording any further status.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-081-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-09-30",
+      "subject": "Settlement policy excerpt",
+      "body": "Service and settlement excerpt, effective for this same-day draft review: Only confirmed external movements are settled; proposals are not settlements. This excerpt is applied to payroll record PAY-009 dated 2025-09-30 and company identifier MERIDIAN-001. The supplied packet states payroll values but does not establish additional approval, payment, counterparty detail, service scope, or commercial terms. Any operational interpretation should therefore remain conditional until a missing explanation or supporting confirmation is provided. This excerpt does not create or confirm a transaction.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-081-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-09-30",
+      "subject": "Clarification requested for PAY-009",
+      "body": "For reconciliation of PAY-009 dated 2025-09-30, can the finance owner confirm whether a confirmed external movement exists, or whether the record remains only a proposal or internal payroll entry? The packet provides gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00, but it does not provide movement evidence or an explanation. Please identify the appropriate supporting reference if one exists. Do not infer settlement, payment, or approval from the listed figures alone.",
+      "source_refs": [
+        "PAY-009"
+      ]
+    },
+    {
+      "document_id": "packet-081-doc-6",
+      "kind": "follow_up",
+      "date": "2025-09-30",
+      "subject": "Next steps for payroll clarification",
+      "body": "Follow-up for Casey Team05 and Taylor Team06: Please review the open clarification for payroll record PAY-009 on 2025-09-30. Confirm whether the packet should be supplemented with an explanation or evidence of a confirmed external movement. Until that information is available, retain the listed payroll values as provided and apply the settlement policy that proposals are not settlements. Please avoid recording an unestablished payment or approval. If no supporting information is available, note the uncertainty and leave the status unresolved for further review.",
+      "source_refs": [
+        "PAY-009"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

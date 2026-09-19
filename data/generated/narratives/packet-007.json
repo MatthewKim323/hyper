@@ -1,0 +1,82 @@
+{
+  "packet_id": "packet-007",
+  "documents": [
+    {
+      "document_id": "packet-007-doc-1",
+      "kind": "supplier/customer email",
+      "date": "2025-07-31",
+      "subject": "Monthly invoice AR-00783 for review",
+      "body": "Hello Aster Network 043 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-00783 for customer CUS-043 under contract CON-043. The invoice date is 2025-07-31, the due date is 2025-08-30, and the amount is $85.70. Please review the invoice details and let us know if any explanation or clarification is needed. This message is a same-day draft for coordination and does not establish payment, approval, or any additional commercial arrangement.\n\nRegards,\nFinance team",
+      "source_refs": [
+        "AR-00783",
+        "CUS-043",
+        "CON-043"
+      ]
+    },
+    {
+      "document_id": "packet-007-doc-2",
+      "kind": "internal chat",
+      "date": "2025-07-31",
+      "subject": "AR-00783 review checkpoint",
+      "body": "Casey Team05: Invoice AR-00783 is posted for customer CUS-043 under contract CON-043. The packet lists a monthly invoice dated 2025-07-31, due 2025-08-30, for $85.70.\n\nFinance team: Please verify that the customer reference, contract reference, invoice date, due date, and amount align with the available records. If anything is unclear, request an explanation from the appropriate contact. No payment or additional approval is established here, so please keep the item open for review pending documented clarification.",
+      "source_refs": [
+        "AR-00783",
+        "CUS-043",
+        "CON-043"
+      ]
+    },
+    {
+      "document_id": "packet-007-doc-3",
+      "kind": "operational note",
+      "date": "2025-07-31",
+      "subject": "Billing record handling note",
+      "body": "Record invoice AR-00783 as a posted monthly invoice for customer CUS-043 and contract CON-043. Confirm that the invoice date remains 2025-07-31 and that the due date is 2025-08-30. The recorded amount is 8,570 cents, equivalent to $85.70. Check the source record for consistency with the available customer and contract identifiers. Any missing explanation should be requested. Do not infer payment status, approval, transaction purpose, or additional terms from this note.",
+      "source_refs": [
+        "AR-00783",
+        "CUS-043",
+        "CON-043"
+      ]
+    },
+    {
+      "document_id": "packet-007-doc-4",
+      "kind": "contract/service excerpt",
+      "date": "2025-07-31",
+      "subject": "CON-043 service and billing terms",
+      "body": "Contract CON-043 identifies customer CUS-043 and is effective from 2025-01-01 through 2026-12-31. The service is Hosted access and metered API blocks. Billing is annual advance, with terms of 30 days. The monthly base is 360,000 cents, equivalent to $3,600.00, and the usage block price is 1 cent, equivalent to $0.01. This excerpt records the packet terms only and does not determine invoice purpose, payment status, approval, or reconciliation outcome.",
+      "source_refs": [
+        "CON-043",
+        "CUS-043"
+      ]
+    },
+    {
+      "document_id": "packet-007-doc-5",
+      "kind": "reconciliation question",
+      "date": "2025-07-31",
+      "subject": "Question regarding AR-00783 and CON-043",
+      "body": "Please confirm how posted monthly invoice AR-00783 for customer CUS-043 should be reconciled to contract CON-043. The packet shows an invoice amount of $85.70, while the contract lists annual-advance billing, a monthly base of $3,600.00, and a usage block price of $0.01. What source explanation accounts for the invoice amount, if one is available? Please also confirm whether any supporting record is required. No payment or approval should be assumed pending clarification.",
+      "source_refs": [
+        "AR-00783",
+        "CUS-043",
+        "CON-043"
+      ]
+    },
+    {
+      "document_id": "packet-007-doc-6",
+      "kind": "follow-up",
+      "date": "2025-07-31",
+      "subject": "Follow-up requested for invoice review",
+      "body": "Following the review of invoice AR-00783, please provide any available explanation for the posted amount of $85.70 and its relationship to contract CON-043. The invoice is dated 2025-07-31, is due 2025-08-30, and references customer CUS-043. If the current records are sufficient, please state that the identifiers and dates have been checked; otherwise, identify the missing information needed for reconciliation. This follow-up does not record payment, approval, or a resolved result.",
+      "source_refs": [
+        "AR-00783",
+        "CUS-043",
+        "CON-043"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

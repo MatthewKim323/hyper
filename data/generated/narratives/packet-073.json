@@ -1,0 +1,82 @@
+{
+  "packet_id": "packet-073",
+  "documents": [
+    {
+      "document_id": "packet-073-doc-1",
+      "kind": "email",
+      "date": "2025-01-31",
+      "subject": "Invoice AR-00025 posted for review",
+      "body": "Hello Orion Network 021 finance team,\n\nMeridian Ledger Labs, Inc. has a monthly invoice listed as posted under invoice AR-00025 for customer CUS-021 and contract CON-021. The invoice date is 2025-01-31, and the due date shown is 2025-03-02. The recorded amount is $4,382.12. Please review the invoice details and let us know if any explanation or clarification is needed. This message does not establish payment, approval, or any additional transaction purpose.\n\nRegards,\nFinance",
+      "source_refs": [
+        "AR-00025",
+        "CUS-021",
+        "CON-021"
+      ]
+    },
+    {
+      "document_id": "packet-073-doc-2",
+      "kind": "chat",
+      "date": "2025-01-31",
+      "subject": "AR-00025 review checkpoint",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AR-00025 for Orion Network 021. The record links customer CUS-021 with contract CON-021 and shows a monthly invoice dated 2025-01-31.\n\nThe amount recorded is $4,382.12, with a listed due date of 2025-03-02. I do not see any packet-supported explanation for the difference between the monthly base and the invoice amount. Please flag whether customer clarification is needed. No payment or approval is established here.",
+      "source_refs": [
+        "AR-00025",
+        "CUS-021",
+        "CON-021"
+      ]
+    },
+    {
+      "document_id": "packet-073-doc-3",
+      "kind": "operational_note",
+      "date": "2025-01-31",
+      "subject": "Billing record observation",
+      "body": "Operational review of AR-00025: the invoice is marked posted and categorized as monthly. It references customer CUS-021, Orion Network 021, and contract CON-021. The invoice amount is $4,382.12, dated 2025-01-31, with a due date of 2025-03-02. Contract information identifies monthly arrears billing for hosted access and metered API blocks. The packet does not provide a usage quantity, adjustment explanation, approval record, or payment record. Request supporting clarification before drawing further conclusions.",
+      "source_refs": [
+        "AR-00025",
+        "CUS-021",
+        "CON-021"
+      ]
+    },
+    {
+      "document_id": "packet-073-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-01-31",
+      "subject": "CON-021 service and billing terms",
+      "body": "Contract CON-021 identifies customer CUS-021 and covers hosted access and metered API blocks. The effective date is 2025-01-01, and the stated end date is 2026-12-31. Billing is described as monthly arrears, with terms of 30 days. The monthly base is recorded as $4,300.00, and the usage block price is recorded as $0.01 per block. This excerpt does not specify usage volume, invoice adjustments, approval status, or payment status for AR-00025.",
+      "source_refs": [
+        "CON-021",
+        "CUS-021",
+        "AR-00025"
+      ]
+    },
+    {
+      "document_id": "packet-073-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-01-31",
+      "subject": "Question regarding AR-00025 variance",
+      "body": "Could the owner of AR-00025 confirm how the posted amount of $4,382.12 relates to the contract terms for CON-021? The contract records a monthly base of $4,300.00 and a usage block price of $0.01, while the service is hosted access and metered API blocks. The packet does not state the metered quantity or provide an adjustment explanation. Please identify the supporting detail, if available, and confirm whether customer clarification should be requested. No payment or approval is assumed.",
+      "source_refs": [
+        "AR-00025",
+        "CON-021"
+      ]
+    },
+    {
+      "document_id": "packet-073-doc-6",
+      "kind": "follow_up",
+      "date": "2025-01-31",
+      "subject": "Next steps for invoice clarification",
+      "body": "Follow-up for Casey Team05 and Orion Network 021: please retain AR-00025 as a posted monthly invoice dated 2025-01-31, with the listed due date of 2025-03-02 and recorded amount of $4,382.12. Before reconciliation is completed, request an explanation for any amount beyond the monthly base stated in CON-021, including any relevant metered API block detail. The packet does not establish payment, approval, or a final resolution. Record any response against CUS-021 and CON-021.",
+      "source_refs": [
+        "AR-00025",
+        "CUS-021",
+        "CON-021"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-097",
+  "documents": [
+    {
+      "document_id": "packet-097-doc-1",
+      "kind": "email",
+      "date": "2025-07-31",
+      "subject": "Review requested for invoice AR-00813",
+      "body": "To: finance73@customer.example\n\nMeridian Ledger Labs, Inc. is requesting confirmation that Aster Network 073 received invoice AR-00813. The invoice is posted, dated 2025-07-31, and identifies CUS-073 under contract CON-073. Its stated amount is $95.45, with a due date of 2025-08-30. Please advise whether any explanation or supporting context is available for the invoiced amount. This message is a same-day draft request for clarification; it does not establish payment, approval, or a resolved balance.",
+      "source_refs": [
+        "AR-00813",
+        "CUS-073",
+        "CON-073"
+      ]
+    },
+    {
+      "document_id": "packet-097-doc-2",
+      "kind": "chat",
+      "date": "2025-07-31",
+      "subject": "AR-00813 clarification needed",
+      "body": "Casey Team05: I am reviewing posted invoice AR-00813 for Aster Network 073. The record shows a monthly invoice dated 2025-07-31 for $95.45, due 2025-08-30, under contract CON-073. The contract record separately lists annual advance billing, a monthly base of $1,500.00, and a usage block price of $0.01. Please check the available records for an explanation of how this invoice amount was determined. No payment or additional approval is established here.",
+      "source_refs": [
+        "AR-00813",
+        "CON-073",
+        "CUS-073"
+      ]
+    },
+    {
+      "document_id": "packet-097-doc-3",
+      "kind": "operational_note",
+      "date": "2025-07-31",
+      "subject": "Invoice and contract record review",
+      "body": "Operational review note: Invoice AR-00813 is posted for customer CUS-073 and is dated 2025-07-31. The invoice is identified as monthly, carries an amount of $95.45, and has a due date of 2025-08-30. Contract CON-073 covers hosted access and metered API blocks, is effective from 2025-01-01 through 2026-12-31, and lists annual advance billing. Before reconciliation is completed, request the missing explanation for the relationship between these recorded details.",
+      "source_refs": [
+        "AR-00813",
+        "CUS-073",
+        "CON-073"
+      ]
+    },
+    {
+      "document_id": "packet-097-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-07-31",
+      "subject": "CON-073 service and billing excerpt",
+      "body": "Contract CON-073 identifies CUS-073 as the customer and covers hosted access and metered API blocks. The recorded effective date is 2025-01-01, and the recorded end date is 2026-12-31. Billing is listed as annual advance, with a monthly base of $1,500.00 and a usage block price of $0.01. The terms field states 30 days. This excerpt is provided for comparison with invoice AR-00813 and does not interpret or amend the contract record.",
+      "source_refs": [
+        "CON-073",
+        "CUS-073",
+        "AR-00813"
+      ]
+    },
+    {
+      "document_id": "packet-097-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-07-31",
+      "subject": "Question regarding AR-00813 reconciliation",
+      "body": "For reconciliation of AR-00813, please clarify the basis for the posted amount of $95.45. The invoice is marked monthly and references customer CUS-073 and contract CON-073. The contract record lists annual advance billing, a monthly base of $1,500.00, and metered API blocks priced at $0.01 each. Please identify which recorded contract or usage information supports the invoice amount, and advise whether any source detail is missing. This question does not assume payment, approval, or a final accounting treatment.",
+      "source_refs": [
+        "AR-00813",
+        "CUS-073",
+        "CON-073"
+      ]
+    },
+    {
+      "document_id": "packet-097-doc-6",
+      "kind": "follow_up",
+      "date": "2025-07-31",
+      "subject": "Follow-up requested on invoice AR-00813",
+      "body": "Following up on the review of invoice AR-00813 for Aster Network 073. The posted invoice is dated 2025-07-31, shows $95.45, and is due 2025-08-30. Please confirm receipt of this clarification request and provide any available explanation connecting the invoice to contract CON-073. The contract record states annual advance billing for hosted access and metered API blocks. Until the missing context is supplied, the reconciliation remains a question for review. No payment or approval is recorded by this draft.",
+      "source_refs": [
+        "AR-00813",
+        "CUS-073",
+        "CON-073"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

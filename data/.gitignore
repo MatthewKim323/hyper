@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+swarm/runs/
+swarm/build-engine/
+exports/*
+!exports/*.tar.gz
+swarm/pool-progress.jsonl
+swarm/review/
+swarm/resume-check.jsonl

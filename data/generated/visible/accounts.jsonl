@@ -1,0 +1,20 @@
+{"account":"1000","name":"USD operating bank","kind":"asset"}
+{"account":"1100","name":"USDC treasury wallet","kind":"asset"}
+{"account":"1110","name":"USDC disbursement wallet","kind":"asset"}
+{"account":"1200","name":"Accounts receivable","kind":"asset"}
+{"account":"1300","name":"Prepaid services","kind":"asset"}
+{"account":"1500","name":"Equipment cost","kind":"asset"}
+{"account":"1510","name":"Accumulated depreciation","kind":"contra_asset"}
+{"account":"2000","name":"Accounts payable","kind":"liability"}
+{"account":"2100","name":"Payroll deductions payable","kind":"liability"}
+{"account":"2200","name":"Deferred subscription revenue","kind":"liability"}
+{"account":"2300","name":"Accrued cloud services","kind":"liability"}
+{"account":"3000","name":"Contributed equity","kind":"equity"}
+{"account":"4000","name":"Subscription revenue","kind":"revenue"}
+{"account":"4010","name":"Usage revenue","kind":"revenue"}
+{"account":"5000","name":"Cloud and vendor service expense","kind":"expense"}
+{"account":"5100","name":"Gross payroll expense","kind":"expense"}
+{"account":"5110","name":"Employer payroll expense","kind":"expense"}
+{"account":"5200","name":"Insurance and software expense","kind":"expense"}
+{"account":"5300","name":"Depreciation expense","kind":"expense"}
+{"account":"5400","name":"Treasury service fees","kind":"expense"}

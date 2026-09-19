@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-034",
+  "documents": [
+    {
+      "document_id": "packet-034-doc-1",
+      "kind": "email",
+      "date": "2026-04-30",
+      "subject": "Monthly invoice AR-01952 for review",
+      "body": "To: finance112@customer.example\n\nSubject: Monthly invoice AR-01952 for review\n\nHello Juniper Network 112 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-01952 for customer CUS-112 under contract CON-112. The invoice date is 2026-04-30, the due date is 2026-05-30, and the amount is $2,642.20. Please review the invoice details and let us know if any explanation or supporting information is needed. This message is a same-day draft request for review and does not establish payment or approval.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AR-01952",
+        "CUS-112",
+        "CON-112"
+      ]
+    },
+    {
+      "document_id": "packet-034-doc-2",
+      "kind": "chat",
+      "date": "2026-04-30",
+      "subject": "AR-01952 review checkpoint",
+      "body": "Casey Team05: I\u2019m reviewing the posted monthly invoice AR-01952 for Juniper Network 112. The record lists CUS-112 and contract CON-112, with an invoice amount of $2,642.20 and a due date of 2026-05-30.\n\nTeam: Please check that the customer and contract references are aligned with the billing record. If anything appears inconsistent, document the specific field and request clarification. The packet does not establish any payment, approval, or explanation for the invoice amount, so those items should remain open pending evidence.",
+      "source_refs": [
+        "AR-01952",
+        "CUS-112",
+        "CON-112"
+      ]
+    },
+    {
+      "document_id": "packet-034-doc-3",
+      "kind": "operational_note",
+      "date": "2026-04-30",
+      "subject": "Billing record handling note",
+      "body": "Operational note dated 2026-04-30: Invoice AR-01952 is marked posted for customer CUS-112 under contract CON-112. It is identified as a monthly invoice dated 2026-04-30, with a due date of 2026-05-30 and a recorded amount of $2,642.20. The related contract describes monthly arrears billing for hosted access and metered API blocks. Retain the customer, contract, date, status, and amount as recorded. Any missing explanation, approval, or payment evidence should be requested separately rather than inferred from this note.",
+      "source_refs": [
+        "AR-01952",
+        "CUS-112",
+        "CON-112"
+      ]
+    },
+    {
+      "document_id": "packet-034-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-04-30",
+      "subject": "CON-112 billing and service excerpt",
+      "body": "Contract CON-112 identifies customer CUS-112 and covers hosted access and metered API blocks. Its effective date is 2025-01-01, and its end date is 2026-12-31. Billing is monthly in arrears, with a monthly base of $2,550.00 and a usage block price of $0.01. The contract lists terms of 30 days. This excerpt is provided for comparison with invoice AR-01952 dated 2026-04-30; it does not determine the source of any invoice variance or establish an additional commercial term.",
+      "source_refs": [
+        "CON-112",
+        "CUS-112",
+        "AR-01952"
+      ]
+    },
+    {
+      "document_id": "packet-034-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-04-30",
+      "subject": "Question regarding AR-01952 reconciliation",
+      "body": "For reconciliation of invoice AR-01952, can the responsible team explain how the recorded amount of $2,642.20 relates to the terms in contract CON-112? The contract lists a monthly base of $2,550.00 and a usage block price of $0.01, with billing monthly in arrears for hosted access and metered API blocks. Please provide the relevant usage or calculation detail, if available, and confirm whether the customer reference CUS-112 is correct. No explanation or approval is established in the packet.",
+      "source_refs": [
+        "AR-01952",
+        "CON-112",
+        "CUS-112"
+      ]
+    },
+    {
+      "document_id": "packet-034-doc-6",
+      "kind": "follow_up",
+      "date": "2026-04-30",
+      "subject": "Follow-up requested for posted invoice",
+      "body": "Follow-up dated 2026-04-30 regarding invoice AR-01952: Juniper Network 112 is listed as customer CUS-112, and the related contract is CON-112. Please confirm that the posted monthly invoice, dated 2026-04-30, is being reviewed against the contract\u2019s monthly-arrears terms and the listed service of hosted access and metered API blocks. If supporting usage detail, an explanation of the amount, or another record is required, please identify the missing item. This draft does not confirm payment, approval, or resolution.",
+      "source_refs": [
+        "AR-01952",
+        "CUS-112",
+        "CON-112"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

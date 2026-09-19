@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-069",
+  "documents": [
+    {
+      "document_id": "packet-069-doc-1",
+      "kind": "email",
+      "date": "2026-03-31",
+      "subject": "Payroll record and settlement-status clarification",
+      "body": "Hello Casey Team05 and Taylor Team06,\n\nPlease review the payroll record dated 2026-03-31 under payroll ID PAY-015 for Meridian Ledger Labs, Inc. The packet identifies gross payroll, withholding, employer cost, and net payroll amounts, but it does not provide explanations for any associated movements or establish an approval or payment. Please confirm which details require supporting documentation and whether any external movement has been confirmed. Under the stated settlement policy, proposals should not be treated as settlements. Please send questions or missing context for follow-up.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-069-doc-2",
+      "kind": "chat",
+      "date": "2026-03-31",
+      "subject": "Payroll review",
+      "body": "Casey Team05: I am reviewing PAY-015 for the 2026-03-31 payroll record. The packet includes gross, withholding, employer, and net fields, but it does not explain related movements.\n\nTaylor Team06: I can help identify what needs clarification. We should avoid assuming a purpose, approval, or payment that is not documented.\n\nCasey Team05: Agreed. Let\u2019s request the missing explanations and distinguish any confirmed external movement from a proposal, consistent with the settlement policy for MERIDIAN-001.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-069-doc-3",
+      "kind": "operational_note",
+      "date": "2026-03-31",
+      "subject": "Payroll record handling note",
+      "body": "For payroll ID PAY-015, retain the 2026-03-31 record with its stated gross, withholding, employer, and net fields. The available packet does not identify explanations for missing movements, additional approvals, or payments. Operational handling should therefore preserve the distinction between documented payroll data and unresolved context. Before any settlement treatment, request evidence of a confirmed external movement. The company identifier is MERIDIAN-001. No transaction purpose should be inferred from the payroll record alone, and no outcome should be recorded without supporting information.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-069-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-03-31",
+      "subject": "Settlement-policy excerpt",
+      "body": "Settlement treatment shall follow the policy supplied for MERIDIAN-001: only confirmed external movements are settled, while proposals are not settlements. This excerpt does not establish a contract term beyond that stated policy, nor does it create an approval, payment, obligation, or transaction purpose. For payroll ID PAY-015, any missing explanation must be requested before characterization. The record date is 2026-03-31. Any interpretation of the payroll fields should remain limited to the information contained in the company packet.",
+      "source_refs": [
+        "MERIDIAN-001",
+        "PAY-015"
+      ]
+    },
+    {
+      "document_id": "packet-069-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-03-31",
+      "subject": "Question on PAY-015 reconciliation status",
+      "body": "For the 2026-03-31 payroll record PAY-015, can the responsible reviewer provide the missing explanations for any related external movements? Specifically, please identify whether a movement is confirmed or remains a proposal, without assuming its purpose, approval, or payment status. The packet supplies payroll amounts and the settlement policy for MERIDIAN-001, but it does not supply additional transaction detail. Should the record remain unreconciled pending clarification, and what supporting information is available for review? Please do not treat an unsupported proposal as settled.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-069-doc-6",
+      "kind": "follow_up",
+      "date": "2026-03-31",
+      "subject": "Follow-up request for missing payroll context",
+      "body": "Following the review of PAY-015, please provide any available explanation for related movements connected with the 2026-03-31 payroll record. The current packet does not establish an additional approval, payment, or transaction purpose. Please also indicate whether any external movement is confirmed or only proposed, applying the settlement policy for MERIDIAN-001. Until that information is supplied, retain the payroll record as documented and leave unresolved items clearly identified. This follow-up requests clarification only and does not record a settlement or other resolved outcome.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

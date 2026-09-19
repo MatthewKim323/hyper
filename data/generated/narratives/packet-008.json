@@ -1,0 +1,92 @@
+{
+  "packet_id": "packet-008",
+  "documents": [
+    {
+      "document_id": "packet-008-doc-1",
+      "kind": "email",
+      "date": "2025-08-31",
+      "subject": "Invoice AP-00428 review",
+      "body": "Hello Granite Legal 008,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-00428 from the current payable records. The invoice is posted for $2,328.97, is associated with PO-00428, and lists a due date of 2025-09-27. Please confirm that the invoice details remain accurate and provide any explanation needed for open questions in the record. This message is a same-day draft for review; it does not confirm payment, approval, or any additional commercial arrangement.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00428",
+        "PO-00428",
+        "VEN-008"
+      ]
+    },
+    {
+      "document_id": "packet-008-doc-2",
+      "kind": "chat",
+      "date": "2025-08-31",
+      "subject": "AP-00428 status check",
+      "body": "Casey Team05: I\u2019m checking the posted status of AP-00428 against PO-00428 and receipt RC-AP-00428. The recorded amount is $2,328.97, and the vendor is Granite Legal 008 under VEN-008.\n\nTeam note: The receipt records an accepted amount of $2,328.97 and identifies EMP-005 as the accepting employee. I do not see an established payment or additional approval in this draft context. Please flag any missing explanation or discrepancy for follow-up before the record is treated as complete.",
+      "source_refs": [
+        "AP-00428",
+        "PO-00428",
+        "RC-AP-00428",
+        "VEN-008",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-008-doc-3",
+      "kind": "operational_note",
+      "date": "2025-08-31",
+      "subject": "Accounts payable record note",
+      "body": "Operational review on 2025-08-31: invoice AP-00428 is posted for vendor VEN-008, Granite Legal 008, in the legal category. The invoice amount is $2,328.97, matching the recorded amount for PO-00428. Service receipt RC-AP-00428 also records an accepted amount of $2,328.97 and identifies EMP-005 as the accepting employee. The related agreement identifier is VA-AP-00428. Any missing explanation should be requested. This note establishes no payment, additional approval, or resolved exception.",
+      "source_refs": [
+        "AP-00428",
+        "VEN-008",
+        "PO-00428",
+        "RC-AP-00428",
+        "EMP-005",
+        "VA-AP-00428"
+      ]
+    },
+    {
+      "document_id": "packet-008-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-08-31",
+      "subject": "Agreement reference VA-AP-00428",
+      "body": "Reference excerpt prepared for review on 2025-08-31:\n\nAgreement identifier: VA-AP-00428.\nRelated purchase order: PO-00428.\nSupplier identifier: VEN-008.\nRecorded purchase-order amount: $2,328.97.\n\nThe packet identifies Granite Legal 008 as the supplier billing contact and classifies the vendor category as legal. The vendor record also specifies a 30-day term and approved recipient SIM-RECIPIENT-008. This excerpt reproduces recorded references only; it does not add contractual language, establish performance beyond the service receipt, or confirm approval or payment.",
+      "source_refs": [
+        "VA-AP-00428",
+        "PO-00428",
+        "VEN-008",
+        "SIM-RECIPIENT-008"
+      ]
+    },
+    {
+      "document_id": "packet-008-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-08-31",
+      "subject": "Reconciliation question for AP-00428",
+      "body": "Can the record owner confirm whether invoice AP-00428, purchase order PO-00428, and service receipt RC-AP-00428 are intended to represent the same recorded obligation? Each listed amount is $2,328.97, while the invoice status is posted. The receipt identifies EMP-005 as the accepting employee. Please also identify any missing explanation, discrepancy, or required review step. The available packet does not establish an approval or payment, so reconciliation should remain an open question until the relevant record support is provided.",
+      "source_refs": [
+        "AP-00428",
+        "PO-00428",
+        "RC-AP-00428",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-008-doc-6",
+      "kind": "follow_up",
+      "date": "2025-08-31",
+      "subject": "Follow-up items for Granite Legal 008",
+      "body": "Follow-up draft for 2025-08-31: Casey Team05 should retain the linkage among AP-00428, PO-00428, and RC-AP-00428 while requesting explanations for any unresolved questions. Granite Legal 008 may be contacted through ap8@supplier.example regarding invoice details. The vendor record identifies SIM-RECIPIENT-008 as the approved recipient, and the invoice shows a due date of 2025-09-27. No payment, additional approval, or resolved outcome is established here. Record any response against the relevant identifiers without adding unsupported facts.",
+      "source_refs": [
+        "AP-00428",
+        "PO-00428",
+        "RC-AP-00428",
+        "VEN-008",
+        "SIM-RECIPIENT-008"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "packet_id": "packet-065",
+  "documents": [
+    {
+      "document_id": "packet-065-doc-1",
+      "kind": "email",
+      "date": "2025-11-30",
+      "subject": "Invoice AP-00605 status and record confirmation",
+      "body": "Hello Atlas Services 005,\n\nMeridian Ledger Labs, Inc. has invoice AP-00605 recorded with vendor VEN-005 and purchase order PO-00605. The posted invoice amount is $1,704.79, and the recorded due date is 2025-12-27. Please confirm that your records identify AP-00605 consistently and advise whether any explanation or supporting detail is needed regarding the submitted services documentation. This message requests confirmation only; it does not establish additional approval or payment.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00605",
+        "VEN-005",
+        "PO-00605"
+      ]
+    },
+    {
+      "document_id": "packet-065-doc-2",
+      "kind": "chat",
+      "date": "2025-11-30",
+      "subject": "AP-00605 review",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AP-00605 against PO-00605. The invoice and purchase order each show $1,704.79, and the service receipt RC-AP-00605 records an accepted amount of $1,704.79. The receipt identifies EMP-005 as the accepting employee. I do not see an established payment or additional approval in the available record. Atlas Services 005 is the listed supplier, with vendor ID VEN-005. I\u2019ll keep the item in review pending any missing explanation.",
+      "source_refs": [
+        "AP-00605",
+        "PO-00605",
+        "RC-AP-00605",
+        "EMP-005",
+        "VEN-005"
+      ]
+    },
+    {
+      "document_id": "packet-065-doc-3",
+      "kind": "operational_note",
+      "date": "2025-11-30",
+      "subject": "Invoice and receipt alignment note",
+      "body": "Operational review documents invoice AP-00605 as posted for vendor VEN-005 and linked to purchase order PO-00605. The invoice amount, purchase order amount, and accepted service receipt amount each equal $1,704.79. Service receipt RC-AP-00605 identifies PO-00605 and EMP-005. The supplier category is services. The record contains an approved recipient identifier, SIM-RECIPIENT-005. No additional approval, payment, exception explanation, or final disposition is established by this note.",
+      "source_refs": [
+        "AP-00605",
+        "VEN-005",
+        "PO-00605",
+        "RC-AP-00605",
+        "EMP-005",
+        "SIM-RECIPIENT-005"
+      ]
+    },
+    {
+      "document_id": "packet-065-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-11-30",
+      "subject": "Agreement reference and service record excerpt",
+      "body": "Reference excerpt: Purchase order PO-00605 is associated with vendor VEN-005 and agreement VA-AP-00605. The supplier is Atlas Services 005, categorized as services. The related service receipt is RC-AP-00605, which records an accepted amount of $1,704.79 and identifies EMP-005 as the accepting employee. This excerpt is limited to the identifiers and amounts present in the company packet. It does not add commercial terms, legal conclusions, approval status, payment status, or performance explanations.",
+      "source_refs": [
+        "PO-00605",
+        "VEN-005",
+        "VA-AP-00605",
+        "RC-AP-00605",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-065-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-11-30",
+      "subject": "Question regarding AP-00605 reconciliation",
+      "body": "Can Casey Team05 confirm whether invoice AP-00605 should be reconciled using the matching records for PO-00605 and RC-AP-00605? The invoice, purchase order, and accepted service receipt each identify $1,704.79, while the invoice status is posted. Please also confirm whether any explanation is missing from the current record and whether the approved recipient identifier SIM-RECIPIENT-005 remains the applicable reference for vendor VEN-005. This is a question for review, not a payment or approval confirmation.",
+      "source_refs": [
+        "AP-00605",
+        "PO-00605",
+        "RC-AP-00605",
+        "SIM-RECIPIENT-005",
+        "VEN-005"
+      ]
+    },
+    {
+      "document_id": "packet-065-doc-6",
+      "kind": "follow_up",
+      "date": "2025-11-30",
+      "subject": "Follow-up on supplier record review",
+      "body": "Follow-up for Atlas Services 005 and Casey Team05: please review the linked records for AP-00605, PO-00605, and RC-AP-00605. The packet shows a posted invoice for $1,704.79, a purchase order for the same amount, and an accepted service receipt for the same amount. If any explanation, discrepancy detail, or missing documentation remains, please provide it for review. No additional approval or payment is established here. Please reference VEN-005 when responding.",
+      "source_refs": [
+        "AP-00605",
+        "PO-00605",
+        "RC-AP-00605",
+        "VEN-005"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

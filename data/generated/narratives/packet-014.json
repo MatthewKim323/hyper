@@ -1,0 +1,91 @@
+{
+  "packet_id": "packet-014",
+  "documents": [
+    {
+      "document_id": "packet-014-doc-1",
+      "kind": "email",
+      "date": "2026-02-28",
+      "subject": "Invoice AP-00794 record review",
+      "body": "Hello Granite Legal 014,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-00794 from the current packet. The invoice is associated with vendor VEN-014 and purchase order PO-00794, and its recorded status is posted. The stated amount is $1,509.13. Please confirm whether any explanation or supporting detail is needed for the recorded service receipt RC-AP-00794. We are not treating this message as evidence of payment or additional approval. Please direct any clarification to the listed billing contact address.",
+      "source_refs": [
+        "AP-00794",
+        "VEN-014",
+        "PO-00794",
+        "RC-AP-00794"
+      ]
+    },
+    {
+      "document_id": "packet-014-doc-2",
+      "kind": "chat",
+      "date": "2026-02-28",
+      "subject": "AP-00794 internal review",
+      "body": "Casey Team05: I am reviewing the posted invoice AP-00794 for vendor VEN-014. The purchase order is PO-00794, and the recorded invoice and accepted service amounts both convert to $1,509.13. The service receipt is RC-AP-00794, accepted by EMP-005. I do not see evidence in the packet establishing any payment or additional approval. If the record requires an explanation, please identify the missing detail rather than infer a purpose or outcome. I will keep the item in review pending clarification.",
+      "source_refs": [
+        "AP-00794",
+        "VEN-014",
+        "PO-00794",
+        "RC-AP-00794",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-014-doc-3",
+      "kind": "operational_note",
+      "date": "2026-02-28",
+      "subject": "Accounts payable record note",
+      "body": "As of 2026-02-28, the available record identifies invoice AP-00794 for vendor VEN-014, linked to purchase order PO-00794. The invoice status is posted, and the recorded amount is $1,509.13. Service receipt RC-AP-00794 records the same accepted amount and identifies EMP-005 as the accepting employee. The packet does not establish payment, additional approval, or an explanation of the underlying service purpose. Any operational exception should be documented as an open question and routed to Casey Team05 for review.",
+      "source_refs": [
+        "AP-00794",
+        "VEN-014",
+        "PO-00794",
+        "RC-AP-00794",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-014-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-02-28",
+      "subject": "Agreement reference excerpt",
+      "body": "Agreement reference: VA-AP-00794. The associated purchase order is PO-00794, issued for vendor VEN-014, and the vendor record identifies Granite Legal 014 in the legal category. The packet records invoice AP-00794 with a posted status and an amount of $1,509.13. This excerpt is limited to the supplied identifiers and recorded fields. It does not establish additional commercial terms, a payment event, an approval beyond the stated service receipt record, or any legal conclusion. Unstated provisions require separate verification.",
+      "source_refs": [
+        "VA-AP-00794",
+        "PO-00794",
+        "VEN-014",
+        "AP-00794"
+      ]
+    },
+    {
+      "document_id": "packet-014-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-02-28",
+      "subject": "Question regarding AP-00794 reconciliation",
+      "body": "Can Casey Team05 confirm how the posted invoice AP-00794 should be reconciled against purchase order PO-00794 and service receipt RC-AP-00794? The invoice amount, purchase order amount, and accepted service amount each record $1,509.13 when converted from the supplied cent fields. The packet shows matching identifiers and amounts, but it does not explain the service purpose or establish payment or additional approval. Please state whether any missing explanation, supporting record, or exception remains before the reconciliation status is characterized further.",
+      "source_refs": [
+        "AP-00794",
+        "PO-00794",
+        "RC-AP-00794"
+      ]
+    },
+    {
+      "document_id": "packet-014-doc-6",
+      "kind": "follow_up",
+      "date": "2026-02-28",
+      "subject": "Follow-up on supplier record clarification",
+      "body": "Follow-up for 2026-02-28: Granite Legal 014 remains the listed supplier for vendor VEN-014, with billing contact ap14@supplier.example. The related records are invoice AP-00794, purchase order PO-00794, agreement VA-AP-00794, and service receipt RC-AP-00794. Please provide any missing explanation needed to connect these records, if one is required. This draft does not confirm payment, add an approval, or resolve an exception. Casey Team05 remains the identified finance owner for reviewing the available information and documenting next questions.",
+      "source_refs": [
+        "VEN-014",
+        "AP-00794",
+        "PO-00794",
+        "VA-AP-00794",
+        "RC-AP-00794"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

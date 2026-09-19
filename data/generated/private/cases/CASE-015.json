@@ -1,0 +1,17 @@
+{
+  "case_id": "CASE-015",
+  "development_family": "supplier_silent",
+  "split": "development_not_sealed",
+  "counterparty_events": [],
+  "expected_disposition": "WAITING",
+  "expected_net_cents": null,
+  "reason": "Required evidence is unavailable or delivery remains outstanding; no assumption of resolution.",
+  "invariants": [
+    "cash remains unchanged",
+    "no repeated credit allocation",
+    "recipient unchanged",
+    "current approval required when over threshold"
+  ],
+  "allowed_sequence": "Any sequence obtaining the required evidence; triggers are simulator API conditions, not mandatory solver steps",
+  "solver_must_not_read_this": true
+}

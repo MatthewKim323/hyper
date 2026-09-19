@@ -1,0 +1,95 @@
+{
+  "packet_id": "packet-098",
+  "documents": [
+    {
+      "document_id": "packet-098-doc-1",
+      "kind": "email",
+      "date": "2025-08-31",
+      "subject": "Invoice AP-00458 review",
+      "body": "To: ap38@supplier.example\nFrom: Casey Team05\n\nHello Granite Legal 038,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-00458, associated with PO-00458 and vendor ID VEN-038. The invoice is recorded as posted for $2,323.06, with a due date of 2025-09-27. Please provide any explanation or supporting detail needed for our review, including whether the billing contact information and approved recipient remain current. This message does not confirm payment or any additional approval. We will follow up after reconciliation.",
+      "source_refs": [
+        "AP-00458",
+        "VEN-038",
+        "PO-00458"
+      ]
+    },
+    {
+      "document_id": "packet-098-doc-2",
+      "kind": "chat",
+      "date": "2025-08-31",
+      "subject": "AP-00458 reconciliation discussion",
+      "body": "Casey Team05: I am reviewing AP-00458 for Granite Legal 038, vendor VEN-038. The posted invoice amount is $2,323.06, and PO-00458 carries the same recorded amount.\n\nCasey Team05: The service receipt RC-AP-00458 also records an accepted amount of $2,323.06 and identifies EMP-005 as the accepting employee. I do not see a payment or additional approval established in the packet. Please flag any missing explanation or documentation before the reconciliation is treated as complete.",
+      "source_refs": [
+        "AP-00458",
+        "VEN-038",
+        "PO-00458",
+        "RC-AP-00458",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-098-doc-3",
+      "kind": "operational_note",
+      "date": "2025-08-31",
+      "subject": "Accounts payable review note",
+      "body": "Operational review for invoice AP-00458: vendor VEN-038 is Granite Legal 038, categorized as legal, with contact ap38@supplier.example. The invoice status is posted, and the recorded amount is $2,323.06. PO-00458 lists the same amount and is linked to agreement VA-AP-00458. Service receipt RC-AP-00458 records an accepted amount of $2,323.06 and names EMP-005 as the accepting employee. Reconciliation remains subject to any missing explanation or documentation; no payment or additional approval is established.",
+      "source_refs": [
+        "AP-00458",
+        "VEN-038",
+        "PO-00458",
+        "VA-AP-00458",
+        "RC-AP-00458",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-098-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-08-31",
+      "subject": "Agreement and service-record excerpt",
+      "body": "Referenced records identify agreement VA-AP-00458 in connection with purchase order PO-00458 and vendor VEN-038, Granite Legal 038. The purchase order records an amount of $2,323.06. Service receipt RC-AP-00458 references PO-00458 and records an accepted amount of $2,323.06, with EMP-005 identified as the accepting employee. This excerpt does not establish additional contractual language, payment activity, approval beyond the recorded acceptance, or any transaction purpose beyond the supplied records.",
+      "source_refs": [
+        "VA-AP-00458",
+        "PO-00458",
+        "VEN-038",
+        "RC-AP-00458",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-098-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-08-31",
+      "subject": "Question regarding AP-00458",
+      "body": "Please confirm whether the recorded invoice, purchase order, and service receipt should be reconciled using the information currently available. AP-00458 is posted for $2,323.06; PO-00458 records $2,323.06; and RC-AP-00458 records an accepted amount of $2,323.06. The records identify vendor VEN-038 and agreement VA-AP-00458. Are any explanations or supporting documents missing from this packet? Please also clarify whether the approved recipient SIM-RECIPIENT-038 remains the intended recipient. No payment or additional approval is established.",
+      "source_refs": [
+        "AP-00458",
+        "PO-00458",
+        "RC-AP-00458",
+        "VEN-038",
+        "VA-AP-00458",
+        "SIM-RECIPIENT-038"
+      ]
+    },
+    {
+      "document_id": "packet-098-doc-6",
+      "kind": "follow_up",
+      "date": "2025-08-31",
+      "subject": "Follow-up on invoice review",
+      "body": "Following up on the same-day review of AP-00458 for Granite Legal 038. The packet identifies invoice AP-00458 as posted, linked to PO-00458, and associated with vendor VEN-038. The invoice and purchase order each record $2,323.06, while service receipt RC-AP-00458 records an accepted amount of $2,323.06 by EMP-005. Please send any missing explanation or supporting documentation. Until that information is available, this draft records review activity only and does not confirm payment or additional approval.",
+      "source_refs": [
+        "AP-00458",
+        "VEN-038",
+        "PO-00458",
+        "RC-AP-00458",
+        "EMP-005"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

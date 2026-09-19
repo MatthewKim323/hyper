@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-048",
+  "documents": [
+    {
+      "document_id": "packet-048-doc-1",
+      "kind": "email",
+      "date": "2025-12-31",
+      "subject": "Payroll record and settlement status",
+      "body": "Hello Casey and Taylor,\n\nFor today\u2019s payroll record, PAY-012 shows gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. The record is dated 2025-12-31 and associated with Meridian Ledger Labs, Inc., company ID MERIDIAN-001. Please confirm whether any explanation is needed for these fields and identify any missing supporting information. No additional approval or payment is established in this draft. We should treat only confirmed external movements as settled under the stated policy.\n\nRegards,\nFinance owner",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-048-doc-2",
+      "kind": "chat",
+      "date": "2025-12-31",
+      "subject": "Same-day payroll review",
+      "body": "Casey Team05: I\u2019m reviewing PAY-012 for 2025-12-31. The recorded gross is $438,000.00, withholding is $87,600.00, employer amount is $35,040.00, and net is $350,400.00.\n\nTaylor Team06: I see the same fields. We still need to request explanations for anything that is unclear rather than infer a purpose or outcome.\n\nCasey Team05: Agreed. Also, the settlement policy distinguishes confirmed external movements from proposals. Let\u2019s leave settlement status open unless confirmation is available and document any missing support as a question.",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-048-doc-3",
+      "kind": "operational_note",
+      "date": "2025-12-31",
+      "subject": "Payroll record review note",
+      "body": "Operational review for 2025-12-31: PAY-012 records gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. The record is associated with Meridian Ledger Labs, Inc. and company ID MERIDIAN-001. Before any reconciliation conclusion is prepared, obtain explanations for missing or unclear fields. Do not add an approval, payment, transaction purpose, or external movement that is not confirmed in the packet. Proposals must remain distinct from settlements under the stated settlement policy.",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-048-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-12-31",
+      "subject": "Settlement policy excerpt",
+      "body": "Excerpt for same-day review, dated 2025-12-31:\n\n\u201cOnly confirmed external movements are settled; proposals are not settlements.\u201d\n\nThis excerpt is provided in connection with payroll record PAY-012 for Meridian Ledger Labs, Inc., company ID MERIDIAN-001. It does not establish an additional approval, payment, commercial term, or completed movement. Any operational use of this language should be accompanied by confirmation of the relevant external movement. Where confirmation or explanation is missing, the appropriate action is to request it and preserve the item as unresolved for review.",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-048-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-12-31",
+      "subject": "Questions regarding PAY-012",
+      "body": "Please clarify the reconciliation support for PAY-012 dated 2025-12-31. The packet records gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. Are explanations or source records available for each recorded field? Has any external movement associated with this record been confirmed, or is the item only a proposal? Please identify any missing context without inferring transaction purpose. No additional approval or payment should be treated as established unless separately supported by the packet.",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-048-doc-6",
+      "kind": "follow_up",
+      "date": "2025-12-31",
+      "subject": "Follow-up actions for payroll review",
+      "body": "Follow-up for the 2025-12-31 review: retain PAY-012 and its recorded amounts, request explanations for any missing fields, and seek confirmation of any external movement before classifying it as settled. The recorded values are gross $438,000.00, withholding $87,600.00, employer $35,040.00, and net $350,400.00. Keep proposals separate from settlements. Casey Team05 and Taylor Team06 should note any response received, while avoiding assumptions about purpose, approval, payment, or final status not supported by the company packet.",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

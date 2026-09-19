@@ -1,0 +1,21 @@
+{
+  "company_id": "MERIDIAN-001",
+  "name": "Meridian Ledger Labs, Inc.",
+  "synthetic": true,
+  "currency": "USD",
+  "period_start": "2025-01-01",
+  "period_end": "2026-06-30",
+  "business": "Blockchain monitoring and API SaaS; company-owned funds only; no custody or token issuance",
+  "headcount": 48,
+  "customers": 120,
+  "vendors": 60,
+  "assumptions": {
+    "valuation": "USDC fixed at $1 solely for this simulation; tracked separately from bank cash",
+    "tax": "No income/sales tax model; synthetic payroll withholding 20%, employer cost 8%; not statutory rates",
+    "revenue": "Hosted subscription earned monthly; annual advance base billings deferred; monthly usage earned as delivered",
+    "cash_flow": "Bank-only management cash-flow view; USDC purchases/redemptions shown as investing. Not a standards-compliant statement classification opinion.",
+    "settlement": "SIM identifiers; sponsored network gas charged as USD provider fee; no native gas token model",
+    "population": "48 staff,120 customers,60 vendors in scope throughout, not a hiring or customer acquisition simulation",
+    "period": "18-month established-business scenario initialized at zero balances immediately before seed financing"
+  }
+}

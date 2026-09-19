@@ -1,0 +1,88 @@
+{
+  "packet_id": "packet-035",
+  "documents": [
+    {
+      "document_id": "packet-035-doc-1",
+      "kind": "email",
+      "date": "2026-05-31",
+      "subject": "Invoice AP-00995 review",
+      "body": "To: Atlas Services 035 <ap35@supplier.example>\n\nHello Atlas Services 035,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-00995, associated with vendor VEN-035 and purchase order PO-00995. Our records show the invoice status as posted for $1,702.10. Please confirm that the invoice details remain accurate and advise whether any explanation or supporting information is needed for the current review. This draft does not establish payment, additional approval, or a change to the recorded status.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00995",
+        "VEN-035",
+        "PO-00995"
+      ]
+    },
+    {
+      "document_id": "packet-035-doc-2",
+      "kind": "chat",
+      "date": "2026-05-31",
+      "subject": "AP-00995 internal review",
+      "body": "Casey Team05: I am reviewing AP-00995 for Atlas Services 035. The invoice is posted, and the recorded amount is $1,702.10. The purchase order is PO-00995, with the same recorded amount. The service receipt is RC-AP-00995 and shows an accepted amount of $1,702.10. I do not see evidence here of payment or additional approval. Please flag any missing explanation or documentation before the record is treated as complete.",
+      "source_refs": [
+        "AP-00995",
+        "PO-00995",
+        "RC-AP-00995"
+      ]
+    },
+    {
+      "document_id": "packet-035-doc-3",
+      "kind": "operational_note",
+      "date": "2026-05-31",
+      "subject": "Accounts payable record check",
+      "body": "As of 2026-05-31, invoice AP-00995 is recorded for Atlas Services 035 under vendor VEN-035. The invoice is posted, with an amount of $1,702.10. Purchase order PO-00995 records the same amount, and service receipt RC-AP-00995 records an accepted amount of $1,702.10. The receipt identifies EMP-005 as the accepting employee. This note documents the available records only; it does not establish payment, further approval, or the purpose of the transaction.",
+      "source_refs": [
+        "AP-00995",
+        "VEN-035",
+        "PO-00995",
+        "RC-AP-00995",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-035-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-05-31",
+      "subject": "Service and agreement reference excerpt",
+      "body": "Reference excerpt for internal review: Atlas Services 035 is identified as a services vendor under VEN-035. Purchase order PO-00995 is linked to agreement VA-AP-00995 and records an amount of $1,702.10. Service receipt RC-AP-00995 is linked to PO-00995 and records an accepted amount of $1,702.10. These statements reproduce the supplied record references. They should not be read as adding commercial terms, establishing performance beyond the receipt, or confirming payment or approval.",
+      "source_refs": [
+        "VEN-035",
+        "PO-00995",
+        "VA-AP-00995",
+        "RC-AP-00995"
+      ]
+    },
+    {
+      "document_id": "packet-035-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-05-31",
+      "subject": "Question regarding AP-00995",
+      "body": "Can the responsible reviewer confirm whether invoice AP-00995, purchase order PO-00995, and service receipt RC-AP-00995 are intended to remain linked for reconciliation? The recorded invoice amount and purchase-order amount are each $1,702.10, while the receipt records the same accepted amount. Please also clarify whether any explanation or supporting documentation is missing, and whether the approved recipient reference SIM-RECIPIENT-035 should be checked as part of this review. No payment or additional approval is established in the supplied packet.",
+      "source_refs": [
+        "AP-00995",
+        "PO-00995",
+        "RC-AP-00995",
+        "SIM-RECIPIENT-035"
+      ]
+    },
+    {
+      "document_id": "packet-035-doc-6",
+      "kind": "follow_up",
+      "date": "2026-05-31",
+      "subject": "Follow-up actions for AP-00995",
+      "body": "Follow-up for the 2026-05-31 review: Casey Team05 should confirm whether the available invoice, purchase-order, and service-receipt records are sufficient for reconciliation. Atlas Services 035 may be contacted through ap35@supplier.example if clarification is required. The review should preserve the identifiers AP-00995, VEN-035, PO-00995, and RC-AP-00995. Any missing explanation should be requested directly rather than inferred. Until clarified, the packet supports a posted invoice record but does not establish payment or an additional approval.",
+      "source_refs": [
+        "AP-00995",
+        "VEN-035",
+        "PO-00995",
+        "RC-AP-00995"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "packet_id": "packet-020",
+  "documents": [
+    {
+      "document_id": "packet-020-doc-1",
+      "kind": "email",
+      "date": "2025-02-28",
+      "subject": "Invoice AP-00080 review request",
+      "body": "To: ap20@supplier.example\nFrom: Casey Team05\n\nHello Granite Legal 020,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-00080, associated with purchase order PO-00080. The invoice is recorded as posted for $2,739.39, with a due date of 2025-03-27. Please provide any available explanation or supporting detail for the billed services and confirm whether the invoice should remain associated with agreement VA-AP-00080. This request is for review only; no additional approval or payment is established by this draft.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00080",
+        "VEN-020",
+        "PO-00080",
+        "VA-AP-00080"
+      ]
+    },
+    {
+      "document_id": "packet-020-doc-2",
+      "kind": "chat",
+      "date": "2025-02-28",
+      "subject": "Invoice and receipt alignment",
+      "body": "Casey Team05: I am reviewing AP-00080 against PO-00080 and service receipt RC-AP-00080. The recorded invoice amount and purchase-order amount are each $2,739.39, and the receipt lists an accepted amount of $2,739.39. Granite Legal 020 is identified as the supplier billing contact. Before any next step, we should request missing explanations or supporting detail where needed and verify the approved recipient identifier SIM-RECIPIENT-020. The packet does not establish an additional approval or payment.",
+      "source_refs": [
+        "AP-00080",
+        "PO-00080",
+        "RC-AP-00080",
+        "SIM-RECIPIENT-020",
+        "VEN-020"
+      ]
+    },
+    {
+      "document_id": "packet-020-doc-3",
+      "kind": "operational_note",
+      "date": "2025-02-28",
+      "subject": "Accounts payable review note",
+      "body": "Invoice AP-00080 is posted under vendor VEN-020, Granite Legal 020, in the legal category. The invoice date is 2025-02-25, and the recorded due date is 2025-03-27. Purchase order PO-00080 is dated 2025-02-01 and references agreement VA-AP-00080. Service receipt RC-AP-00080 is dated 2025-02-25 and records an accepted amount of $2,739.39 by EMP-005. Review should confirm documentation and recipient details. No payment or additional approval is established in the available packet.",
+      "source_refs": [
+        "AP-00080",
+        "VEN-020",
+        "PO-00080",
+        "VA-AP-00080",
+        "RC-AP-00080",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-020-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-02-28",
+      "subject": "Agreement reference excerpt",
+      "body": "Reference: VA-AP-00080\n\nThis excerpt records the agreement identifier connected to purchase order PO-00080 and invoice AP-00080. The associated vendor is Granite Legal 020, identified by vendor ID VEN-020. The packet also records vendor terms of 30 days and an approved recipient identifier of SIM-RECIPIENT-020. No additional service description, scope language, approval record, payment record, or legal conclusion is included here. Any missing contractual or service detail should be requested from the appropriate record owner before relying on this excerpt.",
+      "source_refs": [
+        "VA-AP-00080",
+        "PO-00080",
+        "AP-00080",
+        "VEN-020",
+        "SIM-RECIPIENT-020"
+      ]
+    },
+    {
+      "document_id": "packet-020-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-02-28",
+      "subject": "Question on AP-00080 reconciliation",
+      "body": "Can Finance confirm whether invoice AP-00080, purchase order PO-00080, and service receipt RC-AP-00080 are intended to be reconciled using the recorded amount of $2,739.39? The packet shows matching amounts for the invoice, purchase order, and accepted service receipt, but it does not provide an explanation of the underlying services or establish a further approval. Please also confirm whether SIM-RECIPIENT-020 is the recipient identifier to use for review, without treating that identifier as evidence of payment.",
+      "source_refs": [
+        "AP-00080",
+        "PO-00080",
+        "RC-AP-00080",
+        "SIM-RECIPIENT-020"
+      ]
+    },
+    {
+      "document_id": "packet-020-doc-6",
+      "kind": "follow_up",
+      "date": "2025-02-28",
+      "subject": "Follow-up items for Granite Legal 020",
+      "body": "Follow-up for Casey Team05: request missing service or billing explanation from Granite Legal 020 at ap20@supplier.example; retain invoice AP-00080, purchase order PO-00080, and service receipt RC-AP-00080 together for review; and compare recipient details with approved recipient SIM-RECIPIENT-020. The invoice is posted, dated 2025-02-25, and due 2025-03-27. These are review actions only. The packet does not establish that any additional approval has occurred or that payment has been made.",
+      "source_refs": [
+        "AP-00080",
+        "PO-00080",
+        "RC-AP-00080",
+        "SIM-RECIPIENT-020",
+        "VEN-020"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "packet_id": "packet-074",
+  "documents": [
+    {
+      "document_id": "packet-074-doc-1",
+      "kind": "email",
+      "date": "2025-02-28",
+      "subject": "Invoice AP-00074 review request",
+      "body": "Hello Granite Legal 014, Meridian Ledger Labs, Inc. is reviewing invoice AP-00074 associated with purchase order PO-00074. The posted invoice amount is $1,530.13, matching the purchase order amount and accepted service receipt amount. Please confirm whether any explanation or supporting detail is available for the billed legal services, and confirm that future correspondence should continue through the approved recipient reference SIM-RECIPIENT-014. This message records a review request as of 2025-02-28; it does not confirm payment or additional approval.",
+      "source_refs": [
+        "AP-00074",
+        "PO-00074",
+        "RC-AP-00074",
+        "SIM-RECIPIENT-014"
+      ]
+    },
+    {
+      "document_id": "packet-074-doc-2",
+      "kind": "chat",
+      "date": "2025-02-28",
+      "subject": "AP-00074 internal review",
+      "body": "Casey Team05: I\u2019m checking the posted invoice AP-00074 for Granite Legal 014. The invoice and PO-00074 both show $1,530.13, and RC-AP-00074 records the same accepted amount. The receipt identifies EMP-005 as the accepting employee. I don\u2019t see an established payment or an additional approval in the packet. Before we close the review, should we request a concise explanation of the billed services and confirm the recipient reference tied to VEN-014?",
+      "source_refs": [
+        "AP-00074",
+        "VEN-014",
+        "PO-00074",
+        "RC-AP-00074",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-074-doc-3",
+      "kind": "operational_note",
+      "date": "2025-02-28",
+      "subject": "Invoice control note",
+      "body": "As of 2025-02-28, invoice AP-00074 is posted for vendor VEN-014, Granite Legal 014. The recorded invoice amount is $1,530.13. PO-00074 records the same amount, and service receipt RC-AP-00074 records an accepted amount of $1,530.13 with acceptance attributed to EMP-005. The invoice due date is 2025-03-27, while the packet does not establish payment, a further approval, or an explanation of the underlying services. Follow-up should preserve these distinctions.",
+      "source_refs": [
+        "AP-00074",
+        "VEN-014",
+        "PO-00074",
+        "RC-AP-00074",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-074-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-02-28",
+      "subject": "Agreement reference excerpt",
+      "body": "Reference excerpt for agreement VA-AP-00074: purchase order PO-00074 identifies vendor VEN-014 and records an amount of $1,530.13. The related invoice is AP-00074, and the supplier category is legal. Vendor terms are recorded as 30 days, with the invoice due date shown as 2025-03-27. This excerpt reflects packet references only. It does not add service descriptions, payment confirmation, approval evidence, legal conclusions, or any commercial term beyond the recorded fields.",
+      "source_refs": [
+        "VA-AP-00074",
+        "PO-00074",
+        "VEN-014",
+        "AP-00074"
+      ]
+    },
+    {
+      "document_id": "packet-074-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-02-28",
+      "subject": "Question on AP-00074 reconciliation",
+      "body": "For reconciliation as of 2025-02-28, can the responsible reviewer confirm whether invoice AP-00074 should be matched to PO-00074 and service receipt RC-AP-00074 based on the recorded equal amounts of $1,530.13? The packet identifies the invoice as posted and the receipt as accepted by EMP-005, but it does not establish payment or an additional approval. Please also identify whether any explanation is missing for the legal-services charge associated with VEN-014.",
+      "source_refs": [
+        "AP-00074",
+        "PO-00074",
+        "RC-AP-00074",
+        "EMP-005",
+        "VEN-014"
+      ]
+    },
+    {
+      "document_id": "packet-074-doc-6",
+      "kind": "follow_up",
+      "date": "2025-02-28",
+      "subject": "Follow-up actions for AP-00074",
+      "body": "Follow-up dated 2025-02-28: retain the posted status for invoice AP-00074, compare its $1,530.13 amount with PO-00074 and RC-AP-00074, and request clarification from Granite Legal 014 if service detail is needed. Confirm correspondence against vendor reference VEN-014 and approved recipient reference SIM-RECIPIENT-014. Record any response when received, while keeping payment and additional approval status open because neither is established in the packet. Do not infer purpose beyond the available records.",
+      "source_refs": [
+        "AP-00074",
+        "PO-00074",
+        "RC-AP-00074",
+        "VEN-014",
+        "SIM-RECIPIENT-014"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

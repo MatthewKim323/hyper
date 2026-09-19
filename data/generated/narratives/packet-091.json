@@ -1,0 +1,82 @@
+{
+  "packet_id": "packet-091",
+  "documents": [
+    {
+      "document_id": "packet-091-doc-1",
+      "kind": "email",
+      "date": "2025-01-31",
+      "subject": "Monthly invoice AR-00031 for review",
+      "body": "To: finance26@customer.example\n\nHello Cedar Network 026 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-00031 for customer CUS-026 under contract CON-026. The invoice date is 2025-01-31, the due date is 2025-03-02, and the recorded amount is $1,932.63. Please review the invoice against your records and let us know if any explanation or supporting detail is needed. This message is a same-day draft and does not establish payment, approval, or any resolved discrepancy.\n\nRegards,\nMeridian Ledger Labs, Inc.",
+      "source_refs": [
+        "AR-00031",
+        "CUS-026",
+        "CON-026"
+      ]
+    },
+    {
+      "document_id": "packet-091-doc-2",
+      "kind": "chat",
+      "date": "2025-01-31",
+      "subject": "AR-00031 internal review",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AR-00031 for Cedar Network 026, customer CUS-026. The record shows contract CON-026, invoice date 2025-01-31, due date 2025-03-02, and a recorded amount of $1,932.63. The contract identifies monthly arrears billing for hosted access and metered API blocks. I do not see an explanation for the difference between the monthly base and the invoice amount in the packet. We should request supporting detail rather than infer usage or approval.",
+      "source_refs": [
+        "AR-00031",
+        "CUS-026",
+        "CON-026"
+      ]
+    },
+    {
+      "document_id": "packet-091-doc-3",
+      "kind": "operational_note",
+      "date": "2025-01-31",
+      "subject": "Invoice and contract control note",
+      "body": "For operational review on 2025-01-31, invoice AR-00031 is recorded as posted for customer CUS-026 under contract CON-026. The invoice is monthly, dated 2025-01-31, and due 2025-03-02. The contract is effective 2025-01-01 through 2026-12-31 and describes hosted access and metered API blocks, with monthly arrears billing and terms of 30 days. Retain the invoice and contract identifiers together. Any missing explanation, usage detail, approval, or payment status should be requested or separately verified.",
+      "source_refs": [
+        "AR-00031",
+        "CON-026"
+      ]
+    },
+    {
+      "document_id": "packet-091-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-01-31",
+      "subject": "CON-026 service and billing excerpt",
+      "body": "Contract CON-026 identifies customer CUS-026 and covers hosted access and metered API blocks. Its effective period is 2025-01-01 through 2026-12-31. Billing is monthly in arrears, with terms of 30 days. The stated monthly base is $1,850.00, and the usage block price is $0.01 per block. This excerpt records only the terms provided in the company packet. It does not determine the usage represented on invoice AR-00031, nor does it establish an approval, payment, or explanation for the posted amount.",
+      "source_refs": [
+        "CON-026",
+        "CUS-026",
+        "AR-00031"
+      ]
+    },
+    {
+      "document_id": "packet-091-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-01-31",
+      "subject": "Question regarding AR-00031 reconciliation",
+      "body": "Please confirm how the recorded amount on invoice AR-00031 should be reconciled to contract CON-026. The invoice for customer CUS-026 is posted, monthly, dated 2025-01-31, and recorded at $1,932.63. CON-026 states a monthly base of $1,850.00 and a usage block price of $0.01, with monthly arrears billing. The packet does not provide usage detail or an explanation for the invoice amount. Please supply the missing support or identify the appropriate next review step; no conclusion is requested yet.",
+      "source_refs": [
+        "AR-00031",
+        "CON-026",
+        "CUS-026"
+      ]
+    },
+    {
+      "document_id": "packet-091-doc-6",
+      "kind": "follow_up",
+      "date": "2025-01-31",
+      "subject": "Follow-up requested for invoice review",
+      "body": "Following the same-day review of invoice AR-00031, please ask Cedar Network 026 at finance26@customer.example to review the posted monthly invoice associated with CUS-026 and CON-026. Confirm whether the customer needs supporting detail concerning the recorded amount of $1,932.63, particularly in relation to the contract\u2019s monthly base and metered API block terms. Please document any response using the existing identifiers. Until supporting information is received, do not record an assumed explanation, approval, payment, or resolved reconciliation outcome.",
+      "source_refs": [
+        "AR-00031",
+        "CUS-026",
+        "CON-026"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

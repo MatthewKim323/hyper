@@ -1,0 +1,71 @@
+{
+  "case_id": "CASE-014",
+  "development_family": "missing_agreement",
+  "split": "development_not_sealed",
+  "counterparty_events": [
+    {
+      "trigger": "request_price_correction",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-P-CASE-014",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-1055",
+          "vendor_id": "FIXTURE-VENDOR-014",
+          "amount_cents": 460000,
+          "scope": "Price adjustment over original invoice quantity",
+          "already_allocated_cents": 0
+        },
+        "sha256": "a9a41d6b1748c3a523e421c711e1fd7b49cf8b93703a1f5215465a9886b58cef"
+      }
+    },
+    {
+      "trigger": "request_quantity_status",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CAN-CASE-014",
+        "type": "internal_cancellation",
+        "date": "2026-06-25",
+        "source": "procurement",
+        "body": {
+          "po_id": "PO-494",
+          "quantity": 46,
+          "approved_internally": true,
+          "supplier_acceptance": "not established by this internal record"
+        },
+        "sha256": "f76103a9dd68770bd4bda082ee14b533e6e195f758a22f4f19468667baa9ba10"
+      }
+    },
+    {
+      "trigger": "request_cancellation_acceptance_and_credit",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-Q-CASE-014",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-1055",
+          "vendor_id": "FIXTURE-VENDOR-014",
+          "amount_cents": 281750,
+          "scope": "Canceled quantity at corrected price",
+          "supplier_cancellation_accepted": true
+        },
+        "sha256": "a243d9a8922143a1abba25136278b24961cc5a176fe8143fdfa7c92923d8a1f1"
+      }
+    }
+  ],
+  "expected_disposition": "WAITING",
+  "expected_net_cents": null,
+  "reason": "Required evidence is unavailable or delivery remains outstanding; no assumption of resolution.",
+  "invariants": [
+    "cash remains unchanged",
+    "no repeated credit allocation",
+    "recipient unchanged",
+    "current approval required when over threshold"
+  ],
+  "allowed_sequence": "Any sequence obtaining the required evidence; triggers are simulator API conditions, not mandatory solver steps",
+  "solver_must_not_read_this": true
+}

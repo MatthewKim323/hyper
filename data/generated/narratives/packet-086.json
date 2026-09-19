@@ -1,0 +1,90 @@
+{
+  "packet_id": "packet-086",
+  "documents": [
+    {
+      "document_id": "packet-086-doc-1",
+      "kind": "email",
+      "date": "2026-02-28",
+      "subject": "Invoice AP-00806 \u2014 confirmation request",
+      "body": "Hello Granite Legal 026,\n\nMeridian Ledger Labs, Inc. has invoice AP-00806 recorded as posted. The invoice references vendor VEN-026 and purchase order PO-00806, dated 2026-02-25, with a due date of 2026-03-27. The recorded amount is $1,943.92. Please confirm that the invoice details remain correct and advise whether any explanation or supporting information is needed for the current record. No payment or additional approval is established by this message.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00806",
+        "VEN-026",
+        "PO-00806"
+      ]
+    },
+    {
+      "document_id": "packet-086-doc-2",
+      "kind": "chat",
+      "date": "2026-02-28",
+      "subject": "AP-00806 review status",
+      "body": "Casey Team05: I\u2019m reviewing AP-00806 against PO-00806 and the related service receipt RC-AP-00806. The invoice and purchase order each show $1,943.92, and the receipt records an accepted amount of $1,943.92. The invoice status is posted. I do not see any packet evidence of payment or an additional approval. Granite Legal 026 is listed as the supplier billing contact, so I\u2019ll direct any missing-explanation request to ap26@supplier.example.",
+      "source_refs": [
+        "AP-00806",
+        "PO-00806",
+        "RC-AP-00806",
+        "VEN-026"
+      ]
+    },
+    {
+      "document_id": "packet-086-doc-3",
+      "kind": "operational_note",
+      "date": "2026-02-28",
+      "subject": "Invoice and receipt record",
+      "body": "Operational note: Invoice AP-00806 is posted for vendor VEN-026, Granite Legal 026, in the legal category. The invoice date is 2026-02-25, with a due date of 2026-03-27 and a recorded amount of $1,943.92. Purchase order PO-00806 carries the same recorded amount and identifies agreement VA-AP-00806. Service receipt RC-AP-00806, dated 2026-02-25, records an accepted amount of $1,943.92 and identifies EMP-005 as the accepting party. Payment is not established here.",
+      "source_refs": [
+        "AP-00806",
+        "VEN-026",
+        "PO-00806",
+        "VA-AP-00806",
+        "RC-AP-00806",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-086-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-02-28",
+      "subject": "Agreement reference VA-AP-00806",
+      "body": "Service and ordering record excerpt: Agreement VA-AP-00806 is associated with purchase order PO-00806 for vendor VEN-026. The purchase order date is 2026-02-01, and its recorded amount is $1,943.92. The related service receipt is RC-AP-00806, dated 2026-02-25, with an accepted amount of $1,943.92. This excerpt records the identifiers and amounts supplied in the packet only. It does not establish additional services, payment activity, approval beyond the recorded receipt acceptance, or any unresolved contractual interpretation.",
+      "source_refs": [
+        "VA-AP-00806",
+        "PO-00806",
+        "VEN-026",
+        "RC-AP-00806"
+      ]
+    },
+    {
+      "document_id": "packet-086-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-02-28",
+      "subject": "Reconciliation question for AP-00806",
+      "body": "Can Casey Team05 confirm whether the posted invoice AP-00806 should be reconciled using PO-00806 and service receipt RC-AP-00806 as the matching records? The invoice amount, purchase order amount, and accepted receipt amount are each recorded as $1,943.92. The invoice is dated 2026-02-25 and is due 2026-03-27. Please identify any discrepancy, missing explanation, or documentation gap before further processing. The packet does not establish payment or an additional approval, so neither should be assumed.",
+      "source_refs": [
+        "AP-00806",
+        "PO-00806",
+        "RC-AP-00806"
+      ]
+    },
+    {
+      "document_id": "packet-086-doc-6",
+      "kind": "follow_up",
+      "date": "2026-02-28",
+      "subject": "Follow-up items for Granite Legal 026",
+      "body": "Follow-up for the current record: confirm the invoice identifier AP-00806, vendor identifier VEN-026, purchase order PO-00806, and the $1,943.92 recorded amount. If any explanation or supporting information is missing, request it from Granite Legal 026 at ap26@supplier.example. Separately, retain the relationship to service receipt RC-AP-00806 and agreement VA-AP-00806 for review. The invoice remains recorded as posted, but these drafts do not establish payment, a new approval, or a resolved discrepancy.",
+      "source_refs": [
+        "AP-00806",
+        "VEN-026",
+        "PO-00806",
+        "RC-AP-00806",
+        "VA-AP-00806"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

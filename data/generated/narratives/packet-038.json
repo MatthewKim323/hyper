@@ -1,0 +1,92 @@
+{
+  "packet_id": "packet-038",
+  "documents": [
+    {
+      "document_id": "packet-038-doc-1",
+      "kind": "email",
+      "date": "2025-02-28",
+      "subject": "Invoice AP-00098 review",
+      "body": "Hello Granite Legal 038, Meridian Ledger Labs, Inc. is reviewing invoice AP-00098 from the current accounts-payable records. The invoice is posted for $2,320.34 and is associated with purchase order PO-00098. Please confirm that the invoice, vendor reference VEN-038, and approved recipient SIM-RECIPIENT-038 remain accurate for processing. If any explanation or supporting detail is missing, please provide it. This message does not confirm payment, additional approval, or resolution. Thank you.",
+      "source_refs": [
+        "AP-00098",
+        "VEN-038",
+        "PO-00098",
+        "SIM-RECIPIENT-038"
+      ]
+    },
+    {
+      "document_id": "packet-038-doc-2",
+      "kind": "chat",
+      "date": "2025-02-28",
+      "subject": "AP-00098 reconciliation status",
+      "body": "Casey Team05: I found invoice AP-00098 marked posted for $2,320.34. The purchase order is PO-00098, and the service receipt is RC-AP-00098 with an accepted amount of $2,320.34. The records appear aligned on the listed amount, but this draft does not establish payment or any additional approval. Please flag any missing explanation, discrepancy, or documentation before the item is treated as fully reconciled.",
+      "source_refs": [
+        "AP-00098",
+        "PO-00098",
+        "RC-AP-00098",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-038-doc-3",
+      "kind": "operational_note",
+      "date": "2025-02-28",
+      "subject": "Accounts-payable record check",
+      "body": "Operational review identifies invoice AP-00098 for vendor VEN-038, Granite Legal 038, with status posted and recorded amount of $2,320.34. Purchase order PO-00098 records the same amount, and service receipt RC-AP-00098 records an accepted amount of $2,320.34. The receipt lists EMP-005 as the accepting employee. Confirm the linked records and investigate any missing explanation. No payment, further approval, or completed resolution is established in this note.",
+      "source_refs": [
+        "AP-00098",
+        "VEN-038",
+        "PO-00098",
+        "RC-AP-00098",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-038-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-02-28",
+      "subject": "Service and order record excerpt",
+      "body": "Excerpt: Purchase order PO-00098 identifies vendor VEN-038 and agreement VA-AP-00098. The recorded purchase-order amount is $2,320.34. Service receipt RC-AP-00098 references PO-00098 and records an accepted amount of $2,320.34, with acceptance attributed to EMP-005. This excerpt is limited to the supplied records and does not add service scope, legal terms, payment confirmation, approval status, or any conclusion beyond the identifiers and amounts stated above.",
+      "source_refs": [
+        "PO-00098",
+        "VEN-038",
+        "VA-AP-00098",
+        "RC-AP-00098",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-038-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-02-28",
+      "subject": "Question regarding AP-00098",
+      "body": "Can Casey Team05 confirm whether invoice AP-00098 should be reconciled against purchase order PO-00098 and service receipt RC-AP-00098? The invoice, purchase order, and accepted service amount are each recorded as $2,320.34, while the invoice status is posted. Please identify any missing explanation, discrepancy, or required documentation. Also confirm whether the approved recipient reference SIM-RECIPIENT-038 is the intended record for this review. No payment or additional approval is established by the supplied packet.",
+      "source_refs": [
+        "AP-00098",
+        "PO-00098",
+        "RC-AP-00098",
+        "SIM-RECIPIENT-038"
+      ]
+    },
+    {
+      "document_id": "packet-038-doc-6",
+      "kind": "follow_up",
+      "date": "2025-02-28",
+      "subject": "Follow-up on invoice records",
+      "body": "Follow-up for Granite Legal 038 and Casey Team05: please review the relationship among invoice AP-00098, vendor VEN-038, purchase order PO-00098, agreement VA-AP-00098, and service receipt RC-AP-00098. The listed invoice and accepted amounts are $2,320.34. Please respond with any missing explanation or documentation and note any discrepancy requiring investigation. Until that review is complete, these draft records should not be read as confirming payment, further approval, or a resolved reconciliation.",
+      "source_refs": [
+        "AP-00098",
+        "VEN-038",
+        "PO-00098",
+        "VA-AP-00098",
+        "RC-AP-00098"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-064",
+  "documents": [
+    {
+      "document_id": "packet-064-doc-1",
+      "kind": "email",
+      "date": "2025-10-31",
+      "subject": "Invoice AR-01182 for review",
+      "body": "Hello Juniper Network 082 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-01182 under contract CON-082 for customer CUS-082. The invoice date is 2025-10-31, the due date is 2025-11-30, and the stated amount is $4,752.55. Please review the invoice and confirm whether the billing details align with your records. If any component requires explanation, please identify the specific question so it can be investigated. This message is a same-day draft request and does not establish payment or approval.",
+      "source_refs": [
+        "AR-01182",
+        "CUS-082",
+        "CON-082"
+      ]
+    },
+    {
+      "document_id": "packet-064-doc-2",
+      "kind": "chat",
+      "date": "2025-10-31",
+      "subject": "AR-01182 internal review",
+      "body": "Casey Team05: Invoice AR-01182 is posted for Juniper Network 082 under CON-082. The recorded amount is $4,752.55, with a 2025-11-30 due date.\n\nTeam note: Please compare the invoice against the monthly-arrears arrangement and the contract\u2019s hosted access and metered API blocks service description. The packet does not provide an explanation for the amount beyond the stated invoice and contract fields. Please document any discrepancy or missing support as a question; no additional approval or payment is established here.",
+      "source_refs": [
+        "AR-01182",
+        "CON-082",
+        "CUS-082"
+      ]
+    },
+    {
+      "document_id": "packet-064-doc-3",
+      "kind": "operational_note",
+      "date": "2025-10-31",
+      "subject": "Billing record handling note",
+      "body": "Operational review for 2025-10-31: invoice AR-01182 is marked posted for customer CUS-082 and contract CON-082. The invoice is identified as monthly, dated 2025-10-31, and due 2025-11-30. The contract identifies monthly arrears billing, a monthly base of $4,650.00, and a usage block price of $0.01. Retain the invoice and contract identifiers together for review. Any unexplained difference should be escalated as an open reconciliation question rather than treated as resolved.",
+      "source_refs": [
+        "AR-01182",
+        "CUS-082",
+        "CON-082"
+      ]
+    },
+    {
+      "document_id": "packet-064-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-10-31",
+      "subject": "CON-082 service and billing excerpt",
+      "body": "Contract CON-082 identifies customer CUS-082 and covers hosted access and metered API blocks. The effective date is 2025-01-01, and the end date is 2026-12-31. Billing is specified as monthly arrears, with terms of 30 days. The monthly base is $4,650.00, and the usage block price is $0.01. This excerpt states the supplied contract fields only. It does not establish the usage underlying invoice AR-01182, nor does it provide an additional approval or payment record.",
+      "source_refs": [
+        "CON-082",
+        "CUS-082",
+        "AR-01182"
+      ]
+    },
+    {
+      "document_id": "packet-064-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-10-31",
+      "subject": "Question regarding AR-01182 amount",
+      "body": "For reconciliation, can the record owner explain how the posted amount of $4,752.55 on invoice AR-01182 relates to the contract fields for CON-082, including the $4,650.00 monthly base and $0.01 usage block price? The packet identifies the service as hosted access and metered API blocks but does not provide a usage quantity or an amount breakdown. Please confirm what supporting detail should be reviewed and whether Juniper Network 082 should be asked for any clarification.",
+      "source_refs": [
+        "AR-01182",
+        "CON-082",
+        "CUS-082"
+      ]
+    },
+    {
+      "document_id": "packet-064-doc-6",
+      "kind": "follow_up",
+      "date": "2025-10-31",
+      "subject": "Follow-up requested for billing review",
+      "body": "Following up on the same-day review of invoice AR-01182 for Juniper Network 082. Please confirm that the invoice remains recorded as posted, and provide any available explanation or supporting detail for the stated $4,752.55 amount under CON-082. The contract records monthly-arrears billing, a $4,650.00 monthly base, and a $0.01 usage block price. If information is missing, please list the open questions for follow-up. No payment, approval, or reconciliation resolution is recorded by this draft.",
+      "source_refs": [
+        "AR-01182",
+        "CON-082",
+        "CUS-082"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

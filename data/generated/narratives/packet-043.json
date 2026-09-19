@@ -1,0 +1,89 @@
+{
+  "packet_id": "packet-043",
+  "documents": [
+    {
+      "document_id": "packet-043-doc-1",
+      "kind": "email",
+      "date": "2025-07-31",
+      "subject": "Invoice AR-00795 \u2014 confirmation request",
+      "body": "To: finance55@customer.example\nSubject: Invoice AR-00795 \u2014 confirmation request\n\nHello Aster Network 055 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-00795 for customer CUS-055 under contract CON-055. The invoice date is 2025-07-31, the due date is 2025-08-30, and the amount is $102.47. Please confirm that your records identify the applicable contract and invoice consistently. If any explanation or supporting detail is missing, please let us know so it can be requested and reviewed.",
+      "source_refs": [
+        "packet-043",
+        "AR-00795",
+        "CUS-055",
+        "CON-055"
+      ]
+    },
+    {
+      "document_id": "packet-043-doc-2",
+      "kind": "chat",
+      "date": "2025-07-31",
+      "subject": "AR-00795 review",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AR-00795 for Aster Network 055, customer CUS-055.\n\nCasey Team05: The packet links it to contract CON-055 and shows a monthly invoice dated 2025-07-31, due 2025-08-30, for $102.47.\n\nCasey Team05: The contract describes hosted access and metered API blocks, with annual advance billing, a $3,600.00 monthly base, and a one-cent usage block price. I do not see an established approval or payment. Please flag any missing explanation or discrepancy for follow-up.",
+      "source_refs": [
+        "packet-043",
+        "AR-00795",
+        "CUS-055",
+        "CON-055"
+      ]
+    },
+    {
+      "document_id": "packet-043-doc-3",
+      "kind": "operational_note",
+      "date": "2025-07-31",
+      "subject": "Invoice and contract linkage note",
+      "body": "Operational note for 2025-07-31: Invoice AR-00795 is posted for customer CUS-055, Aster Network 055, and is associated with contract CON-055. The invoice is identified as monthly, dated 2025-07-31, due 2025-08-30, with an amount of $102.47. Contract CON-055 is effective from 2025-01-01 through 2026-12-31 and describes hosted access and metered API blocks. Billing is listed as annual advance. No payment, approval, or explanatory allocation is established here; request clarification where needed.",
+      "source_refs": [
+        "packet-043",
+        "AR-00795",
+        "CUS-055",
+        "CON-055"
+      ]
+    },
+    {
+      "document_id": "packet-043-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-07-31",
+      "subject": "CON-055 service and billing excerpt",
+      "body": "Contract CON-055 identifies customer CUS-055 and covers hosted access and metered API blocks. Its effective date is 2025-01-01, and its end date is 2026-12-31. The billing field states annual advance. The packet lists a monthly base of $3,600.00, a usage block price of $0.01, and terms of 30 days. This excerpt does not determine how invoice AR-00795 was calculated, nor does it establish an approval, payment, or additional commercial term beyond the stated fields.",
+      "source_refs": [
+        "packet-043",
+        "CON-055",
+        "CUS-055",
+        "AR-00795"
+      ]
+    },
+    {
+      "document_id": "packet-043-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-07-31",
+      "subject": "Question regarding AR-00795 and CON-055",
+      "body": "Please reconcile invoice AR-00795 with contract CON-055 for customer CUS-055. The invoice is posted as a monthly invoice dated 2025-07-31, due 2025-08-30, for $102.47. The contract separately lists annual advance billing, a monthly base of $3,600.00, and a usage block price of $0.01. What source detail explains the invoice amount and its relationship to the contract fields? Please provide or request the missing explanation; do not assume an approval, payment, or allocation.",
+      "source_refs": [
+        "packet-043",
+        "AR-00795",
+        "CON-055",
+        "CUS-055"
+      ]
+    },
+    {
+      "document_id": "packet-043-doc-6",
+      "kind": "follow_up",
+      "date": "2025-07-31",
+      "subject": "Follow-up actions for AR-00795",
+      "body": "Follow-up for 2025-07-31: Casey Team05 should request clarification from Aster Network 055 at finance55@customer.example regarding posted invoice AR-00795. The request should reference customer CUS-055 and contract CON-055, and should ask how the $102.47 monthly invoice amount relates to the contract\u2019s annual advance billing, $3,600.00 monthly base, and $0.01 usage block price. Record any explanation received for review. Until then, treat approval, payment, and reconciliation status as undetermined.",
+      "source_refs": [
+        "packet-043",
+        "AR-00795",
+        "CUS-055",
+        "CON-055"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

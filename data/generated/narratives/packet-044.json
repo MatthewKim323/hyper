@@ -1,0 +1,92 @@
+{
+  "packet_id": "packet-044",
+  "documents": [
+    {
+      "document_id": "packet-044-doc-1",
+      "kind": "email",
+      "date": "2025-08-31",
+      "subject": "Invoice review request for AP-00464",
+      "body": "Hello Granite Legal 044,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-00464 for $1,520.99, associated with purchase order PO-00464 and vendor VEN-044. The invoice is recorded as posted, and the approved recipient is SIM-RECIPIENT-044. Please confirm that the invoice details and recipient information remain correct. If any explanation or supporting context is needed for the recorded charge, please provide it. This message is a same-day review request and does not indicate payment or any additional approval.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00464",
+        "VEN-044",
+        "PO-00464",
+        "SIM-RECIPIENT-044"
+      ]
+    },
+    {
+      "document_id": "packet-044-doc-2",
+      "kind": "chat",
+      "date": "2025-08-31",
+      "subject": "AP-00464 review status",
+      "body": "Casey Team05: I am reviewing AP-00464 from Granite Legal 044. The packet shows vendor VEN-044, purchase order PO-00464, and a posted amount of $1,520.99. The service receipt RC-AP-00464 records the same accepted amount and identifies EMP-005 as the accepting employee. I do not see an established payment or additional approval in the available facts. Please flag any missing explanation or documentation before the record is treated as fully reconciled.",
+      "source_refs": [
+        "AP-00464",
+        "VEN-044",
+        "PO-00464",
+        "RC-AP-00464",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-044-doc-3",
+      "kind": "operational_note",
+      "date": "2025-08-31",
+      "subject": "Accounts payable review note",
+      "body": "For the 2025-08-31 review, invoice AP-00464 is associated with vendor VEN-044 and purchase order PO-00464. The invoice status is posted, with an amount of $1,520.99. The related service receipt is RC-AP-00464, which records an accepted amount of $1,520.99 and names EMP-005 as the accepting employee. The purchase order references agreement VA-AP-00464. This note records available matching information only; it does not establish payment, new approval, or a resolved exception.",
+      "source_refs": [
+        "AP-00464",
+        "VEN-044",
+        "PO-00464",
+        "RC-AP-00464",
+        "VA-AP-00464",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-044-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-08-31",
+      "subject": "Referenced agreement and service-record excerpt",
+      "body": "The available record links purchase order PO-00464 to agreement VA-AP-00464 and vendor VEN-044, identified as Granite Legal 044 in the company packet. The purchase order amount is $1,520.99, and the corresponding service receipt RC-AP-00464 records an accepted amount of $1,520.99. This excerpt is limited to the identifiers and amounts expressly present in the packet. It does not interpret the underlying agreement, add commercial terms, or establish any payment, approval, or legal conclusion.",
+      "source_refs": [
+        "PO-00464",
+        "VA-AP-00464",
+        "VEN-044",
+        "RC-AP-00464"
+      ]
+    },
+    {
+      "document_id": "packet-044-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-08-31",
+      "subject": "Question regarding AP-00464 reconciliation",
+      "body": "Can Casey Team05 confirm whether the available records are sufficient to reconcile invoice AP-00464 against PO-00464 and service receipt RC-AP-00464? The invoice amount is $1,520.99, while the purchase order and accepted service amount show the same value. The invoice is marked posted, but the packet does not establish payment or any additional approval. If reconciliation requires an explanation, supporting record, or confirmation concerning approved recipient SIM-RECIPIENT-044, please identify what remains outstanding.",
+      "source_refs": [
+        "AP-00464",
+        "PO-00464",
+        "RC-AP-00464",
+        "SIM-RECIPIENT-044"
+      ]
+    },
+    {
+      "document_id": "packet-044-doc-6",
+      "kind": "follow_up",
+      "date": "2025-08-31",
+      "subject": "Follow-up on invoice record review",
+      "body": "Following up on the same-day review of AP-00464, associated with Granite Legal 044, vendor VEN-044, and purchase order PO-00464. The recorded invoice amount, purchase order amount, and accepted service amount are each $1,520.99. Please provide any missing explanation or documentation needed to complete the review, including whether the listed recipient SIM-RECIPIENT-044 requires confirmation. Until that information is available, this follow-up should be read as an open request only, with no payment or additional approval implied.",
+      "source_refs": [
+        "AP-00464",
+        "VEN-044",
+        "PO-00464",
+        "SIM-RECIPIENT-044"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

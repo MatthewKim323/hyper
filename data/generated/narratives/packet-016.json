@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-016",
+  "documents": [
+    {
+      "document_id": "packet-016-doc-1",
+      "kind": "email",
+      "date": "2026-04-30",
+      "subject": "Invoice AR-01946 posted for review",
+      "body": "To: finance106@customer.example\nSubject: Invoice AR-01946 posted for review\n\nHello Juniper Network 106 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-01946 for customer CUS-106 under contract CON-106. The invoice date is 2026-04-30, the due date is 2026-05-30, and the stated amount is $4,728.97. Please review the invoice against your records and let us know if any explanation or supporting detail is needed. This message does not establish payment, approval, or resolution.",
+      "source_refs": [
+        "AR-01946",
+        "CUS-106",
+        "CON-106"
+      ]
+    },
+    {
+      "document_id": "packet-016-doc-2",
+      "kind": "chat",
+      "date": "2026-04-30",
+      "subject": "AR-01946 review checkpoint",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AR-01946 for Juniper Network 106. The packet links it to customer CUS-106 and contract CON-106, with monthly billing in arrears. The invoice amount is $4,728.97, while the contract lists a monthly base of $4,650.00 and a usage block price of $0.01. I do not yet have an explanation for the amount above the base. I\u2019ll request clarification and avoid treating any approval or payment as established.",
+      "source_refs": [
+        "AR-01946",
+        "CUS-106",
+        "CON-106"
+      ]
+    },
+    {
+      "document_id": "packet-016-doc-3",
+      "kind": "operational_note",
+      "date": "2026-04-30",
+      "subject": "Billing record review note",
+      "body": "Operational note: On 2026-04-30, invoice AR-01946 is recorded as posted for customer CUS-106 under contract CON-106. The invoice is identified as monthly, with an amount of $4,728.97 and a due date of 2026-05-30. Contract CON-106 describes Hosted access and metered API blocks, monthly arrears billing, a monthly base of $4,650.00, and a usage block price of $0.01. The packet does not provide usage detail, explanation, approval, payment, or a resolved reconciliation.",
+      "source_refs": [
+        "AR-01946",
+        "CON-106",
+        "CUS-106"
+      ]
+    },
+    {
+      "document_id": "packet-016-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-04-30",
+      "subject": "CON-106 service and billing excerpt",
+      "body": "Contract CON-106 identifies customer CUS-106 and covers Hosted access and metered API blocks. The contract effective date is 2025-01-01, and the end date is 2026-12-31. Billing is monthly in arrears with terms of 30 days. The listed monthly base is $4,650.00, and the usage block price is $0.01. This excerpt is provided for comparison with invoice AR-01946, dated 2026-04-30. It does not determine the invoice composition or establish any additional commercial interpretation.",
+      "source_refs": [
+        "CON-106",
+        "CUS-106",
+        "AR-01946"
+      ]
+    },
+    {
+      "document_id": "packet-016-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-04-30",
+      "subject": "Question regarding AR-01946 amount",
+      "body": "Please confirm how invoice AR-01946 reaches the posted amount of $4,728.97 for customer CUS-106 under contract CON-106. The contract lists a monthly base of $4,650.00 and a usage block price of $0.01 for Hosted access and metered API blocks, but the packet does not include the applicable usage detail or an explanatory breakdown. Please provide the relevant calculation or supporting record for review. Until that information is available, no approval, payment, or reconciliation outcome should be assumed.",
+      "source_refs": [
+        "AR-01946",
+        "CUS-106",
+        "CON-106"
+      ]
+    },
+    {
+      "document_id": "packet-016-doc-6",
+      "kind": "follow_up",
+      "date": "2026-04-30",
+      "subject": "Follow-up requested for invoice review",
+      "body": "Follow-up for 2026-04-30: Meridian Ledger Labs, Inc. should request clarification from Juniper Network 106 at finance106@customer.example regarding invoice AR-01946. The request should reference customer CUS-106 and contract CON-106, and should ask for the usage or other supporting detail needed to understand the posted amount of $4,728.97 in relation to the contract\u2019s $4,650.00 monthly base and $0.01 usage block price. Track the response when received; no response, approval, payment, or resolution is established here.",
+      "source_refs": [
+        "AR-01946",
+        "CUS-106",
+        "CON-106"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

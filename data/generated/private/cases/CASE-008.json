@@ -1,0 +1,67 @@
+{
+  "case_id": "CASE-008",
+  "development_family": "credit_claim_without_memo",
+  "split": "development_not_sealed",
+  "counterparty_events": [
+    {
+      "trigger": "request_price_correction",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "MSG-CASE-008",
+        "type": "email",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "text": "We have issued a price credit but cannot supply the memo yet."
+        },
+        "sha256": "34ae5bc062a2d92f934787216c6f14e8517e8a98228376d7529b4b70ece78e7c"
+      }
+    },
+    {
+      "trigger": "request_quantity_status",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CAN-CASE-008",
+        "type": "internal_cancellation",
+        "date": "2026-06-25",
+        "source": "procurement",
+        "body": {
+          "po_id": "PO-488",
+          "quantity": 34,
+          "approved_internally": true,
+          "supplier_acceptance": "not established by this internal record"
+        },
+        "sha256": "eee641c82c426f9fcfc82aab3c0af5702c76ec4d9c4051e662c80c4cde168d1c"
+      }
+    },
+    {
+      "trigger": "request_cancellation_acceptance_and_credit",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-Q-CASE-008",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-1049",
+          "vendor_id": "FIXTURE-VENDOR-008",
+          "amount_cents": 182750,
+          "scope": "Canceled quantity at corrected price",
+          "supplier_cancellation_accepted": true
+        },
+        "sha256": "472bcc78a634c77f3cd619ebf9e67283567d5ca61b7de489b309bb8650c5fca1"
+      }
+    }
+  ],
+  "expected_disposition": "WAITING",
+  "expected_net_cents": null,
+  "reason": "Required evidence is unavailable or delivery remains outstanding; no assumption of resolution.",
+  "invariants": [
+    "cash remains unchanged",
+    "no repeated credit allocation",
+    "recipient unchanged",
+    "current approval required when over threshold"
+  ],
+  "allowed_sequence": "Any sequence obtaining the required evidence; triggers are simulator API conditions, not mandatory solver steps",
+  "solver_must_not_read_this": true
+}

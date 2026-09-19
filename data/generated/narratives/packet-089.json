@@ -1,0 +1,95 @@
+{
+  "packet_id": "packet-089",
+  "documents": [
+    {
+      "document_id": "packet-089-doc-1",
+      "kind": "email",
+      "date": "2026-05-31",
+      "subject": "Request to confirm invoice and recipient details",
+      "body": "Hello Atlas Services 029, Meridian Ledger Labs, Inc. is reviewing posted invoice AP-00989 for $2,541.18, associated with purchase order PO-00989. Our records identify VEN-029 as the vendor and SIM-RECIPIENT-029 as the approved recipient. Please confirm that these references and the invoice details remain accurate for our records. If any explanation or supporting information is needed to reconcile the invoice with the related service receipt, please provide it. This message is a same-day draft and does not confirm payment or additional approval.",
+      "source_refs": [
+        "AP-00989",
+        "PO-00989",
+        "VEN-029",
+        "SIM-RECIPIENT-029",
+        "RC-AP-00989"
+      ]
+    },
+    {
+      "document_id": "packet-089-doc-2",
+      "kind": "chat",
+      "date": "2026-05-31",
+      "subject": "Invoice review status",
+      "body": "Casey Team05: I am reviewing AP-00989 against PO-00989 and service receipt RC-AP-00989. The recorded invoice amount is $2,541.18, and the receipt lists the same accepted amount. The vendor is Atlas Services 029, identified as VEN-029. I do not see evidence in the packet of payment or any additional approval, so those points remain open. Next step: confirm whether any explanation is required and preserve the matching references in the review record. This is a draft for today\u2019s internal discussion.",
+      "source_refs": [
+        "AP-00989",
+        "PO-00989",
+        "RC-AP-00989",
+        "VEN-029"
+      ]
+    },
+    {
+      "document_id": "packet-089-doc-3",
+      "kind": "operational_note",
+      "date": "2026-05-31",
+      "subject": "Accounts payable review note",
+      "body": "Invoice AP-00989 is posted for $2,541.18 and is linked to vendor VEN-029 and purchase order PO-00989. The purchase order records the same amount, while service receipt RC-AP-00989 records an accepted amount of $2,541.18 and identifies EMP-005 as the accepting employee. The approved recipient is SIM-RECIPIENT-029. Record the references together for reconciliation. No payment, additional approval, or explanation is established by the available packet. Any gap should be escalated as a question rather than resolved by assumption.",
+      "source_refs": [
+        "AP-00989",
+        "VEN-029",
+        "PO-00989",
+        "RC-AP-00989",
+        "EMP-005",
+        "SIM-RECIPIENT-029"
+      ]
+    },
+    {
+      "document_id": "packet-089-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-05-31",
+      "subject": "Service and agreement reference excerpt",
+      "body": "Reference excerpt: Agreement VA-AP-00989 is associated with purchase order PO-00989 and vendor VEN-029, Atlas Services 029. The purchase order records an amount of $2,541.18. Related service receipt RC-AP-00989 records an accepted amount of $2,541.18 and identifies EMP-005 as the accepting employee. This excerpt states only the relationships and recorded fields supplied in the packet. It does not add service scope, performance language, payment terms, approval language, or other contractual obligations not provided in the source material.",
+      "source_refs": [
+        "VA-AP-00989",
+        "PO-00989",
+        "VEN-029",
+        "RC-AP-00989",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-089-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-05-31",
+      "subject": "Question regarding invoice matching and open controls",
+      "body": "Can Casey Team05 confirm whether invoice AP-00989 should be treated as fully matched to PO-00989 and service receipt RC-AP-00989 based on the recorded amounts? The invoice, purchase order, and accepted service amount each show $2,541.18, but the packet does not establish payment or any additional approval. Please also confirm whether the approved recipient SIM-RECIPIENT-029 is sufficient for the current review, or whether missing explanation or supporting information should be requested from Atlas Services 029.",
+      "source_refs": [
+        "AP-00989",
+        "PO-00989",
+        "RC-AP-00989",
+        "SIM-RECIPIENT-029",
+        "VEN-029"
+      ]
+    },
+    {
+      "document_id": "packet-089-doc-6",
+      "kind": "follow_up",
+      "date": "2026-05-31",
+      "subject": "Follow-up items for AP-00989",
+      "body": "Follow-up for the AP-00989 review: retain the invoice, purchase order PO-00989, and service receipt RC-AP-00989 as the primary matching references. Confirm the vendor identity as Atlas Services 029, vendor ID VEN-029, and compare the approved recipient SIM-RECIPIENT-029 with the applicable record. If an unexplained gap remains, request clarification rather than infer a reason. The packet establishes a posted invoice and accepted service amount, but it does not establish payment or additional approval. Keep this artifact as a same-day draft.",
+      "source_refs": [
+        "AP-00989",
+        "PO-00989",
+        "RC-AP-00989",
+        "VEN-029",
+        "SIM-RECIPIENT-029"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

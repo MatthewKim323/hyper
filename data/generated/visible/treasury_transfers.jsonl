@@ -1,0 +1,7 @@
+{"transfer_id":"TRF-001","date":"2025-01-01","from_account":"1000","to_account":"1100","amount_cents":100000000,"kind":"USD to USDC conversion","measurement_usd_per_usdc":"1.00"}
+{"transfer_id":"TRF-002","date":"2025-01-01","from_account":"1100","to_account":"1110","amount_cents":30000000,"kind":"Own-wallet transfer","measurement_usd_per_usdc":"1.00"}
+{"transfer_id":"TRF-003","date":"2025-04-01","from_account":"1100","to_account":"1110","amount_cents":15000000,"kind":"Own-wallet transfer","measurement_usd_per_usdc":"1.00"}
+{"transfer_id":"TRF-004","date":"2025-07-01","from_account":"1100","to_account":"1110","amount_cents":15000000,"kind":"Own-wallet transfer","measurement_usd_per_usdc":"1.00"}
+{"transfer_id":"TRF-005","date":"2025-10-01","from_account":"1100","to_account":"1110","amount_cents":15000000,"kind":"Own-wallet transfer","measurement_usd_per_usdc":"1.00"}
+{"transfer_id":"TRF-006","date":"2026-01-01","from_account":"1100","to_account":"1110","amount_cents":15000000,"kind":"Own-wallet transfer","measurement_usd_per_usdc":"1.00"}
+{"transfer_id":"TRF-007","date":"2026-04-01","from_account":"1100","to_account":"1110","amount_cents":15000000,"kind":"Own-wallet transfer","measurement_usd_per_usdc":"1.00"}

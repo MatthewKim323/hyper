@@ -1,0 +1,3 @@
+{"treasury_account_id":"SIM-1000","ledger_account":"1000","label":"Operating bank","asset":"USD","owner":"MERIDIAN-001","endpoint":"SIM-NONROUTABLE-1000","approved":true}
+{"treasury_account_id":"SIM-1100","ledger_account":"1100","label":"Treasury wallet","asset":"USDC","owner":"MERIDIAN-001","endpoint":"SIM-NONROUTABLE-1100","approved":true}
+{"treasury_account_id":"SIM-1110","ledger_account":"1110","label":"Disbursement wallet","asset":"USDC","owner":"MERIDIAN-001","endpoint":"SIM-NONROUTABLE-1110","approved":true}

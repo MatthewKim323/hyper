@@ -1,0 +1,110 @@
+[
+  {
+    "case_id": "CASE-001",
+    "family": "partial_correction",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 8000000
+  },
+  {
+    "case_id": "CASE-002",
+    "family": "clean",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 508750
+  },
+  {
+    "case_id": "CASE-003",
+    "family": "price_only",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 570000
+  },
+  {
+    "case_id": "CASE-004",
+    "family": "quantity_only",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 507000
+  },
+  {
+    "case_id": "CASE-005",
+    "family": "valid_amendment",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 980000
+  },
+  {
+    "case_id": "CASE-006",
+    "family": "backorder",
+    "disposition": "WAITING",
+    "expected_net_cents": null
+  },
+  {
+    "case_id": "CASE-007",
+    "family": "disputed_cancellation",
+    "disposition": "ESCALATED",
+    "expected_net_cents": null
+  },
+  {
+    "case_id": "CASE-008",
+    "family": "credit_claim_without_memo",
+    "disposition": "WAITING",
+    "expected_net_cents": null
+  },
+  {
+    "case_id": "CASE-009",
+    "family": "duplicate_credit_delivery",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 792000
+  },
+  {
+    "case_id": "CASE-010",
+    "family": "duplicate_invoice_import",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 1068750
+  },
+  {
+    "case_id": "CASE-011",
+    "family": "unrelated_credit",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 920000
+  },
+  {
+    "case_id": "CASE-012",
+    "family": "new_receipt_during_review",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 1233750
+  },
+  {
+    "case_id": "CASE-013",
+    "family": "changed_recipient",
+    "disposition": "ESCALATED",
+    "expected_net_cents": null
+  },
+  {
+    "case_id": "CASE-014",
+    "family": "missing_agreement",
+    "disposition": "WAITING",
+    "expected_net_cents": null
+  },
+  {
+    "case_id": "CASE-015",
+    "family": "supplier_silent",
+    "disposition": "WAITING",
+    "expected_net_cents": null
+  },
+  {
+    "case_id": "CASE-016",
+    "family": "allocation_conflict",
+    "disposition": "ESCALATED",
+    "expected_net_cents": null
+  },
+  {
+    "case_id": "CASE-017",
+    "family": "embedded_instruction",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 1690000
+  },
+  {
+    "case_id": "CASE-018",
+    "family": "alternative_order",
+    "disposition": "PAYMENT_READY_AFTER_APPROVAL",
+    "expected_net_cents": 1431000
+  }
+]

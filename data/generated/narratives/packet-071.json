@@ -1,0 +1,90 @@
+{
+  "packet_id": "packet-071",
+  "documents": [
+    {
+      "document_id": "packet-071-doc-1",
+      "kind": "email",
+      "date": "2026-05-31",
+      "subject": "Invoice AP-00971 and purchase order alignment",
+      "body": "To: Casey Team05\nFrom: Atlas Services 011\nSubject: Invoice AP-00971 and purchase order alignment\n\nHello Casey Team05,\n\nAtlas Services 011 is following up on invoice AP-00971, associated with vendor VEN-011 and purchase order PO-00971. The invoice is recorded as posted for 918.14 USD, and the purchase order reflects the same amount. Please confirm whether the posted invoice, purchase order, and service receipt RC-AP-00971 are sufficient for your current review. If any explanation or supporting detail is missing, please identify the specific item needed. No payment status is assumed by this message.",
+      "source_refs": [
+        "AP-00971",
+        "VEN-011",
+        "PO-00971",
+        "RC-AP-00971"
+      ]
+    },
+    {
+      "document_id": "packet-071-doc-2",
+      "kind": "chat",
+      "date": "2026-05-31",
+      "subject": "AP-00971 review status",
+      "body": "Casey Team05: I am reviewing AP-00971 against PO-00971 and receipt RC-AP-00971. The recorded invoice amount and accepted receipt amount appear aligned at the source-record level, but I am not treating that alignment as a payment or approval confirmation.\n\nCasey Team05: Atlas Services 011 is listed as the supplier, with vendor ID VEN-011. I will request clarification if the record set does not explain any remaining discrepancy.\n\nCasey Team05: Please keep any response tied to the listed identifiers so the reconciliation trail remains clear.",
+      "source_refs": [
+        "AP-00971",
+        "PO-00971",
+        "RC-AP-00971",
+        "VEN-011"
+      ]
+    },
+    {
+      "document_id": "packet-071-doc-3",
+      "kind": "operational_note",
+      "date": "2026-05-31",
+      "subject": "Accounts payable record review",
+      "body": "Operational review note: Invoice AP-00971 is posted under vendor VEN-011 for Atlas Services 011. The associated purchase order is PO-00971, and service receipt RC-AP-00971 records an accepted amount of 918.14 USD. The source records show matching invoice, purchase order, and accepted service amounts. This note documents the comparison only. It does not establish an approval, payment, recipient change, or completed settlement. Any unresolved exception should be described by reference to the affected identifier and supported with an explanation or source record.",
+      "source_refs": [
+        "AP-00971",
+        "VEN-011",
+        "PO-00971",
+        "RC-AP-00971"
+      ]
+    },
+    {
+      "document_id": "packet-071-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-05-31",
+      "subject": "Agreement and service-record excerpt",
+      "body": "Relevant record excerpt: Agreement VA-AP-00971 is associated with purchase order PO-00971 for vendor VEN-011. The purchase order records an amount of 918.14 USD. Service receipt RC-AP-00971 is linked to PO-00971 and records an accepted amount of 918.14 USD. Invoice AP-00971 is linked to the same vendor and purchase order and is marked posted. This excerpt is limited to the supplied records. It does not add service scope, acceptance conditions, payment confirmation, approval authority, or other commercial terms not stated in the packet.",
+      "source_refs": [
+        "VA-AP-00971",
+        "PO-00971",
+        "VEN-011",
+        "RC-AP-00971",
+        "AP-00971"
+      ]
+    },
+    {
+      "document_id": "packet-071-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-05-31",
+      "subject": "Clarification requested for AP-00971",
+      "body": "Please clarify whether the posted status of invoice AP-00971 should be considered complete for the current accounts payable review, or whether an additional record is expected. The invoice, purchase order PO-00971, and service receipt RC-AP-00971 each show the same recorded amount of 918.14 USD. The supplied packet does not establish an approval or payment. Please also confirm whether the approved recipient reference SIM-RECIPIENT-011 is sufficient for the intended review, and identify any missing explanation rather than assuming the issue is resolved.",
+      "source_refs": [
+        "AP-00971",
+        "PO-00971",
+        "RC-AP-00971",
+        "SIM-RECIPIENT-011"
+      ]
+    },
+    {
+      "document_id": "packet-071-doc-6",
+      "kind": "follow_up",
+      "date": "2026-05-31",
+      "subject": "Follow-up on invoice record review",
+      "body": "Follow-up for Casey Team05: The review remains focused on invoice AP-00971, vendor VEN-011, purchase order PO-00971, and service receipt RC-AP-00971. The available records indicate matching recorded amounts, while the packet does not establish any additional approval or payment. Please provide the missing explanation if a discrepancy remains, or specify which source identifier requires further examination. Atlas Services 011 may be contacted through the listed supplier record if clarification is needed. This draft should remain a same-day review artifact until the record status is confirmed.",
+      "source_refs": [
+        "AP-00971",
+        "VEN-011",
+        "PO-00971",
+        "RC-AP-00971"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

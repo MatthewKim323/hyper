@@ -1,0 +1,79 @@
+{
+  "case_id": "CASE-004",
+  "company_id": "MERIDIAN-001",
+  "invoice_id": "INV-1045",
+  "as_of": "2026-06-25",
+  "display_mode": "DEV_FIXTURE",
+  "work_status": "NEW",
+  "invoice_posting_status": "unposted_draft",
+  "bank_effect_cents": 0,
+  "vendor_master": {
+    "vendor_id": "FIXTURE-VENDOR-004",
+    "approved_contact": "contact4@fixture.example",
+    "approved_recipient": "SIM-FIXTURE-RECIPIENT-004"
+  },
+  "policy": {
+    "currency": "USD",
+    "tax_freight_fx": "excluded in fixture",
+    "approval_required_above_cents": 250000,
+    "three_way_match": true,
+    "applicable_agreement_required": true,
+    "recipient_change_requires_separate_authorization": true,
+    "credits_require_authoritative_document": true,
+    "allocation_must_be_unique": true,
+    "partial_payment_without_amendment": false
+  },
+  "documents": [
+    {
+      "document_id": "INV-1045",
+      "type": "invoice",
+      "date": "2026-06-25",
+      "source": "supplier_portal",
+      "body": {
+        "invoice_id": "INV-1045",
+        "vendor_id": "FIXTURE-VENDOR-004",
+        "quantity": 130,
+        "unit_price_cents": 4875,
+        "amount_cents": 633750,
+        "po_id": "PO-484"
+      },
+      "sha256": "87bee3de7db16c0f5118881dfd0199cf4e47b4235621a8657d9673ac19be2836"
+    },
+    {
+      "document_id": "PO-484",
+      "type": "purchase_order",
+      "date": "2026-06-25",
+      "source": "procurement",
+      "body": {
+        "po_id": "PO-484",
+        "vendor_id": "FIXTURE-VENDOR-004",
+        "quantity": 130,
+        "unit_price_cents": 4875
+      },
+      "sha256": "4228eb5a9fb218aec02905951878e556b96b056125451686508fc51ad0e435c8"
+    },
+    {
+      "document_id": "GR-CASE-004",
+      "type": "receipt",
+      "date": "2026-06-25",
+      "source": "receiving",
+      "body": {
+        "po_id": "PO-484",
+        "quantity_received": 104
+      },
+      "sha256": "99bab44432eb5a76be0e4527eecc141066458f045409d4fc733a85d930517a2e"
+    },
+    {
+      "document_id": "AGR-CASE-004",
+      "type": "agreement",
+      "date": "2026-06-25",
+      "source": "contract_repository",
+      "body": {
+        "po_id": "PO-484",
+        "vendor_id": "FIXTURE-VENDOR-004",
+        "unit_price_cents": 4875
+      },
+      "sha256": "8e78b85e361ac02c43b29b4efabb909aa59ae3ebef8a59dd76eb9f3cddaebf92"
+    }
+  ]
+}

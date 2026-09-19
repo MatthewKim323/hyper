@@ -1,0 +1,8 @@
+transfer_id,date,from_account,to_account,amount_cents,kind,measurement_usd_per_usdc
+TRF-001,2025-01-01,1000,1100,100000000,USD to USDC conversion,1.00
+TRF-002,2025-01-01,1100,1110,30000000,Own-wallet transfer,1.00
+TRF-003,2025-04-01,1100,1110,15000000,Own-wallet transfer,1.00
+TRF-004,2025-07-01,1100,1110,15000000,Own-wallet transfer,1.00
+TRF-005,2025-10-01,1100,1110,15000000,Own-wallet transfer,1.00
+TRF-006,2026-01-01,1100,1110,15000000,Own-wallet transfer,1.00
+TRF-007,2026-04-01,1100,1110,15000000,Own-wallet transfer,1.00

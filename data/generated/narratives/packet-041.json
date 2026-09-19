@@ -1,0 +1,93 @@
+{
+  "packet_id": "packet-041",
+  "documents": [
+    {
+      "document_id": "packet-041-doc-1",
+      "kind": "email",
+      "date": "2025-05-31",
+      "subject": "Invoice AP-00281 \u2014 record confirmation request",
+      "body": "To: ap41@supplier.example\nSubject: Invoice AP-00281 \u2014 record confirmation request\n\nHello Atlas Services 041,\n\nMeridian Ledger Labs, Inc. is reviewing the posted supplier record for invoice AP-00281, associated with vendor VEN-041 and purchase order PO-00281. The recorded invoice amount is $922.40, and the invoice due date is 2025-06-27. Please confirm whether your records identify any discrepancy in the invoice, purchase order, or service receipt linkage. If an explanation or supporting detail is needed, please provide it for review. No payment status is being confirmed by this draft.",
+      "source_refs": [
+        "AP-00281",
+        "VEN-041",
+        "PO-00281"
+      ]
+    },
+    {
+      "document_id": "packet-041-doc-2",
+      "kind": "chat",
+      "date": "2025-05-31",
+      "subject": "AP-00281 review",
+      "body": "Casey Team05: I am reviewing the posted record for AP-00281. The invoice is linked to PO-00281, and both records show the same recorded amount of $922.40. The service receipt RC-AP-00281 also records an accepted amount of $922.40. The available packet does not establish any additional approval or payment. I will document the matching identifiers and request clarification if any explanation is missing. Please flag any discrepancy involving VEN-041, the receipt linkage, or the approved recipient identifier SIM-RECIPIENT-041.",
+      "source_refs": [
+        "AP-00281",
+        "PO-00281",
+        "RC-AP-00281",
+        "VEN-041",
+        "SIM-RECIPIENT-041"
+      ]
+    },
+    {
+      "document_id": "packet-041-doc-3",
+      "kind": "operational_note",
+      "date": "2025-05-31",
+      "subject": "Accounts payable record review",
+      "body": "Operational note for 2025-05-31: Invoice AP-00281 is posted for vendor VEN-041 and is associated with purchase order PO-00281. The invoice and purchase order each record 92240 cents, equivalent to $922.40. Service receipt RC-AP-00281 records an accepted amount of 92240 cents and identifies EMP-005 as the accepting party. The vendor category is services, and the approved recipient is SIM-RECIPIENT-041. This note records available fields only; it does not establish payment, further approval, or a transaction purpose.",
+      "source_refs": [
+        "AP-00281",
+        "VEN-041",
+        "PO-00281",
+        "RC-AP-00281",
+        "EMP-005",
+        "SIM-RECIPIENT-041"
+      ]
+    },
+    {
+      "document_id": "packet-041-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-05-31",
+      "subject": "Agreement linkage excerpt VA-AP-00281",
+      "body": "Agreement reference: VA-AP-00281\n\nThe available record associates purchase order PO-00281 with vendor VEN-041 and agreement identifier VA-AP-00281. The purchase order records an amount of $922.40 and identifies Atlas Services 041 as the vendor. Vendor terms are recorded as 30 days, while the associated invoice AP-00281 has a due date of 2025-06-27. This excerpt reproduces the available linkage and timing fields only. It does not add contractual language, establish performance obligations, or confirm approval, payment, or any resolved dispute.",
+      "source_refs": [
+        "VA-AP-00281",
+        "PO-00281",
+        "VEN-041",
+        "AP-00281"
+      ]
+    },
+    {
+      "document_id": "packet-041-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-05-31",
+      "subject": "Question regarding AP-00281 reconciliation",
+      "body": "Please confirm whether invoice AP-00281 should reconcile to purchase order PO-00281 and service receipt RC-AP-00281 based on the recorded fields. Each record shows an amount of 92240 cents, or $922.40. The invoice status is posted, and the receipt identifies accepted_by as EMP-005. The packet does not explain whether any remaining review step is required or whether the approved recipient SIM-RECIPIENT-041 has been used. Please provide any missing explanation or identify a discrepancy before the record is treated as complete.",
+      "source_refs": [
+        "AP-00281",
+        "PO-00281",
+        "RC-AP-00281",
+        "EMP-005",
+        "SIM-RECIPIENT-041"
+      ]
+    },
+    {
+      "document_id": "packet-041-doc-6",
+      "kind": "follow_up",
+      "date": "2025-05-31",
+      "subject": "Follow-up items for supplier record",
+      "body": "Follow-up for 2025-05-31: Retain the current linkage among invoice AP-00281, vendor VEN-041, purchase order PO-00281, and service receipt RC-AP-00281. Request clarification from Atlas Services 041 at ap41@supplier.example if any field is disputed or unexplained. Confirm that future review references the approved recipient identifier SIM-RECIPIENT-041. The records currently show invoice status posted and matching recorded amounts of $922.40, but no additional approval or payment is established. Close the follow-up only after outstanding explanations, if any, are documented.",
+      "source_refs": [
+        "AP-00281",
+        "VEN-041",
+        "PO-00281",
+        "RC-AP-00281",
+        "SIM-RECIPIENT-041"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

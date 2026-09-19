@@ -1,0 +1,36 @@
+{
+  "case_id": "CASE-003",
+  "development_family": "price_only",
+  "split": "development_not_sealed",
+  "counterparty_events": [
+    {
+      "trigger": "request_price_correction",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-P-CASE-003",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-1044",
+          "vendor_id": "FIXTURE-VENDOR-003",
+          "amount_cents": 240000,
+          "scope": "Price adjustment over original invoice quantity",
+          "already_allocated_cents": 0
+        },
+        "sha256": "fa561d2994ec5cf35bf605f9c8b3a6d4e3f30032eaeaed20398e045a64487401"
+      }
+    }
+  ],
+  "expected_disposition": "PAYMENT_READY_AFTER_APPROVAL",
+  "expected_net_cents": 570000,
+  "reason": "All pricing and quantity conditions can be supported through available evidence.",
+  "invariants": [
+    "cash remains unchanged",
+    "no repeated credit allocation",
+    "recipient unchanged",
+    "current approval required when over threshold"
+  ],
+  "allowed_sequence": "Any sequence obtaining the required evidence; triggers are simulator API conditions, not mandatory solver steps",
+  "solver_must_not_read_this": true
+}

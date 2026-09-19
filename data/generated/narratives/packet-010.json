@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-010",
+  "documents": [
+    {
+      "document_id": "packet-010-doc-1",
+      "kind": "email",
+      "date": "2025-10-31",
+      "subject": "Question regarding posted monthly invoice AR-01164",
+      "body": "Hello Juniper Network 064 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-01164 for customer CUS-064 under contract CON-064. The invoice amount is $2,645.78, and the recorded status is posted. Please review the invoice and let us know whether any clarification is needed regarding the billed amount or the service description. If an issue is identified, please reference AR-01164 in your response so the finance record can be reviewed consistently.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AR-01164",
+        "CUS-064",
+        "CON-064"
+      ]
+    },
+    {
+      "document_id": "packet-010-doc-2",
+      "kind": "chat",
+      "date": "2025-10-31",
+      "subject": "AR-01164 review",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AR-01164 for customer CUS-064. The record identifies it as a monthly invoice under contract CON-064 and shows an amount of $2,645.78.\n\nJuniper Network 064: We can review the invoice from our finance side. Please identify what detail should be checked against the contract or service description.\n\nCasey Team05: The contract describes hosted access and metered API blocks, with monthly arrears billing. I\u2019m not recording any additional explanation, approval, or payment until supporting information is available.",
+      "source_refs": [
+        "AR-01164",
+        "CUS-064",
+        "CON-064"
+      ]
+    },
+    {
+      "document_id": "packet-010-doc-3",
+      "kind": "operational_note",
+      "date": "2025-10-31",
+      "subject": "Invoice and contract review note",
+      "body": "Operational review recorded for invoice AR-01164. The invoice is associated with customer CUS-064 and contract CON-064, is identified as monthly, and has status posted. The amount is $2,645.78. Contract CON-064 describes hosted access and metered API blocks, monthly arrears billing, and a monthly base of $2,550.00. The usage block price is $0.01 per block. This note records the available fields only; it does not establish an explanation for the invoice amount, approval, payment, or any resolved discrepancy.",
+      "source_refs": [
+        "AR-01164",
+        "CUS-064",
+        "CON-064"
+      ]
+    },
+    {
+      "document_id": "packet-010-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-10-31",
+      "subject": "CON-064 service and billing excerpt",
+      "body": "Contract CON-064 identifies customer CUS-064 and covers hosted access and metered API blocks. The billing method is monthly arrears, with terms of 30 days. The listed monthly base is $2,550.00, and the usage block price is $0.01 per block. For purposes of reviewing invoice AR-01164, these provisions should be compared with the invoice record and any available usage detail. This excerpt does not state how the posted invoice amount was derived and should not be treated as a reconciliation or approval.",
+      "source_refs": [
+        "CON-064",
+        "CUS-064",
+        "AR-01164"
+      ]
+    },
+    {
+      "document_id": "packet-010-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-10-31",
+      "subject": "Reconciliation question for AR-01164",
+      "body": "Can the finance owner confirm how invoice AR-01164, posted for customer CUS-064 under contract CON-064, relates to the contract\u2019s monthly base and metered API block pricing? The invoice amount is $2,645.78, while the contract lists a monthly base of $2,550.00 and a usage block price of $0.01. Please provide or identify the relevant usage detail and explain any remaining difference. No approval, payment, or final reconciliation is established by the current record.",
+      "source_refs": [
+        "AR-01164",
+        "CUS-064",
+        "CON-064"
+      ]
+    },
+    {
+      "document_id": "packet-010-doc-6",
+      "kind": "follow_up",
+      "date": "2025-10-31",
+      "subject": "Follow-up requested on posted invoice",
+      "body": "Follow-up for Juniper Network 064 and Casey Team05: please review posted invoice AR-01164 and compare it with contract CON-064. The contract describes hosted access and metered API blocks under monthly arrears billing. The invoice is associated with customer CUS-064 and records an amount of $2,645.78. Please return any explanation, supporting usage information, or identified discrepancy using the invoice and contract identifiers. Until that information is available, the record should remain open for review, with no payment or approval inferred.",
+      "source_refs": [
+        "AR-01164",
+        "CON-064",
+        "CUS-064"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

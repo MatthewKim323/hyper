@@ -1,0 +1,67 @@
+{
+  "case_id": "CASE-014",
+  "company_id": "MERIDIAN-001",
+  "invoice_id": "INV-1055",
+  "as_of": "2026-06-25",
+  "display_mode": "DEV_FIXTURE",
+  "work_status": "NEW",
+  "invoice_posting_status": "unposted_draft",
+  "bank_effect_cents": 0,
+  "vendor_master": {
+    "vendor_id": "FIXTURE-VENDOR-014",
+    "approved_contact": "contact14@fixture.example",
+    "approved_recipient": "SIM-FIXTURE-RECIPIENT-014"
+  },
+  "policy": {
+    "currency": "USD",
+    "tax_freight_fx": "excluded in fixture",
+    "approval_required_above_cents": 250000,
+    "three_way_match": true,
+    "applicable_agreement_required": true,
+    "recipient_change_requires_separate_authorization": true,
+    "credits_require_authoritative_document": true,
+    "allocation_must_be_unique": true,
+    "partial_payment_without_amendment": false
+  },
+  "documents": [
+    {
+      "document_id": "INV-1055",
+      "type": "invoice",
+      "date": "2026-06-25",
+      "source": "supplier_portal",
+      "body": {
+        "invoice_id": "INV-1055",
+        "vendor_id": "FIXTURE-VENDOR-014",
+        "quantity": 230,
+        "unit_price_cents": 8125,
+        "amount_cents": 1868750,
+        "po_id": "PO-494"
+      },
+      "sha256": "841530d03179f6be42327010dd2a7b4df1054ad0b403b445b0975a5e673715e1"
+    },
+    {
+      "document_id": "PO-494",
+      "type": "purchase_order",
+      "date": "2026-06-25",
+      "source": "procurement",
+      "body": {
+        "po_id": "PO-494",
+        "vendor_id": "FIXTURE-VENDOR-014",
+        "quantity": 230,
+        "unit_price_cents": 6125
+      },
+      "sha256": "6433301a4cd8f1f1db48725c73c82a61da81fd6fb982e93c7674ced679a08d25"
+    },
+    {
+      "document_id": "GR-CASE-014",
+      "type": "receipt",
+      "date": "2026-06-25",
+      "source": "receiving",
+      "body": {
+        "po_id": "PO-494",
+        "quantity_received": 184
+      },
+      "sha256": "f2682c12aa141de0f5da4af9c05974cbb70fe7ec55746657a43af2bf7578999a"
+    }
+  ]
+}

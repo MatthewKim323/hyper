@@ -1,0 +1,95 @@
+{
+  "packet_id": "packet-056",
+  "documents": [
+    {
+      "document_id": "packet-056-doc-1",
+      "kind": "email",
+      "date": "2025-02-28",
+      "subject": "Invoice AP-00116 coordination",
+      "body": "To: Granite Legal 056 <ap56@supplier.example>\n\nHello Granite Legal 056,\n\nMeridian Ledger Labs, Inc. is coordinating its records for invoice AP-00116 from vendor VEN-056. The invoice is posted and is associated with purchase order PO-00116. Our records show an invoice amount of $1,929.69 and a due date of 2025-03-27. Please confirm that the invoice details, agreement reference VA-AP-00116, and approved recipient SIM-RECIPIENT-056 remain accurate. If any explanation or supporting context is needed, please provide it for review.",
+      "source_refs": [
+        "AP-00116",
+        "VEN-056",
+        "PO-00116",
+        "VA-AP-00116",
+        "SIM-RECIPIENT-056"
+      ]
+    },
+    {
+      "document_id": "packet-056-doc-2",
+      "kind": "chat",
+      "date": "2025-02-28",
+      "subject": "AP-00116 record check",
+      "body": "Casey Team05: I am checking the posted record for invoice AP-00116 from Granite Legal 056. The invoice amount is $1,929.69, and purchase order PO-00116 carries the same recorded amount. The service receipt RC-AP-00116 also lists an accepted amount of $1,929.69 and identifies EMP-005 as the accepting employee. Before any further action, can we confirm whether any explanation or additional context is missing from the packet? No payment or additional approval is established here.",
+      "source_refs": [
+        "AP-00116",
+        "PO-00116",
+        "RC-AP-00116",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-056-doc-3",
+      "kind": "operational_note",
+      "date": "2025-02-28",
+      "subject": "Accounts payable record note",
+      "body": "Operational note for invoice AP-00116: vendor VEN-056 is Granite Legal 056, categorized as legal, with contact ap56@supplier.example. The invoice status is posted. Purchase order PO-00116 references agreement VA-AP-00116, and the service receipt is RC-AP-00116. Recorded invoice, purchase order, and accepted receipt amounts each equal $1,929.69. The receipt identifies EMP-005 as the accepting employee. Retain the record for clarification of any missing explanation; no payment or additional approval is established by this note.",
+      "source_refs": [
+        "AP-00116",
+        "VEN-056",
+        "PO-00116",
+        "VA-AP-00116",
+        "RC-AP-00116",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-056-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-02-28",
+      "subject": "Service and agreement reference excerpt",
+      "body": "Excerpt for reference: Agreement VA-AP-00116 is associated with purchase order PO-00116, issued to vendor VEN-056. The purchase order records an amount of $1,929.69. Service receipt RC-AP-00116 identifies PO-00116, records an accepted amount of $1,929.69, and names EMP-005 as the accepting employee. This excerpt does not establish additional approval, payment, legal conclusions, or commercial terms beyond the supplied packet. Any missing explanation or supporting context should be requested from the relevant billing contact.",
+      "source_refs": [
+        "VA-AP-00116",
+        "PO-00116",
+        "VEN-056",
+        "RC-AP-00116",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-056-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-02-28",
+      "subject": "Question regarding AP-00116 reconciliation",
+      "body": "Please confirm whether invoice AP-00116, purchase order PO-00116, and service receipt RC-AP-00116 should be treated as fully aligned for recordkeeping purposes. Each supplied record shows $1,929.69, while the invoice status is posted and the receipt identifies EMP-005 as the accepting employee. The packet does not establish payment or an additional approval. If there is a missing explanation, exception, or supporting detail, please identify it and provide the relevant source reference before the reconciliation record is finalized.",
+      "source_refs": [
+        "AP-00116",
+        "PO-00116",
+        "RC-AP-00116",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-056-doc-6",
+      "kind": "follow_up",
+      "date": "2025-02-28",
+      "subject": "Follow-up requested for Granite Legal 056",
+      "body": "Follow-up for Casey Team05 and Granite Legal 056: please review the supplied references for invoice AP-00116, vendor VEN-056, purchase order PO-00116, and service receipt RC-AP-00116. Confirm whether any explanation remains necessary regarding the matching recorded amounts of $1,929.69. Please also flag any uncertainty concerning agreement VA-AP-00116 or the approved recipient SIM-RECIPIENT-056. This draft records a request for clarification only; it does not establish payment, additional approval, or a resolved outcome.",
+      "source_refs": [
+        "AP-00116",
+        "VEN-056",
+        "PO-00116",
+        "RC-AP-00116",
+        "VA-AP-00116",
+        "SIM-RECIPIENT-056"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

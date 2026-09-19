@@ -1,0 +1,90 @@
+{
+  "packet_id": "packet-095",
+  "documents": [
+    {
+      "document_id": "packet-095-doc-1",
+      "kind": "email",
+      "date": "2025-05-31",
+      "subject": "Invoice AP-00275 reconciliation request",
+      "body": "Hello Atlas Services 035, Meridian Ledger Labs, Inc. is reviewing invoice AP-00275, dated 2025-05-28, for $1,704.49. Our records associate it with purchase order PO-00275 and vendor ID VEN-035. Please confirm that the invoice details, approved recipient SIM-RECIPIENT-035, and the stated due date of 2025-06-27 are correct. If any explanation or supporting information is needed to reconcile the posted invoice with the related service receipt, please provide it. This message records a same-day review request and does not confirm payment or additional approval.",
+      "source_refs": [
+        "AP-00275",
+        "PO-00275",
+        "VEN-035",
+        "RC-AP-00275"
+      ]
+    },
+    {
+      "document_id": "packet-095-doc-2",
+      "kind": "chat",
+      "date": "2025-05-31",
+      "subject": "AP-00275 review status",
+      "body": "Casey Team05: I am reviewing posted invoice AP-00275 against PO-00275 and service receipt RC-AP-00275. The invoice, purchase order, and accepted service amount each show 170449 cents. The receipt identifies EMP-005 as the accepting party. I do not see an established payment or additional approval in the available packet. Atlas Services 035 is listed as the supplier billing contact, with ap35@supplier.example as the contact address. I will request clarification for anything not supported by these records before treating the review as complete.",
+      "source_refs": [
+        "AP-00275",
+        "PO-00275",
+        "RC-AP-00275",
+        "EMP-005",
+        "VEN-035"
+      ]
+    },
+    {
+      "document_id": "packet-095-doc-3",
+      "kind": "operational_note",
+      "date": "2025-05-31",
+      "subject": "Accounts payable record alignment",
+      "body": "Operational review note: invoice AP-00275 is posted and linked to vendor VEN-035, purchase order PO-00275, and service receipt RC-AP-00275. The invoice date and receipt date are 2025-05-28; the purchase order date is 2025-05-01. Recorded amounts are 170449 cents for the invoice, purchase order, and accepted service receipt. The receipt records acceptance by EMP-005. The vendor category is services, and the listed terms are 30 days. No payment, further approval, or unresolved explanation is established by this note.",
+      "source_refs": [
+        "AP-00275",
+        "VEN-035",
+        "PO-00275",
+        "RC-AP-00275",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-095-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-05-31",
+      "subject": "Agreement reference VA-AP-00275",
+      "body": "Reference excerpt for agreement VA-AP-00275: purchase order PO-00275 identifies vendor VEN-035 and is dated 2025-05-01. The purchase order records 170449 cents and is associated with invoice AP-00275. The vendor record identifies Atlas Services 035, categorizes the relationship as services, and lists terms of 30 days. This excerpt is limited to the supplied records and does not add commercial language, interpret obligations, confirm performance beyond the service receipt, or establish payment or approval. Any missing explanation should be requested from the relevant billing contact.",
+      "source_refs": [
+        "VA-AP-00275",
+        "PO-00275",
+        "VEN-035",
+        "AP-00275"
+      ]
+    },
+    {
+      "document_id": "packet-095-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-05-31",
+      "subject": "Clarification requested for AP-00275",
+      "body": "Can Casey Team05 confirm whether the posted invoice AP-00275 is fully supported by the matching records for PO-00275 and service receipt RC-AP-00275? The three records each show 170449 cents, while the invoice is dated 2025-05-28, the purchase order is dated 2025-05-01, and the receipt is dated 2025-05-28. Please identify any missing explanation, documentation, or review step needed to reconcile these records. This question does not assume payment, additional approval, or any transaction purpose beyond the packet.",
+      "source_refs": [
+        "AP-00275",
+        "PO-00275",
+        "RC-AP-00275"
+      ]
+    },
+    {
+      "document_id": "packet-095-doc-6",
+      "kind": "follow_up",
+      "date": "2025-05-31",
+      "subject": "Follow-up on supplier record review",
+      "body": "Follow-up for the 2025-05-31 review: please send any clarification required for invoice AP-00275, purchase order PO-00275, or service receipt RC-AP-00275. The supplier record names Atlas Services 035 and lists ap35@supplier.example as the billing contact. The approved recipient is recorded as SIM-RECIPIENT-035. Please keep any response tied to the identifiers above and explain any discrepancy rather than assuming an outcome. Until supporting information is received, this draft should be treated as a request for review only, with no payment or additional approval inferred.",
+      "source_refs": [
+        "AP-00275",
+        "PO-00275",
+        "RC-AP-00275",
+        "VEN-035"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

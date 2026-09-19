@@ -1,0 +1,92 @@
+{
+  "packet_id": "packet-101",
+  "documents": [
+    {
+      "document_id": "packet-101-doc-1",
+      "kind": "email",
+      "date": "2025-11-30",
+      "subject": "Request to confirm invoice record AP-00641",
+      "body": "Hello Atlas Services 041,\n\nMeridian Ledger Labs, Inc. is reviewing the supplier record for invoice AP-00641. The record identifies vendor VEN-041, purchase order PO-00641, and a posted amount of $934.88. Please confirm that these identifiers and the recorded amount match your records. If any explanation or supporting detail is missing, please provide it in your reply. This request is for reconciliation only and does not establish an approval or payment status. Please respond through the listed supplier contact, ap41@supplier.example.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00641",
+        "VEN-041",
+        "PO-00641",
+        "RC-AP-00641"
+      ]
+    },
+    {
+      "document_id": "packet-101-doc-2",
+      "kind": "chat",
+      "date": "2025-11-30",
+      "subject": "AP-00641 review",
+      "body": "Casey Team05: I\u2019m reviewing AP-00641 against PO-00641 and receipt RC-AP-00641. The invoice and purchase order records each show $934.88, and the receipt records an accepted amount of $934.88. The invoice status is posted. I do not see an explanation gap in the supplied fields, but the packet does not establish any additional approval or payment. Atlas Services 041 is listed as the supplier contact. I\u2019ll request confirmation of the identifiers and ask for any missing context before treating the review as complete.",
+      "source_refs": [
+        "AP-00641",
+        "PO-00641",
+        "RC-AP-00641",
+        "VEN-041"
+      ]
+    },
+    {
+      "document_id": "packet-101-doc-3",
+      "kind": "operational_note",
+      "date": "2025-11-30",
+      "subject": "Invoice and receipt matching note",
+      "body": "Operational review as of 2025-11-30: invoice AP-00641 is associated with vendor VEN-041 and purchase order PO-00641. The invoice record shows a posted amount of $934.88. The purchase order record shows the same amount, and service receipt RC-AP-00641 records an accepted amount of $934.88 by EMP-005. The available records support an amount and identifier comparison. No additional approval, payment, exception explanation, or downstream resolution is established in this note. Any missing explanation should be requested from the listed supplier contact.",
+      "source_refs": [
+        "AP-00641",
+        "VEN-041",
+        "PO-00641",
+        "RC-AP-00641",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-101-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-11-30",
+      "subject": "Service agreement reference VA-AP-00641",
+      "body": "Reference excerpt for agreement VA-AP-00641: purchase order PO-00641 identifies vendor VEN-041 and records an amount of $934.88. The associated vendor record categorizes Atlas Services 041 as a services supplier and lists terms of 30 days. The invoice record for AP-00641 is posted and records $934.88. This excerpt is limited to the supplied records and does not add service scope, acceptance conditions, approval authority, payment confirmation, or other commercial terms. Questions about omitted explanations or supporting detail should remain open pending clarification.",
+      "source_refs": [
+        "VA-AP-00641",
+        "PO-00641",
+        "VEN-041",
+        "AP-00641"
+      ]
+    },
+    {
+      "document_id": "packet-101-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-11-30",
+      "subject": "Open question for AP-00641",
+      "body": "Can the owner confirm whether invoice AP-00641 should be reconciled using the existing links to vendor VEN-041, purchase order PO-00641, and service receipt RC-AP-00641? The supplied records show $934.88 for the invoice, $934.88 for the purchase order, and an accepted amount of $934.88 on the receipt. Please also confirm whether any explanation or supporting document is missing from the packet. This question should not be read as evidence of approval, payment, or a resolved reconciliation outcome.",
+      "source_refs": [
+        "AP-00641",
+        "VEN-041",
+        "PO-00641",
+        "RC-AP-00641"
+      ]
+    },
+    {
+      "document_id": "packet-101-doc-6",
+      "kind": "follow_up",
+      "date": "2025-11-30",
+      "subject": "Follow-up on supplier record verification",
+      "body": "Follow-up dated 2025-11-30: please review the identifiers associated with AP-00641, including VEN-041, PO-00641, and agreement VA-AP-00641. The current record shows the invoice as posted for $934.88, while the related purchase order and service receipt RC-AP-00641 show matching amounts. Please advise if Atlas Services 041 has identified any discrepancy or missing explanation. The vendor record lists SIM-RECIPIENT-041 as the approved recipient; this follow-up does not independently verify that field or establish any payment action.",
+      "source_refs": [
+        "AP-00641",
+        "VEN-041",
+        "PO-00641",
+        "VA-AP-00641",
+        "RC-AP-00641",
+        "SIM-RECIPIENT-041"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

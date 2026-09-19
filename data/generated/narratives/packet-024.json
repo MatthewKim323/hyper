@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-024",
+  "documents": [
+    {
+      "document_id": "packet-024-doc-1",
+      "kind": "email",
+      "date": "2025-06-30",
+      "subject": "Payroll record clarification request",
+      "body": "Hello supplier or customer team,\n\nMeridian Ledger Labs, Inc. is reviewing the payroll record identified as PAY-006 for 2025-06-30. The packet lists gross payroll of $438,000, withholding of $87,600, employer cost of $35,040, and net payroll of $350,400. Please provide any missing explanation relevant to the record and identify whether any external movement has been confirmed. Under the settlement policy, proposals are not settlements. Please do not treat this draft as evidence of approval or payment.",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-024-doc-2",
+      "kind": "chat",
+      "date": "2025-06-30",
+      "subject": "PAY-006 review",
+      "body": "Casey Team05: I\u2019m reviewing PAY-006 dated 2025-06-30. The record contains gross, withholding, employer, and net fields, but the packet does not explain any external movement or establish an approval.\n\nTaylor Team06: Understood. We should request the missing explanation and avoid describing a proposal as settled.\n\nCasey Team05: Agreed. Let\u2019s keep the record open for clarification and distinguish the payroll figures from any unconfirmed movement. No payment or additional approval is established here.",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-024-doc-3",
+      "kind": "operational_note",
+      "date": "2025-06-30",
+      "subject": "Payroll control note",
+      "body": "Operational note for 2025-06-30: PAY-006 records gross payroll of $438,000, withholding of $87,600, employer cost of $35,040, and net payroll of $350,400. The company identifier is MERIDIAN-001. Reviewers should preserve the distinction between recorded payroll fields and external settlement status. The stated policy permits settlement only for confirmed external movements; proposals remain proposals. Missing explanations should be requested. This note does not establish a payment, approval, or transaction purpose.",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-024-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-06-30",
+      "subject": "Settlement policy excerpt",
+      "body": "Service and settlement excerpt: For Meridian Ledger Labs, Inc., identified as MERIDIAN-001, only confirmed external movements are settled; proposals are not settlements. This excerpt is provided for review of payroll record PAY-006 dated 2025-06-30. It does not add commercial terms, authorize a payment, confirm an external movement, or establish a transaction purpose. Any missing explanation must be requested from the relevant party before the record\u2019s status can be described further.",
+      "source_refs": [
+        "MERIDIAN-001",
+        "PAY-006"
+      ]
+    },
+    {
+      "document_id": "packet-024-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-06-30",
+      "subject": "Question regarding PAY-006 status",
+      "body": "For reconciliation of PAY-006 dated 2025-06-30, can the responsible reviewer clarify whether any external movement associated with the record has been confirmed? The packet provides payroll amounts of $438,000 gross, $87,600 withholding, $35,040 employer cost, and $350,400 net, but it does not provide an explanation of settlement status. Please also indicate whether the item is a proposal or another status supported by source evidence. No approval or payment should be inferred.",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-024-doc-6",
+      "kind": "follow_up",
+      "date": "2025-06-30",
+      "subject": "Follow-up on payroll clarification",
+      "body": "Follow-up for 2025-06-30: Please respond to the open clarification request for PAY-006. The record remains limited to the payroll fields supplied in the packet and the settlement policy for MERIDIAN-001. We still need any missing explanation concerning external movement status. Until supporting information is available, please keep proposals separate from settlements and avoid recording an approval, payment, or purpose not established by the source. This follow-up is a draft request, not a resolved outcome.",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

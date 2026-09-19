@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-019",
+  "documents": [
+    {
+      "document_id": "packet-019-doc-1",
+      "kind": "email",
+      "date": "2025-01-31",
+      "subject": "Invoice AR-00007 review request",
+      "body": "Hello Lattice Network 006 finance team,\n\nMeridian Ledger Labs, Inc. records show invoice AR-00007 for customer CUS-006, dated 2025-01-31, with posted status. The invoice amount is $3,333.42, and the stated due date is 2025-03-02. Please review the invoice against contract CON-006 and let us know whether any detail requires clarification. If the amount or billing basis is questioned, please identify the specific line or usage information needing review. No payment or approval is assumed in this draft.",
+      "source_refs": [
+        "AR-00007",
+        "CUS-006",
+        "CON-006"
+      ]
+    },
+    {
+      "document_id": "packet-019-doc-2",
+      "kind": "chat",
+      "date": "2025-01-31",
+      "subject": "AR-00007 billing check",
+      "body": "Casey Team05: I\u2019m reviewing the posted monthly invoice AR-00007 for Lattice Network 006, customer CUS-006. The record shows $3,333.42, dated 2025-01-31, with a 2025-03-02 due date. Contract CON-006 lists monthly arrears billing, a $3,250.00 monthly base, and metered API blocks priced at $0.01 each. I do not see an explanation for the difference in the packet. Can we request supporting detail before treating the variance as understood?",
+      "source_refs": [
+        "AR-00007",
+        "CUS-006",
+        "CON-006"
+      ]
+    },
+    {
+      "document_id": "packet-019-doc-3",
+      "kind": "operational_note",
+      "date": "2025-01-31",
+      "subject": "Billing record review note",
+      "body": "On 2025-01-31, review the posted invoice AR-00007 associated with customer CUS-006 and contract CON-006. The invoice is identified as monthly, with an amount of $3,333.42 and a due date of 2025-03-02. Contract records describe hosted access and metered API blocks, billed monthly in arrears. The monthly base is $3,250.00, while the usage block price is $0.01. Request an explanation for any difference not supported by available usage detail; do not infer approval or payment.",
+      "source_refs": [
+        "AR-00007",
+        "CUS-006",
+        "CON-006"
+      ]
+    },
+    {
+      "document_id": "packet-019-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-01-31",
+      "subject": "CON-006 service and billing excerpt",
+      "body": "Contract CON-006 identifies customer CUS-006 and has an effective date of 2025-01-01 and an end date of 2026-12-31. The stated service is hosted access and metered API blocks. Billing is monthly in arrears, with terms of 30 days. The monthly base is 325000 cents, equivalent to $3,250.00. The usage block price is 1 cent, equivalent to $0.01 per block. This excerpt does not establish usage quantities, invoice approval, payment, or any explanation for invoice AR-00007.",
+      "source_refs": [
+        "CON-006",
+        "CUS-006",
+        "AR-00007"
+      ]
+    },
+    {
+      "document_id": "packet-019-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-01-31",
+      "subject": "Question on AR-00007 composition",
+      "body": "Please reconcile invoice AR-00007 for customer CUS-006 against contract CON-006. The posted invoice amount is $3,333.42, while the contract lists a monthly base of $3,250.00 and a usage block price of $0.01. What usage quantity or other contract-supported detail accounts for the difference? Please provide the relevant billing support or explain which record should be corrected. The packet does not establish an approval, payment, adjustment, or final reconciliation result, so those items remain open questions.",
+      "source_refs": [
+        "AR-00007",
+        "CUS-006",
+        "CON-006"
+      ]
+    },
+    {
+      "document_id": "packet-019-doc-6",
+      "kind": "follow_up",
+      "date": "2025-01-31",
+      "subject": "Follow-up requested for invoice review",
+      "body": "This is a same-day follow-up regarding invoice AR-00007 for Lattice Network 006, customer CUS-006. Please confirm whether the posted amount of $3,333.42 has been reviewed against contract CON-006. If clarification is needed, specify whether the question concerns the monthly base, metered API blocks, monthly-arrears timing, or another documented field. Please include supporting detail where available. Until that information is provided, this draft records an open request only and does not indicate payment, approval, adjustment, or resolution.",
+      "source_refs": [
+        "AR-00007",
+        "CUS-006",
+        "CON-006"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

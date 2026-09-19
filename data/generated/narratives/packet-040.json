@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-040",
+  "documents": [
+    {
+      "document_id": "packet-040-doc-1",
+      "kind": "email",
+      "date": "2025-04-30",
+      "subject": "Invoice AR-00414 posted for review",
+      "body": "To: finance34@customer.example\nSubject: Invoice AR-00414 posted for review\n\nHello Juniper Network 034 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-00414 for customer CUS-034 under contract CON-034. The invoice date is 2025-04-30, the due date is 2025-05-30, and the amount is $4,739.04. Please review the invoice and let us know if any explanation or supporting detail is needed. This message does not establish payment, approval, or any additional commercial arrangement.",
+      "source_refs": [
+        "AR-00414",
+        "CUS-034",
+        "CON-034"
+      ]
+    },
+    {
+      "document_id": "packet-040-doc-2",
+      "kind": "chat",
+      "date": "2025-04-30",
+      "subject": "AR-00414 review status",
+      "body": "Casey Team05: I see AR-00414 posted for CUS-034 on 2025-04-30. The invoice amount is $4,739.04, with a due date of 2025-05-30.\n\nCasey Team05: The associated contract is CON-034, covering hosted access and metered API blocks with monthly arrears billing. I do not see an explanation for the amount beyond the packet details. Juniper Network 034 may need to confirm whether the invoice aligns with its records. No payment or approval should be inferred from this chat.",
+      "source_refs": [
+        "AR-00414",
+        "CUS-034",
+        "CON-034"
+      ]
+    },
+    {
+      "document_id": "packet-040-doc-3",
+      "kind": "operational_note",
+      "date": "2025-04-30",
+      "subject": "Accounts receivable handling note",
+      "body": "Operational note for 2025-04-30: Invoice AR-00414 is posted for customer CUS-034 under contract CON-034. Record the invoice as monthly, dated 2025-04-30, with a due date of 2025-05-30 and an amount of $4,739.04. The contract identifies monthly arrears billing for hosted access and metered API blocks. Before any further account conclusion is documented, request clarification for missing explanations and preserve the distinction between a posted invoice and any unestablished payment or approval.",
+      "source_refs": [
+        "AR-00414",
+        "CUS-034",
+        "CON-034"
+      ]
+    },
+    {
+      "document_id": "packet-040-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-04-30",
+      "subject": "CON-034 service and billing excerpt",
+      "body": "Contract CON-034 identifies customer CUS-034 and covers hosted access and metered API blocks. Its effective date is 2025-01-01, and its end date is 2026-12-31. Billing is monthly in arrears, with terms of 30 days. The monthly base is $4,650.00, and the usage block price is $0.01. This excerpt is provided for comparison with invoice AR-00414. It does not state the usage quantity, explain the posted invoice amount, or establish any payment, approval, or additional obligation.",
+      "source_refs": [
+        "CON-034",
+        "CUS-034",
+        "AR-00414"
+      ]
+    },
+    {
+      "document_id": "packet-040-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-04-30",
+      "subject": "Question regarding AR-00414 reconciliation",
+      "body": "For reconciliation of invoice AR-00414, can Juniper Network 034 confirm how the posted amount of $4,739.04 should be matched to the records for CUS-034 and contract CON-034? The contract lists a monthly base of $4,650.00 and a usage block price of $0.01, but the available packet does not provide a usage quantity or other explanation for the invoice amount. Please identify any missing detail needed for review. No payment or approval is established by this question.",
+      "source_refs": [
+        "AR-00414",
+        "CUS-034",
+        "CON-034"
+      ]
+    },
+    {
+      "document_id": "packet-040-doc-6",
+      "kind": "follow_up",
+      "date": "2025-04-30",
+      "subject": "Follow-up requested for invoice review",
+      "body": "Follow-up for 2025-04-30: Please review invoice AR-00414 for CUS-034 against contract CON-034. The invoice is posted, dated 2025-04-30, carries an amount of $4,739.04, and is due 2025-05-30. The contract describes monthly arrears billing for hosted access and metered API blocks. Please provide any missing explanation or usage detail required to reconcile the amount. Until that information is available, retain the item as a review question and do not record payment or approval as established.",
+      "source_refs": [
+        "AR-00414",
+        "CUS-034",
+        "CON-034"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

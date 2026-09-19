@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-027",
+  "documents": [
+    {
+      "document_id": "packet-027-doc-1",
+      "kind": "email",
+      "date": "2025-09-30",
+      "subject": "Request for payroll settlement clarification",
+      "body": "To: Casey Team05\nFrom: Taylor Team06\nSubject: Request for payroll settlement clarification\n\nOn 2025-09-30, I am reviewing payroll record PAY-009 for Meridian Ledger Labs, Inc. The packet identifies gross payroll, withholding, employer amounts, and net payroll, but it does not provide an explanation of any external movement or confirm that a payment occurred. Please clarify whether any movement connected to PAY-009 has been externally confirmed. If not, please identify what remains proposed or unresolved so the record can be handled under the settlement policy.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-027-doc-2",
+      "kind": "chat",
+      "date": "2025-09-30",
+      "subject": "PAY-009 status check",
+      "body": "Casey Team05: I am checking PAY-009 dated 2025-09-30 against the settlement policy. The record includes payroll figures, but the packet does not establish an external confirmation, payment, or additional approval.\n\nTaylor Team06: Understood. I will look for an explanation of any movement and will treat missing information as a question, not as evidence of settlement.\n\nCasey Team05: Please keep the company identifier MERIDIAN-001 in the notes and flag anything that needs confirmation. We should avoid describing the transaction purpose beyond what the packet states.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-027-doc-3",
+      "kind": "operational_note",
+      "date": "2025-09-30",
+      "subject": "Payroll record review note",
+      "body": "Operational review for Meridian Ledger Labs, Inc., company identifier MERIDIAN-001, dated 2025-09-30. Payroll record PAY-009 is dated 2025-09-30 and contains gross, withholding, employer, and net fields. The available packet does not state whether an external movement was confirmed, whether a payment was made, or whether any further approval exists. Action required: request the missing explanation and confirmation status. Until supported information is received, do not classify a proposal as a settlement or infer a transaction purpose.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-027-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-09-30",
+      "subject": "Settlement policy excerpt",
+      "body": "Meridian Ledger Labs, Inc. \u2014 Service and settlement excerpt, effective for this draft dated 2025-09-30.\n\n\u201cOnly confirmed external movements are settled; proposals are not settlements.\u201d\n\nThis excerpt is limited to the settlement policy supplied in the company packet. It does not establish a payment, approval, commercial term, legal claim, or transaction purpose for payroll record PAY-009. Any application of the policy to that record requires confirmation of the relevant external movement and an explanation supported by the packet or subsequent documentation.",
+      "source_refs": [
+        "MERIDIAN-001",
+        "PAY-009"
+      ]
+    },
+    {
+      "document_id": "packet-027-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-09-30",
+      "subject": "Reconciliation question for PAY-009",
+      "body": "For reconciliation dated 2025-09-30, can the owner confirm whether payroll record PAY-009 has any externally confirmed movement? The packet supplies payroll fields and identifies Meridian Ledger Labs, Inc. under MERIDIAN-001, but it does not connect those fields to a confirmed settlement, payment, approval, or stated transaction purpose. If a movement is being considered, please provide the missing explanation and confirmation status. If the item remains a proposal, should it remain outside settled activity under the stated settlement policy?",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-027-doc-6",
+      "kind": "follow_up",
+      "date": "2025-09-30",
+      "subject": "Follow-up items for payroll review",
+      "body": "Following the 2025-09-30 review, please respond on the unresolved points for PAY-009. Confirm whether an external movement exists and, if so, provide the explanation needed to understand its relationship to the payroll record. The packet does not establish any payment, additional approval, or settled outcome, so those matters should remain open. Please also preserve company identifier MERIDIAN-001 in supporting notes. Once information is available, the record can be assessed against the policy that proposals are not settlements.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

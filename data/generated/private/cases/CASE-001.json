@@ -1,0 +1,71 @@
+{
+  "case_id": "CASE-001",
+  "development_family": "partial_correction",
+  "split": "development_not_sealed",
+  "counterparty_events": [
+    {
+      "trigger": "request_price_correction",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-P-CASE-001",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-1042",
+          "vendor_id": "FIXTURE-VENDOR-001",
+          "amount_cents": 2000000,
+          "scope": "Price adjustment over original invoice quantity",
+          "already_allocated_cents": 0
+        },
+        "sha256": "7f0693e53b7bb329f243cb4b69dfcba2364ec86e379bb741221b84a97ac41145"
+      }
+    },
+    {
+      "trigger": "request_quantity_status",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CAN-CASE-001",
+        "type": "internal_cancellation",
+        "date": "2026-06-25",
+        "source": "procurement",
+        "body": {
+          "po_id": "PO-481",
+          "quantity": 200,
+          "approved_internally": true,
+          "supplier_acceptance": "not established by this internal record"
+        },
+        "sha256": "c5bd9be0c72499aae9191834f12b39debd794262c6d8891368a531ef8e4d9680"
+      }
+    },
+    {
+      "trigger": "request_cancellation_acceptance_and_credit",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-Q-CASE-001",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-1042",
+          "vendor_id": "FIXTURE-VENDOR-001",
+          "amount_cents": 2000000,
+          "scope": "Canceled quantity at corrected price",
+          "supplier_cancellation_accepted": true
+        },
+        "sha256": "7fddc85c0a43a93042465631ef903277edbf9c8a76abe92f1ca59e4a88c3e69c"
+      }
+    }
+  ],
+  "expected_disposition": "PAYMENT_READY_AFTER_APPROVAL",
+  "expected_net_cents": 8000000,
+  "reason": "All pricing and quantity conditions can be supported through available evidence.",
+  "invariants": [
+    "cash remains unchanged",
+    "no repeated credit allocation",
+    "recipient unchanged",
+    "current approval required when over threshold"
+  ],
+  "allowed_sequence": "Any sequence obtaining the required evidence; triggers are simulator API conditions, not mandatory solver steps",
+  "solver_must_not_read_this": true
+}

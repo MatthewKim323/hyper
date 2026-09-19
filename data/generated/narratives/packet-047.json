@@ -1,0 +1,90 @@
+{
+  "packet_id": "packet-047",
+  "documents": [
+    {
+      "document_id": "packet-047-doc-1",
+      "kind": "email",
+      "date": "2025-11-30",
+      "subject": "Invoice AP-00647 record review",
+      "body": "Hello Atlas Services 047, Meridian Ledger Labs, Inc. is reviewing the posted supplier invoice AP-00647 for the current records. The invoice identifies vendor VEN-047, purchase order PO-00647, an invoice date of 2025-11-27, and a due date of 2025-12-27. The recorded amount is $2,109.60. Please confirm that these identifiers and the stated amount correspond to your billing record. If any explanation or supporting detail is needed, please provide it without assuming that payment or additional approval has occurred.",
+      "source_refs": [
+        "AP-00647",
+        "VEN-047",
+        "PO-00647"
+      ]
+    },
+    {
+      "document_id": "packet-047-doc-2",
+      "kind": "chat",
+      "date": "2025-11-30",
+      "subject": "AP-00647 reconciliation discussion",
+      "body": "Casey Team05: I am reviewing AP-00647 against PO-00647 and receipt RC-AP-00647. The invoice status is posted, and the invoice, purchase order, and accepted service amount each show 210,960 cents. I have not treated that alignment as evidence of payment or any additional approval. Atlas Services 047 is listed with approved recipient SIM-RECIPIENT-047, but the record should still be checked before any next action. Please flag any missing explanation, discrepancy, or documentation required for the file.",
+      "source_refs": [
+        "AP-00647",
+        "PO-00647",
+        "RC-AP-00647",
+        "SIM-RECIPIENT-047"
+      ]
+    },
+    {
+      "document_id": "packet-047-doc-3",
+      "kind": "operational_note",
+      "date": "2025-11-30",
+      "subject": "Accounts payable record note",
+      "body": "Operational note: Invoice AP-00647 is posted under vendor VEN-047 and references purchase order PO-00647. The invoice date is 2025-11-27, with a due date of 2025-12-27. The recorded invoice amount is 210,960 cents. Service receipt RC-AP-00647, dated 2025-11-27, records an accepted amount of 210,960 cents and identifies EMP-005 as the accepting employee. This note records source data for review only; it does not establish payment, new approval, or an explanation for any unresolved item.",
+      "source_refs": [
+        "AP-00647",
+        "VEN-047",
+        "PO-00647",
+        "RC-AP-00647",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-047-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-11-30",
+      "subject": "Recorded agreement and service fields",
+      "body": "Service record excerpt: Agreement identifier VA-AP-00647 is associated with purchase order PO-00647. The purchase order identifies vendor VEN-047, carries the date 2025-11-01, and records 210,960 cents. The related service receipt is RC-AP-00647, dated 2025-11-27, with an accepted amount of 210,960 cents. The available record identifies EMP-005 as the accepting employee. This excerpt is limited to the supplied fields and should not be read as adding contractual language, payment status, approval, or other commercial terms.",
+      "source_refs": [
+        "VA-AP-00647",
+        "PO-00647",
+        "VEN-047",
+        "RC-AP-00647",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-047-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-11-30",
+      "subject": "Question regarding AP-00647 matching",
+      "body": "Please review whether invoice AP-00647 can be reconciled to purchase order PO-00647 and service receipt RC-AP-00647 based on the identifiers, dates, and recorded amounts in the packet. The invoice and purchase order each record 210,960 cents, while the receipt records an accepted amount of 210,960 cents. Please identify any missing explanation, evidence, or exception that should remain open. Also confirm whether the approved recipient SIM-RECIPIENT-047 is the appropriate record to reference, without inferring that payment has been made.",
+      "source_refs": [
+        "AP-00647",
+        "PO-00647",
+        "RC-AP-00647",
+        "SIM-RECIPIENT-047"
+      ]
+    },
+    {
+      "document_id": "packet-047-doc-6",
+      "kind": "follow_up",
+      "date": "2025-11-30",
+      "subject": "Follow-up requested for supplier record",
+      "body": "Follow-up for the 2025-11-30 review: please respond regarding invoice AP-00647, vendor VEN-047, and purchase order PO-00647. The available records show the invoice as posted and associate agreement VA-AP-00647 with the purchase order. Please provide any missing explanation or documentation needed to complete the review, and state clearly if a discrepancy remains. Until that information is available, this draft should be treated as a request for clarification only. No payment or additional approval is established here.",
+      "source_refs": [
+        "AP-00647",
+        "VEN-047",
+        "PO-00647",
+        "VA-AP-00647"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

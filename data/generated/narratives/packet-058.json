@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-058",
+  "documents": [
+    {
+      "document_id": "packet-058-doc-1",
+      "kind": "email",
+      "date": "2025-04-30",
+      "subject": "Invoice AR-00420 review",
+      "body": "Hello Juniper Network 040 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-00420 for customer CUS-040 under contract CON-040. The invoice date is 2025-04-30, the due date is 2025-05-30, and the amount is $2,629.21. Please review the invoice against your records and let us know if any explanation or supporting detail is needed. This message is a same-day draft request for review; it does not establish payment, approval, or any additional commercial term.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AR-00420",
+        "CUS-040",
+        "CON-040"
+      ]
+    },
+    {
+      "document_id": "packet-058-doc-2",
+      "kind": "chat",
+      "date": "2025-04-30",
+      "subject": "AR-00420 status check",
+      "body": "Casey Team05: I am reviewing the posted monthly invoice AR-00420 for Juniper Network 040, customer CUS-040.\n\nThe record shows a 2025-04-30 invoice date, a 2025-05-30 due date, and an amount of $2,629.21. Contract CON-040 identifies monthly arrears billing for hosted access and metered API blocks. I do not see an established payment or additional approval in the packet. Juniper Network 040 should be asked to identify any discrepancy or missing explanation before reconciliation is treated as complete.",
+      "source_refs": [
+        "AR-00420",
+        "CUS-040",
+        "CON-040"
+      ]
+    },
+    {
+      "document_id": "packet-058-doc-3",
+      "kind": "operational_note",
+      "date": "2025-04-30",
+      "subject": "Billing record review note",
+      "body": "Operational review concerns invoice AR-00420, posted for customer CUS-040 on 2025-04-30. The invoice is classified as monthly, with a stated amount of $2,629.21 and due date 2025-05-30. Contract CON-040 lists monthly arrears billing, a monthly base of $2,550.00, and a usage block price of $0.01 for hosted access and metered API blocks. The packet does not provide a usage quantity, explanation of the difference, approval, or payment confirmation. Request clarification and retain the record for follow-up.",
+      "source_refs": [
+        "AR-00420",
+        "CUS-040",
+        "CON-040"
+      ]
+    },
+    {
+      "document_id": "packet-058-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-04-30",
+      "subject": "CON-040 service and billing excerpt",
+      "body": "Contract CON-040 is associated with customer CUS-040 and has an effective date of 2025-01-01 and an end date of 2026-12-31. The described service is Hosted access and metered API blocks. Billing is monthly arrears, with terms of 30 days. The monthly base is $2,550.00, and the usage block price is $0.01. This excerpt does not state a usage quantity, invoice calculation detail, payment, approval, or interpretation of the posted amount on invoice AR-00420.",
+      "source_refs": [
+        "CON-040",
+        "CUS-040",
+        "AR-00420"
+      ]
+    },
+    {
+      "document_id": "packet-058-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-04-30",
+      "subject": "Question regarding AR-00420 variance",
+      "body": "For reconciliation of invoice AR-00420, can Juniper Network 040 confirm how the posted amount of $2,629.21 should be understood against contract CON-040? The contract lists a monthly base of $2,550.00 and a usage block price of $0.01, but the packet does not include a usage quantity or other explanation for the difference. Please identify the supporting detail or discrepancy, if any, and confirm whether additional documentation is required. No payment or approval is established by this question.",
+      "source_refs": [
+        "AR-00420",
+        "CON-040",
+        "CUS-040"
+      ]
+    },
+    {
+      "document_id": "packet-058-doc-6",
+      "kind": "follow_up",
+      "date": "2025-04-30",
+      "subject": "Follow-up requested for CUS-040",
+      "body": "Follow-up draft for Casey Team05: please send Juniper Network 040 a request concerning posted monthly invoice AR-00420. Reference customer CUS-040 and contract CON-040, including the invoice date of 2025-04-30, due date of 2025-05-30, and amount of $2,629.21. Ask for any missing explanation or usage detail needed to compare the invoice with the contract\u2019s monthly arrears terms. Keep the request open pending clarification; the packet does not establish a payment, approval, or resolved reconciliation.",
+      "source_refs": [
+        "AR-00420",
+        "CUS-040",
+        "CON-040"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

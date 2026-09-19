@@ -1,0 +1,90 @@
+{
+  "packet_id": "packet-032",
+  "documents": [
+    {
+      "document_id": "packet-032-doc-1",
+      "kind": "email",
+      "date": "2026-02-28",
+      "subject": "Invoice AP-00812 record confirmation",
+      "body": "Hello Casey Team05,\n\nGranite Legal 032 is writing regarding invoice AP-00812, associated with vendor VEN-032 and purchase order PO-00812. The recorded invoice amount is $1,126.46, and its status is posted. Our available record identifies ap32@supplier.example as the billing contact and SIM-RECIPIENT-032 as the approved recipient. Please confirm whether any explanation or supporting information is needed for the current record. No payment or additional approval is assumed in this draft. Regards,\nGranite Legal 032",
+      "source_refs": [
+        "AP-00812",
+        "VEN-032",
+        "PO-00812",
+        "SIM-RECIPIENT-032"
+      ]
+    },
+    {
+      "document_id": "packet-032-doc-2",
+      "kind": "chat",
+      "date": "2026-02-28",
+      "subject": "Invoice and receipt review",
+      "body": "Casey Team05: I\u2019m reviewing AP-00812 for Meridian Ledger Labs, Inc. The invoice is posted and references PO-00812. The recorded invoice amount is $1,126.46, matching the purchase order amount shown in the packet.\n\nTeam note: RC-AP-00812 records an accepted amount of $1,126.46 and identifies EMP-005 as the accepting employee. I do not see a basis in the packet to infer payment, a later approval, or the business purpose beyond the recorded legal vendor relationship. Please flag any missing explanation for follow-up.",
+      "source_refs": [
+        "AP-00812",
+        "PO-00812",
+        "RC-AP-00812",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-032-doc-3",
+      "kind": "operational_note",
+      "date": "2026-02-28",
+      "subject": "Accounts payable record note",
+      "body": "Operational review for invoice AP-00812: vendor VEN-032 is Granite Legal 032, categorized as legal. The invoice status is posted, with a recorded amount of $1,126.46. Purchase order PO-00812 identifies the same vendor and the same recorded amount. Service receipt RC-AP-00812 also records an accepted amount of $1,126.46 and names EMP-005 as the accepting employee. The record does not establish payment, an additional approval, or any explanation for missing documentation. Request clarification before making further assertions.",
+      "source_refs": [
+        "AP-00812",
+        "VEN-032",
+        "PO-00812",
+        "RC-AP-00812",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-032-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-02-28",
+      "subject": "Agreement reference excerpt VA-AP-00812",
+      "body": "Agreement reference: VA-AP-00812. This excerpt is limited to the identifiers and linked records available for the current draft. The agreement is associated with purchase order PO-00812, which identifies vendor VEN-032. The supplier record names Granite Legal 032 and places the vendor in the legal category. The packet also records terms of 30 days for VEN-032. No additional services, scope, obligations, remedies, approval, payment, or legal conclusion should be inferred from this excerpt. Any missing contractual explanation must be requested separately.",
+      "source_refs": [
+        "VA-AP-00812",
+        "PO-00812",
+        "VEN-032"
+      ]
+    },
+    {
+      "document_id": "packet-032-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-02-28",
+      "subject": "Question on AP-00812 reconciliation",
+      "body": "For reconciliation, can Casey Team05 confirm how invoice AP-00812 should be matched within the current ledger review? The packet records vendor VEN-032, purchase order PO-00812, and service receipt RC-AP-00812. Each records an amount of $1,126.46, while the invoice status is posted. Please clarify whether any explanation is missing from the invoice or receipt record, and whether further documentation is required. This question does not assume payment, an additional approval, or a resolved reconciliation outcome.",
+      "source_refs": [
+        "AP-00812",
+        "VEN-032",
+        "PO-00812",
+        "RC-AP-00812"
+      ]
+    },
+    {
+      "document_id": "packet-032-doc-6",
+      "kind": "follow_up",
+      "date": "2026-02-28",
+      "subject": "Follow-up requested for invoice record",
+      "body": "Follow-up for Meridian Ledger Labs, Inc.: please review the draft record for AP-00812 and advise whether any missing explanation should be added. The linked records are PO-00812 and RC-AP-00812; the service receipt identifies EMP-005 as the accepting employee. Granite Legal 032 remains the listed supplier for VEN-032, with ap32@supplier.example as the billing contact. Please identify any discrepancy or documentation gap. Until clarified, this follow-up records no payment, additional approval, or final resolution.",
+      "source_refs": [
+        "AP-00812",
+        "PO-00812",
+        "RC-AP-00812",
+        "EMP-005",
+        "VEN-032"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

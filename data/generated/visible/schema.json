@@ -1,0 +1,415 @@
+{
+  "accounts": {
+    "rows": 20,
+    "fields": {
+      "account": "TEXT",
+      "name": "TEXT",
+      "kind": "TEXT"
+    }
+  },
+  "accruals": {
+    "rows": 1,
+    "fields": {
+      "accrual_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER",
+      "service": "TEXT",
+      "invoice_received": "TEXT"
+    }
+  },
+  "aging": {
+    "rows": 4608,
+    "fields": {
+      "aging_id": "TEXT",
+      "date": "TEXT",
+      "side": "TEXT",
+      "invoice_id": "TEXT",
+      "outstanding_cents": "INTEGER",
+      "days_past_due": "INTEGER"
+    }
+  },
+  "amortization": {
+    "rows": 18,
+    "fields": {
+      "amortization_id": "TEXT",
+      "date": "TEXT",
+      "prepayment_id": "TEXT",
+      "amount_cents": "INTEGER"
+    }
+  },
+  "ap_allocations": {
+    "rows": 1017,
+    "fields": {
+      "allocation_id": "TEXT",
+      "payment_id": "TEXT",
+      "invoice_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER"
+    }
+  },
+  "ap_credits": {
+    "rows": 38,
+    "fields": {
+      "credit_id": "TEXT",
+      "invoice_id": "TEXT",
+      "vendor_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER",
+      "scope": "TEXT",
+      "status": "TEXT"
+    }
+  },
+  "ap_invoices": {
+    "rows": 1080,
+    "fields": {
+      "invoice_id": "TEXT",
+      "vendor_id": "TEXT",
+      "po_id": "TEXT",
+      "date": "TEXT",
+      "due_date": "TEXT",
+      "amount_cents": "INTEGER",
+      "status": "TEXT"
+    }
+  },
+  "ap_payments": {
+    "rows": 1017,
+    "fields": {
+      "payment_id": "TEXT",
+      "vendor_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER",
+      "account": "TEXT",
+      "status": "TEXT"
+    }
+  },
+  "ar_allocations": {
+    "rows": 2161,
+    "fields": {
+      "allocation_id": "TEXT",
+      "receipt_id": "TEXT",
+      "invoice_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER"
+    }
+  },
+  "ar_invoice_lines": {
+    "rows": 4000,
+    "fields": {
+      "line_id": "TEXT",
+      "invoice_id": "TEXT",
+      "description": "TEXT",
+      "amount_cents": "INTEGER"
+    }
+  },
+  "ar_invoices": {
+    "rows": 2200,
+    "fields": {
+      "invoice_id": "TEXT",
+      "customer_id": "TEXT",
+      "contract_id": "TEXT",
+      "date": "TEXT",
+      "due_date": "TEXT",
+      "amount_cents": "INTEGER",
+      "invoice_type": "TEXT",
+      "status": "TEXT",
+      "usage_ids": "TEXT"
+    }
+  },
+  "ar_receipts": {
+    "rows": 2161,
+    "fields": {
+      "receipt_id": "TEXT",
+      "customer_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER",
+      "account": "TEXT",
+      "status": "TEXT"
+    }
+  },
+  "budgets": {
+    "rows": 18,
+    "fields": {
+      "budget_id": "TEXT",
+      "date": "TEXT",
+      "period": "TEXT",
+      "revenue_cents": "INTEGER",
+      "expense_cents": "INTEGER",
+      "approved_on": "TEXT"
+    }
+  },
+  "close_checklist": {
+    "rows": 162,
+    "fields": {
+      "check_id": "TEXT",
+      "date": "TEXT",
+      "control": "TEXT",
+      "owner": "TEXT",
+      "status": "TEXT"
+    }
+  },
+  "contracts": {
+    "rows": 120,
+    "fields": {
+      "contract_id": "TEXT",
+      "customer_id": "TEXT",
+      "effective_date": "TEXT",
+      "end_date": "TEXT",
+      "monthly_base_cents": "INTEGER",
+      "usage_block_price_cents": "INTEGER",
+      "billing": "TEXT",
+      "service": "TEXT",
+      "terms_days": "INTEGER"
+    }
+  },
+  "credit_allocations": {
+    "rows": 38,
+    "fields": {
+      "allocation_id": "TEXT",
+      "credit_id": "TEXT",
+      "invoice_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER"
+    }
+  },
+  "customers": {
+    "rows": 120,
+    "fields": {
+      "customer_id": "TEXT",
+      "name": "TEXT",
+      "contact": "TEXT",
+      "contract_id": "TEXT"
+    }
+  },
+  "depreciation": {
+    "rows": 30,
+    "fields": {
+      "depreciation_id": "TEXT",
+      "date": "TEXT",
+      "asset_id": "TEXT",
+      "amount_cents": "INTEGER"
+    }
+  },
+  "employees": {
+    "rows": 48,
+    "fields": {
+      "employee_id": "TEXT",
+      "name": "TEXT",
+      "department": "TEXT",
+      "monthly_gross_cents": "INTEGER",
+      "active_from": "TEXT"
+    }
+  },
+  "equity_events": {
+    "rows": 1,
+    "fields": {
+      "equity_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER",
+      "instrument": "TEXT"
+    }
+  },
+  "fixed_assets": {
+    "rows": 3,
+    "fields": {
+      "asset_id": "TEXT",
+      "date": "TEXT",
+      "cost_cents": "INTEGER",
+      "useful_life_months": "INTEGER",
+      "residual_cents": "INTEGER"
+    }
+  },
+  "journal_lines": {
+    "rows": 15778,
+    "fields": {
+      "line_id": "TEXT",
+      "journal_id": "TEXT",
+      "account": "TEXT",
+      "debit_cents": "INTEGER",
+      "credit_cents": "INTEGER"
+    }
+  },
+  "journals": {
+    "rows": 6971,
+    "fields": {
+      "journal_id": "TEXT",
+      "date": "TEXT",
+      "source_id": "TEXT",
+      "description": "TEXT"
+    }
+  },
+  "payroll": {
+    "rows": 18,
+    "fields": {
+      "payroll_id": "TEXT",
+      "date": "TEXT",
+      "gross_cents": "INTEGER",
+      "withholding_cents": "INTEGER",
+      "employer_cents": "INTEGER",
+      "net_cents": "INTEGER"
+    }
+  },
+  "payroll_lines": {
+    "rows": 864,
+    "fields": {
+      "payroll_line_id": "TEXT",
+      "payroll_id": "TEXT",
+      "employee_id": "TEXT",
+      "date": "TEXT",
+      "gross_cents": "INTEGER",
+      "withholding_cents": "INTEGER",
+      "employer_cents": "INTEGER",
+      "net_cents": "INTEGER"
+    }
+  },
+  "payroll_remittances": {
+    "rows": 17,
+    "fields": {
+      "remittance_id": "TEXT",
+      "date": "TEXT",
+      "payroll_id": "TEXT",
+      "amount_cents": "INTEGER"
+    }
+  },
+  "prepayments": {
+    "rows": 2,
+    "fields": {
+      "prepayment_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER",
+      "coverage_end": "TEXT",
+      "months": "INTEGER"
+    }
+  },
+  "purchase_orders": {
+    "rows": 1080,
+    "fields": {
+      "po_id": "TEXT",
+      "vendor_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER",
+      "agreement_id": "TEXT"
+    }
+  },
+  "revenue_schedule": {
+    "rows": 360,
+    "fields": {
+      "schedule_id": "TEXT",
+      "date": "TEXT",
+      "contract_id": "TEXT",
+      "amount_cents": "INTEGER"
+    }
+  },
+  "service_receipts": {
+    "rows": 1080,
+    "fields": {
+      "receipt_id": "TEXT",
+      "po_id": "TEXT",
+      "date": "TEXT",
+      "accepted_amount_cents": "INTEGER",
+      "accepted_by": "TEXT"
+    }
+  },
+  "settlement_movements": {
+    "rows": 3251,
+    "fields": {
+      "movement_id": "TEXT",
+      "date": "TEXT",
+      "account": "TEXT",
+      "amount_cents": "INTEGER",
+      "source_id": "TEXT",
+      "journal_id": "TEXT",
+      "asset": "TEXT",
+      "status": "TEXT",
+      "cash_flow_category": "TEXT",
+      "external_reference": "TEXT",
+      "simulation": "TEXT"
+    }
+  },
+  "statements": {
+    "rows": 18,
+    "fields": {
+      "statement_id": "TEXT",
+      "date": "TEXT",
+      "balance_sheet": "TEXT",
+      "income_statement": "TEXT",
+      "bank_cash_flow": "TEXT",
+      "equity": "TEXT"
+    }
+  },
+  "treasury_accounts": {
+    "rows": 3,
+    "fields": {
+      "treasury_account_id": "TEXT",
+      "ledger_account": "TEXT",
+      "label": "TEXT",
+      "asset": "TEXT",
+      "owner": "TEXT",
+      "endpoint": "TEXT",
+      "approved": "TEXT"
+    }
+  },
+  "treasury_fees": {
+    "rows": 18,
+    "fields": {
+      "fee_id": "TEXT",
+      "date": "TEXT",
+      "amount_cents": "INTEGER",
+      "description": "TEXT"
+    }
+  },
+  "treasury_transfers": {
+    "rows": 7,
+    "fields": {
+      "transfer_id": "TEXT",
+      "date": "TEXT",
+      "from_account": "TEXT",
+      "to_account": "TEXT",
+      "amount_cents": "INTEGER",
+      "kind": "TEXT",
+      "measurement_usd_per_usdc": "TEXT"
+    }
+  },
+  "trial_balance": {
+    "rows": 360,
+    "fields": {
+      "trial_balance_id": "TEXT",
+      "date": "TEXT",
+      "account": "TEXT",
+      "balance_cents": "INTEGER"
+    }
+  },
+  "usage_daily": {
+    "rows": 65520,
+    "fields": {
+      "usage_id": "TEXT",
+      "date": "TEXT",
+      "customer_id": "TEXT",
+      "contract_id": "TEXT",
+      "meter": "TEXT",
+      "units": "INTEGER",
+      "rate_cents": "INTEGER",
+      "amount_cents": "INTEGER"
+    }
+  },
+  "vendor_agreements": {
+    "rows": 1080,
+    "fields": {
+      "agreement_id": "TEXT",
+      "vendor_id": "TEXT",
+      "date": "TEXT",
+      "scope": "TEXT",
+      "agreed_amount_cents": "INTEGER"
+    }
+  },
+  "vendors": {
+    "rows": 60,
+    "fields": {
+      "vendor_id": "TEXT",
+      "name": "TEXT",
+      "contact": "TEXT",
+      "category": "TEXT",
+      "approved_recipient": "TEXT",
+      "terms_days": "INTEGER"
+    }
+  }
+}

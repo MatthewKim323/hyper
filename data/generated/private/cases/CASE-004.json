@@ -1,0 +1,53 @@
+{
+  "case_id": "CASE-004",
+  "development_family": "quantity_only",
+  "split": "development_not_sealed",
+  "counterparty_events": [
+    {
+      "trigger": "request_quantity_status",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CAN-CASE-004",
+        "type": "internal_cancellation",
+        "date": "2026-06-25",
+        "source": "procurement",
+        "body": {
+          "po_id": "PO-484",
+          "quantity": 26,
+          "approved_internally": true,
+          "supplier_acceptance": "not established by this internal record"
+        },
+        "sha256": "c05e9e55d21c6367f4a92388e64d544c1cde32caeb54641d4c48994c300d6c7c"
+      }
+    },
+    {
+      "trigger": "request_cancellation_acceptance_and_credit",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-Q-CASE-004",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-1045",
+          "vendor_id": "FIXTURE-VENDOR-004",
+          "amount_cents": 126750,
+          "scope": "Canceled quantity at corrected price",
+          "supplier_cancellation_accepted": true
+        },
+        "sha256": "64e8ca2af3976001bb540d797c2ab7cb1bcff79727a4a18b83f472aa6b120532"
+      }
+    }
+  ],
+  "expected_disposition": "PAYMENT_READY_AFTER_APPROVAL",
+  "expected_net_cents": 507000,
+  "reason": "All pricing and quantity conditions can be supported through available evidence.",
+  "invariants": [
+    "cash remains unchanged",
+    "no repeated credit allocation",
+    "recipient unchanged",
+    "current approval required when over threshold"
+  ],
+  "allowed_sequence": "Any sequence obtaining the required evidence; triggers are simulator API conditions, not mandatory solver steps",
+  "solver_must_not_read_this": true
+}

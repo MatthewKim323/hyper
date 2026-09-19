@@ -1,0 +1,82 @@
+{
+  "packet_id": "packet-076",
+  "documents": [
+    {
+      "document_id": "packet-076-doc-1",
+      "kind": "email",
+      "date": "2025-04-30",
+      "subject": "Invoice AR-00426 posted for review",
+      "body": "Hello Juniper Network 046 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-00426 dated 2025-04-30 for customer CUS-046 under contract CON-046. The recorded amount is $4,734.05, with a due date of 2025-05-30. Please review the invoice against your records and let us know if any explanation or supporting detail is needed. This message does not confirm payment or any additional approval. Questions may be directed to finance46@customer.example or the designated finance owner.",
+      "source_refs": [
+        "AR-00426",
+        "CUS-046",
+        "CON-046"
+      ]
+    },
+    {
+      "document_id": "packet-076-doc-2",
+      "kind": "chat",
+      "date": "2025-04-30",
+      "subject": "AR-00426 review",
+      "body": "Casey Team05: AR-00426 is posted today for CUS-046 under CON-046. The invoice amount is $4,734.05, and the stated due date is 2025-05-30.\n\nTeam note: the contract describes monthly arrears billing for hosted access and metered API blocks. Before treating the record as fully explained, please compare the invoice with the contract terms and request clarification for anything that does not reconcile. No payment or additional approval is established here.",
+      "source_refs": [
+        "AR-00426",
+        "CUS-046",
+        "CON-046"
+      ]
+    },
+    {
+      "document_id": "packet-076-doc-3",
+      "kind": "operational_note",
+      "date": "2025-04-30",
+      "subject": "Billing record review note",
+      "body": "Operational review for 2025-04-30: invoice AR-00426 is posted for customer CUS-046 and references contract CON-046. The invoice is identified as monthly, with an amount of $4,734.05 and a due date of 2025-05-30. Contract CON-046 records monthly arrears billing, a monthly base of $4,650.00, and a usage block price of $0.01. Reconcile the invoice composition against these recorded terms and document any missing explanation as an open question.",
+      "source_refs": [
+        "AR-00426",
+        "CUS-046",
+        "CON-046"
+      ]
+    },
+    {
+      "document_id": "packet-076-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-04-30",
+      "subject": "CON-046 service and billing excerpt",
+      "body": "Contract CON-046 identifies customer CUS-046 and covers hosted access and metered API blocks. Its effective date is 2025-01-01, and its end date is 2026-12-31. Billing is stated as monthly arrears, with terms of 30 days. The monthly base is recorded as $4,650.00, and the usage block price is $0.01. This excerpt does not determine the composition of invoice AR-00426 beyond the terms expressly recorded in the contract.",
+      "source_refs": [
+        "CON-046",
+        "CUS-046",
+        "AR-00426"
+      ]
+    },
+    {
+      "document_id": "packet-076-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-04-30",
+      "subject": "Question regarding AR-00426 composition",
+      "body": "Please confirm how the $4,734.05 recorded on invoice AR-00426 was derived from the terms in CON-046. The contract lists a $4,650.00 monthly base and a $0.01 price for each usage block, with monthly arrears billing. The packet does not provide a usage quantity or an explanation of the difference. Please supply the relevant invoice detail or identify the missing basis for review. Until clarified, no payment status or approval should be inferred.",
+      "source_refs": [
+        "AR-00426",
+        "CON-046"
+      ]
+    },
+    {
+      "document_id": "packet-076-doc-6",
+      "kind": "follow_up",
+      "date": "2025-04-30",
+      "subject": "Follow-up actions for invoice review",
+      "body": "Follow-up for 2025-04-30: retain invoice AR-00426 with its posted status and compare it with contract CON-046 for customer CUS-046. Confirm the monthly arrears treatment, monthly base, and metered API block pricing shown in the contract. Request the missing explanation for the invoice amount if the recorded terms do not provide sufficient detail. Track any response as unresolved until documented. The due date shown for AR-00426 is 2025-05-30; this note does not confirm payment or approval.",
+      "source_refs": [
+        "AR-00426",
+        "CON-046",
+        "CUS-046"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

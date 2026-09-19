@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-004",
+  "documents": [
+    {
+      "document_id": "packet-004-doc-1",
+      "kind": "email",
+      "date": "2025-04-30",
+      "subject": "Review requested for invoice AR-00402",
+      "body": "To: finance22@customer.example\nSubject: Review requested for invoice AR-00402\n\nJuniper Network 022, invoice AR-00402 for monthly service was posted on 2025-04-30. The invoice amount is $4,737.61, and the stated due date is 2025-05-30. It references customer CUS-022 and contract CON-022. Please review the invoice against your records and let us know whether any line-item explanation or supporting detail is needed. No payment or approval is assumed by this draft.",
+      "source_refs": [
+        "AR-00402",
+        "CUS-022",
+        "CON-022"
+      ]
+    },
+    {
+      "document_id": "packet-004-doc-2",
+      "kind": "chat",
+      "date": "2025-04-30",
+      "subject": "AR-00402 review",
+      "body": "Casey Team05: AR-00402 is posted for Juniper Network 022 as a monthly invoice dated 2025-04-30. The recorded amount is $4,737.61, with a due date of 2025-05-30.\n\nBefore treating the balance as reconciled, can we confirm whether the amount aligns with CON-022\u2019s monthly billing terms and any metered API blocks? The packet identifies monthly arrears, a $4,650.00 monthly base, and a $0.01 usage-block price. No payment or additional approval is established.",
+      "source_refs": [
+        "AR-00402",
+        "CON-022",
+        "CUS-022"
+      ]
+    },
+    {
+      "document_id": "packet-004-doc-3",
+      "kind": "operational_note",
+      "date": "2025-04-30",
+      "subject": "Invoice posting and review note",
+      "body": "Operational record for AR-00402: the invoice status is posted, invoice type is monthly, and the invoice date is 2025-04-30. The customer is Juniper Network 022, identified as CUS-022, under contract CON-022. The recorded amount is $4,737.61, and the due date is 2025-05-30. Review should compare the posted amount with the contract\u2019s monthly base and metered API block terms. Any unexplained variance should be documented as a question, not resolved by assumption.",
+      "source_refs": [
+        "AR-00402",
+        "CUS-022",
+        "CON-022"
+      ]
+    },
+    {
+      "document_id": "packet-004-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-04-30",
+      "subject": "CON-022 service and billing reference",
+      "body": "Contract reference: CON-022 is associated with customer CUS-022 and is effective from 2025-01-01 through 2026-12-31. The listed service is Hosted access and metered API blocks. Billing is stated as monthly arrears, with terms of 30 days. The monthly base is $4,650.00, and the usage block price is $0.01 per block. This reference does not establish which usage, if any, contributed to AR-00402 or whether any related review has been completed.",
+      "source_refs": [
+        "CON-022",
+        "CUS-022",
+        "AR-00402"
+      ]
+    },
+    {
+      "document_id": "packet-004-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-04-30",
+      "subject": "Question on AR-00402 variance",
+      "body": "For reconciliation of AR-00402, please confirm how the posted amount of $4,737.61 relates to the $4,650.00 monthly base listed under CON-022. The packet also lists a usage block price of $0.01 for the Hosted access and metered API blocks service. Should the invoice detail identify metered blocks supporting the difference, or is additional explanation required from the customer? Please do not mark the item resolved until the underlying detail and any customer response are available.",
+      "source_refs": [
+        "AR-00402",
+        "CON-022",
+        "CUS-022"
+      ]
+    },
+    {
+      "document_id": "packet-004-doc-6",
+      "kind": "follow_up",
+      "date": "2025-04-30",
+      "subject": "Follow-up requested for posted monthly invoice",
+      "body": "Follow-up for Juniper Network 022 regarding AR-00402: please review the posted monthly invoice dated 2025-04-30 and confirm whether its $4,737.61 amount can be matched to the terms recorded for CON-022. The contract lists monthly arrears, a $4,650.00 monthly base, and a $0.01 usage block price, but this draft does not establish the applicable usage detail. Please provide any missing explanation or documentation before the 2025-05-30 due date. No payment or approval is assumed.",
+      "source_refs": [
+        "AR-00402",
+        "CON-022",
+        "CUS-022"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

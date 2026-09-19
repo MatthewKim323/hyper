@@ -1,0 +1,90 @@
+{
+  "packet_id": "packet-080",
+  "documents": [
+    {
+      "document_id": "packet-080-doc-1",
+      "kind": "email",
+      "date": "2025-08-31",
+      "subject": "Invoice AP-00440 review and supporting detail",
+      "body": "To: Granite Legal 020 <ap20@supplier.example>\n\nHello Granite Legal 020,\n\nWe are reviewing invoice AP-00440 for Meridian Ledger Labs, Inc. The invoice is posted and references purchase order PO-00440. The recorded amount is $2,749.57, with a due date of 2025-09-27. Please provide any available explanation or supporting detail for the billed services so our records can remain aligned with the related purchasing and receipt information. This message is a same-day review request and does not confirm payment or any additional approval.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00440",
+        "PO-00440",
+        "VEN-020"
+      ]
+    },
+    {
+      "document_id": "packet-080-doc-2",
+      "kind": "chat",
+      "date": "2025-08-31",
+      "subject": "AP-00440 reconciliation thread",
+      "body": "Casey Team05: I\u2019m checking the posted invoice AP-00440 against PO-00440 and receipt RC-AP-00440. The recorded invoice and purchase order amounts both convert to $2,749.57, and the receipt records the same accepted amount. Granite Legal 020 is listed as the supplier billing contact. I do not see an explanation for the underlying service detail in the packet, so that should be requested before we treat the review as complete. No payment or additional approval is established here.",
+      "source_refs": [
+        "AP-00440",
+        "PO-00440",
+        "RC-AP-00440",
+        "VEN-020"
+      ]
+    },
+    {
+      "document_id": "packet-080-doc-3",
+      "kind": "operational_note",
+      "date": "2025-08-31",
+      "subject": "Accounts payable record check",
+      "body": "Operational note: Invoice AP-00440 is posted for vendor VEN-020, Granite Legal 020, and is associated with PO-00440. The invoice date is 2025-08-28, while this draft note is dated 2025-08-31. The purchase order amount is $2,749.57, and the service receipt RC-AP-00440 records an accepted amount of $2,749.57 by EMP-005. The records are numerically consistent as stated. Any missing explanation should be requested rather than inferred. Payment status is not established by this note.",
+      "source_refs": [
+        "AP-00440",
+        "VEN-020",
+        "PO-00440",
+        "RC-AP-00440",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-080-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-08-31",
+      "subject": "Service and purchasing record excerpt",
+      "body": "Record excerpt: Purchase order PO-00440 identifies vendor VEN-020 and carries agreement reference VA-AP-00440. The purchase order date is 2025-08-01, and its recorded amount is $2,749.57. Invoice AP-00440 is dated 2025-08-28, is posted, and carries the same recorded amount. Service receipt RC-AP-00440 is dated 2025-08-28 and records an accepted amount of $2,749.57. This excerpt states only the supplied record fields; it does not establish additional legal terms, approval, payment, or service scope.",
+      "source_refs": [
+        "PO-00440",
+        "VEN-020",
+        "VA-AP-00440",
+        "AP-00440",
+        "RC-AP-00440"
+      ]
+    },
+    {
+      "document_id": "packet-080-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-08-31",
+      "subject": "Question regarding AP-00440 and PO-00440",
+      "body": "Can Casey Team05 confirm what supporting explanation is available for invoice AP-00440 from Granite Legal 020? The posted invoice amount is $2,749.57, matching the recorded amount on PO-00440 and the accepted amount on receipt RC-AP-00440. The packet identifies the supplier category as legal, but it does not provide additional service description or an explanation for the charge. Please clarify whether the existing records are sufficient for the intended review and identify any missing documentation. This question does not request or imply payment.",
+      "source_refs": [
+        "AP-00440",
+        "PO-00440",
+        "RC-AP-00440",
+        "VEN-020"
+      ]
+    },
+    {
+      "document_id": "packet-080-doc-6",
+      "kind": "follow_up",
+      "date": "2025-08-31",
+      "subject": "Follow-up actions for supplier record review",
+      "body": "Follow-up for 2025-08-31: retain the relationship among invoice AP-00440, purchase order PO-00440, and service receipt RC-AP-00440 in the review record. Contact Granite Legal 020 at ap20@supplier.example to request any missing explanation or supporting detail. Confirm that the vendor identifier remains VEN-020 and that the invoice remains recorded as posted. The supplied packet shows matching amounts of $2,749.57 across the invoice, purchase order, and accepted receipt. Do not record payment or additional approval unless separately established.",
+      "source_refs": [
+        "AP-00440",
+        "PO-00440",
+        "RC-AP-00440",
+        "VEN-020"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

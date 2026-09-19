@@ -1,0 +1,21 @@
+account,name,kind
+1000,USD operating bank,asset
+1100,USDC treasury wallet,asset
+1110,USDC disbursement wallet,asset
+1200,Accounts receivable,asset
+1300,Prepaid services,asset
+1500,Equipment cost,asset
+1510,Accumulated depreciation,contra_asset
+2000,Accounts payable,liability
+2100,Payroll deductions payable,liability
+2200,Deferred subscription revenue,liability
+2300,Accrued cloud services,liability
+3000,Contributed equity,equity
+4000,Subscription revenue,revenue
+4010,Usage revenue,revenue
+5000,Cloud and vendor service expense,expense
+5100,Gross payroll expense,expense
+5110,Employer payroll expense,expense
+5200,Insurance and software expense,expense
+5300,Depreciation expense,expense
+5400,Treasury service fees,expense

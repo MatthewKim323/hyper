@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-079",
+  "documents": [
+    {
+      "document_id": "packet-079-doc-1",
+      "kind": "email",
+      "date": "2025-07-31",
+      "subject": "Invoice AR-00807 posted for review",
+      "body": "Hello Aster Network 067 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-00807 for customer CUS-067 under contract CON-067 on 2025-07-31. The recorded invoice amount is $99.78. Please review the invoice against your records and let us know whether any explanation or supporting detail is missing. This message does not establish a payment, approval, or resolution. If a discrepancy exists, please identify the relevant field and provide the information needed for reconciliation.\n\nRegards,\nMeridian Ledger Labs, Inc.",
+      "source_refs": [
+        "AR-00807",
+        "CUS-067",
+        "CON-067"
+      ]
+    },
+    {
+      "document_id": "packet-079-doc-2",
+      "kind": "chat",
+      "date": "2025-07-31",
+      "subject": "AR-00807 review",
+      "body": "Casey Team05: AR-00807 is posted for CUS-067 under CON-067. The invoice is identified as monthly and records $99.78. I am checking whether the amount aligns with the available contract fields, including the $3,600.00 monthly base and the metered API block price of $0.01. The packet does not establish the usage quantity or any additional explanation. Please flag anything requiring clarification. No payment or approval should be inferred from the posted status alone.",
+      "source_refs": [
+        "AR-00807",
+        "CUS-067",
+        "CON-067"
+      ]
+    },
+    {
+      "document_id": "packet-079-doc-3",
+      "kind": "operational_note",
+      "date": "2025-07-31",
+      "subject": "Billing record review note",
+      "body": "Operational note for 2025-07-31: Invoice AR-00807 is posted for customer CUS-067 and linked to contract CON-067. The invoice is marked monthly and records 9978 cents, equivalent to $99.78. The contract describes hosted access and metered API blocks, with a monthly base of 360000 cents and a usage block price of 1 cent. The available record does not state the usage quantity, calculation detail, approval, or payment. Request missing explanations before treating the record as reconciled.",
+      "source_refs": [
+        "AR-00807",
+        "CUS-067",
+        "CON-067"
+      ]
+    },
+    {
+      "document_id": "packet-079-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-07-31",
+      "subject": "CON-067 service and billing excerpt",
+      "body": "Contract CON-067 identifies the customer as CUS-067 and describes the service as hosted access and metered API blocks. The listed monthly base is 360000 cents, or $3,600.00, and the usage block price is 1 cent, or $0.01, per stated packet field. Billing is identified as annual advance, while invoice AR-00807 is identified as monthly. This excerpt records the available terms for review; it does not explain the invoice amount, establish usage, or confirm any approval or payment.",
+      "source_refs": [
+        "CON-067",
+        "CUS-067",
+        "AR-00807"
+      ]
+    },
+    {
+      "document_id": "packet-079-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-07-31",
+      "subject": "Question regarding AR-00807 and CON-067",
+      "body": "Can the finance owner confirm how the $99.78 recorded on invoice AR-00807 relates to contract CON-067? The contract lists annual-advance billing, a monthly base of $3,600.00, and a metered API block price of $0.01, while the invoice is marked monthly. The packet does not provide usage quantity, calculation detail, or an explanation for the relationship among these fields. Please supply the missing rationale or supporting record. Until then, no payment, approval, or resolved reconciliation should be assumed.",
+      "source_refs": [
+        "AR-00807",
+        "CON-067",
+        "CUS-067"
+      ]
+    },
+    {
+      "document_id": "packet-079-doc-6",
+      "kind": "follow_up",
+      "date": "2025-07-31",
+      "subject": "Follow-up requested for customer billing review",
+      "body": "Following up on the review of AR-00807 for Aster Network 067, customer CUS-067, under contract CON-067. Please confirm whether the invoice amount of $99.78 can be supported by the available billing terms and any recorded usage detail. If clarification is needed, identify the missing source information and the appropriate record to consult. This follow-up is a same-day draft based only on the posted invoice and contract fields. It does not document payment, approval, or a final reconciliation outcome.",
+      "source_refs": [
+        "AR-00807",
+        "CUS-067",
+        "CON-067"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

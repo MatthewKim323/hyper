@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-013",
+  "documents": [
+    {
+      "document_id": "packet-013-doc-1",
+      "kind": "email",
+      "date": "2026-01-31",
+      "subject": "Invoice AR-01545 review",
+      "body": "To: finance73@customer.example\n\nHello Aster Network 073 finance team,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AR-01545 for customer CUS-073 under contract CON-073. The invoice is posted, reflects annual advance billing, and shows an amount of $18,000.00. Please review the invoice in your records and let us know whether any discrepancy, missing explanation, or supporting detail requires attention. No payment or approval is assumed by this message. We welcome any questions so the account can be reconciled accurately.\n\nRegards,\nMeridian Ledger Labs, Inc.",
+      "source_refs": [
+        "AR-01545",
+        "CUS-073",
+        "CON-073"
+      ]
+    },
+    {
+      "document_id": "packet-013-doc-2",
+      "kind": "chat",
+      "date": "2026-01-31",
+      "subject": "AR-01545 reconciliation status",
+      "body": "Casey Team05: I am reviewing posted invoice AR-01545 for CUS-073 today. The record identifies CON-073, annual advance billing, and an amount of $18,000.00. I do not see an established payment or approval in the packet, so those items remain open questions. If anyone has customer-side context, please share the explanation or documentation available. Until then, keep the item marked for review and avoid treating the balance as resolved.",
+      "source_refs": [
+        "AR-01545",
+        "CUS-073",
+        "CON-073"
+      ]
+    },
+    {
+      "document_id": "packet-013-doc-3",
+      "kind": "operational_note",
+      "date": "2026-01-31",
+      "subject": "Receivables review note",
+      "body": "Operational note: Invoice AR-01545 is posted for customer CUS-073 and is associated with contract CON-073. The stated invoice type is annual advance, with an amount of $18,000.00 and a due date of 2026-01-31. Review should confirm whether the customer record and contract reference align with the billing record. Any missing explanation, payment evidence, or approval status should be requested rather than inferred. No reconciliation outcome is recorded in this draft.",
+      "source_refs": [
+        "AR-01545",
+        "CUS-073",
+        "CON-073"
+      ]
+    },
+    {
+      "document_id": "packet-013-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-01-31",
+      "subject": "CON-073 service and billing excerpt",
+      "body": "Contract CON-073 identifies customer CUS-073 and covers hosted access and metered API blocks. The contract billing model is annual advance. Its stated monthly base is $1,500.00, and the usage block price is $0.01 per block. The terms specify 30 days. The contract record shows an effective period ending 2026-12-31. This excerpt is provided for comparison with invoice AR-01545; it does not establish usage, payment, approval, or any additional commercial interpretation.",
+      "source_refs": [
+        "CON-073",
+        "CUS-073",
+        "AR-01545"
+      ]
+    },
+    {
+      "document_id": "packet-013-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-01-31",
+      "subject": "Question regarding AR-01545",
+      "body": "Please confirm how invoice AR-01545 should be reconciled against contract CON-073 for customer CUS-073. The invoice is posted as an annual advance for $18,000.00, while the contract record lists a monthly base of $1,500.00 and a usage block price of $0.01. Should the review rely solely on the stated annual billing classification, or is additional contract or usage support required? Please provide any missing explanation or documentation. No payment, approval, or resolved treatment is assumed.",
+      "source_refs": [
+        "AR-01545",
+        "CON-073",
+        "CUS-073"
+      ]
+    },
+    {
+      "document_id": "packet-013-doc-6",
+      "kind": "follow_up",
+      "date": "2026-01-31",
+      "subject": "Follow-up on customer invoice review",
+      "body": "Follow-up for Aster Network 073: please review the open questions concerning invoice AR-01545 and contract CON-073. Confirm whether the customer record, billing classification, amount, and due-date information are understood consistently. If a discrepancy exists, describe it and provide the available support. If no discrepancy is identified, please state what evidence supports that assessment. This follow-up does not record a payment, approval, or final reconciliation outcome; those matters remain unestablished in the current packet.",
+      "source_refs": [
+        "AR-01545",
+        "CUS-073",
+        "CON-073"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "packet_id": "packet-059",
+  "documents": [
+    {
+      "document_id": "packet-059-doc-1",
+      "kind": "email",
+      "date": "2025-05-31",
+      "subject": "Invoice AP-00299 review request",
+      "body": "To: ap59@supplier.example\nFrom: Casey Team05\n\nHello Atlas Services 059,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-00299 for the current accounts-payable record. Our packet identifies vendor VEN-059, purchase order PO-00299, and a posted amount of $2,527.87. Please confirm that the invoice, purchase order, and service receipt RC-AP-00299 refer to the same services. If any explanation or supporting detail is missing, please provide it for review. This message does not confirm approval or payment. Thank you.",
+      "source_refs": [
+        "AP-00299",
+        "VEN-059",
+        "PO-00299",
+        "RC-AP-00299"
+      ]
+    },
+    {
+      "document_id": "packet-059-doc-2",
+      "kind": "chat",
+      "date": "2025-05-31",
+      "subject": "AP-00299 coordination",
+      "body": "Casey Team05: I am reviewing posted invoice AP-00299 against PO-00299 and receipt RC-AP-00299. The packet shows matching recorded amounts of $2,527.87, but the draft record does not establish any additional approval or payment. Atlas Services 059 is listed as the supplier, with approved recipient SIM-RECIPIENT-059. Before any next step, can we confirm whether explanatory support is needed and whether the recorded service acceptance is sufficient for the intended review? Please keep the question open until the documentation is checked.",
+      "source_refs": [
+        "AP-00299",
+        "PO-00299",
+        "RC-AP-00299",
+        "SIM-RECIPIENT-059"
+      ]
+    },
+    {
+      "document_id": "packet-059-doc-3",
+      "kind": "operational_note",
+      "date": "2025-05-31",
+      "subject": "Accounts-payable record note",
+      "body": "Operational note for Meridian Ledger Labs, Inc.: invoice AP-00299 is identified as posted for vendor VEN-059, Atlas Services 059, under purchase order PO-00299. The invoice amount and purchase-order amount are each recorded as $2,527.87. Service receipt RC-AP-00299 records an accepted amount of $2,527.87 and identifies acceptance by EMP-005. The available packet does not explain any discrepancy because none is stated, and it does not establish additional approval or payment. Request clarification if supporting context is required.",
+      "source_refs": [
+        "AP-00299",
+        "VEN-059",
+        "PO-00299",
+        "RC-AP-00299",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-059-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-05-31",
+      "subject": "Agreement reference VA-AP-00299",
+      "body": "Excerpt for review: Agreement VA-AP-00299 is associated with purchase order PO-00299 and vendor VEN-059. The packet identifies Atlas Services 059 as a services supplier and lists terms of 30 days. Invoice AP-00299 is linked to that purchase order and is marked posted. This excerpt records references only; it does not add commercial terms, confirm performance beyond the recorded service receipt, or establish approval or payment. Any missing explanation or supporting documentation should be requested from the relevant billing contact.",
+      "source_refs": [
+        "VA-AP-00299",
+        "PO-00299",
+        "VEN-059",
+        "AP-00299"
+      ]
+    },
+    {
+      "document_id": "packet-059-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-05-31",
+      "subject": "Question regarding AP-00299 reconciliation",
+      "body": "Can the finance owner confirm whether invoice AP-00299 should be reconciled to PO-00299 and service receipt RC-AP-00299 based on the recorded matching amount of $2,527.87? The packet identifies the invoice as posted, the receipt as accepted by EMP-005, and the vendor as VEN-059. Please also indicate whether any explanation, attachment, or additional record is missing. This question is intentionally unresolved: the available information does not establish an additional approval or payment, and no transaction purpose beyond the packet is asserted.",
+      "source_refs": [
+        "AP-00299",
+        "PO-00299",
+        "RC-AP-00299",
+        "EMP-005",
+        "VEN-059"
+      ]
+    },
+    {
+      "document_id": "packet-059-doc-6",
+      "kind": "follow_up",
+      "date": "2025-05-31",
+      "subject": "Follow-up on supplier record review",
+      "body": "Follow-up for Casey Team05: please review the linked records for Atlas Services 059, including invoice AP-00299, vendor VEN-059, purchase order PO-00299, and service receipt RC-AP-00299. The records show the same recorded amount of $2,527.87, while the invoice status is posted and the receipt identifies EMP-005 as the accepting party. If the file requires clarification, request it from ap59@supplier.example. No additional approval or payment is established by this draft follow-up.",
+      "source_refs": [
+        "AP-00299",
+        "VEN-059",
+        "PO-00299",
+        "RC-AP-00299",
+        "EMP-005"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

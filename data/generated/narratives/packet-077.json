@@ -1,0 +1,92 @@
+{
+  "packet_id": "packet-077",
+  "documents": [
+    {
+      "document_id": "packet-077-doc-1",
+      "kind": "email",
+      "date": "2025-05-31",
+      "subject": "Invoice AP-00257 record confirmation",
+      "body": "Hello Atlas Services 017,\n\nMeridian Ledger Labs, Inc. is reviewing the posted supplier record for invoice AP-00257. The record identifies vendor VEN-017, purchase order PO-00257, and an amount of $2,149.31. Please review the associated billing details and advise whether any explanation or supporting context is needed for the invoice record. This message is a same-day draft inquiry only; it does not establish payment, additional approval, or a resolved reconciliation. Please reply through the listed supplier contact if clarification is required.",
+      "source_refs": [
+        "AP-00257",
+        "VEN-017",
+        "PO-00257"
+      ]
+    },
+    {
+      "document_id": "packet-077-doc-2",
+      "kind": "chat",
+      "date": "2025-05-31",
+      "subject": "Internal review: AP-00257",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AP-00257 against PO-00257 and receipt RC-AP-00257. The recorded amount is $2,149.31 across the invoice, purchase order, and accepted service receipt. The vendor is Atlas Services 017, identified as VEN-017. I do not see an established payment or additional approval in the packet. If anything remains unclear, we should request an explanation from the supplier contact rather than infer the missing context. This is a same-day internal draft for review.",
+      "source_refs": [
+        "AP-00257",
+        "PO-00257",
+        "RC-AP-00257",
+        "VEN-017"
+      ]
+    },
+    {
+      "document_id": "packet-077-doc-3",
+      "kind": "operational_note",
+      "date": "2025-05-31",
+      "subject": "Accounts payable record review",
+      "body": "Operational note: Invoice AP-00257 is posted for vendor VEN-017, Atlas Services 017. The linked purchase order is PO-00257, and the service receipt is RC-AP-00257. Each record states $2,149.31, with the receipt identifying an accepted amount and EMP-005 as the accepting party. The supplier category is services, and the approved recipient is SIM-RECIPIENT-017. No payment or additional approval is established by this draft. Escalate only for clarification of missing explanations or record discrepancies.",
+      "source_refs": [
+        "AP-00257",
+        "VEN-017",
+        "PO-00257",
+        "RC-AP-00257",
+        "EMP-005",
+        "SIM-RECIPIENT-017"
+      ]
+    },
+    {
+      "document_id": "packet-077-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-05-31",
+      "subject": "Service record linkage excerpt",
+      "body": "Service record excerpt: Agreement identifier VA-AP-00257 is associated with purchase order PO-00257 for vendor VEN-017. The related service receipt is RC-AP-00257, and its recorded accepted amount is $2,149.31. This excerpt captures only the identifiers and amounts supplied in the company packet. It should not be read as adding contractual language, scope, approval, payment status, or other commercial terms. Any omitted service explanation or supporting detail should be requested from the identified supplier billing contact.",
+      "source_refs": [
+        "VA-AP-00257",
+        "PO-00257",
+        "VEN-017",
+        "RC-AP-00257"
+      ]
+    },
+    {
+      "document_id": "packet-077-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-05-31",
+      "subject": "Question regarding AP-00257",
+      "body": "Can Casey Team05 confirm whether the posted invoice AP-00257 can be reconciled using the records currently supplied? The invoice, purchase order PO-00257, and service receipt RC-AP-00257 each show $2,149.31, while the vendor is identified as VEN-017. If reconciliation requires any explanation beyond those matching records, please specify what is missing so it can be requested from Atlas Services 017. This question does not assume payment, further approval, or a completed reconciliation; it records an open point for same-day review.",
+      "source_refs": [
+        "AP-00257",
+        "PO-00257",
+        "RC-AP-00257",
+        "VEN-017"
+      ]
+    },
+    {
+      "document_id": "packet-077-doc-6",
+      "kind": "follow_up",
+      "date": "2025-05-31",
+      "subject": "Follow-up items for supplier record",
+      "body": "Follow-up for the AP-00257 review: retain the linkage to PO-00257, RC-AP-00257, VEN-017, and agreement VA-AP-00257. If clarification is needed, contact Atlas Services 017 at ap17@supplier.example and reference the supplier record and its listed approved recipient, SIM-RECIPIENT-017. Casey Team05 should identify any unresolved explanation request before the record is treated as complete. This draft does not confirm payment, additional approval, or any final resolution. Document all replies against the same identifiers.",
+      "source_refs": [
+        "AP-00257",
+        "PO-00257",
+        "RC-AP-00257",
+        "VEN-017",
+        "VA-AP-00257",
+        "SIM-RECIPIENT-017"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

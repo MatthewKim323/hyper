@@ -1,0 +1,76 @@
+{
+  "packet_id": "packet-054",
+  "documents": [
+    {
+      "document_id": "packet-054-doc-1",
+      "kind": "email",
+      "date": "2026-06-30",
+      "subject": "Payroll record and settlement-policy clarification",
+      "body": "Hello Casey Team05,\n\nFor the 2026-06-30 payroll record, PAY-018 lists gross payroll of $438,000.00, withholding of $87,600.00, employer costs of $35,040.00, and net payroll of $350,400.00. Please confirm whether any external movement has been confirmed for reconciliation purposes. The company policy states that only confirmed external movements are settled, while proposals are not settlements. If supporting explanation or status information is missing, please provide it so the record can be reviewed without assuming an approval or payment.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-054-doc-2",
+      "kind": "chat",
+      "date": "2026-06-30",
+      "subject": "Payroll review status",
+      "body": "Casey Team05: I am reviewing PAY-018 dated 2026-06-30. The record shows $438,000.00 gross, $87,600.00 withholding, $35,040.00 employer cost, and $350,400.00 net.\n\nTaylor Team06: Under MERIDIAN-001 policy, should we treat any proposed movement as unsettled until external confirmation is available?\n\nCasey Team05: Yes, the policy distinguishes confirmed external movements from proposals. I will request any missing explanation or evidence rather than infer a payment, approval, or transaction purpose.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-054-doc-3",
+      "kind": "operational_note",
+      "date": "2026-06-30",
+      "subject": "Payroll reconciliation handling note",
+      "body": "Operational note for 2026-06-30: PAY-018 records gross payroll of $438,000.00, withholding of $87,600.00, employer costs of $35,040.00, and net payroll of $350,400.00. Reconciliation should distinguish recorded payroll figures from settlement activity. Per MERIDIAN-001, only confirmed external movements are settled; proposals remain proposals. Any missing explanation, external confirmation, or status detail should be requested from the responsible owner. This note does not establish an additional approval, payment, or purpose beyond the packet.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-054-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-06-30",
+      "subject": "Settlement treatment excerpt",
+      "body": "Draft service excerpt, effective for review on 2026-06-30:\n\n\u201cUnder company identifier MERIDIAN-001, settlement treatment is limited to confirmed external movements. A proposal, request, or other unconfirmed item must not be treated as a settlement solely because it appears in a workflow or reconciliation record. The parties should request missing explanations and supporting status details where necessary. This excerpt does not specify additional commercial terms, approvals, payments, or transaction purpose, and no unresolved item is deemed settled by inclusion in this draft.\u201d",
+      "source_refs": [
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-054-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-06-30",
+      "subject": "Question regarding PAY-018 settlement status",
+      "body": "For PAY-018 dated 2026-06-30, can the finance owner confirm whether any external movement associated with the payroll record has been confirmed? The record contains gross payroll of $438,000.00, withholding of $87,600.00, employer costs of $35,040.00, and net payroll of $350,400.00. If the item is only proposed, MERIDIAN-001 indicates that it should not be treated as settled. Please provide the missing explanation or confirmation needed for reconciliation, without assuming an approval or payment.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-054-doc-6",
+      "kind": "follow_up",
+      "date": "2026-06-30",
+      "subject": "Follow-up requested for payroll record",
+      "body": "Follow-up for 2026-06-30: Please review PAY-018 and advise whether the relevant external movement is confirmed, proposed, or otherwise unresolved. The recorded amounts are gross payroll of $438,000.00, withholding of $87,600.00, employer costs of $35,040.00, and net payroll of $350,400.00. Under MERIDIAN-001, only confirmed external movements are settled. Please send any missing explanation or status evidence to Casey Team05 or Taylor Team06. This follow-up records an open request and does not establish an outcome.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

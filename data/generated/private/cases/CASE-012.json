@@ -1,0 +1,33 @@
+{
+  "case_id": "CASE-012",
+  "development_family": "new_receipt_during_review",
+  "split": "development_not_sealed",
+  "counterparty_events": [
+    {
+      "trigger": "review_started",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "GR2-CASE-012",
+        "type": "receipt",
+        "date": "2026-06-25",
+        "source": "receiving",
+        "body": {
+          "po_id": "PO-492",
+          "quantity_received": 42
+        },
+        "sha256": "cc331fa19558a602c82895c95c2b65b83ab32974ed6e708c8761b81962be10ec"
+      }
+    }
+  ],
+  "expected_disposition": "PAYMENT_READY_AFTER_APPROVAL",
+  "expected_net_cents": 1233750,
+  "reason": "All pricing and quantity conditions can be supported through available evidence.",
+  "invariants": [
+    "cash remains unchanged",
+    "no repeated credit allocation",
+    "recipient unchanged",
+    "current approval required when over threshold"
+  ],
+  "allowed_sequence": "Any sequence obtaining the required evidence; triggers are simulator API conditions, not mandatory solver steps",
+  "solver_must_not_read_this": true
+}

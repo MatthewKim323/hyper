@@ -1,0 +1,81 @@
+{
+  "packet_id": "packet-049",
+  "documents": [
+    {
+      "document_id": "packet-049-doc-1",
+      "kind": "email",
+      "date": "2026-01-31",
+      "subject": "Invoice AR-01557 posted for review",
+      "body": "To: finance83@customer.example\nSubject: Invoice AR-01557 posted for review\n\nHello Harbor Network 083 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-01557 dated 2026-01-31 under contract CON-083. The invoice amount is $5,082.94, and the stated due date is 2026-03-02. Please review the invoice against your records and let us know if any explanation or supporting detail is needed. This message does not establish a payment, approval, or resolution. We welcome questions regarding the posted billing information.",
+      "source_refs": [
+        "AR-01557",
+        "CON-083",
+        "CUS-083"
+      ]
+    },
+    {
+      "document_id": "packet-049-doc-2",
+      "kind": "chat",
+      "date": "2026-01-31",
+      "subject": "AR-01557 review",
+      "body": "Casey Team05: I see monthly invoice AR-01557 for Harbor Network 083, dated 2026-01-31, with a posted amount of $5,082.94 and due date 2026-03-02.\n\nTeam note: The related contract is CON-083, covering hosted access and metered API blocks, with monthly arrears billing. Before treating the item as routine, can we confirm whether the invoice detail aligns with the contract terms and whether any customer question is already recorded? No payment or approval is established here; please keep the item open for review.",
+      "source_refs": [
+        "AR-01557",
+        "CON-083",
+        "CUS-083"
+      ]
+    },
+    {
+      "document_id": "packet-049-doc-3",
+      "kind": "operational_note",
+      "date": "2026-01-31",
+      "subject": "Accounts receivable posting checkpoint",
+      "body": "Operational note for 2026-01-31: Invoice AR-01557 is posted for customer CUS-083, Harbor Network 083. The invoice is identified as monthly, dated 2026-01-31, and carries an amount of $5,082.94. Its stated due date is 2026-03-02. Contract CON-083 remains the associated contract reference. Confirm that the billing record, customer identifier, and contract identifier remain aligned before any downstream reconciliation. The packet does not establish payment activity, approval, dispute status, or a completed review.",
+      "source_refs": [
+        "AR-01557",
+        "CUS-083",
+        "CON-083"
+      ]
+    },
+    {
+      "document_id": "packet-049-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-01-31",
+      "subject": "CON-083 service and billing excerpt",
+      "body": "Contract CON-083 identifies Harbor Network 083 as customer CUS-083. The contract effective date is 2025-01-01, and the end date is 2026-12-31. The service is described as hosted access and metered API blocks. Billing is monthly in arrears, with a monthly base of $5,000.00 and a usage block price of $0.01. The stated terms are 30 days. This excerpt does not determine the underlying usage, invoice calculation, payment status, or any additional approval.",
+      "source_refs": [
+        "CON-083",
+        "CUS-083"
+      ]
+    },
+    {
+      "document_id": "packet-049-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-01-31",
+      "subject": "Question on AR-01557 reconciliation",
+      "body": "Please confirm how the posted amount on invoice AR-01557 should be reconciled to contract CON-083. The invoice is dated 2026-01-31, is marked monthly and posted, and totals $5,082.94. The contract lists a monthly base of $5,000.00, a usage block price of $0.01, and monthly arrears billing. What invoice detail supports the difference between the base and posted amount? Please provide the relevant usage or calculation detail if available. No explanation is assumed in this question.",
+      "source_refs": [
+        "AR-01557",
+        "CON-083"
+      ]
+    },
+    {
+      "document_id": "packet-049-doc-6",
+      "kind": "follow_up",
+      "date": "2026-01-31",
+      "subject": "Follow-up requested for invoice review",
+      "body": "Follow-up dated 2026-01-31 regarding AR-01557 for Harbor Network 083. Please review the posted invoice amount of $5,082.94, the associated contract CON-083, and the stated due date of 2026-03-02. If the customer or finance owner identifies a discrepancy, please document the question and supporting detail using the existing identifiers. If no discrepancy is identified, retain the review record for reference. This follow-up does not confirm payment, approval, acceptance, or a resolved outcome.",
+      "source_refs": [
+        "AR-01557",
+        "CUS-083",
+        "CON-083"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

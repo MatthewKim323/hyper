@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-012",
+  "documents": [
+    {
+      "document_id": "packet-012-doc-1",
+      "kind": "email",
+      "date": "2025-12-31",
+      "subject": "Payroll record review request",
+      "body": "Hello Finance and People Operations teams,\n\nPlease review the payroll record dated 2025-12-31 for Meridian Ledger Labs, Inc. The record identifies payroll ID PAY-012 and lists gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. Please confirm that the listed fields are understood and identify any missing explanation or supporting context. No additional approval or payment is established by this draft. Please also note whether the settlement policy affects any proposed external movement.",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-012-doc-2",
+      "kind": "chat",
+      "date": "2025-12-31",
+      "subject": "Payroll and settlement check",
+      "body": "Casey: I am reviewing PAY-012 for the 2025-12-31 payroll record. The figures show gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00.\n\nTaylor: I can help identify missing explanations, but the packet does not establish an additional approval or payment.\n\nCasey: Understood. We should distinguish any proposal from a confirmed external movement and avoid describing an unresolved item as settled under the stated policy.",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-012-doc-3",
+      "kind": "operational_note",
+      "date": "2025-12-31",
+      "subject": "PAY-012 review note",
+      "body": "Operational review note for Meridian Ledger Labs, Inc.: Payroll ID PAY-012 is dated 2025-12-31. Recorded fields are gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. The available packet does not provide explanations for the listed components beyond their labels. Request clarification where needed, retain the source identifiers in any related record, and avoid recording an additional approval, payment, or settlement unless separately confirmed. Apply the settlement policy only to confirmed external movements.",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-012-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-12-31",
+      "subject": "Service and settlement policy excerpt",
+      "body": "For purposes of this draft excerpt, Meridian Ledger Labs, Inc. identifies company ID MERIDIAN-001. The applicable settlement statement is: \u201cOnly confirmed external movements are settled; proposals are not settlements.\u201d This excerpt does not establish a service scope, commercial term, payment obligation, approval, or completed movement beyond the stated policy and the payroll record identified as PAY-012. Any proposed action should remain clearly labeled as a proposal until confirmation is available. Missing explanations should be requested rather than inferred from the record.",
+      "source_refs": [
+        "MERIDIAN-001",
+        "PAY-012"
+      ]
+    },
+    {
+      "document_id": "packet-012-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-12-31",
+      "subject": "Question regarding PAY-012 reconciliation",
+      "body": "Please clarify how PAY-012 should be reconciled for 2025-12-31. The record lists gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. The packet does not explain whether any related item is a proposal, a confirmed external movement, or another category, and it does not establish an additional approval or payment. Which supporting explanation should accompany these fields, and what evidence would be sufficient to characterize any external movement as confirmed under the settlement policy?",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-012-doc-6",
+      "kind": "follow_up",
+      "date": "2025-12-31",
+      "subject": "Follow-up actions for payroll clarification",
+      "body": "Following the review of PAY-012, please provide any missing explanation for the recorded payroll fields dated 2025-12-31. Confirm that the record is being referenced under company ID MERIDIAN-001 and preserve the listed identifiers in supporting materials. Please separate proposed actions from confirmed external movements, consistent with the settlement policy. Until clarification is supplied, do not describe an item as settled and do not imply an additional approval or payment. This follow-up remains an open request for information, with no resolved outcome established by the packet.",
+      "source_refs": [
+        "PAY-012",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

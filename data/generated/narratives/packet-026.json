@@ -1,0 +1,94 @@
+{
+  "packet_id": "packet-026",
+  "documents": [
+    {
+      "document_id": "packet-026-doc-1",
+      "kind": "email",
+      "date": "2025-08-31",
+      "subject": "Invoice AP-00446 \u2014 Documentation Confirmation Request",
+      "body": "To: Granite Legal 026 <ap26@supplier.example>\n\nHello Granite Legal 026,\n\nWe are reviewing the posted invoice AP-00446 for $1,942.11 under PO-00446. Our records show the invoice date as 2025-08-28 and the due date as 2025-09-27. Please confirm that the invoice, vendor identifier VEN-026, and approved recipient SIM-RECIPIENT-026 are correctly associated. If any explanation or supporting detail is needed to reconcile the billing record, please provide it. This message does not confirm payment or additional approval.\n\nRegards,\nMeridian Ledger Labs, Inc.",
+      "source_refs": [
+        "AP-00446",
+        "PO-00446",
+        "VEN-026",
+        "SIM-RECIPIENT-026"
+      ]
+    },
+    {
+      "document_id": "packet-026-doc-2",
+      "kind": "chat",
+      "date": "2025-08-31",
+      "subject": "AP-00446 Reconciliation Check",
+      "body": "Casey Team05: I\u2019m checking the posted invoice AP-00446 against PO-00446 and receipt RC-AP-00446. The recorded amount is $1,942.11 in each of those records, and the receipt identifies accepted amount in the same value. The invoice and receipt both carry the date 2025-08-28. Before any next step, can we confirm whether the agreement reference VA-AP-00446 is the expected supporting link? I do not see evidence here of payment or an additional approval, so those remain open questions.",
+      "source_refs": [
+        "AP-00446",
+        "PO-00446",
+        "RC-AP-00446",
+        "VA-AP-00446"
+      ]
+    },
+    {
+      "document_id": "packet-026-doc-3",
+      "kind": "operational_note",
+      "date": "2025-08-31",
+      "subject": "Accounts Payable Record Review",
+      "body": "Operational note for 2025-08-31: Invoice AP-00446 is posted for vendor VEN-026, Granite Legal 026, in the amount of $1,942.11. The purchase order PO-00446 records the same amount and references agreement VA-AP-00446. Service receipt RC-AP-00446, dated 2025-08-28, records an accepted amount of $1,942.11 and identifies EMP-005 as the accepting party. Confirm the relationship among these records and request explanations for any missing documentation. No payment or additional approval is established by this note.",
+      "source_refs": [
+        "AP-00446",
+        "VEN-026",
+        "PO-00446",
+        "VA-AP-00446",
+        "RC-AP-00446",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-026-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-08-31",
+      "subject": "Service and Billing Record Excerpt",
+      "body": "Reference excerpt for agreement VA-AP-00446: The available records associate PO-00446 with vendor VEN-026 and Granite Legal 026. The purchase order is dated 2025-08-01 and records $1,942.11. Invoice AP-00446 is dated 2025-08-28, has status posted, and records the same amount. Service receipt RC-AP-00446 is dated 2025-08-28 and records an accepted amount of $1,942.11. The excerpt does not establish payment, additional approval, or any explanation beyond the listed records.",
+      "source_refs": [
+        "VA-AP-00446",
+        "PO-00446",
+        "VEN-026",
+        "AP-00446",
+        "RC-AP-00446"
+      ]
+    },
+    {
+      "document_id": "packet-026-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-08-31",
+      "subject": "Question Regarding AP-00446 and PO-00446",
+      "body": "Please confirm whether invoice AP-00446 should be reconciled to PO-00446 using the recorded amount of $1,942.11 and service receipt RC-AP-00446. The invoice and purchase order both identify the amount as 194211 cents, while the receipt records an accepted amount of 194211 cents. The invoice is posted, and the supplier is identified as Granite Legal 026 under VEN-026. Please also clarify whether any missing explanation or supporting record is required before further processing. No payment status is established here.",
+      "source_refs": [
+        "AP-00446",
+        "PO-00446",
+        "RC-AP-00446",
+        "VEN-026"
+      ]
+    },
+    {
+      "document_id": "packet-026-doc-6",
+      "kind": "follow_up",
+      "date": "2025-08-31",
+      "subject": "Follow-Up: Granite Legal 026 Records",
+      "body": "Follow-up for the records associated with AP-00446: Please respond with any missing explanation needed to connect the posted invoice, PO-00446, and service receipt RC-AP-00446. The records show vendor VEN-026, agreement VA-AP-00446, and matching recorded amounts of $1,942.11. Please verify that communications should continue through ap26@supplier.example and that SIM-RECIPIENT-026 remains the approved recipient recorded in the packet. This follow-up is a request for clarification only and does not document payment, approval, or a resolved reconciliation.",
+      "source_refs": [
+        "AP-00446",
+        "PO-00446",
+        "RC-AP-00446",
+        "VEN-026",
+        "VA-AP-00446",
+        "SIM-RECIPIENT-026"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

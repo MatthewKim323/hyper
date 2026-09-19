@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-052",
+  "documents": [
+    {
+      "document_id": "packet-052-doc-1",
+      "kind": "email",
+      "date": "2026-04-30",
+      "subject": "Invoice AR-01958 posted for review",
+      "body": "Hello Juniper Network 118 finance team,\n\nInvoice AR-01958 was posted on 2026-04-30 for the monthly service period reflected in the company records. The invoice amount is $4,739.44, with a due date of 2026-05-30. It is associated with customer CUS-118 and contract CON-118. Please review the invoice and let us know if any detail requires clarification, including whether the billed amount aligns with your records. No payment or approval is assumed by this message.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AR-01958",
+        "CUS-118",
+        "CON-118"
+      ]
+    },
+    {
+      "document_id": "packet-052-doc-2",
+      "kind": "chat",
+      "date": "2026-04-30",
+      "subject": "AR-01958 review status",
+      "body": "Casey Team05: AR-01958 is posted today for Juniper Network 118 under CUS-118 and CON-118. The recorded amount is $4,739.44, due 2026-05-30.\n\nTeam: Do we have a documented explanation for the difference between the invoice amount and the contract\u2019s monthly base of $4,650.00? The packet identifies metered API blocks at $0.01 each, but it does not establish the usage quantity or any approval. Please request supporting detail before treating the difference as reconciled.",
+      "source_refs": [
+        "AR-01958",
+        "CUS-118",
+        "CON-118"
+      ]
+    },
+    {
+      "document_id": "packet-052-doc-3",
+      "kind": "operational_note",
+      "date": "2026-04-30",
+      "subject": "Invoice posting and reconciliation hold",
+      "body": "Operational note for 2026-04-30: Invoice AR-01958 is posted for customer CUS-118 under contract CON-118. The invoice records a monthly charge of $4,739.44 and a due date of 2026-05-30. The contract describes hosted access and metered API blocks, billed monthly in arrears, with a monthly base of $4,650.00 and a usage block price of $0.01. The packet does not provide usage quantity, supporting calculation, payment status, or additional approval. Request those details before closing reconciliation.",
+      "source_refs": [
+        "AR-01958",
+        "CUS-118",
+        "CON-118"
+      ]
+    },
+    {
+      "document_id": "packet-052-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-04-30",
+      "subject": "CON-118 service and billing excerpt",
+      "body": "Contract CON-118 is associated with customer CUS-118 and is effective from 2025-01-01 through 2026-12-31. The described service is Hosted access and metered API blocks. Billing is monthly in arrears, with a monthly base of $4,650.00 and a usage block price of $0.01. The contract also states terms of 30 days. This excerpt does not specify the usage quantity applicable to invoice AR-01958, nor does it establish payment, approval, or a final explanation for the invoice amount recorded on 2026-04-30.",
+      "source_refs": [
+        "CON-118",
+        "CUS-118",
+        "AR-01958"
+      ]
+    },
+    {
+      "document_id": "packet-052-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-04-30",
+      "subject": "Question regarding AR-01958 amount composition",
+      "body": "For invoice AR-01958, can the responsible reviewer provide the source calculation supporting the recorded amount of $4,739.44? Contract CON-118 lists a monthly base of $4,650.00 and a metered API block price of $0.01, but the packet does not state the quantity of blocks, the applicable usage record, or any adjustment explanation. Please confirm which supporting records should be matched to customer CUS-118 and whether any unresolved item remains. This is a request for clarification, not a conclusion that the invoice is incorrect.",
+      "source_refs": [
+        "AR-01958",
+        "CON-118",
+        "CUS-118"
+      ]
+    },
+    {
+      "document_id": "packet-052-doc-6",
+      "kind": "follow_up",
+      "date": "2026-04-30",
+      "subject": "Follow-up requested for invoice review",
+      "body": "Follow-up for Juniper Network 118: Please review invoice AR-01958, posted on 2026-04-30 under customer CUS-118 and contract CON-118. The recorded amount is $4,739.44, and the due date is 2026-05-30. Please provide or identify the records supporting the metered component, since the contract states a $0.01 usage block price without stating a quantity in the packet. Also confirm whether any question remains open. No payment, approval, or resolved reconciliation outcome is established here.",
+      "source_refs": [
+        "AR-01958",
+        "CUS-118",
+        "CON-118"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

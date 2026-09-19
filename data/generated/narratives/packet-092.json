@@ -1,0 +1,96 @@
+{
+  "packet_id": "packet-092",
+  "documents": [
+    {
+      "document_id": "packet-092-doc-1",
+      "kind": "email",
+      "date": "2025-02-28",
+      "subject": "Invoice AP-00092 review",
+      "body": "To: Granite Legal 032 <ap32@supplier.example>\n\nWe are reviewing invoice AP-00092 for Meridian Ledger Labs, Inc. The invoice is posted and references purchase order PO-00092. The recorded amount is $1,130.96, with a due date of 2025-03-27. Please provide any available explanation or supporting detail for the billed services if clarification is needed during review. We are also checking the related service receipt and agreement reference. This message does not confirm payment, additional approval, or a resolved reconciliation. Please preserve the invoice and purchase order identifiers in any response.",
+      "source_refs": [
+        "AP-00092",
+        "PO-00092",
+        "RC-AP-00092",
+        "VA-AP-00092",
+        "VEN-032"
+      ]
+    },
+    {
+      "document_id": "packet-092-doc-2",
+      "kind": "chat",
+      "date": "2025-02-28",
+      "subject": "AP-00092 internal review",
+      "body": "Casey Team05: I\u2019m reviewing AP-00092 today. The invoice is posted for $1,130.96 and is tied to PO-00092. The purchase order records the same amount, and service receipt RC-AP-00092 records an accepted amount of $1,130.96 by EMP-005. I do not see a need to state anything beyond those records. If clarification is required, we should request it from Granite Legal 032 at ap32@supplier.example. No payment or additional approval is established here, so the item remains a review question.",
+      "source_refs": [
+        "AP-00092",
+        "PO-00092",
+        "RC-AP-00092",
+        "EMP-005",
+        "VEN-032"
+      ]
+    },
+    {
+      "document_id": "packet-092-doc-3",
+      "kind": "operational_note",
+      "date": "2025-02-28",
+      "subject": "Accounts payable review note",
+      "body": "Invoice AP-00092 is posted for vendor VEN-032, Granite Legal 032, under purchase order PO-00092. The invoice date is 2025-02-25, and the stated due date is 2025-03-27. The recorded amount is 113096 cents, equivalent to $1,130.96. Service receipt RC-AP-00092 is dated 2025-02-25 and records an accepted amount of 113096 cents, with acceptance attributed to EMP-005. Related agreement reference: VA-AP-00092. This note records source data only and does not establish payment, further approval, or final disposition.",
+      "source_refs": [
+        "AP-00092",
+        "VEN-032",
+        "PO-00092",
+        "RC-AP-00092",
+        "EMP-005",
+        "VA-AP-00092"
+      ]
+    },
+    {
+      "document_id": "packet-092-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-02-28",
+      "subject": "Agreement and order reference excerpt",
+      "body": "Reference excerpt for review: Agreement VA-AP-00092 is associated with purchase order PO-00092. The purchase order identifies vendor VEN-032 and is dated 2025-02-01. Its recorded amount is 113096 cents, equivalent to $1,130.96. Invoice AP-00092 identifies the same vendor and purchase order, carries an invoice date of 2025-02-25, and records a posted status. The available packet also identifies a service receipt, RC-AP-00092, dated 2025-02-25. This excerpt does not interpret obligations or confirm any subsequent action.",
+      "source_refs": [
+        "VA-AP-00092",
+        "PO-00092",
+        "VEN-032",
+        "AP-00092",
+        "RC-AP-00092"
+      ]
+    },
+    {
+      "document_id": "packet-092-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-02-28",
+      "subject": "Question regarding AP-00092",
+      "body": "Can Casey Team05 confirm whether the records for AP-00092 should be treated as aligned for review purposes? The invoice and purchase order each record 113096 cents, and RC-AP-00092 records an accepted amount of 113096 cents. The invoice status is posted, but the packet does not establish payment or an additional approval. If any discrepancy, missing explanation, or documentation gap remains, please identify it and request supporting information from Granite Legal 032. Please reference PO-00092 and VA-AP-00092 in any follow-up so the records remain traceable.",
+      "source_refs": [
+        "AP-00092",
+        "PO-00092",
+        "RC-AP-00092",
+        "VA-AP-00092",
+        "VEN-032"
+      ]
+    },
+    {
+      "document_id": "packet-092-doc-6",
+      "kind": "follow_up",
+      "date": "2025-02-28",
+      "subject": "Follow-up actions for AP-00092",
+      "body": "Follow-up for AP-00092: retain the invoice, purchase order, service receipt, and agreement references together for continued review. Confirm that the vendor identifier remains VEN-032 and that the invoice remains associated with PO-00092. If clarification is needed, contact Granite Legal 032 through ap32@supplier.example and request an explanation rather than assuming one. Record any response against AP-00092 and RC-AP-00092. The documented due date is 2025-03-27. This follow-up does not represent payment, additional approval, or a completed resolution.",
+      "source_refs": [
+        "AP-00092",
+        "VEN-032",
+        "PO-00092",
+        "RC-AP-00092",
+        "VA-AP-00092"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

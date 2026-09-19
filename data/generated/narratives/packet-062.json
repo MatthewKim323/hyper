@@ -1,0 +1,95 @@
+{
+  "packet_id": "packet-062",
+  "documents": [
+    {
+      "document_id": "packet-062-doc-1",
+      "kind": "email",
+      "date": "2025-08-31",
+      "subject": "Invoice AP-00422 record review",
+      "body": "Hello Granite Legal 002, we are reviewing invoice AP-00422 for Meridian Ledger Labs, Inc. The record identifies vendor VEN-002, purchase order PO-00422, and an amount of $1,114.14. It is currently marked posted, with the associated service receipt RC-AP-00422 showing the same accepted amount. Please confirm whether any explanation or supporting detail is needed for the billing record, and direct any response to the approved recipient SIM-RECIPIENT-002. No payment status is being confirmed in this draft.",
+      "source_refs": [
+        "AP-00422",
+        "VEN-002",
+        "PO-00422",
+        "RC-AP-00422",
+        "SIM-RECIPIENT-002"
+      ]
+    },
+    {
+      "document_id": "packet-062-doc-2",
+      "kind": "chat",
+      "date": "2025-08-31",
+      "subject": "AP-00422 reconciliation discussion",
+      "body": "Casey Team05: I am checking the posted invoice AP-00422 against PO-00422 and service receipt RC-AP-00422. The invoice, purchase order, and accepted receipt each show $1,114.14, so the recorded amounts appear aligned. I do not see an explanation for the underlying charge in the packet, and I am not treating the record as evidence of additional approval or payment. Granite Legal 002 remains the listed supplier contact for any clarification request.",
+      "source_refs": [
+        "AP-00422",
+        "PO-00422",
+        "RC-AP-00422"
+      ]
+    },
+    {
+      "document_id": "packet-062-doc-3",
+      "kind": "operational_note",
+      "date": "2025-08-31",
+      "subject": "Accounts payable record note",
+      "body": "Operational review note: invoice AP-00422 is posted for vendor VEN-002, identified as Granite Legal 002 in the legal category. The linked purchase order is PO-00422, and the service receipt is RC-AP-00422. Each recorded amount is $1,114.14, while the receipt identifies accepted_by as EMP-005. The packet does not establish an additional approval, payment, or explanation of purpose. Any unresolved question should be routed to the listed billing contact for clarification.",
+      "source_refs": [
+        "AP-00422",
+        "VEN-002",
+        "PO-00422",
+        "RC-AP-00422",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-062-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-08-31",
+      "subject": "Agreement and purchasing record excerpt",
+      "body": "Record excerpt: Agreement VA-AP-00422 is associated with purchase order PO-00422 for vendor VEN-002. The purchase order records an amount of $1,114.14, and the related invoice AP-00422 records the same amount. Vendor terms are listed as 30 days. This excerpt is limited to the identifiers and fields present in the packet; it does not describe services, authorize payment, or establish any additional commercial or legal conclusion. Further interpretation should be requested from the supplier billing contact.",
+      "source_refs": [
+        "VA-AP-00422",
+        "PO-00422",
+        "VEN-002",
+        "AP-00422"
+      ]
+    },
+    {
+      "document_id": "packet-062-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-08-31",
+      "subject": "Question regarding AP-00422 matching records",
+      "body": "Can the record owner confirm whether invoice AP-00422 should be considered fully supported by PO-00422 and service receipt RC-AP-00422 for reconciliation purposes? The three records each identify the same vendor relationship and amount of $1,114.14, and the receipt lists EMP-005 as the accepting employee. The packet does not explain the charge beyond these fields. Please advise whether additional documentation or a supplier explanation is required, without inferring payment or any further approval.",
+      "source_refs": [
+        "AP-00422",
+        "PO-00422",
+        "RC-AP-00422",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-062-doc-6",
+      "kind": "follow_up",
+      "date": "2025-08-31",
+      "subject": "Follow-up items for Granite Legal 002 record",
+      "body": "Follow-up draft for Casey Team05: contact Granite Legal 002 through the listed billing channel regarding AP-00422, and request any missing explanation or supporting detail needed to complete the review. Cross-reference PO-00422, RC-AP-00422, and agreement VA-AP-00422. Confirm that the vendor identifier is VEN-002 and that responses are directed to the approved recipient SIM-RECIPIENT-002. Keep the record open for clarification; this draft does not establish payment, additional approval, or a resolved reconciliation result.",
+      "source_refs": [
+        "AP-00422",
+        "PO-00422",
+        "RC-AP-00422",
+        "VA-AP-00422",
+        "VEN-002",
+        "SIM-RECIPIENT-002"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [
+      "Granite Legal 002",
+      "Granite Legal 002"
+    ],
+    "body_modified": false
+  }
+}

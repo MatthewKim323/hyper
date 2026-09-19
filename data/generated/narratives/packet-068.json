@@ -1,0 +1,95 @@
+{
+  "packet_id": "packet-068",
+  "documents": [
+    {
+      "document_id": "packet-068-doc-1",
+      "kind": "email",
+      "date": "2026-02-28",
+      "subject": "Invoice AP-00788 review request",
+      "body": "To: ap8@supplier.example\nFrom: Casey Team05\nSubject: Invoice AP-00788 review request\n\nHello Granite Legal 008,\n\nWe are reviewing invoice AP-00788 for Meridian Ledger Labs, Inc. The record identifies vendor VEN-008, purchase order PO-00788, and a posted amount of $2,338.55. Please provide any missing explanation or supporting detail needed to connect the billed legal services with the purchase-order record and service receipt RC-AP-00788. This request is for clarification only; the available packet does not establish additional approval or payment. Please preserve the referenced identifiers in your reply.",
+      "source_refs": [
+        "AP-00788",
+        "VEN-008",
+        "PO-00788",
+        "RC-AP-00788"
+      ]
+    },
+    {
+      "document_id": "packet-068-doc-2",
+      "kind": "chat",
+      "date": "2026-02-28",
+      "subject": "AP-00788 reconciliation status",
+      "body": "Casey Team05: I am checking the posted invoice AP-00788 against PO-00788 and service receipt RC-AP-00788. The invoice amount and purchase-order amount are both recorded as $2,338.55, and the receipt lists the same accepted amount. I do not see an explanation in the packet for any remaining review need, so I am keeping the item open as a question rather than treating it as approved or paid. Granite Legal 008 is the listed supplier billing contact. I will request clarification using the existing identifiers.",
+      "source_refs": [
+        "AP-00788",
+        "PO-00788",
+        "RC-AP-00788",
+        "VEN-008"
+      ]
+    },
+    {
+      "document_id": "packet-068-doc-3",
+      "kind": "operational_note",
+      "date": "2026-02-28",
+      "subject": "Invoice and receipt control note",
+      "body": "Operational note: Invoice AP-00788 is recorded with status posted and vendor identifier VEN-008. The linked purchase order is PO-00788, and the service receipt is RC-AP-00788. Recorded invoice, purchase-order, and accepted service-receipt amounts each equal $2,338.55. The receipt identifies EMP-005 as the accepting party. Vendor metadata lists Granite Legal 008 in the legal category, with approved recipient SIM-RECIPIENT-008 and terms of 30 days. No additional approval, payment, or explanation is established by this note.",
+      "source_refs": [
+        "AP-00788",
+        "VEN-008",
+        "PO-00788",
+        "RC-AP-00788",
+        "EMP-005",
+        "SIM-RECIPIENT-008"
+      ]
+    },
+    {
+      "document_id": "packet-068-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-02-28",
+      "subject": "Agreement and service-record excerpt",
+      "body": "Agreement reference: VA-AP-00788. Related purchase order: PO-00788. Supplier identifier: VEN-008. The packet associates the agreement reference with the purchase order and identifies Granite Legal 008 as the supplier. Vendor metadata records legal services, a 30-day term field, and approved recipient SIM-RECIPIENT-008. Service receipt RC-AP-00788 records an accepted amount of $2,338.55 and identifies EMP-005 as the accepting party. This excerpt does not add contractual language, approval evidence, payment evidence, or explanations not present in the supplied record.",
+      "source_refs": [
+        "VA-AP-00788",
+        "PO-00788",
+        "VEN-008",
+        "SIM-RECIPIENT-008",
+        "RC-AP-00788",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-068-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-02-28",
+      "subject": "Question regarding AP-00788 support",
+      "body": "Can Casey Team05 confirm what additional explanation, if any, is required for reconciling invoice AP-00788 to purchase order PO-00788 and service receipt RC-AP-00788? The three records each show $2,338.55, while the invoice status is posted. The packet identifies Granite Legal 008 as the supplier billing contact and lists agreement VA-AP-00788. It does not establish a payment or an additional approval. Please indicate whether supporting detail is missing, and identify the relevant source record or identifier needed for review without assuming a transaction purpose.",
+      "source_refs": [
+        "AP-00788",
+        "PO-00788",
+        "RC-AP-00788",
+        "VA-AP-00788"
+      ]
+    },
+    {
+      "document_id": "packet-068-doc-6",
+      "kind": "follow_up",
+      "date": "2026-02-28",
+      "subject": "Follow-up on invoice clarification",
+      "body": "Follow-up for Granite Legal 008 and Casey Team05: Please review the open clarification request for AP-00788. The packet links the posted invoice to VEN-008, PO-00788, VA-AP-00788, and service receipt RC-AP-00788. Each recorded amount is $2,338.55, and the receipt identifies EMP-005 as the accepting party. Please provide only the missing explanation or source detail needed to complete review. Until such information is available, this draft follow-up does not state that any additional approval or payment occurred. Replies should retain the supplied identifiers.",
+      "source_refs": [
+        "AP-00788",
+        "VEN-008",
+        "PO-00788",
+        "VA-AP-00788",
+        "RC-AP-00788",
+        "EMP-005"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

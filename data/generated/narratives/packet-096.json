@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-096",
+  "documents": [
+    {
+      "document_id": "packet-096-doc-1",
+      "kind": "email",
+      "date": "2025-06-30",
+      "subject": "Payroll record clarification requested",
+      "body": "Hello Casey Team05,\n\nAs of 2025-06-30, the payroll record identified as PAY-006 for Meridian Ledger Labs, Inc. lists gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. Please provide any missing explanation needed to support the record and clarify whether any external movement has been confirmed. Under the settlement policy, only confirmed external movements are settled; proposals are not settlements. No additional approval or payment is established here.\n\nRegards,\nTaylor Team06",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-096-doc-2",
+      "kind": "chat",
+      "date": "2025-06-30",
+      "subject": "PAY-006 review",
+      "body": "Taylor Team06: I\u2019m reviewing PAY-006 dated 2025-06-30. The packet shows gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00.\n\nCasey Team05: Noted. Do we have a documented explanation for each listed field, and is there evidence of any confirmed external movement?\n\nTaylor Team06: That information is not established in the packet. We should request the missing explanation and avoid treating any proposal as a settlement under Meridian Ledger Labs, Inc.\u2019s policy.",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-096-doc-3",
+      "kind": "operational_note",
+      "date": "2025-06-30",
+      "subject": "Payroll record handling note",
+      "body": "Operational note for 2025-06-30: PAY-006 is associated with Meridian Ledger Labs, Inc. and records gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. The packet does not provide explanations beyond these fields, nor does it establish an approval or payment. Request supporting clarification before documenting any external movement. Apply the stated settlement policy: only confirmed external movements are settled, while proposals remain proposals until confirmation is available.",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-096-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-06-30",
+      "subject": "Settlement policy excerpt",
+      "body": "Settlement policy excerpt, dated 2025-06-30, for Meridian Ledger Labs, Inc., company ID MERIDIAN-001: \u201cOnly confirmed external movements are settled; proposals are not settlements.\u201d This excerpt should be read alongside payroll record PAY-006, which lists gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. The available record does not establish any additional approval, payment, explanation, or confirmed external movement. Such matters remain open for clarification.",
+      "source_refs": [
+        "MERIDIAN-001",
+        "PAY-006"
+      ]
+    },
+    {
+      "document_id": "packet-096-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-06-30",
+      "subject": "Question regarding PAY-006 reconciliation",
+      "body": "For reconciliation dated 2025-06-30, please confirm what explanation supports the fields in PAY-006: gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. Please also identify whether any external movement connected with this record has been confirmed, or whether the item remains a proposal or unresolved entry. The settlement policy for MERIDIAN-001 states that only confirmed external movements are settled. No additional approval or payment should be inferred from the current packet.",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-096-doc-6",
+      "kind": "follow_up",
+      "date": "2025-06-30",
+      "subject": "Follow-up actions for payroll clarification",
+      "body": "Follow-up for 2025-06-30: Casey Team05 and Taylor Team06 should obtain the missing explanation for payroll record PAY-006 and document the status of any related external movement. The record contains gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. Until confirmation is available, apply the MERIDIAN-001 settlement policy and do not characterize a proposal as a settlement. The packet does not establish an additional approval or payment.",
+      "source_refs": [
+        "PAY-006",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-028",
+  "documents": [
+    {
+      "document_id": "packet-028-doc-1",
+      "kind": "email",
+      "date": "2025-10-31",
+      "subject": "Monthly invoice AR-01170 for review",
+      "body": "To: finance70@customer.example\nSubject: Monthly invoice AR-01170 for review\n\nHello Juniper Network 070 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-01170 under contract CON-070 for customer CUS-070. The invoice date is 2025-10-31, the due date is 2025-11-30, and the amount is $4,739.57. Please review the invoice against your records and let us know if any explanation or supporting detail is needed. This message does not establish payment or approval.",
+      "source_refs": [
+        "AR-01170",
+        "CUS-070",
+        "CON-070"
+      ]
+    },
+    {
+      "document_id": "packet-028-doc-2",
+      "kind": "chat",
+      "date": "2025-10-31",
+      "subject": "AR-01170 review status",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AR-01170 for Juniper Network 070 today. The record identifies customer CUS-070 and contract CON-070, with a monthly invoice dated 2025-10-31. The amount is $4,739.57, and the due date is 2025-11-30.\n\nCasey Team05: The contract lists monthly arrears billing, a monthly base of $4,650.00, and a usage block price of $0.01. I do not have an explanation for the difference in the packet. Please request clarification rather than infer it.",
+      "source_refs": [
+        "AR-01170",
+        "CUS-070",
+        "CON-070"
+      ]
+    },
+    {
+      "document_id": "packet-028-doc-3",
+      "kind": "operational_note",
+      "date": "2025-10-31",
+      "subject": "Invoice and contract review note",
+      "body": "Operational review performed on 2025-10-31 for invoice AR-01170. The invoice is marked posted and categorized as monthly for customer CUS-070 under contract CON-070. Recorded amount: $4,739.57. Recorded due date: 2025-11-30. Contract CON-070 is effective from 2025-01-01 through 2026-12-31 and specifies monthly arrears billing for hosted access and metered API blocks. The packet does not provide a usage quantity, explanation for the invoice variance, approval, or payment status.",
+      "source_refs": [
+        "AR-01170",
+        "CUS-070",
+        "CON-070"
+      ]
+    },
+    {
+      "document_id": "packet-028-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-10-31",
+      "subject": "CON-070 service and billing excerpt",
+      "body": "Contract ID: CON-070\nCustomer ID: CUS-070\nEffective date: 2025-01-01\nEnd date: 2026-12-31\nService: Hosted access and metered API blocks\nBilling: Monthly arrears\nTerms: 30 days\nMonthly base: $4,650.00\nUsage block price: $0.01 per recorded usage block, as stated in the packet\u2019s pricing field.\n\nThis excerpt is prepared for same-day review alongside invoice AR-01170. The packet does not specify usage volume, billing-period detail, or any additional commercial terms. No approval or payment is established here.",
+      "source_refs": [
+        "CON-070",
+        "CUS-070",
+        "AR-01170"
+      ]
+    },
+    {
+      "document_id": "packet-028-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-10-31",
+      "subject": "Question regarding AR-01170 and CON-070",
+      "body": "For reconciliation, can the responsible finance contact confirm how the posted amount of $4,739.57 on invoice AR-01170 relates to the pricing fields in contract CON-070? The contract records a monthly base of $4,650.00 and a usage block price of $0.01, while the packet does not include a usage quantity or explanatory calculation. Please provide the missing explanation or relevant source detail for customer CUS-070. Until clarified, no payment, approval, or final reconciliation outcome should be recorded from this draft.",
+      "source_refs": [
+        "AR-01170",
+        "CON-070",
+        "CUS-070"
+      ]
+    },
+    {
+      "document_id": "packet-028-doc-6",
+      "kind": "follow_up",
+      "date": "2025-10-31",
+      "subject": "Follow-up requested for monthly invoice review",
+      "body": "Follow-up for Juniper Network 070 regarding invoice AR-01170, dated 2025-10-31 and due 2025-11-30. Please review the posted amount of $4,739.57 against contract CON-070, which identifies monthly arrears billing for hosted access and metered API blocks. If the amount reflects usage, please share the applicable usage detail or explanation. If the records differ, please identify the discrepancy so it can be reviewed. No payment or approval is being represented by this follow-up.",
+      "source_refs": [
+        "AR-01170",
+        "CUS-070",
+        "CON-070"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

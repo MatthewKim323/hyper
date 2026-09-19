@@ -1,0 +1,2883 @@
+{
+  "requested": 102,
+  "completed": 102,
+  "failed": 0,
+  "documents": 612,
+  "distinct_sessions": 102,
+  "model": "gpt-5.6-luna",
+  "total_usage": {
+    "input_tokens": 1761053,
+    "cached_input_tokens": 1219328,
+    "output_tokens": 129859
+  },
+  "amount_review_flags": [],
+  "runs": [
+    {
+      "packet_id": "packet-001",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "ce54da9fd11dbed2cdd066c41c89eb014e70f02d9273bcbc73c8841f96d829f8",
+      "status": "completed",
+      "pid": 85081,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baee-c38d-7811-8c81-6d4427e3b611"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17590,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1283,
+          "reasoning_output_tokens": 236
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "5ee50796fa7db66815ed7c026842917da5c9671e6361a22d91dc16706662a001",
+      "elapsed_seconds": 29.84,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-002",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "2992e2bf37ab8c5f8e6eac500479f4a64462d1924237d08bd8df92bbe00af7d9",
+      "status": "completed",
+      "pid": 85753,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-6846-7832-aaa5-e6fc872141c2"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1398,
+          "reasoning_output_tokens": 233
+        }
+      ],
+      "elapsed_seconds": 35.42,
+      "document_count": 6,
+      "output_sha256": "2b08e7dc21e91e8899c3535979088c7149b2484b49b46459d32f9481b72466d5",
+      "normalization": {
+        "removed_grounded_non_id_references": [
+          "Granite Legal 002",
+          "ap2@supplier.example",
+          "Granite Legal 002",
+          "ap2@supplier.example"
+        ],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-003",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "95848755b577f27eea88e8917aec4bc49beaafa1ee9a2cfc5525b5a8c43cb864",
+      "status": "completed",
+      "pid": 85756,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-6846-7273-8b40-a0d08d9c4532"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1294,
+          "reasoning_output_tokens": 263
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "3b20cd297fe99c7f7c1028ec6f0052a14b3038f67965e0a9762d815b236f9b7c",
+      "elapsed_seconds": 31.43,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-004",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "8698808cf287317641fad0a3ad75096f88a208f195f48bed547ad1108ecd5fe6",
+      "status": "completed",
+      "pid": 85755,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-6846-7142-a325-df4ced22800b"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1327,
+          "reasoning_output_tokens": 312
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "553339f4dd29801829453bf7594fa144bad67db76a8d6beb0c4cfa248b1d5c82",
+      "elapsed_seconds": 33.95,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-005",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "e32ec446f0347f6231d4fb00079b298626e8dcf2fe2e83fbc9d0711906725398",
+      "status": "completed",
+      "pid": 85754,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-6846-73f1-8934-9c6c7334c23a"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1233,
+          "reasoning_output_tokens": 211
+        }
+      ],
+      "elapsed_seconds": 31.01,
+      "document_count": 6,
+      "output_sha256": "0d47d3afad345eb4c3857a732dad532184b469ab4d2184ac9f8d1d2277c7d202",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-006",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "a6679ba5e9d248838c641e38d4a372b908e8813a3238c35b361ac874557f2f8a",
+      "status": "completed",
+      "pid": 85752,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-6846-72d3-b4b0-137e508a059f"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1227,
+          "reasoning_output_tokens": 234
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "d76440e218810b4d23b99e0353f387582fbe7f2015d72976a9a2c67c1df069c0",
+      "elapsed_seconds": 29.98,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-007",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "f42d22cda05054ff3b8f830c87978f8f25b439147c59e770701082890278e1c6",
+      "status": "completed",
+      "pid": 85757,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-6846-7a72-be71-2a0af9e0d838"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17072,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1295,
+          "reasoning_output_tokens": 292
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "d71254fadff49b29be314c11606f18e74741b8cb6d9511bd0f41cb8833f227a3",
+      "elapsed_seconds": 31.11,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-008",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "c52502c738d078f7971724479efe42172e907b30d8c756aed33c4e17e8388422",
+      "status": "completed",
+      "pid": 85758,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-6846-7340-858d-8a3c4f05e1d3"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1284,
+          "reasoning_output_tokens": 175
+        }
+      ],
+      "elapsed_seconds": 31.97,
+      "document_count": 6,
+      "output_sha256": "15ad91e81b5fa5a9aefeadf8ae58786fa5c0c89d3564bb4787eb0fef47866616",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-009",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "ea86b3649e9d6177bd7a887fd38fabe2164f59296b6ab630dec42274dcfdedbb",
+      "status": "completed",
+      "pid": 85759,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-6846-7f42-9d90-0cc6f250cf84"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1236,
+          "reasoning_output_tokens": 240
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "506d8f8f773e32ed1a3217301285f99d72b03338e70a17ef0d3c4db9d734e12a",
+      "elapsed_seconds": 30.25,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-010",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "85173d54217691acf6bb22baaa9b865337316477b51a0499e7bcb72131c1f521",
+      "status": "completed",
+      "pid": 90139,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-e229-79c3-a657-d860aa485b1c"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17588,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1246,
+          "reasoning_output_tokens": 238
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "4442fe5e948b61f10895708aae454afc7c9091cd38fc7ff0871ab6408db5bc31",
+      "elapsed_seconds": 32.06,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-011",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "8dd70f59aa0e0b54d42cea90c6525f694a79fdb162ebe84d792fe70557970fc4",
+      "status": "completed",
+      "pid": 90141,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-e409-7592-8bda-e2a59d730c7d"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1350,
+          "reasoning_output_tokens": 276
+        }
+      ],
+      "elapsed_seconds": 33.15,
+      "document_count": 6,
+      "output_sha256": "676f4cb6cc30275dbd23fd00bae3af357191776313138734a6604d66128b5ecb",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-012",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "0616c4befc5df135371f5369d846c067436ab0e843d8df59f8e55ffefb1ed7e3",
+      "status": "completed",
+      "pid": 90144,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-e760-7471-9090-806fb612572b"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17471,
+          "cached_input_tokens": 8960,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1145,
+          "reasoning_output_tokens": 142
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "143bc54c037a4769066a2eaa3be9fdf6f74d9ca9b8e2fc9ec53584c172c689b3",
+      "elapsed_seconds": 30.57,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-013",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "23f6c5175a26668b7f1241755ff4bfb91e760f0ab1943a2ae81c179a64a8360e",
+      "status": "completed",
+      "pid": 90146,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-e86b-7483-837c-40b744963caa"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17590,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1438,
+          "reasoning_output_tokens": 472
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "0f8f889e3a640357904e375034e25cfe476e6e3de9c2c6515efb33ebd4e0199c",
+      "elapsed_seconds": 34.27,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-014",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "f924f3794be872c184c11b4fa693542cf5c88425f8c980d826f05a9f743eafe8",
+      "status": "completed",
+      "pid": 90148,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-e879-7da3-81c6-5c31e60a28d7"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17620,
+          "cached_input_tokens": 8960,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1356,
+          "reasoning_output_tokens": 297
+        }
+      ],
+      "elapsed_seconds": 35.6,
+      "document_count": 6,
+      "output_sha256": "c1f58fe2958ee66d8949e06909e65bd2bb14a72709eff3a440429f864542e7c0",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-015",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "a9da7917a9c632ecb3a31c25449a8c16f44fcdaefe192557675d7d299539acc0",
+      "status": "completed",
+      "pid": 90345,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-e3fa-73e0-848c-a19bfb0ad8af"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 8960,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1154,
+          "reasoning_output_tokens": 142
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "e8638e15d04ab92f1cf1ac0b332f81f821380f3ffde1e3b133f1f7cbf89dfad6",
+      "elapsed_seconds": 29.57,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-016",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "72e3828a5b2337cd2c391ad524b18cfe01e9206edda15ea1e5d9c177345b4e9d",
+      "status": "completed",
+      "pid": 93287,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-ebb2-75b1-a499-97b1c384e5f6"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1219,
+          "reasoning_output_tokens": 181
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "9fffa4717910ccd87785c8042f2073c84a77a63467efab8929b76c47135566ab",
+      "elapsed_seconds": 31.2,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-017",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "bb841ece2a452abdabfae0af94aa03afd1a7ad3a6cec32c1cdc41d627a0adb63",
+      "status": "completed",
+      "pid": 93953,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baef-f16f-7660-9fbb-30832f55eeaf"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1350,
+          "reasoning_output_tokens": 279
+        }
+      ],
+      "elapsed_seconds": 37.57,
+      "document_count": 6,
+      "output_sha256": "9384fa49297fe33ee618a754d2f35cdffd4112b20a32159dcbf9d13ea8256fbd",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-018",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "47b117373be69193110e2d4ae834d46758184cd087afbf705fc23875583c7ba8",
+      "status": "completed",
+      "pid": 94538,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-5795-7300-ac19-9cd8e9ce0e2e"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1167,
+          "reasoning_output_tokens": 199
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "b164c4088bcfe16ec56a29fd5cf39d913598edec151659e74d54b571eefb3548",
+      "elapsed_seconds": 31.04,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-019",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "68b953d4814803d5f968dc03dd40b96d7c38944b26a12c6725fffca1637ce29d",
+      "status": "completed",
+      "pid": 94539,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-57b3-70d2-8958-b4bfcb82a96e"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1354,
+          "reasoning_output_tokens": 321
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "48938b94498fb74797d61fa71cbf01ed1ec9b7af837fbff441ed3a6f26061884",
+      "elapsed_seconds": 33.03,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-020",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "b31bdca687edc123cd141e8362583da71bb35055fbaf1c35417491b18a7867c3",
+      "status": "completed",
+      "pid": 94921,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-596d-7261-bc82-7e19ad5e9d0e"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1315,
+          "reasoning_output_tokens": 190
+        }
+      ],
+      "elapsed_seconds": 62.17,
+      "document_count": 6,
+      "output_sha256": "5d60536343f6fc21855fd125b49628f4f719c4f1203fdf952ae7c10813bc7e68",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-021",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "9d552dc536b6b91112dc3d91a95103bab95f30fcf9e5d8f82e886a5482419ed1",
+      "status": "completed",
+      "pid": 96187,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-5eda-7a61-8cac-06f0dba6991b"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1149,
+          "reasoning_output_tokens": 120
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "0bbdd298e3f8f0ef5dab47f536e89644876a79aaab584e47353b140dc004d56f",
+      "elapsed_seconds": 29.87,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-022",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "f12a7fdb14f4d88d09682b4c0009c5ba3c5d109a23829f2cf98fc5cc7484c50b",
+      "status": "completed",
+      "pid": 96753,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-65a8-7ce2-a8be-e06b3d36f4a9"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1230,
+          "reasoning_output_tokens": 167
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "436f7dff2bc8bc9e199738c532f7045f3d425bab7ab1604e842ec20ece8a93e4",
+      "elapsed_seconds": 31.76,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-023",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "6c65c72617cdac81f4131df79aaf223a9c8a85242387eba2695624c58ecb7070",
+      "status": "completed",
+      "pid": 96897,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-6680-7b23-b174-37780bdeabc5"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1404,
+          "reasoning_output_tokens": 351
+        }
+      ],
+      "elapsed_seconds": 33.98,
+      "document_count": 6,
+      "output_sha256": "d84598a29be2a3d6e86f4f7e47666a3cfca52ab209b53785f221d4fd1cc452da",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-024",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "a7f842aeb89e0034384ab091575108ea3ea873de9d2994692422e764193d6f1d",
+      "status": "completed",
+      "pid": 97869,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-6cf9-7b22-85a5-1e6d7bae9640"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1100,
+          "reasoning_output_tokens": 174
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "2f623f2f6314750b0b98744ecd91cafd5e6938f046558af21afb2db49e4fff0e",
+      "elapsed_seconds": 30.71,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-025",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "3bf4110d7f433ad011ea42529694b63d7398c2363afd7e6ba51730b68bc02cf7",
+      "status": "completed",
+      "pid": 98418,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-8451-7211-9e79-8291612f9c2d"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17280,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1243,
+          "reasoning_output_tokens": 225
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "06f94fa085d7e06bf0f077f57a00f9d90c7039452548c2de66282339ca41da16",
+      "elapsed_seconds": 32.68,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-026",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "40c065414ed6c83e3b1a9ee08727a9b82f8b58e11f443f133e616ea6394b4dc6",
+      "status": "completed",
+      "pid": 99011,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-d0d9-7000-9946-90abb25bff2c"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1387,
+          "reasoning_output_tokens": 224
+        }
+      ],
+      "elapsed_seconds": 34.08,
+      "document_count": 6,
+      "output_sha256": "92029a6a05b38a20d199ca93248dd9ced9cad30b6a54eb29b7a18de91e7492d3",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-027",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "f73f1a364643007cec4162b9e22c1eb34ef352277d4cf3204aafe93820280e21",
+      "status": "completed",
+      "pid": 99420,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-d37d-7ea2-abe9-c0e0ed977987"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1190,
+          "reasoning_output_tokens": 222
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "969b270d2f39bb4c2bafe9e2d868d6eb5b5651be5b25c54af750a0b2d4de0f1b",
+      "elapsed_seconds": 28.62,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-028",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "faafd009998ff7dc1435a4d41e84fdd16b61ab67f4b9e0bea491dd9bc78a6be5",
+      "status": "completed",
+      "pid": 208,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-d8b7-7271-94ff-1037a8eff7a0"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1310,
+          "reasoning_output_tokens": 245
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "0ee47fd646d4c59dd211983c8e13e82d12e935d37a57c6b1d7ab4cc2c46c1f38",
+      "elapsed_seconds": 32.23,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-029",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "dcf65bf64249eee048ab5d4f8c1f07ce72b29492894f5c693f3805d7e3041077",
+      "status": "completed",
+      "pid": 848,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-e1ae-7c83-bacc-ec1fe9c7da78"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1297,
+          "reasoning_output_tokens": 227
+        }
+      ],
+      "elapsed_seconds": 34.72,
+      "document_count": 6,
+      "output_sha256": "9bea5c4224a73133808ea74ac2f8af904fd627125db18288197f1bbfed4e1d96",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-030",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "c5f8c6ce04883d7d59212771fe85369f070d6f5ddcf7693d827ba6d0aad0f9d3",
+      "status": "completed",
+      "pid": 1496,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-e4e6-74b2-9cf5-52fe55f0ba00"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1200,
+          "reasoning_output_tokens": 216
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "b1df8f1a32aac0b1ee7a9736aa95f24bff47980b8597e207780e08de94496d08",
+      "elapsed_seconds": 29.69,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-031",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "ef78c92cabaac352c47f711ab88e6c5d442cc5d573819648ccd2dbb204e88d14",
+      "status": "completed",
+      "pid": 2100,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf0-eb4a-7511-af1e-be02311dffab"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1316,
+          "reasoning_output_tokens": 294
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "34c7698fc0afb18f8ce42a58e1db1f7800aaf8ec8eb108e0951481571a8a9daf",
+      "elapsed_seconds": 32.96,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-032",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "b321a9fbfae09fe08023d3e5de1fc689da4e3abbdf0788c05771506bb196100f",
+      "status": "completed",
+      "pid": 2664,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-03fb-7e80-9e7b-97927c398613"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1377,
+          "reasoning_output_tokens": 321
+        }
+      ],
+      "elapsed_seconds": 31.31,
+      "document_count": 6,
+      "output_sha256": "d07b1d404bff4d89e0a163fa29b07147c3a947ad6ccf45dbaae9386dac5ae10a",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-033",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "2687bec85428595c7a6c6e674ec3f27985bfa33676083cd5baa32f48ee3dcaef",
+      "status": "completed",
+      "pid": 3219,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-437b-71f0-915f-8bab48352e69"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1188,
+          "reasoning_output_tokens": 239
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "d488f7a95af0371deb57025d5e05239daa0fa7d27ef209fc19b79f9e3d9e0d4c",
+      "elapsed_seconds": 29.19,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-034",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "81b600e53d152b9ac30533339f63709f8e521b22107c9f5cf32a3d0da9aba644",
+      "status": "completed",
+      "pid": 3767,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-4c69-7a93-a732-76501fc0fe0f"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1261,
+          "reasoning_output_tokens": 194
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "060fcef071f325bdc20c31d08fd55eb19d6d77822a31d520b9d85b3f8f7dbf53",
+      "elapsed_seconds": 31.48,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-035",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "06a257de45a55c74f56d3ab090a201056e051ebdc711b5b43320c47d5ad81b5a",
+      "status": "completed",
+      "pid": 4318,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-55f3-7691-a909-51cbfeea132d"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1280,
+          "reasoning_output_tokens": 239
+        }
+      ],
+      "elapsed_seconds": 31.34,
+      "document_count": 6,
+      "output_sha256": "ab4907d1c39c48e2e79e2311220db878a6aa5fff68fc53219f997720ac10757e",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-036",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "52f9e79db02f391cef224d75a8474888faedd83188b42f57e9a5fe48209c8516",
+      "status": "completed",
+      "pid": 4353,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-568a-7612-b586-147cd7df0643"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1205,
+          "reasoning_output_tokens": 194
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "b3aa34467a909c4e3471d85f5477e106da3383b5507e2f898e1d5d75f15c5deb",
+      "elapsed_seconds": 30.3,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-037",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "e11ce6c9bdd08991f8745fe6b86bab3c8012ea26473022e44c7c5e29a7c84eb3",
+      "status": "completed",
+      "pid": 5072,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-58e7-7cb2-9964-7e18f92fb921"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1215,
+          "reasoning_output_tokens": 166
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "d0d2c1f2996c1d80f71b36191ba97f2efa2a4e61f2446679ebda4912e30836b4",
+      "elapsed_seconds": 29.46,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-038",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "299acb031d1e36c87b6b13a93e18b70cb2a3b30adb5921357b0511a32275b275",
+      "status": "completed",
+      "pid": 5983,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-6957-7752-bcfb-10cf663648f0"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 8960,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1189,
+          "reasoning_output_tokens": 168
+        }
+      ],
+      "elapsed_seconds": 29.32,
+      "document_count": 6,
+      "output_sha256": "6ca7ebc2350c14442b6dc95a6ab0c9aeb1b3bd0beeace3e07d20deab6b32d971",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-039",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "989a3b682ae24cce6b40e55ffe0705cf7e3341cb44058d375d6b1340cbdf8aa6",
+      "status": "completed",
+      "pid": 6343,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-6bfe-7322-a9e6-6991fc35c24e"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1260,
+          "reasoning_output_tokens": 234
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "833a55f500d8d1932828bf99bdb0bb27bce73b478aca58e60e00ca71cf8da2a0",
+      "elapsed_seconds": 30.11,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-040",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "312dae1dbfe84dda61b52a8b5a868a4c426c769285a097b901a3285bfec71ecd",
+      "status": "completed",
+      "pid": 7079,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-7e42-7570-8d64-9358a796cdaa"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1297,
+          "reasoning_output_tokens": 256
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "834556e30abfee180228d2d1aee3d97812cd55215c502be48aa0609a1696671b",
+      "elapsed_seconds": 30.28,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-041",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "574c45de9fe53e311fe017412affeafe665d5324d2e535ec453f9d302b2a7d4a",
+      "status": "completed",
+      "pid": 7731,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-b559-7822-ab98-13dce8232c98"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1525,
+          "reasoning_output_tokens": 385
+        }
+      ],
+      "elapsed_seconds": 37.6,
+      "document_count": 6,
+      "output_sha256": "10882e2c68aa4869f2c9f0f991e9fe97f4cb3a77d83befefb5cf35c0ac3e3c2b",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-042",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "892f1ac6bf7e2dc559d732d48fd4f5691b88e2be38d8b7e5365d222b620a383a",
+      "status": "completed",
+      "pid": 8288,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-c75c-7b62-94be-5a36adfb1061"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1250,
+          "reasoning_output_tokens": 190
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "a518bd41ee905689571bd6f6b50ed5a1e422706c5c2bc7463a3a8dcad2219fee",
+      "elapsed_seconds": 29.84,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-043",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "6fdc70879dd064ff40989944d21ae4720fc87cb1dc3de3994f5d2a40ba148b9c",
+      "status": "completed",
+      "pid": 8835,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-cbf4-7eb1-91c6-6d45d070a8db"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17280,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1324,
+          "reasoning_output_tokens": 225
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "c8f5d40921263e59200bf9a5e75e9746dfb168d6c91c74deff218ae07da9a870",
+      "elapsed_seconds": 32.77,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-044",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "eef57c99b30d1588ebd11dcb46fb73d18da7db9eb1114a14a7cee1372e825b92",
+      "status": "completed",
+      "pid": 8980,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-cce8-7662-9852-2ddf04a800c3"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1316,
+          "reasoning_output_tokens": 250
+        }
+      ],
+      "elapsed_seconds": 32.73,
+      "document_count": 6,
+      "output_sha256": "f20d968d19ef236c91f113d46c4005a67c027eac753b0c973dcd8739aa7bd3cf",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-045",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "b8823fd18e402d5486cbb4a9c87c1a86875a55cb7ebec9f5e402e035d0bc7d8a",
+      "status": "completed",
+      "pid": 9563,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-d044-7622-8c81-92d09d648679"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1284,
+          "reasoning_output_tokens": 255
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "e13383516a5f6c049b6023b716514ff17c0c100d0d328004686323e0f1dee81a",
+      "elapsed_seconds": 34.5,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-046",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "86254065802a8b5eb779a31f38af6d10a9d1946baec5c04c76093f779122b4b9",
+      "status": "completed",
+      "pid": 10511,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-dbd6-7fc1-8e31-739c2a80ae97"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17073,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1347,
+          "reasoning_output_tokens": 285
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "7308badc6206dcfdeaa62a316e0f209d6b698eb0ae807730a3fd4f7ef4af6275",
+      "elapsed_seconds": 32.23,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-047",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "51a252bd6fbc416c2f232efdda2d472f2ea8b95a6a8929e0662631cf5dfc7f98",
+      "status": "completed",
+      "pid": 11061,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-e198-7ef2-93ce-ef606f29844e"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1311,
+          "reasoning_output_tokens": 228
+        }
+      ],
+      "elapsed_seconds": 30.59,
+      "document_count": 6,
+      "output_sha256": "9621f3c94cb8be201e91e22af607703bf6c821d1540418fc5d9795bf72d1bb4c",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-048",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "0a064c8c620ea3cf36d26d6e5a558d6d81ab44caf60e01b6b67ff89631ead850",
+      "status": "completed",
+      "pid": 11644,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf1-f499-7b71-983f-03a6e2207076"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1229,
+          "reasoning_output_tokens": 173
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "145b606ebf769a608d50b628cf9bc6e657ce3869aaef737f559274af94b591a2",
+      "elapsed_seconds": 31.35,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-049",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "e9af240770deec2f53af08047f02f4ea5b79c927d9e6a1b92379d9ee72158842",
+      "status": "completed",
+      "pid": 12782,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-3bef-7882-866a-27f1cf8706b1"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 8960,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1200,
+          "reasoning_output_tokens": 174
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "0fa6f681e6aad05d1cf0767fe1a6f9373023c0f515a226957e55201f42ecdda2",
+      "elapsed_seconds": 34.64,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-050",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "d46c1d33a7eba46c3cbc966e4454d3fd0f27a120ac79e0ae0e2237baedf7d40a",
+      "status": "completed",
+      "pid": 13339,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-4841-7f70-a501-422c9268226f"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1288,
+          "reasoning_output_tokens": 220
+        }
+      ],
+      "elapsed_seconds": 32.56,
+      "document_count": 6,
+      "output_sha256": "f901977cd39f616e671268c673e838a2cb126f16fc0abf5897c09b0727f74aa6",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-051",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "a884eb996eed0e854490b873b4e0869fe38648850515ae64295cb71cbb2d2971",
+      "status": "completed",
+      "pid": 13867,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-4bff-7203-9aa8-454a80df5da3"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1171,
+          "reasoning_output_tokens": 264
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "990b8ba9495973a3eca489bd46960e557154fbab70a45791768b2ef7d3f7409f",
+      "elapsed_seconds": 31.22,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-052",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "44d285077d0cc5ecc711b541a861beaf7e7b19c2640e7593534cf45654239ae1",
+      "status": "completed",
+      "pid": 14027,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-4cc0-7f80-8937-c5dc6a14ea21"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1303,
+          "reasoning_output_tokens": 253
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "4c49051f321982c0da2a7203c3793ef0ada27f0aa758285edafcc8ae86ade37f",
+      "elapsed_seconds": 31.91,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-053",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "f648ec526fd553a078eb2d775f1ee5981ac2056f0ae3e2c54c86215f458cf916",
+      "status": "completed",
+      "pid": 15002,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-571e-75a2-ab17-2307448cbbb4"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1344,
+          "reasoning_output_tokens": 211
+        }
+      ],
+      "elapsed_seconds": 31.88,
+      "document_count": 6,
+      "output_sha256": "815c23600dc03d17f3ad7018f9ffb6eaa61f79a7c8241261296fe95ade8920b2",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-054",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "4a4feec7fe95c19db903d23ef8a0d29aa1f57600b1db0c49da6ee63764aca118",
+      "status": "completed",
+      "pid": 15198,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-5915-7620-ba17-ef77ae41b220"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1211,
+          "reasoning_output_tokens": 198
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "221fc904a4e60c5b3add1bed8039ed27f309358ae362f217db62fd3832bb9204",
+      "elapsed_seconds": 30.26,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-055",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "37ecac1ee21f347755b696c227e6442eef01e53647d54145ee3073ba1e0a2663",
+      "status": "completed",
+      "pid": 15421,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-59b9-7161-9bf6-c40fd7d6907a"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1311,
+          "reasoning_output_tokens": 268
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "2b79e6fc03ee2a05be0f806be375eef8429faf39a6194c1fb23dc51574a47c1b",
+      "elapsed_seconds": 33.06,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-056",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "e5d1498239e504d20e86f6afbbfb092ec2f2ebfb7f632f1bc9ca4e92bc3e780e",
+      "status": "completed",
+      "pid": 16704,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-6f11-7d90-b79b-1b36128d0aa6"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1326,
+          "reasoning_output_tokens": 216
+        }
+      ],
+      "elapsed_seconds": 36.42,
+      "document_count": 6,
+      "output_sha256": "7f400abf521b04b5ca69b63ffa41de8dddc3d934d502fdb87b5d92472428235c",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-057",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "89987298ccaac120fa657b0016e72171dd362f12d98eafc5c3cb741b435ebe87",
+      "status": "completed",
+      "pid": 17372,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-c9eb-7673-b072-212aeb5b4a16"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17471,
+          "cached_input_tokens": 8960,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1135,
+          "reasoning_output_tokens": 173
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "a687dc258476ac563eedb38e31472c48037bb3bae1ab110929804f3b8d28ad6e",
+      "elapsed_seconds": 34.38,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-058",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "41ca96a2fd7690a78c4ee0271cf4b2fc8e7a06af12618871557ef4c26a9a3c03",
+      "status": "completed",
+      "pid": 17375,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-cb3f-7671-9534-d871d1bac17d"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1298,
+          "reasoning_output_tokens": 252
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "783c510ae1b49d6540640f3436481587dce056fa35defffa54d5a8311744a7fb",
+      "elapsed_seconds": 32.45,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-059",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "a576a854ce67e20a98fb67e4b075dc1999ccc2549e768f75596ca551039e304b",
+      "status": "completed",
+      "pid": 17377,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-ceac-7472-a08f-b3fa94173b96"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1270,
+          "reasoning_output_tokens": 197
+        }
+      ],
+      "elapsed_seconds": 32.72,
+      "document_count": 6,
+      "output_sha256": "11b848593300b56598a7c05265f1213e98e567d4530eb5c916b72b4f45401036",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-060",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "d4577ba0c5738bc97279886d0eadaa2ca5fb6bf0469aaa0e13f7b4e5395e9798",
+      "status": "completed",
+      "pid": 17380,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-cf7a-7773-bb96-087dc7859357"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17471,
+          "cached_input_tokens": 8960,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1070,
+          "reasoning_output_tokens": 108
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "3c73245589e5ad92eb795ba195a6842d7866e4e4534f766d3779973cbbc23dc9",
+      "elapsed_seconds": 31.87,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-061",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "418265f398056d515d4beb1390ae05176cbca272f8fde6a8d67357eb9177c971",
+      "status": "completed",
+      "pid": 18559,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-cf56-7cb3-b6fe-b4fc6dc54f63"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17280,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1338,
+          "reasoning_output_tokens": 292
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "c969405f1e7d42f320d8b763967a52c88b30eef686024f49cc12d8f050280746",
+      "elapsed_seconds": 37.93,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-062",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "1020b52ca3a4ecbf813f1b5925b3e44634a844a470b0d38889a17a432d00772f",
+      "status": "completed",
+      "pid": 19396,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-d394-75b3-a4b2-98f9cdb94f50"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1451,
+          "reasoning_output_tokens": 407
+        }
+      ],
+      "elapsed_seconds": 37.68,
+      "document_count": 6,
+      "output_sha256": "643968786a81f6aef05ea4d6b87300d0ea699b9da7ae1164df801a666076b292",
+      "normalization": {
+        "removed_grounded_non_id_references": [
+          "Granite Legal 002",
+          "Granite Legal 002"
+        ],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-063",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "485f27e7957fc95e6093dda18744741b5bc978c76b0bfbcaa26bb822c3c28966",
+      "status": "completed",
+      "pid": 20703,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-dae5-7a10-a55c-1236930ada83"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1076,
+          "reasoning_output_tokens": 153
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "5f327acfa4ab982dbd778be845055ee36bcf1e827955b9e5962c9a98dc4d54bb",
+      "elapsed_seconds": 31.47,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-064",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "c3042ed7f7690bae0d101f2eafcfd98cc75417edf46d3e984c272937ac259b62",
+      "status": "completed",
+      "pid": 21267,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf2-fd4e-7381-ad53-894faea06c4d"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1221,
+          "reasoning_output_tokens": 205
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "975c2ed10a14f7e73b7daba23506337ecc308c41711227a1cde84fa3736622bd",
+      "elapsed_seconds": 30.01,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-065",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "2672dd51057bd3d05499d50b18ae88b78deed84315ed602f576fde307dd0da60",
+      "status": "completed",
+      "pid": 21823,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-44d7-7351-9b7a-86c5c768b931"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1286,
+          "reasoning_output_tokens": 233
+        }
+      ],
+      "elapsed_seconds": 35.53,
+      "document_count": 6,
+      "output_sha256": "95db0ba2a187eda44032b887e66b1a8b0d5f8ea3fa7401b6be328a27679944c3",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-066",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "62edd150ec0668f6ad58ec5579b0755efa0e15ecd8a04b5a6ab2b3f67c73a78d",
+      "status": "completed",
+      "pid": 21971,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-45ec-7be1-bf99-c291e7fc61d2"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1227,
+          "reasoning_output_tokens": 158
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "37c4f44364d99e51a46d22346fc2d983e923fd0c3190f44ee0961bd0484e15a6",
+      "elapsed_seconds": 33.4,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-067",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "4155a4e98c74c011bd0f342cbf9af681e19f6bea9733ee71186ce98174449096",
+      "status": "completed",
+      "pid": 22253,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-4735-7272-a8e1-7e2784279fe1"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1183,
+          "reasoning_output_tokens": 128
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "7fe52ed61e85be7dfff4c5781833dc584c73c0af26135f2c89fef3905fd0c385",
+      "elapsed_seconds": 31.42,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-068",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "c4ccfb3c8b9ceaf41782c77e7012ba9d6c46087e16d191d51997a76cf5787a95",
+      "status": "completed",
+      "pid": 22836,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-4971-7233-8483-14026dfd3c51"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1405,
+          "reasoning_output_tokens": 260
+        }
+      ],
+      "elapsed_seconds": 36.16,
+      "document_count": 6,
+      "output_sha256": "166e1e69431be617e801a23fa31bd1d6a3523929fc336cdd2e9c4dc62be1b68e",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-069",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "ef773cbc587ab6a24f50b379fd6e2b69969efb350ff1ee37c7c43f33fcd4492b",
+      "status": "completed",
+      "pid": 24031,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-55db-7891-b64d-ee35dd9619e1"
+      ],
+      "usage": [
+        {
+          "input_tokens": 16956,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1264,
+          "reasoning_output_tokens": 310
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "752fc23d00f541c82d8a5a502e7eeb292c25fb5b4c748de59c71649ae6297ad0",
+      "elapsed_seconds": 33.06,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-070",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "8b19cd64860a51aa0feb299fab7b7b6ae92b2086dbf7230377cea392052e2d9b",
+      "status": "completed",
+      "pid": 24580,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-639b-71d1-8d2a-72d2961a5fb7"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17073,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1218,
+          "reasoning_output_tokens": 185
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "bf2ee001cd3617f345966f4cd9261306ff378f2450ab17822c37fb09e6b619b0",
+      "elapsed_seconds": 34.08,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-071",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "a01a1741fbb02a20f5dd6c183bf775e8469009ce5b65d39599a483b1ca3dfd0c",
+      "status": "completed",
+      "pid": 25049,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-66c7-7bd1-8311-0d8f761384da"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1428,
+          "reasoning_output_tokens": 327
+        }
+      ],
+      "elapsed_seconds": 34.77,
+      "document_count": 6,
+      "output_sha256": "e40a6a455dd6c8bbeee51dac3375f2783d10e02f7920bc4d20bfb201ec9cb86d",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-072",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "eff7af8da9e27bc3fcb47f2e5824e5afcc6bf485594efa6dacc176af06c0a468",
+      "status": "completed",
+      "pid": 25720,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-7286-79f1-9374-48f9b2956cad"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1215,
+          "reasoning_output_tokens": 198
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "410452d8f3b5a3638ce2fbc9c60c9549bfe852550e6a89c6b1a81dab832dab65",
+      "elapsed_seconds": 30.77,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-073",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "6b87369fb242d139bfaf3ea9bba81e1c043e25b847fa02e0b78a620438fb8352",
+      "status": "completed",
+      "pid": 26897,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-c210-74c3-af82-7cb6971cad1d"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1290,
+          "reasoning_output_tokens": 286
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "9dbe7808f8bd298b652d84de560176dded004169be75ec501eec20c7569fd2a9",
+      "elapsed_seconds": 31.35,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-074",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "20f5e24321c2eb2b7a09646f1270f3d758c7aac664c066edc421ce8c741ac08e",
+      "status": "completed",
+      "pid": 27474,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-c869-74f1-8d7a-8df5e45c699e"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1234,
+          "reasoning_output_tokens": 179
+        }
+      ],
+      "elapsed_seconds": 30.16,
+      "document_count": 6,
+      "output_sha256": "d936ec9ccfcbe6d1d6fb1f4848c2bf7c9fc9e0691e610ae88d215939249bb14a",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-075",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "3c1386a2e782576767a965ad7cb2a9b17150dfd9a8bfece4fe5a010dac7d8e79",
+      "status": "completed",
+      "pid": 28023,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-cf92-7ea1-a473-89e0ac601ca1"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1226,
+          "reasoning_output_tokens": 230
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "aec512fc0f24075e35876522ab8b2f7760ff3fdf574f2946721cc923cda53a9d",
+      "elapsed_seconds": 34.69,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-076",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "6c81e2994fb8ac46ec854fadecab8ae95a461fb747ec20c2c859b288a1d6d82c",
+      "status": "completed",
+      "pid": 28620,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-d6b7-7f71-ab4b-9f1baa7a2bb0"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1125,
+          "reasoning_output_tokens": 146
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "77aa046cd10de24670e1e1bff05419ab800a40bb48d268f16555b520f8a19c8c",
+      "elapsed_seconds": 29.02,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-077",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "5064df77f18add0e17f559fa179513706f7d7f890c49a59a7b310895e3f9d06c",
+      "status": "completed",
+      "pid": 28622,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-d6e9-79b0-82f4-de9156651ba1"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1358,
+          "reasoning_output_tokens": 291
+        }
+      ],
+      "elapsed_seconds": 34.06,
+      "document_count": 6,
+      "output_sha256": "61ee8b7a3822cd777621159c3c88f73a1f285c223dec5e30ca636430e9fdaf1a",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-078",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "ade1f79cb3146c4ed20ee2792e540417a8b4bc60b6f52148061380e71be44c29",
+      "status": "completed",
+      "pid": 29748,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-e8a6-7d10-910c-f2d888cc56ab"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1106,
+          "reasoning_output_tokens": 132
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "03f20ba9178e5969cdf5c1472517c3b33ade82ef35bcf1a5b8b0cb06131afbf6",
+      "elapsed_seconds": 29.24,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-079",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "e26424a91b049ccc4e1563a665293935d5431042893764bed6e46b4a3d26eeaf",
+      "status": "completed",
+      "pid": 29973,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-eaa4-7463-9d0c-172f5fd21da0"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17280,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1203,
+          "reasoning_output_tokens": 210
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "ddcee05e29f8e60f945f5add67be375806726aafce5bdf2e723d2ba55e4874e0",
+      "elapsed_seconds": 29.4,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-080",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "950cc404a126180165e0d90355497f6641bd3e51013519e133176d93d3bc0b99",
+      "status": "completed",
+      "pid": 30843,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf3-ee96-7513-a775-fe0eef3bebf2"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1230,
+          "reasoning_output_tokens": 129
+        }
+      ],
+      "elapsed_seconds": 34.43,
+      "document_count": 6,
+      "output_sha256": "56fd3a764a389cb323ecc2a86b303d47de3283f60e5bf31c98ced90ea3c05590",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-081",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "365101430c760dbe63209727b001965b6656005d43df5a3e549c6cf3a93202a5",
+      "status": "completed",
+      "pid": 31432,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-3c8d-7a91-9e67-bf250d07b4f7"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1159,
+          "reasoning_output_tokens": 185
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "ed9f4af50338533bd495690c9712a0639e3b9f4fd4337f8dbc292ae6a2eb4080",
+      "elapsed_seconds": 33.28,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-082",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "fb429630ba3bb4ea6a5d14bc3fa324b5637d17ce81f4ba99ea042c6d5cf9dfe4",
+      "status": "completed",
+      "pid": 31624,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-3e37-78a0-a119-649edeb08db5"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1234,
+          "reasoning_output_tokens": 201
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "79f6a76b8befd9d212d5fa7c7ab4aef3d6ba3520ee255c3c147eb66a6a1106ed",
+      "elapsed_seconds": 32.99,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-083",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "f96f553de6835f3028fa1f7a180321d5e38106812cb3ed319dd30719c184f339",
+      "status": "completed",
+      "pid": 32527,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-4827-7861-a1dc-7c29f7351c78"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1344,
+          "reasoning_output_tokens": 240
+        }
+      ],
+      "elapsed_seconds": 36.17,
+      "document_count": 6,
+      "output_sha256": "359824da5bd55c604597ca988bfe83587f8557a2b5d0a0d49bd7641dddd56158",
+      "normalization": {
+        "removed_grounded_non_id_references": [
+          "ap23@supplier.example",
+          "ap23@supplier.example"
+        ],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-084",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "85b78200f8aa433ac3d6568eab5f5a87ee2ea50c8ef3e1189408241b25c53250",
+      "status": "completed",
+      "pid": 33085,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-570e-7681-bd76-495d1b002919"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1226,
+          "reasoning_output_tokens": 199
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "e7c72103d64f3a14fbdcd854dc23357c4c214c277815fb4de0b5b79e0dbd0456",
+      "elapsed_seconds": 30.46,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-085",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "90265dc4ecc71d4b5f3f82e5540ef29d9fe5ad29be0efa9535721353d1f96a15",
+      "status": "completed",
+      "pid": 33626,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-5acb-7b62-8d90-861487f01854"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1511,
+          "reasoning_output_tokens": 465
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "f7cc6f7de813f2e88af308e135f2bfda5aa4c2742123f29ca5278df6ca48d003",
+      "elapsed_seconds": 37.91,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-086",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "8ce104fbb881b5e28c042f82c17dd0a9eb7b2a99ec0b9715d776cf12c94f3458",
+      "status": "completed",
+      "pid": 33796,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-5bf6-7ed1-82dc-6983620b8d43"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1284,
+          "reasoning_output_tokens": 186
+        }
+      ],
+      "elapsed_seconds": 32.3,
+      "document_count": 6,
+      "output_sha256": "22a39584776ecab03e9dd26290b305af7ed444b0f0d112ff17c030aac1eebf42",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-087",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "ca5bbf17c32c54d8873ebe10256aa36e7df4f3823746f89881c3d908b40980d7",
+      "status": "completed",
+      "pid": 34200,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-5d77-7580-b171-e0c149fc0c90"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1267,
+          "reasoning_output_tokens": 284
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "d0a772f3ccd5c64da2f65427a405cde90f5467bbfa7f8ffd7016732fd7764ceb",
+      "elapsed_seconds": 30.82,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-088",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "1983d61e25a0de61a4387339a315c82b4c8e2779af8449b4003e31f131b701b7",
+      "status": "completed",
+      "pid": 35297,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-752e-7243-8cce-189419aa4253"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1317,
+          "reasoning_output_tokens": 230
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "c8792c80fd3f1f6cb79ad42d1ad27ebcee89f75612d496608750d4645c05de2d",
+      "elapsed_seconds": 30.55,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-089",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "d5c96e12333966e85cd457109f80f48304483eac8d58c7318f0555fa970ee2e9",
+      "status": "completed",
+      "pid": 35864,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-be83-7ff0-aa06-90f9c6abefc8"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1490,
+          "reasoning_output_tokens": 391
+        }
+      ],
+      "elapsed_seconds": 39.21,
+      "document_count": 6,
+      "output_sha256": "6664c1f62950d033467bdefa78e33a3b4625b9af77dbbd3e214b6ebd208f7b60",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-090",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "fa1f39294a509aac5bc9039a98b713792574607bf2ac4b1d8cb26f6ffa58c5d3",
+      "status": "completed",
+      "pid": 35934,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-bf1a-7591-b35b-0e8c342d6c8a"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1380,
+          "reasoning_output_tokens": 351
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "f37a7430676fe321e2e34b5331d9c2cfccf4eaf73d6abeda8c435729b7ad9651",
+      "elapsed_seconds": 34.76,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-091",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "f4215efa822a19bec5fa1c7eb04e8ad22789426dfe735ac941eac71b2f2acec7",
+      "status": "completed",
+      "pid": 36987,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-ce0a-7030-96b7-aed2950bce8a"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1214,
+          "reasoning_output_tokens": 157
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "c22af52552bee1027f030d273b2afc6a3eb70c2f7c2385b79446bf500a86bcd1",
+      "elapsed_seconds": 30.29,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-092",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "08f212b1638c7dbfbc4ad510a62c916ddadecbe4c796b2876c4598c373766b19",
+      "status": "completed",
+      "pid": 37535,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-d55c-7e40-8cd7-2e4bbae4d623"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1309,
+          "reasoning_output_tokens": 141
+        }
+      ],
+      "elapsed_seconds": 31.99,
+      "document_count": 6,
+      "output_sha256": "b83951e3a437b4a6eca6219c2953540a16161c707ec21131e67f86916efcd092",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-093",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "cca34d7ea3dd5d74b290a705f8db6d13dfda2c7699c1218aac2e40594ae6fc19",
+      "status": "completed",
+      "pid": 37562,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-d5e4-7401-bd63-703884b39731"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1118,
+          "reasoning_output_tokens": 151
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "f2d4551d7c0fce9e3644fbdea3b9c18a14501351043e46121c33cef87577d5b2",
+      "elapsed_seconds": 30.91,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-094",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "7909628cca0bdddd2513f3adfbb02dd9c3fc442dcd7f39e18b75454d48ef93be",
+      "status": "completed",
+      "pid": 38637,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-da28-74b0-af85-81ba8ba8d54c"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1289,
+          "reasoning_output_tokens": 266
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "cde2f5ce986951309aea4f53470599cc957d8417623baa22b14fd918626935ac",
+      "elapsed_seconds": 31.95,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-095",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "e35a4ea03439d28c0e9653b9d7c22353beb03a42fac927829e695f517704edce",
+      "status": "completed",
+      "pid": 39186,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-ec77-73a2-830b-5e264c4ca557"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1232,
+          "reasoning_output_tokens": 120
+        }
+      ],
+      "elapsed_seconds": 29.28,
+      "document_count": 6,
+      "output_sha256": "14822fba7a412fe94a2f3c4db7a30b72fd27fa4e3ff82130a5eee6dac110ff85",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-096",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "d7936d2d8b4e5556ed8c12a1902760a459b5ff7d38ed1ab48094e6a5c92b87ce",
+      "status": "completed",
+      "pid": 39504,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf4-eee5-76b3-a078-2a9eaac57a8e"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1188,
+          "reasoning_output_tokens": 146
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "18c9c5f0f0c95d275358b75b65ade8a5f935eb4306e5da4f11421307886a8a05",
+      "elapsed_seconds": 28.9,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-097",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "5124ed0d234a077c66d1d6a132a21f83b8987857063d571376f4b2962627d59f",
+      "status": "completed",
+      "pid": 40312,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf5-446b-7a92-8218-dcaf6297826c"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17280,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1441,
+          "reasoning_output_tokens": 427
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "d0564b7579872a6cc5b064c61bbd0c00d0f992edca0b99b05c11a8d762143691",
+      "elapsed_seconds": 33.07,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-098",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "f05c7628ebd5e37961649a75bc944731b64485e037d80f9aa152559b50cb022e",
+      "status": "completed",
+      "pid": 40717,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf5-46e0-7192-9fee-967c98ec5a4a"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17313,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1388,
+          "reasoning_output_tokens": 283
+        }
+      ],
+      "elapsed_seconds": 37.37,
+      "document_count": 6,
+      "output_sha256": "df6048156cc029522239ace4cfac01943a8b65d2ece06533bd4dabb6a0c2a6ee",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-099",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "ed949baef5eb00dc3817adb3b9e7d81308e60a01113e9840d8cfc7c04f79dcd2",
+      "status": "completed",
+      "pid": 41405,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf5-4eb8-7bb1-aff1-5b24a2d208ff"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1252,
+          "reasoning_output_tokens": 248
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "fe1dad166f85fbe068cd8f1b388a61d3a71bb59a37f975cc1f1d242f56467f69",
+      "elapsed_seconds": 30.7,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-100",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "a21a38d1a83ba0e2a2a5e64bcdd896e1eae83698b687d12f4943718c88766c67",
+      "status": "completed",
+      "pid": 41953,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf5-5250-7620-a2c5-a0fe497f093b"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17281,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1151,
+          "reasoning_output_tokens": 166
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "35fd3ce885c8a188168863fb73c11e484f8801665d1c6651be17a8e00a646725",
+      "elapsed_seconds": 29.87,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    },
+    {
+      "packet_id": "packet-101",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "b1ee574237fb97cbace28edc0d0a7a10e91c7846bfe8f311f8e98aa0ce1a5f95",
+      "status": "completed",
+      "pid": 42499,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf5-5701-77f1-9670-f260dd9551c0"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17311,
+          "cached_input_tokens": 15104,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1494,
+          "reasoning_output_tokens": 394
+        }
+      ],
+      "elapsed_seconds": 34.57,
+      "document_count": 6,
+      "output_sha256": "5d975cf50cda73c987001a591895c332e3ca96e646f26852edcb67e1afed3d6a",
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": "ungrounded reference"
+    },
+    {
+      "packet_id": "packet-102",
+      "model": "gpt-5.6-luna",
+      "prompt_sha256": "ea3da85e91a172a77d5090e5d6429925ef8da8d747d40f3d64caff0414b9f2a2",
+      "status": "completed",
+      "pid": 42535,
+      "returncode": 0,
+      "session_ids": [
+        "01a0baf5-579c-7552-a164-60ff4cc69ae5"
+      ],
+      "usage": [
+        {
+          "input_tokens": 17164,
+          "cached_input_tokens": 16128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1205,
+          "reasoning_output_tokens": 237
+        }
+      ],
+      "document_count": 6,
+      "output_sha256": "7b59a4c21ad3226edfc37e3ddad7b771e5f06907dd8e099716d9e1275199d69a",
+      "elapsed_seconds": 29.13,
+      "normalization": {
+        "removed_grounded_non_id_references": [],
+        "body_modified": false
+      },
+      "initial_validation_error": null
+    }
+  ]
+}

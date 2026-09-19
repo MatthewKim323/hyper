@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-015",
+  "documents": [
+    {
+      "document_id": "packet-015-doc-1",
+      "kind": "email",
+      "date": "2026-03-31",
+      "subject": "Payroll record and settlement clarification",
+      "body": "Hello Casey and Taylor,\n\nFor the 2026-03-31 payroll record PAY-015, the packet lists gross payroll of $438,000.00, withholding of $87,600.00, employer costs of $35,040.00, and net payroll of $350,400.00. Please confirm whether any external movement associated with this record has been confirmed, or whether the amounts remain proposals for review. The settlement policy states that only confirmed external movements are settled; proposals are not settlements. Please provide any missing explanation needed for reconciliation. No additional approval or payment is established here.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-015-doc-2",
+      "kind": "chat",
+      "date": "2026-03-31",
+      "subject": "PAY-015 status check",
+      "body": "Casey: I am reviewing PAY-015 dated 2026-03-31. The recorded gross is $438,000.00, with $87,600.00 withheld and $35,040.00 listed as employer costs. Net payroll is $350,400.00.\n\nTaylor: I see the same figures. Do we have confirmation of any external movement, or is the record still awaiting clarification?\n\nCasey: I cannot infer a payment or approval from the packet. Let\u2019s request the missing explanation and keep the settlement status unconfirmed until supporting information is provided.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-015-doc-3",
+      "kind": "operational_note",
+      "date": "2026-03-31",
+      "subject": "Payroll reconciliation work note",
+      "body": "Operational note for Meridian Ledger Labs, Inc., company identifier MERIDIAN-001. Payroll record PAY-015 is dated 2026-03-31. The packet records gross payroll of $438,000.00, withholding of $87,600.00, employer costs of $35,040.00, and net payroll of $350,400.00. Reconciliation remains dependent on identifying whether any external movement is confirmed. Under the stated settlement policy, proposals are not settlements. Request the missing explanation before recording a settled movement. This note does not establish an approval, payment, or transaction purpose.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-015-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-03-31",
+      "subject": "Settlement policy excerpt",
+      "body": "Excerpt applicable to the 2026-03-31 review: \u201cOnly confirmed external movements are settled; proposals are not settlements.\u201d This language should be read together with payroll record PAY-015 and company identifier MERIDIAN-001. The packet supplies payroll figures but does not establish an external movement, approval, payment, or additional commercial term. Any operational use of this excerpt should therefore preserve the distinction between a proposal and a confirmed movement. Missing explanations should be requested from the appropriate internal owner before reconciliation status is characterized.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-015-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-03-31",
+      "subject": "Question regarding PAY-015 settlement status",
+      "body": "For PAY-015 dated 2026-03-31, can the finance owner confirm whether a confirmed external movement exists for the payroll amounts recorded in the packet? The listed values are gross payroll of $438,000.00, withholding of $87,600.00, employer costs of $35,040.00, and net payroll of $350,400.00. If no confirmation is available, should the item remain treated as unresolved rather than settled under the policy for MERIDIAN-001? Please provide the missing explanation and any source record that supports the status.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-015-doc-6",
+      "kind": "follow_up",
+      "date": "2026-03-31",
+      "subject": "Follow-up actions for payroll review",
+      "body": "Follow-up for the 2026-03-31 payroll review: retain PAY-015 as the referenced record, verify the listed gross, withholding, employer, and net figures against available support, and request an explanation for any missing settlement detail. Confirm whether an external movement is actually confirmed before treating it as settled. If the information remains incomplete, document the uncertainty and leave approval or payment status unstated. The settlement policy for MERIDIAN-001 does not convert a proposal into a settlement, and no additional approval or payment is established by this follow-up.",
+      "source_refs": [
+        "PAY-015",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

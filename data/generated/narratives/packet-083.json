@@ -1,0 +1,97 @@
+{
+  "packet_id": "packet-083",
+  "documents": [
+    {
+      "document_id": "packet-083-doc-1",
+      "kind": "email",
+      "date": "2025-11-30",
+      "subject": "Invoice AP-00623 record confirmation",
+      "body": "Hello Atlas Services 023,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-00623 for $1,300.58, associated with vendor VEN-023 and purchase order PO-00623. Our records show the invoice status as posted and identify ap23@supplier.example as the supplier contact. Please confirm that the invoice details remain accurate and advise whether any explanation or supporting information is needed for the current review. This message does not confirm payment, additional approval, or any outcome beyond the records identified above.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00623",
+        "VEN-023",
+        "PO-00623"
+      ]
+    },
+    {
+      "document_id": "packet-083-doc-2",
+      "kind": "chat",
+      "date": "2025-11-30",
+      "subject": "Review status for PO-00623",
+      "body": "Casey Team05: I\u2019m reviewing the records connected to PO-00623 and invoice AP-00623. The invoice is posted for $1,300.58, and the service receipt RC-AP-00623 records an accepted amount of $1,300.58 by EMP-005. The vendor is Atlas Services 023, identified as VEN-023. I do not see evidence here of a payment or any additional approval. Atlas Services 023, please flag any discrepancy or missing explanation so the record can be examined further.",
+      "source_refs": [
+        "PO-00623",
+        "AP-00623",
+        "RC-AP-00623",
+        "EMP-005",
+        "VEN-023"
+      ]
+    },
+    {
+      "document_id": "packet-083-doc-3",
+      "kind": "operational_note",
+      "date": "2025-11-30",
+      "subject": "Accounts payable review note",
+      "body": "Operational review of AP-00623: vendor VEN-023 is Atlas Services 023, categorized as services. The invoice amount is $1,300.58 and its status is posted. Purchase order PO-00623 carries the same recorded amount, while service receipt RC-AP-00623 records an accepted amount of $1,300.58 and identifies EMP-005 as the accepting employee. The approved recipient is SIM-RECIPIENT-023. This note records available references only; it does not establish payment, additional approval, or a resolved exception.",
+      "source_refs": [
+        "AP-00623",
+        "VEN-023",
+        "PO-00623",
+        "RC-AP-00623",
+        "EMP-005",
+        "SIM-RECIPIENT-023"
+      ]
+    },
+    {
+      "document_id": "packet-083-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-11-30",
+      "subject": "Referenced service arrangement excerpt",
+      "body": "Referenced records for agreement VA-AP-00623 identify purchase order PO-00623 with vendor VEN-023, Atlas Services 023. The purchase order amount is $1,300.58. The associated invoice is AP-00623, and the service receipt is RC-AP-00623. Vendor records identify the category as services and specify 30-day terms. This excerpt is limited to the supplied packet and should not be read as adding commercial conditions, payment confirmation, approval, scope detail, or legal conclusions not stated in those records.",
+      "source_refs": [
+        "VA-AP-00623",
+        "PO-00623",
+        "VEN-023",
+        "AP-00623",
+        "RC-AP-00623"
+      ]
+    },
+    {
+      "document_id": "packet-083-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-11-30",
+      "subject": "Question regarding AP-00623 reconciliation",
+      "body": "Can the owner of the AP-00623 review confirm whether the posted invoice amount of $1,300.58 reconciles to the $1,300.58 recorded on PO-00623 and the $1,300.58 accepted on service receipt RC-AP-00623? The packet identifies Atlas Services 023 as vendor VEN-023 and EMP-005 as the accepting employee. Please also identify any discrepancy, missing explanation, or documentation still required. No payment or additional approval is established by the supplied records, so those points should remain open unless separately supported.",
+      "source_refs": [
+        "AP-00623",
+        "PO-00623",
+        "RC-AP-00623",
+        "VEN-023",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-083-doc-6",
+      "kind": "follow_up",
+      "date": "2025-11-30",
+      "subject": "Follow-up actions for invoice review",
+      "body": "Casey Team05 will continue the same-day review of invoice AP-00623 with Atlas Services 023 using the supplied references for vendor VEN-023, purchase order PO-00623, agreement VA-AP-00623, and service receipt RC-AP-00623. Please send any missing explanation or supporting detail through the recorded supplier contact, ap23@supplier.example. The current records show a posted invoice for $1,300.58 and an accepted service amount of $1,300.58. Follow-up remains informational and does not confirm payment, further approval, or closure.",
+      "source_refs": [
+        "AP-00623",
+        "VEN-023",
+        "PO-00623",
+        "VA-AP-00623",
+        "RC-AP-00623"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [
+      "ap23@supplier.example",
+      "ap23@supplier.example"
+    ],
+    "body_modified": false
+  }
+}

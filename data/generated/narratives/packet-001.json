@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-001",
+  "documents": [
+    {
+      "document_id": "packet-001-doc-1",
+      "kind": "email",
+      "date": "2025-01-31",
+      "subject": "Invoice AR-00001 status and reconciliation request",
+      "body": "Hello Aster Network 001 finance team, Meridian Ledger Labs, Inc. is reviewing invoice AR-00001 for customer CUS-001 under contract CON-001. The invoice is posted, dated 2025-01-01, due 2025-01-31, and records an annual advance amount of $18,000. Please confirm whether your records show any payment activity or other status information for this invoice. If the balance remains unresolved, please share the appropriate explanation or supporting reference so the accounts can be reviewed accurately. No payment or approval is assumed by this message.",
+      "source_refs": [
+        "AR-00001",
+        "CUS-001",
+        "CON-001"
+      ]
+    },
+    {
+      "document_id": "packet-001-doc-2",
+      "kind": "chat",
+      "date": "2025-01-31",
+      "subject": "AR-00001 review",
+      "body": "Casey Team05: I\u2019m reviewing the posted receivable for Aster Network 001 today. Invoice AR-00001 is linked to CUS-001 and CON-001, with a due date of 2025-01-31. The recorded amount is $18,000, and the invoice type is annual advance. Do we have any internal evidence that changes the current status, or should we request clarification from the customer finance contact? I\u2019m not treating payment, approval, or settlement as established. Please point me to any source that can explain the open reconciliation question.",
+      "source_refs": [
+        "AR-00001",
+        "CUS-001",
+        "CON-001"
+      ]
+    },
+    {
+      "document_id": "packet-001-doc-3",
+      "kind": "operational_note",
+      "date": "2025-01-31",
+      "subject": "Receivable review note for AR-00001",
+      "body": "Operational review on 2025-01-31: invoice AR-00001 is posted for customer CUS-001, Aster Network 001, under contract CON-001. The invoice date is 2025-01-01 and the due date is 2025-01-31. Its recorded type is annual advance, with an amount of $18,000. The related contract identifies hosted access and metered API blocks, an annual-advance billing arrangement, and 30-day terms. Current records do not establish payment, approval, or an explanation for any unresolved reconciliation item.",
+      "source_refs": [
+        "AR-00001",
+        "CUS-001",
+        "CON-001"
+      ]
+    },
+    {
+      "document_id": "packet-001-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-01-31",
+      "subject": "CON-001 billing and service excerpt",
+      "body": "Contract CON-001 identifies CUS-001 as the customer and has an effective date of 2025-01-01 and an end date of 2026-12-31. The service is described as hosted access and metered API blocks. Billing is annual advance, with 30-day terms. The monthly base is recorded as 150,000 cents, and the usage block price is recorded as 1 cent. This excerpt states the supplied contract fields only. It does not establish whether invoice AR-00001 has been paid, approved, disputed, or otherwise resolved.",
+      "source_refs": [
+        "CON-001",
+        "CUS-001",
+        "AR-00001"
+      ]
+    },
+    {
+      "document_id": "packet-001-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-01-31",
+      "subject": "Clarification requested for AR-00001",
+      "body": "Please confirm the current reconciliation status of invoice AR-00001 for CUS-001 under CON-001. The supplied record shows a posted annual-advance invoice dated 2025-01-01, due 2025-01-31, for $18,000. It is unclear whether customer records contain payment activity, a timing explanation, a documentation issue, or another reason the item requires review. Please provide the relevant explanation and any supporting reference available to the finance owner. Until that information is received, no payment, approval, or final resolution should be recorded from this draft.",
+      "source_refs": [
+        "AR-00001",
+        "CUS-001",
+        "CON-001"
+      ]
+    },
+    {
+      "document_id": "packet-001-doc-6",
+      "kind": "follow_up",
+      "date": "2025-01-31",
+      "subject": "Follow-up on invoice and contract review",
+      "body": "Following today\u2019s review, please respond regarding invoice AR-00001 and its relationship to CON-001 for customer CUS-001. The posted invoice carries an annual-advance classification, an amount of $18,000, and a due date of 2025-01-31. Please confirm what your records show and identify any missing explanation or documentation needed for reconciliation. If another contact or reference should handle the question, please direct it accordingly. This follow-up records a request for clarification only and does not assert payment, approval, or a resolved outcome.",
+      "source_refs": [
+        "AR-00001",
+        "CUS-001",
+        "CON-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

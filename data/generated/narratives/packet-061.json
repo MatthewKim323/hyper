@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-061",
+  "documents": [
+    {
+      "document_id": "packet-061-doc-1",
+      "kind": "email",
+      "date": "2025-07-31",
+      "subject": "Question regarding posted invoice AR-00801",
+      "body": "To: finance61@customer.example\n\nHello Aster Network 061 finance team,\n\nMeridian Ledger Labs, Inc. has invoice AR-00801 posted on 2025-07-31 for $93.46, associated with customer CUS-061 and contract CON-061. The invoice is identified as monthly and shows a due date of 2025-08-30. Could you please review the invoice and let us know whether the amount and billing period align with your records? If clarification is needed, please identify the specific item requiring review. No payment or approval is assumed here.",
+      "source_refs": [
+        "AR-00801",
+        "CUS-061",
+        "CON-061"
+      ]
+    },
+    {
+      "document_id": "packet-061-doc-2",
+      "kind": "chat",
+      "date": "2025-07-31",
+      "subject": "AR-00801 review",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AR-00801 for Aster Network 061. The invoice is dated 2025-07-31, marked monthly, and lists $93.46 due on 2025-08-30. It references customer CUS-061 and contract CON-061. The contract describes hosted access and metered API blocks, with annual-advance billing and a 30-day term. I do not yet have an explanation for the invoice amount or its relationship to those contract fields. Please flag any supporting record to request from the customer.",
+      "source_refs": [
+        "AR-00801",
+        "CUS-061",
+        "CON-061"
+      ]
+    },
+    {
+      "document_id": "packet-061-doc-3",
+      "kind": "operational_note",
+      "date": "2025-07-31",
+      "subject": "Invoice and contract review note",
+      "body": "Invoice AR-00801 is posted for customer CUS-061, Aster Network 061, with invoice date 2025-07-31 and due date 2025-08-30. The recorded amount is $93.46, and the invoice type is monthly. Contract CON-061 is effective from 2025-01-01 through 2026-12-31 and identifies hosted access and metered API blocks. Its listed billing method is annual advance, with a monthly base of $1,500.00 and usage block price of $0.01. Reconciliation remains open.",
+      "source_refs": [
+        "AR-00801",
+        "CUS-061",
+        "CON-061"
+      ]
+    },
+    {
+      "document_id": "packet-061-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-07-31",
+      "subject": "CON-061 service and billing excerpt",
+      "body": "Contract CON-061 identifies customer CUS-061 and covers hosted access and metered API blocks. The effective date is 2025-01-01, and the end date is 2026-12-31. The stated billing method is annual advance. The listed monthly base is $1,500.00, and the usage block price is $0.01. Payment terms are 30 days. This excerpt does not establish how invoice AR-00801 reached its posted amount of $93.46 or whether any separate explanation applies.",
+      "source_refs": [
+        "CON-061",
+        "CUS-061",
+        "AR-00801"
+      ]
+    },
+    {
+      "document_id": "packet-061-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-07-31",
+      "subject": "Reconciliation question for CUS-061",
+      "body": "Please confirm how posted invoice AR-00801, dated 2025-07-31, should be reconciled to contract CON-061. The invoice amount is $93.46 and the invoice type is monthly, while the contract lists annual-advance billing, a monthly base of $1,500.00, and a usage block price of $0.01. Is there a documented explanation for the difference between the invoice amount and the listed contract pricing? Please provide the relevant supporting detail or identify the record that should be reviewed next. No payment is presumed.",
+      "source_refs": [
+        "AR-00801",
+        "CON-061",
+        "CUS-061"
+      ]
+    },
+    {
+      "document_id": "packet-061-doc-6",
+      "kind": "follow_up",
+      "date": "2025-07-31",
+      "subject": "Follow-up requested on invoice review",
+      "body": "Following up on the review of invoice AR-00801 for Aster Network 061, customer CUS-061. The invoice remains identified as posted, dated 2025-07-31, with an amount of $93.46 and due date 2025-08-30. Please confirm whether the customer has provided any explanation or supporting detail concerning the invoice amount, its monthly designation, and its connection to contract CON-061. If nothing has been received, please record the outstanding request and the next review point. This follow-up does not imply approval, payment, or resolution.",
+      "source_refs": [
+        "AR-00801",
+        "CUS-061",
+        "CON-061"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-009",
+  "documents": [
+    {
+      "document_id": "packet-009-doc-1",
+      "kind": "email",
+      "date": "2025-09-30",
+      "subject": "Request for payroll-related confirmation",
+      "body": "Hello, We are reviewing the payroll record identified as PAY-009 for 2025-09-30. The record lists gross payroll of $438,000.00, withholding of $87,600.00, employer costs of $35,040.00, and net payroll of $350,400.00. Please confirm whether your records contain any explanation or supporting context relevant to these figures. We are not treating this request as confirmation of a payment or external movement. Any missing explanation should be provided with the applicable source identifier. Thank you for helping us complete the review.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-009-doc-2",
+      "kind": "chat",
+      "date": "2025-09-30",
+      "subject": "PAY-009 review",
+      "body": "Casey Team05: I\u2019m reviewing PAY-009 dated 2025-09-30. The listed gross amount is $438,000.00, with $87,600.00 withheld, $35,040.00 shown as employer cost, and $350,400.00 net. Taylor Team06: I can help request the missing explanation, but I do not see an established approval or payment in the packet. Casey Team05: Agreed. Let\u2019s keep the item open and distinguish any proposal from a confirmed external movement under the settlement policy. Please add source identifiers to any response.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-009-doc-3",
+      "kind": "operational_note",
+      "date": "2025-09-30",
+      "subject": "Payroll record review note",
+      "body": "On 2025-09-30, Meridian Ledger Labs, Inc. recorded payroll item PAY-009. The packet identifies gross payroll of $438,000.00, withholding of $87,600.00, employer cost of $35,040.00, and net payroll of $350,400.00. The available information does not establish an additional approval, payment, or explanation for these fields. Operations should request the missing explanation, preserve PAY-009 as the source identifier, and avoid treating any proposal as a settlement unless an external movement is confirmed. Status remains subject to reconciliation.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-009-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-09-30",
+      "subject": "Settlement treatment excerpt",
+      "body": "\u201cOnly confirmed external movements are settled; proposals are not settlements.\u201d This excerpt applies to review of payroll record PAY-009 and company identifier MERIDIAN-001. The excerpt does not establish that any payment, approval, or external movement occurred on 2025-09-30. Where the record lacks an explanation, the appropriate action is to request clarification and retain the original source identifier. Any later determination should distinguish recorded payroll fields from confirmed settlement activity and should not infer transaction purpose beyond the supplied packet.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-009-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-09-30",
+      "subject": "Open question for PAY-009",
+      "body": "Can the record owner provide the missing explanation for PAY-009 dated 2025-09-30? The packet lists gross payroll of $438,000.00, withholding of $87,600.00, employer cost of $35,040.00, and net payroll of $350,400.00, but it does not identify an associated approval, payment, or confirmed external movement. Please clarify what supporting information is available, using PAY-009 and MERIDIAN-001 as source identifiers. Until that clarification is received, should the item remain open for reconciliation rather than be treated as settled?",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-009-doc-6",
+      "kind": "follow_up",
+      "date": "2025-09-30",
+      "subject": "Follow-up on requested clarification",
+      "body": "Following up on the same-day review of PAY-009, we still need the missing explanation for the payroll fields recorded on 2025-09-30. The packet provides the amounts but does not establish an additional approval, payment, or confirmed external movement. Please return any available clarification with the source identifier PAY-009. Until supporting context is provided, retain the item as unresolved for review and apply the settlement policy associated with MERIDIAN-001. This follow-up does not confirm a settlement or infer transaction purpose.",
+      "source_refs": [
+        "PAY-009",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

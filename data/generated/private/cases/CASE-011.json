@@ -1,0 +1,88 @@
+{
+  "case_id": "CASE-011",
+  "development_family": "unrelated_credit",
+  "split": "development_not_sealed",
+  "counterparty_events": [
+    {
+      "trigger": "request_price_correction",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-P-CASE-011",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-1052",
+          "vendor_id": "FIXTURE-VENDOR-011",
+          "amount_cents": 400000,
+          "scope": "Price adjustment over original invoice quantity",
+          "already_allocated_cents": 0
+        },
+        "sha256": "c1e0b9523d420991571ad8bbed9213faac59ce2e465f01bdb3917cfdc8e6442a"
+      }
+    },
+    {
+      "trigger": "request_quantity_status",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CAN-CASE-011",
+        "type": "internal_cancellation",
+        "date": "2026-06-25",
+        "source": "procurement",
+        "body": {
+          "po_id": "PO-491",
+          "quantity": 40,
+          "approved_internally": true,
+          "supplier_acceptance": "not established by this internal record"
+        },
+        "sha256": "19d06e1a85891b77ccef1eea5ff99d04b842968c40a12823326e9c413a08fc24"
+      }
+    },
+    {
+      "trigger": "request_cancellation_acceptance_and_credit",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-Q-CASE-011",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-1052",
+          "vendor_id": "FIXTURE-VENDOR-011",
+          "amount_cents": 230000,
+          "scope": "Canceled quantity at corrected price",
+          "supplier_cancellation_accepted": true
+        },
+        "sha256": "bbe77e5449fe4e6a1b026e01e16350bb01070926ca8c0efcf2b1286fa5a7c8d9"
+      }
+    },
+    {
+      "trigger": "supplier_unsolicited_reply",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CM-X-CASE-011",
+        "type": "credit_memo",
+        "date": "2026-06-25",
+        "source": "supplier_portal",
+        "body": {
+          "invoice_id": "INV-UNRELATED",
+          "vendor_id": "FIXTURE-VENDOR-011",
+          "amount_cents": 100000,
+          "scope": "Other transaction"
+        },
+        "sha256": "cf0cfc022cf1fad549d0cea49001ba69f3c10613ded6aa1f9e475cb78ef883df"
+      }
+    }
+  ],
+  "expected_disposition": "PAYMENT_READY_AFTER_APPROVAL",
+  "expected_net_cents": 920000,
+  "reason": "All pricing and quantity conditions can be supported through available evidence.",
+  "invariants": [
+    "cash remains unchanged",
+    "no repeated credit allocation",
+    "recipient unchanged",
+    "current approval required when over threshold"
+  ],
+  "allowed_sequence": "Any sequence obtaining the required evidence; triggers are simulator API conditions, not mandatory solver steps",
+  "solver_must_not_read_this": true
+}

@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-003",
+  "documents": [
+    {
+      "document_id": "packet-003-doc-1",
+      "kind": "email",
+      "date": "2025-03-31",
+      "subject": "Request for payroll movement clarification",
+      "body": "Dear Supplier/Customer Team,\n\nMeridian Ledger Labs, Inc. is reviewing payroll record PAY-003 dated 2025-03-31. The record shows gross payroll of $438,000.00, withholding of $87,600.00, employer cost of $35,040.00, and net payroll of $350,400.00. Please provide any available explanation or supporting detail for the related external movement. We are requesting clarification only; this message does not confirm a payment, approval, settlement, or transaction purpose. Please reference company ID MERIDIAN-001 in your response.",
+      "source_refs": [
+        "PAY-003",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-003-doc-2",
+      "kind": "chat",
+      "date": "2025-03-31",
+      "subject": "Payroll record review",
+      "body": "Casey Team05: I am reviewing PAY-003 for 2025-03-31. The recorded gross payroll is $438,000.00, with $87,600.00 withheld, $35,040.00 listed as employer cost, and $350,400.00 shown as net payroll.\n\nTaylor Team06: I can help request the missing explanation, but I do not see evidence here of an additional approval or payment.\n\nCasey Team05: Agreed. Let us document the open question and apply the settlement policy carefully: only confirmed external movements are settled; proposals are not settlements.",
+      "source_refs": [
+        "PAY-003",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-003-doc-3",
+      "kind": "operational_note",
+      "date": "2025-03-31",
+      "subject": "Payroll reconciliation work note",
+      "body": "On 2025-03-31, Finance owner Casey Team05 recorded a review item for payroll PAY-003 under company ID MERIDIAN-001. The immutable record lists gross payroll of $438,000.00, withholding of $87,600.00, employer cost of $35,040.00, and net payroll of $350,400.00. The explanation for any related movement remains missing. Next action is to request supporting detail and distinguish confirmed external movements from proposals. No additional approval, payment, settlement, or transaction purpose is established by this note.",
+      "source_refs": [
+        "PAY-003",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-003-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-03-31",
+      "subject": "Service and settlement excerpt",
+      "body": "Section excerpt, dated 2025-03-31:\n\nFor company ID MERIDIAN-001, the applicable settlement policy is: \u201cOnly confirmed external movements are settled; proposals are not settlements.\u201d This excerpt is associated with payroll record PAY-003, dated 2025-03-31, which identifies gross payroll of $438,000.00, withholding of $87,600.00, employer cost of $35,040.00, and net payroll of $350,400.00. The excerpt records no additional commercial term, approval, payment, or confirmed transaction purpose. Missing explanations must be requested.",
+      "source_refs": [
+        "PAY-003",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-003-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-03-31",
+      "subject": "Open question regarding PAY-003",
+      "body": "Can the responsible record holder provide the missing explanation for payroll PAY-003 dated 2025-03-31? The packet identifies gross payroll of $438,000.00, withholding of $87,600.00, employer cost of $35,040.00, and net payroll of $350,400.00, but does not establish whether any related movement is confirmed or merely proposed. Please identify the supporting record, if one exists, and clarify its status under company ID MERIDIAN-001. Do not treat this question as evidence of approval, payment, settlement, or purpose.",
+      "source_refs": [
+        "PAY-003",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-003-doc-6",
+      "kind": "follow_up",
+      "date": "2025-03-31",
+      "subject": "Follow-up actions for payroll review",
+      "body": "Follow-up dated 2025-03-31: Casey Team05 and Taylor Team06 should continue the review of PAY-003 using company ID MERIDIAN-001. Request the missing explanation and any supporting detail needed to determine whether an external movement is confirmed. Apply the stated settlement policy consistently: only confirmed external movements are settled, while proposals are not settlements. Until supporting information is provided, leave approval, payment, settlement status, and transaction purpose unconfirmed. This draft records next steps only and does not resolve the open question.",
+      "source_refs": [
+        "PAY-003",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

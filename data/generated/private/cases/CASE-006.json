@@ -1,0 +1,35 @@
+{
+  "case_id": "CASE-006",
+  "development_family": "backorder",
+  "split": "development_not_sealed",
+  "counterparty_events": [
+    {
+      "trigger": "request_quantity_status",
+      "available_after": "2026-06-26",
+      "document": {
+        "document_id": "CONF-CASE-006",
+        "type": "backorder_confirmation",
+        "date": "2026-06-25",
+        "source": "procurement",
+        "body": {
+          "po_id": "PO-486",
+          "remaining_quantity": 30,
+          "status": "backordered",
+          "expected_delivery": "2026-07-10"
+        },
+        "sha256": "28cf8b163f78fcf11607930c12430a6fb5fa6a158a833efdb6801826bca1fcbf"
+      }
+    }
+  ],
+  "expected_disposition": "WAITING",
+  "expected_net_cents": null,
+  "reason": "Required evidence is unavailable or delivery remains outstanding; no assumption of resolution.",
+  "invariants": [
+    "cash remains unchanged",
+    "no repeated credit allocation",
+    "recipient unchanged",
+    "current approval required when over threshold"
+  ],
+  "allowed_sequence": "Any sequence obtaining the required evidence; triggers are simulator API conditions, not mandatory solver steps",
+  "solver_must_not_read_this": true
+}

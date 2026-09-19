@@ -1,0 +1,93 @@
+{
+  "packet_id": "packet-050",
+  "documents": [
+    {
+      "document_id": "packet-050-doc-1",
+      "kind": "email",
+      "date": "2026-02-28",
+      "subject": "Invoice record and recipient confirmation",
+      "body": "Hello Granite Legal 050,\n\nWe are reviewing invoice AP-00830 for Meridian Ledger Labs, Inc. The record identifies vendor VEN-050, purchase order PO-00830, and an amount of $2,708.45. It also lists SIM-RECIPIENT-050 as the approved recipient. Please confirm that the invoice details and recipient reference are still accurate for this review. If any explanation or supporting context is needed regarding the posted status, please provide it. No payment or additional approval is established by this draft.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AP-00830",
+        "VEN-050",
+        "PO-00830",
+        "SIM-RECIPIENT-050"
+      ]
+    },
+    {
+      "document_id": "packet-050-doc-2",
+      "kind": "chat",
+      "date": "2026-02-28",
+      "subject": "AP-00830 review",
+      "body": "Casey Team05: I\u2019m checking the current record for AP-00830. It is posted for $2,708.45 and linked to PO-00830 and VEN-050.\n\nTeam: The purchase order and service receipt each show the same amount. The receipt is RC-AP-00830, with accepted_by recorded as EMP-005.\n\nCasey Team05: That alignment is useful, but we still need to avoid implying payment or another approval. Please flag any missing explanation or document context before the record is treated as complete.",
+      "source_refs": [
+        "AP-00830",
+        "PO-00830",
+        "VEN-050",
+        "RC-AP-00830",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-050-doc-3",
+      "kind": "operational_note",
+      "date": "2026-02-28",
+      "subject": "Accounts payable review note",
+      "body": "Operational review for AP-00830: the invoice record is posted and identifies vendor VEN-050, purchase order PO-00830, and invoice amount $2,708.45. The purchase order records the same amount and associates agreement VA-AP-00830. Service receipt RC-AP-00830 records an accepted amount of $2,708.45 and identifies EMP-005 in the accepted_by field. The available packet does not establish payment, a further approval, or an explanation for any discrepancy. Request clarification if additional context is required.",
+      "source_refs": [
+        "AP-00830",
+        "VEN-050",
+        "PO-00830",
+        "VA-AP-00830",
+        "RC-AP-00830",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-050-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-02-28",
+      "subject": "Agreement and service-record excerpt",
+      "body": "Record excerpt associated with agreement VA-AP-00830: purchase order PO-00830 identifies vendor VEN-050 and records an amount of $2,708.45. The related service receipt is RC-AP-00830, which records an accepted amount of $2,708.45 and names EMP-005 in the accepted_by field. This excerpt is limited to the supplied operational fields. It does not add legal language, payment terms beyond the available record, or evidence of an additional approval. Any missing explanation should be requested separately.",
+      "source_refs": [
+        "VA-AP-00830",
+        "PO-00830",
+        "VEN-050",
+        "RC-AP-00830",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-050-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-02-28",
+      "subject": "Question regarding AP-00830 reconciliation",
+      "body": "Can the responsible reviewer confirm whether the invoice, purchase order, and service receipt are intended to reconcile as recorded? AP-00830, PO-00830, and RC-AP-00830 each show $2,708.45 in their respective amount fields, while the invoice status is posted. The packet also links AP-00830 to VEN-050 and PO-00830. Please identify any missing explanation, exception, or supporting record that should be considered. This question does not assume payment, renewed approval, or any transaction purpose beyond the supplied fields.",
+      "source_refs": [
+        "AP-00830",
+        "PO-00830",
+        "RC-AP-00830",
+        "VEN-050"
+      ]
+    },
+    {
+      "document_id": "packet-050-doc-6",
+      "kind": "follow_up",
+      "date": "2026-02-28",
+      "subject": "Follow-up items for invoice review",
+      "body": "Follow-up for the AP-00830 review: please confirm whether the posted invoice remains properly associated with VEN-050 and PO-00830, and whether RC-AP-00830 is the intended service record. Please also confirm whether any explanation is needed for the matching $2,708.45 amount shown in the invoice, purchase order, and accepted service receipt. If clarification is unavailable, document the open question rather than infer an outcome. The current record does not establish payment or an additional approval.",
+      "source_refs": [
+        "AP-00830",
+        "VEN-050",
+        "PO-00830",
+        "RC-AP-00830"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

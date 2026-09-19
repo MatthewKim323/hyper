@@ -1,0 +1,91 @@
+{
+  "packet_id": "packet-053",
+  "documents": [
+    {
+      "document_id": "packet-053-doc-1",
+      "kind": "email",
+      "date": "2026-05-31",
+      "subject": "Invoice AP-01013 record review",
+      "body": "Hello Atlas Services 053,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-01013, dated 2026-05-28, for $1,312.23. Our records associate it with vendor VEN-053 and purchase order PO-01013. The invoice status is posted, with a due date of 2026-06-27. Please confirm that the invoice details remain accurate and identify any missing explanation or supporting information needed for review. This message does not confirm additional approval or payment. Please reply through the recorded supplier contact, ap53@supplier.example.",
+      "source_refs": [
+        "AP-01013",
+        "VEN-053",
+        "PO-01013"
+      ]
+    },
+    {
+      "document_id": "packet-053-doc-2",
+      "kind": "chat",
+      "date": "2026-05-31",
+      "subject": "Internal review: AP-01013",
+      "body": "Casey Team05: I am checking the posted invoice AP-01013 against PO-01013 and receipt RC-AP-01013. The invoice and purchase order each show $1,312.23, and the receipt records an accepted amount of $1,312.23. The receipt date is 2026-05-28, and it lists EMP-005 as the accepting party. I do not see an established additional approval or payment in the packet. If anything is missing, we should request an explanation or supporting record rather than infer one.",
+      "source_refs": [
+        "AP-01013",
+        "PO-01013",
+        "RC-AP-01013",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-053-doc-3",
+      "kind": "operational_note",
+      "date": "2026-05-31",
+      "subject": "Accounts payable record alignment",
+      "body": "Operational review note for 2026-05-31: invoice AP-01013 is posted under vendor VEN-053, Atlas Services 053, and is dated 2026-05-28. The linked purchase order is PO-01013, dated 2026-05-01, with amount $1,312.23. Service receipt RC-AP-01013 is dated 2026-05-28 and records an accepted amount of $1,312.23, accepted by EMP-005. The approved recipient is SIM-RECIPIENT-053. Any unresolved discrepancy or missing explanation should be requested and documented.",
+      "source_refs": [
+        "AP-01013",
+        "VEN-053",
+        "PO-01013",
+        "RC-AP-01013",
+        "EMP-005",
+        "SIM-RECIPIENT-053"
+      ]
+    },
+    {
+      "document_id": "packet-053-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-05-31",
+      "subject": "Agreement and service-record excerpt",
+      "body": "Agreement reference VA-AP-01013 is associated with purchase order PO-01013 and vendor VEN-053. The purchase order is dated 2026-05-01 and records an amount of $1,312.23. The related service receipt is RC-AP-01013, dated 2026-05-28, with an accepted amount of $1,312.23. The associated invoice is AP-01013, dated 2026-05-28, and its status is posted. This excerpt records packet-linked fields only; it does not establish additional contractual terms, approval, payment, or a resolved interpretation.",
+      "source_refs": [
+        "VA-AP-01013",
+        "PO-01013",
+        "VEN-053",
+        "RC-AP-01013",
+        "AP-01013"
+      ]
+    },
+    {
+      "document_id": "packet-053-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-05-31",
+      "subject": "Question regarding AP-01013 reconciliation",
+      "body": "Can the owner confirm whether invoice AP-01013, purchase order PO-01013, and service receipt RC-AP-01013 should be treated as aligned for the current review? Each record shows $1,312.23, while the invoice and receipt are dated 2026-05-28 and the purchase order is dated 2026-05-01. The invoice is posted and lists a due date of 2026-06-27. Please identify any missing explanation, exception, or supporting record. The packet does not establish additional approval or payment, so those matters should remain open unless separately documented.",
+      "source_refs": [
+        "AP-01013",
+        "PO-01013",
+        "RC-AP-01013"
+      ]
+    },
+    {
+      "document_id": "packet-053-doc-6",
+      "kind": "follow_up",
+      "date": "2026-05-31",
+      "subject": "Follow-up items for vendor record review",
+      "body": "Follow-up for 2026-05-31: please retain the linkage among vendor VEN-053, invoice AP-01013, purchase order PO-01013, and receipt RC-AP-01013 while the record review continues. If clarification is needed, request it from Atlas Services 053 through ap53@supplier.example. Confirm that any response addresses the documented fields without adding assumptions about transaction purpose. The packet identifies SIM-RECIPIENT-053 as the approved recipient. No additional approval or payment is established here; record those items only if supported by separate documentation.",
+      "source_refs": [
+        "VEN-053",
+        "AP-01013",
+        "PO-01013",
+        "RC-AP-01013",
+        "SIM-RECIPIENT-053"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

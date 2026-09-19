@@ -1,0 +1,96 @@
+{
+  "packet_id": "packet-011",
+  "documents": [
+    {
+      "document_id": "packet-011-doc-1",
+      "kind": "email",
+      "date": "2025-11-30",
+      "subject": "Invoice AP-00611 record review",
+      "body": "Hello Atlas Services 011, Meridian Ledger Labs, Inc. is reviewing invoice AP-00611 associated with purchase order PO-00611. Our records show a posted amount of $933.52 and identify the approved recipient as SIM-RECIPIENT-011. Please confirm that the invoice details and recipient information remain accurate, and provide any explanation needed for discrepancies if you identify one. This message is a same-day review request; it does not confirm payment, additional approval, or a resolved reconciliation.",
+      "source_refs": [
+        "AP-00611",
+        "PO-00611",
+        "VEN-011",
+        "SIM-RECIPIENT-011"
+      ]
+    },
+    {
+      "document_id": "packet-011-doc-2",
+      "kind": "chat",
+      "date": "2025-11-30",
+      "subject": "AP review status",
+      "body": "Casey Team05: I\u2019m reviewing AP-00611 against PO-00611 and receipt RC-AP-00611. The recorded invoice amount, purchase order amount, and accepted receipt amount each appear as $933.52 based on the packet values. The invoice status is posted. I do not see evidence here of a payment or any additional approval. Atlas Services 011 is listed as the supplier, and SIM-RECIPIENT-011 is the approved recipient. I\u2019ll request clarification if any supporting detail does not align.",
+      "source_refs": [
+        "AP-00611",
+        "PO-00611",
+        "RC-AP-00611",
+        "VEN-011",
+        "SIM-RECIPIENT-011"
+      ]
+    },
+    {
+      "document_id": "packet-011-doc-3",
+      "kind": "operational_note",
+      "date": "2025-11-30",
+      "subject": "Accounts payable control note",
+      "body": "For the 2025-11-30 review, retain the relationship among invoice AP-00611, vendor VEN-011, purchase order PO-00611, and service receipt RC-AP-00611. The invoice is posted, while the receipt records an accepted amount of $933.52 and identifies EMP-005 as the accepting party. The purchase order carries the same recorded amount and links to agreement VA-AP-00611. Before any further processing, document unresolved questions and avoid treating this note as evidence of payment or additional approval.",
+      "source_refs": [
+        "AP-00611",
+        "VEN-011",
+        "PO-00611",
+        "RC-AP-00611",
+        "EMP-005",
+        "VA-AP-00611"
+      ]
+    },
+    {
+      "document_id": "packet-011-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-11-30",
+      "subject": "Agreement linkage excerpt",
+      "body": "Reference: agreement VA-AP-00611, linked in the packet to purchase order PO-00611. The associated supplier is Atlas Services 011, identified by vendor ID VEN-011, and the category is services. The purchase order records $933.52, while service receipt RC-AP-00611 records an accepted amount of $933.52. This excerpt records identifiers and linked operational fields for review only. It does not add contractual language, establish performance beyond the stated receipt, or confirm payment, approval, or final settlement.",
+      "source_refs": [
+        "VA-AP-00611",
+        "PO-00611",
+        "VEN-011",
+        "RC-AP-00611"
+      ]
+    },
+    {
+      "document_id": "packet-011-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-11-30",
+      "subject": "Question on AP-00611 alignment",
+      "body": "Can Casey Team05 confirm whether the posted invoice AP-00611 should be reconciled to purchase order PO-00611 and service receipt RC-AP-00611 as currently recorded? Each source reflects $933.52, and the receipt identifies EMP-005 as the accepting party. Please also confirm whether any explanation is needed for the relationship among vendor VEN-011, agreement VA-AP-00611, and approved recipient SIM-RECIPIENT-011. The packet does not establish payment or additional approval, so those statuses should remain open unless separately supported.",
+      "source_refs": [
+        "AP-00611",
+        "PO-00611",
+        "RC-AP-00611",
+        "EMP-005",
+        "VEN-011",
+        "VA-AP-00611",
+        "SIM-RECIPIENT-011"
+      ]
+    },
+    {
+      "document_id": "packet-011-doc-6",
+      "kind": "follow_up",
+      "date": "2025-11-30",
+      "subject": "Follow-up actions for invoice review",
+      "body": "Follow-up for Casey Team05 and Atlas Services 011: verify the recorded identifiers, confirm that AP-00611, PO-00611, and RC-AP-00611 refer to the intended transaction record, and raise any missing explanation before the review is closed. Check the supplier record for VEN-011 and the approved recipient value SIM-RECIPIENT-011. Preserve the posted status as recorded, while treating payment and additional approval as unestablished. Any response should reference the relevant source identifier and describe the unresolved point precisely.",
+      "source_refs": [
+        "AP-00611",
+        "PO-00611",
+        "RC-AP-00611",
+        "VEN-011",
+        "SIM-RECIPIENT-011"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

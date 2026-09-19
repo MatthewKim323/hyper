@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-100",
+  "documents": [
+    {
+      "document_id": "packet-100-doc-1",
+      "kind": "email",
+      "date": "2025-10-31",
+      "subject": "Invoice AR-01194 review request",
+      "body": "Hello Juniper Network 094 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-01194 for $4,733.04, associated with customer CUS-094 and contract CON-094. The invoice date is 2025-10-31, and the listed due date is 2025-11-30. Please review the invoice details against your records and let us know whether any explanation or supporting detail is needed. We are requesting confirmation of questions only; no payment or approval is established by this draft.",
+      "source_refs": [
+        "AR-01194",
+        "CUS-094",
+        "CON-094"
+      ]
+    },
+    {
+      "document_id": "packet-100-doc-2",
+      "kind": "chat",
+      "date": "2025-10-31",
+      "subject": "AR-01194 internal review",
+      "body": "Casey Team05: Invoice AR-01194 is posted for customer CUS-094 under contract CON-094. The recorded amount is $4,733.04, with a 2025-11-30 due date.\n\nPlease verify that the monthly invoice is tied to the correct customer and contract references. We should also identify whether the amount requires an explanation before any further communication. The packet does not establish an approval, payment, or additional transaction purpose, so those points remain open questions.",
+      "source_refs": [
+        "AR-01194",
+        "CUS-094",
+        "CON-094"
+      ]
+    },
+    {
+      "document_id": "packet-100-doc-3",
+      "kind": "operational_note",
+      "date": "2025-10-31",
+      "subject": "Billing record observation",
+      "body": "Operational note: Invoice AR-01194 is marked posted for CUS-094 on 2025-10-31. The invoice is identified as monthly and lists a due date of 2025-11-30. Contract CON-094 covers Hosted access and metered API blocks, with monthly arrears billing and terms of 30 days. The recorded invoice amount is $4,733.04. The source packet does not explain the amount\u2019s composition, so the next operational step is to request clarification rather than infer a usage or approval outcome.",
+      "source_refs": [
+        "AR-01194",
+        "CUS-094",
+        "CON-094"
+      ]
+    },
+    {
+      "document_id": "packet-100-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-10-31",
+      "subject": "CON-094 service and billing excerpt",
+      "body": "Contract CON-094 identifies customer CUS-094 and provides for Hosted access and metered API blocks. The effective date is 2025-01-01, and the end date is 2026-12-31. Billing is specified as monthly arrears, with a monthly base of $4,650.00 and a usage block price of $0.01. The contract lists terms of 30 days. This excerpt does not determine how invoice AR-01194 reached its recorded amount or establish any payment status.",
+      "source_refs": [
+        "CON-094",
+        "CUS-094",
+        "AR-01194"
+      ]
+    },
+    {
+      "document_id": "packet-100-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-10-31",
+      "subject": "Reconciliation question for AR-01194",
+      "body": "For reconciliation, can the record supporting invoice AR-01194 be reviewed against customer CUS-094 and contract CON-094? The invoice is posted dated 2025-10-31 for $4,733.04, while the contract lists a monthly base of $4,650.00 and a usage block price of $0.01 under monthly arrears billing. Please identify the source of any difference and provide the relevant supporting detail. No explanation, approval, payment, or resolved reconciliation result is established in the packet.",
+      "source_refs": [
+        "AR-01194",
+        "CUS-094",
+        "CON-094"
+      ]
+    },
+    {
+      "document_id": "packet-100-doc-6",
+      "kind": "follow_up",
+      "date": "2025-10-31",
+      "subject": "Follow-up items for invoice review",
+      "body": "Follow-up for 2025-10-31: Please respond regarding invoice AR-01194 for Juniper Network 094, customer CUS-094, under contract CON-094. Confirm whether the invoice references are correct, and request clarification of the recorded $4,733.04 amount using the contract\u2019s stated monthly arrears framework. The listed due date is 2025-11-30. Until supporting information is provided, the explanation remains unknown. This follow-up does not record payment, approval, acceptance, or a resolved outcome.",
+      "source_refs": [
+        "AR-01194",
+        "CUS-094",
+        "CON-094"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

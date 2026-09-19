@@ -1,0 +1,89 @@
+{
+  "packet_id": "packet-005",
+  "documents": [
+    {
+      "document_id": "packet-005-doc-1",
+      "kind": "email",
+      "date": "2025-05-31",
+      "subject": "Invoice AP-00245 recorded for review",
+      "body": "Hello Casey Team05,\n\nAtlas Services 005 is following up regarding invoice AP-00245, dated 2025-05-28, for $1,736.19. The invoice identifies purchase order PO-00245 and vendor ID VEN-005, and its current status is posted. The listed due date is 2025-06-27. Please confirm whether any explanation or supporting detail is needed for your review. This message does not represent a payment confirmation or additional approval.\n\nRegards,\nAtlas Services 005",
+      "source_refs": [
+        "AP-00245",
+        "VEN-005",
+        "PO-00245"
+      ]
+    },
+    {
+      "document_id": "packet-005-doc-2",
+      "kind": "chat",
+      "date": "2025-05-31",
+      "subject": "AP-00245 review status",
+      "body": "Casey Team05: I am reviewing invoice AP-00245 against PO-00245 and service receipt RC-AP-00245. The recorded amount is $1,736.19, and the invoice status is posted. The service receipt records an accepted amount of $1,736.19 and identifies EMP-005 as the accepting party. I do not yet have an established payment or additional approval to report. Atlas Services 005 may be asked for clarification if any supporting explanation is missing.",
+      "source_refs": [
+        "AP-00245",
+        "PO-00245",
+        "RC-AP-00245",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-005-doc-3",
+      "kind": "operational_note",
+      "date": "2025-05-31",
+      "subject": "Invoice and receipt alignment check",
+      "body": "Operational review note: Invoice AP-00245 is associated with vendor VEN-005 and purchase order PO-00245. The invoice date and service receipt date are both 2025-05-28. Each records $1,736.19, while the purchase order amount is also $1,736.19. The invoice is posted. Service receipt RC-AP-00245 identifies EMP-005 as the accepting party. No payment, additional approval, or explanation for the recorded amounts is established in this note.",
+      "source_refs": [
+        "AP-00245",
+        "VEN-005",
+        "PO-00245",
+        "RC-AP-00245",
+        "EMP-005"
+      ]
+    },
+    {
+      "document_id": "packet-005-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-05-31",
+      "subject": "Referenced agreement and service records",
+      "body": "Referenced service arrangement excerpt: Purchase order PO-00245 lists vendor VEN-005, is dated 2025-05-01, and references agreement VA-AP-00245. The purchase order amount is $1,736.19. Invoice AP-00245 is dated 2025-05-28 and is associated with the same purchase order. Service receipt RC-AP-00245 records an accepted amount of $1,736.19. This excerpt describes the supplied records only and does not establish additional contractual terms, approval, or payment.",
+      "source_refs": [
+        "PO-00245",
+        "VEN-005",
+        "VA-AP-00245",
+        "AP-00245",
+        "RC-AP-00245"
+      ]
+    },
+    {
+      "document_id": "packet-005-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-05-31",
+      "subject": "Question regarding AP-00245 reconciliation",
+      "body": "Can Casey Team05 confirm whether invoice AP-00245, purchase order PO-00245, and service receipt RC-AP-00245 should be treated as aligned for reconciliation? The invoice, purchase order, and accepted service amount are each recorded as $1,736.19, and the invoice status is posted. Please identify any missing explanation, discrepancy, or supporting information required to complete review. The available records do not establish that payment occurred or that any additional approval was granted.",
+      "source_refs": [
+        "AP-00245",
+        "PO-00245",
+        "RC-AP-00245"
+      ]
+    },
+    {
+      "document_id": "packet-005-doc-6",
+      "kind": "follow_up",
+      "date": "2025-05-31",
+      "subject": "Follow-up requested for invoice AP-00245",
+      "body": "Follow-up for Casey Team05: Please review invoice AP-00245 with purchase order PO-00245 and service receipt RC-AP-00245. The records show vendor VEN-005, a posted invoice dated 2025-05-28, a listed due date of 2025-06-27, and corresponding recorded amounts of $1,736.19. If anything remains unclear, please request the missing explanation from Atlas Services 005 at ap5@supplier.example. No payment or additional approval is confirmed by this draft follow-up.",
+      "source_refs": [
+        "AP-00245",
+        "PO-00245",
+        "RC-AP-00245",
+        "VEN-005"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

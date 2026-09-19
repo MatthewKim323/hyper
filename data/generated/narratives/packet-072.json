@@ -1,0 +1,77 @@
+{
+  "packet_id": "packet-072",
+  "documents": [
+    {
+      "document_id": "packet-072-doc-1",
+      "kind": "email",
+      "date": "2026-06-30",
+      "subject": "Request for Payroll Movement Confirmation",
+      "body": "Hello External Counterparty,\n\nMeridian Ledger Labs, Inc. is reviewing the payroll record identified as PAY-018 for 2026-06-30. The record shows gross payroll of $438,000.00, withholding of $87,600.00, employer amounts of $35,040.00, and net payroll of $350,400.00. Please provide any available explanation or supporting confirmation for external movements associated with this record. Under the settlement policy, only confirmed external movements are settled; proposals are not settlements. No additional approval or payment is established by this draft. Thank you.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-072-doc-2",
+      "kind": "chat",
+      "date": "2026-06-30",
+      "subject": "PAY-018 review",
+      "body": "Casey Team05: I am reviewing PAY-018 dated 2026-06-30. The recorded gross amount is $438,000.00, with withholding of $87,600.00, employer amounts of $35,040.00, and net payroll of $350,400.00.\n\nTaylor Team06: I can help request missing explanations from People Operations or the relevant external party. We should distinguish any proposal from a confirmed external movement, because the settlement policy says proposals are not settlements.\n\nCasey Team05: Agreed. Please do not treat this chat as evidence of approval or payment.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-072-doc-3",
+      "kind": "operational_note",
+      "date": "2026-06-30",
+      "subject": "Payroll record review note",
+      "body": "Operational review for Meridian Ledger Labs, Inc., company identifier MERIDIAN-001, concerns payroll record PAY-018 dated 2026-06-30. The packet records gross payroll of $438,000.00, withholding of $87,600.00, employer amounts of $35,040.00, and net payroll of $350,400.00. Reconciliation remains dependent on explanations for any missing activity and confirmation of any external movement. Per policy, proposals must not be treated as settlements. This note records review status only and does not establish an approval, payment, or transaction purpose.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-072-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-06-30",
+      "subject": "Settlement policy excerpt",
+      "body": "Service and settlement excerpt, effective for this same-day draft record: Meridian Ledger Labs, Inc., company identifier MERIDIAN-001, recognizes settlement only for confirmed external movements. A proposal, estimate, or other unconfirmed item is not a settlement under this policy. The payroll record under review is PAY-018, dated 2026-06-30, and contains recorded payroll components but does not, by itself, establish an approval, payment, or transaction purpose. Any missing explanation or confirmation must be requested before characterization beyond the packet facts.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-072-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-06-30",
+      "subject": "Open reconciliation questions for PAY-018",
+      "body": "For PAY-018 dated 2026-06-30, can the responsible reviewer provide the missing explanation for each external movement associated with the payroll record, if any? Please identify which items are confirmed movements and which remain proposals or otherwise unconfirmed. The packet records gross payroll of $438,000.00, withholding of $87,600.00, employer amounts of $35,040.00, and net payroll of $350,400.00. Please also confirm whether any supporting record exists, without inferring approval, payment, or purpose not stated in the packet.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-072-doc-6",
+      "kind": "follow_up",
+      "date": "2026-06-30",
+      "subject": "Follow-up actions for payroll review",
+      "body": "Follow-up for the 2026-06-30 review: Casey Team05 should obtain explanations for missing payroll-related activity connected to PAY-018, while Taylor Team06 may coordinate requests concerning People Operations records. Any external movement should be separately identified as confirmed or proposed. Only confirmed external movements may be treated as settled under the stated policy. Please retain the existing payroll figures and source identifiers unchanged. This follow-up does not record an approval, payment, completed reconciliation, or transaction purpose; those matters remain unestablished by the packet.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

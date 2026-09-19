@@ -1,0 +1,83 @@
+{
+  "packet_id": "packet-088",
+  "documents": [
+    {
+      "document_id": "packet-088-doc-1",
+      "kind": "email",
+      "date": "2026-04-30",
+      "subject": "Invoice AR-01850 posted for review",
+      "body": "To: finance10@customer.example\nSubject: Invoice AR-01850 posted for review\n\nHello Juniper Network 010 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-01850 dated 2026-04-30 under contract CON-010. The recorded invoice amount is $4,729.77, with a due date of 2026-05-30. Please review the invoice against your records and let us know if any explanation or supporting detail is needed, including any question about the monthly service or metered API blocks. No payment or additional approval is established by this draft.",
+      "source_refs": [
+        "AR-01850",
+        "CUS-010",
+        "CON-010"
+      ]
+    },
+    {
+      "document_id": "packet-088-doc-2",
+      "kind": "chat",
+      "date": "2026-04-30",
+      "subject": "AR-01850 review",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AR-01850 for Juniper Network 010. The invoice is dated 2026-04-30, shows $4,729.77, and is due 2026-05-30.\n\nTeam note: The related contract is CON-010, covering Hosted access and metered API blocks with monthly arrears billing. The contract records a monthly base of $4,650.00 and a usage block price of $0.01. I do not see an established explanation for the difference between the base and invoice amount here. Please request clarification rather than infer usage, approval, or payment status.",
+      "source_refs": [
+        "AR-01850",
+        "CUS-010",
+        "CON-010"
+      ]
+    },
+    {
+      "document_id": "packet-088-doc-3",
+      "kind": "operational_note",
+      "date": "2026-04-30",
+      "subject": "Invoice and contract alignment check",
+      "body": "Operational note for 2026-04-30: Invoice AR-01850 is posted for customer CUS-010, Juniper Network 010, under contract CON-010. The invoice is monthly, dated 2026-04-30, and records $4,729.77 with a due date of 2026-05-30. Contract CON-010 is effective from 2025-01-01 through 2026-12-31 and specifies monthly arrears billing, a $4,650.00 monthly base, and a $0.01 usage block price. Confirm the invoice composition with the customer before recording any explanation.",
+      "source_refs": [
+        "AR-01850",
+        "CUS-010",
+        "CON-010"
+      ]
+    },
+    {
+      "document_id": "packet-088-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-04-30",
+      "subject": "CON-010 billing excerpt",
+      "body": "Contract CON-010\nCustomer: CUS-010\nEffective date: 2025-01-01\nEnd date: 2026-12-31\nService: Hosted access and metered API blocks\nBilling: Monthly arrears\nTerms: 30 days\nMonthly base: $4,650.00\nUsage block price: $0.01\n\nThis excerpt reflects the supplied contract fields only. It does not establish the quantity of metered API blocks associated with invoice AR-01850, nor does it establish any approval, payment, or explanation for the posted invoice amount. Those details should be requested or verified separately.",
+      "source_refs": [
+        "CON-010",
+        "CUS-010",
+        "AR-01850"
+      ]
+    },
+    {
+      "document_id": "packet-088-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-04-30",
+      "subject": "Question regarding AR-01850 variance",
+      "body": "For reconciliation, can Juniper Network 010 confirm how invoice AR-01850 dated 2026-04-30 relates to the billing fields in contract CON-010? The invoice is posted for $4,729.77, while the contract lists a monthly base of $4,650.00 and a usage block price of $0.01. Please provide the missing explanation or relevant usage detail, if available, and confirm whether the customer record should retain any note for review. This question does not assume a payment, approval, or resolved reconciliation outcome.",
+      "source_refs": [
+        "AR-01850",
+        "CUS-010",
+        "CON-010"
+      ]
+    },
+    {
+      "document_id": "packet-088-doc-6",
+      "kind": "follow_up",
+      "date": "2026-04-30",
+      "subject": "Follow-up actions for invoice review",
+      "body": "Follow-up dated 2026-04-30: Casey Team05 should send the invoice details for AR-01850 to finance10@customer.example and request clarification on the posted amount of $4,729.77. The request should reference customer CUS-010 and contract CON-010, including the monthly base, usage block pricing, and monthly arrears terms shown in the contract. After the customer responds, update the review record with the explanation provided, if any. Do not record payment, approval, or final reconciliation status without supporting information.",
+      "source_refs": [
+        "AR-01850",
+        "CUS-010",
+        "CON-010"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

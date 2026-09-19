@@ -1,0 +1,93 @@
+{
+  "packet_id": "packet-029",
+  "documents": [
+    {
+      "document_id": "packet-029-doc-1",
+      "kind": "email",
+      "date": "2025-11-30",
+      "subject": "Invoice AP-00629 review",
+      "body": "Hello Atlas Services 029,\n\nMeridian Ledger Labs, Inc. is reviewing invoice AP-00629 for $2,508.18, associated with vendor ID VEN-029 and purchase order PO-00629. Our records show the invoice status as posted and identify ap29@supplier.example as the billing contact. Please confirm that the invoice details remain accurate and advise whether any explanation or supporting information is needed for the current review. This message does not confirm approval or payment. Please reference AP-00629 in any reply.",
+      "source_refs": [
+        "AP-00629",
+        "VEN-029",
+        "PO-00629"
+      ]
+    },
+    {
+      "document_id": "packet-029-doc-2",
+      "kind": "chat",
+      "date": "2025-11-30",
+      "subject": "AP-00629 review status",
+      "body": "Casey Team05: I found invoice AP-00629 posted for $2,508.18 against PO-00629. The purchase order carries the same amount, and service receipt RC-AP-00629 records an accepted amount of $2,508.18. The packet does not establish an additional approval or payment, so I am treating the item as requiring confirmation rather than as resolved. Atlas Services 029 is listed as the supplier billing contact. I will request clarification if any discrepancy or missing explanation appears.",
+      "source_refs": [
+        "AP-00629",
+        "PO-00629",
+        "RC-AP-00629"
+      ]
+    },
+    {
+      "document_id": "packet-029-doc-3",
+      "kind": "operational_note",
+      "date": "2025-11-30",
+      "subject": "Accounts payable review note",
+      "body": "Invoice AP-00629 is posted for $2,508.18 under vendor VEN-029, with purchase order PO-00629 and agreement VA-AP-00629 identified in the packet. Service receipt RC-AP-00629 records $2,508.18 as the accepted amount and identifies EMP-005 as the accepting employee. The approved recipient is SIM-RECIPIENT-029. This note records reference alignment only; it does not establish payment, additional approval, transaction purpose, or a resolved exception. Any missing explanation should be requested from the listed billing contact.",
+      "source_refs": [
+        "AP-00629",
+        "VEN-029",
+        "PO-00629",
+        "VA-AP-00629",
+        "RC-AP-00629",
+        "EMP-005",
+        "SIM-RECIPIENT-029"
+      ]
+    },
+    {
+      "document_id": "packet-029-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-11-30",
+      "subject": "Agreement and order reference excerpt",
+      "body": "For review purposes, the packet associates purchase order PO-00629 with vendor VEN-029 and agreement VA-AP-00629. The purchase order amount is $2,508.18. Invoice AP-00629 identifies the same purchase order and vendor, while service receipt RC-AP-00629 identifies PO-00629 and an accepted amount of $2,508.18. This excerpt is limited to recorded references and amounts. It does not interpret the underlying services, establish additional obligations, or confirm approval or payment.",
+      "source_refs": [
+        "PO-00629",
+        "VEN-029",
+        "VA-AP-00629",
+        "AP-00629",
+        "RC-AP-00629"
+      ]
+    },
+    {
+      "document_id": "packet-029-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-11-30",
+      "subject": "Question regarding AP-00629 reconciliation",
+      "body": "Can Casey Team05 confirm whether invoice AP-00629 should be reconciled using the recorded match among VEN-029, PO-00629, and RC-AP-00629? The invoice amount is $2,508.18, the purchase order amount is $2,508.18, and the service receipt accepted amount is $2,508.18. The packet does not provide an explanation for any remaining review requirement or establish payment. Please identify any missing documentation, discrepancy, or approval needed before the item can be treated as complete.",
+      "source_refs": [
+        "AP-00629",
+        "VEN-029",
+        "PO-00629",
+        "RC-AP-00629"
+      ]
+    },
+    {
+      "document_id": "packet-029-doc-6",
+      "kind": "follow_up",
+      "date": "2025-11-30",
+      "subject": "Follow-up on invoice AP-00629",
+      "body": "Follow-up for Atlas Services 029 and Casey Team05: please review invoice AP-00629 and confirm whether further explanation or documentation is required. The packet records vendor VEN-029, purchase order PO-00629, agreement VA-AP-00629, and service receipt RC-AP-00629. The invoice and related recorded amounts are each $2,508.18. The approved recipient is SIM-RECIPIENT-029. No payment or additional approval is established here, so please respond with the appropriate next step and preserve the listed identifiers.",
+      "source_refs": [
+        "AP-00629",
+        "VEN-029",
+        "PO-00629",
+        "VA-AP-00629",
+        "RC-AP-00629",
+        "SIM-RECIPIENT-029"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

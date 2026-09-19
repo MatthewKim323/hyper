@@ -1,0 +1,82 @@
+{
+  "packet_id": "packet-031",
+  "documents": [
+    {
+      "document_id": "packet-031-doc-1",
+      "kind": "email",
+      "date": "2026-01-31",
+      "subject": "Invoice AR-01551 for review",
+      "body": "Hello Lattice Network 078 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-01551 for customer CUS-078 under contract CON-078. The invoice date is 2026-01-31, the due date is 2026-03-02, and the stated amount is $3,348.60. Please review the invoice against your records and let us know if any detail requires clarification. If an explanation is needed for the billed amount, please identify the specific line or usage information in question so it can be investigated.\n\nRegards,\nCasey Team05",
+      "source_refs": [
+        "AR-01551",
+        "CUS-078",
+        "CON-078"
+      ]
+    },
+    {
+      "document_id": "packet-031-doc-2",
+      "kind": "chat",
+      "date": "2026-01-31",
+      "subject": "AR-01551 review",
+      "body": "Casey Team05: Invoice AR-01551 is posted for Lattice Network 078 under CON-078. The amount shown is $3,348.60, with a due date of 2026-03-02.\n\nTeam note: Before treating the balance as fully understood, we should compare the invoice with the contract terms and any available metered API block detail. The packet identifies monthly arrears billing and a monthly base, but it does not explain the difference between the base and the invoice amount. Please request supporting detail rather than infer the cause.",
+      "source_refs": [
+        "AR-01551",
+        "CON-078",
+        "CUS-078"
+      ]
+    },
+    {
+      "document_id": "packet-031-doc-3",
+      "kind": "operational_note",
+      "date": "2026-01-31",
+      "subject": "Invoice and contract review note",
+      "body": "Operational review concerns invoice AR-01551, posted on 2026-01-31 for customer CUS-078. The related contract is CON-078. The invoice is monthly, states an amount of $3,348.60, and lists 2026-03-02 as the due date. Contract CON-078 describes hosted access and metered API blocks, with monthly arrears billing. Its monthly base is $3,250.00, and the usage block price is $0.01. No explanation for the variance is established in the packet.",
+      "source_refs": [
+        "AR-01551",
+        "CUS-078",
+        "CON-078"
+      ]
+    },
+    {
+      "document_id": "packet-031-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-01-31",
+      "subject": "CON-078 service and billing terms",
+      "body": "Contract CON-078 identifies customer CUS-078 and covers hosted access and metered API blocks. The contract effective date is 2025-01-01, and the end date is 2026-12-31. Billing is described as monthly arrears, with terms of 30 days. The monthly base is $3,250.00, and the usage block price is $0.01 per block. These details provide the contractual reference for reviewing monthly invoice AR-01551, but the packet does not provide a usage quantity or a separate calculation.",
+      "source_refs": [
+        "CON-078",
+        "CUS-078",
+        "AR-01551"
+      ]
+    },
+    {
+      "document_id": "packet-031-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-01-31",
+      "subject": "Question regarding AR-01551 variance",
+      "body": "For invoice AR-01551, can the finance record be reconciled to contract CON-078 by identifying the metered API block quantity or other billing detail represented in the invoice amount of $3,348.60? The contract lists a monthly base of $3,250.00 and a usage block price of $0.01, with monthly arrears billing. The packet does not establish the usage quantity, an adjustment, or any payment. Please provide the missing explanation or confirm which supporting record should be reviewed.",
+      "source_refs": [
+        "AR-01551",
+        "CON-078"
+      ]
+    },
+    {
+      "document_id": "packet-031-doc-6",
+      "kind": "follow_up",
+      "date": "2026-01-31",
+      "subject": "Next steps for customer invoice review",
+      "body": "Follow-up for Lattice Network 078 and invoice AR-01551: please review the posted invoice against customer CUS-078 and contract CON-078. The current record includes the 2026-01-31 invoice date, the 2026-03-02 due date, and an amount of $3,348.60. Please send any questions about the amount, hosted access, or metered API blocks, together with the relevant supporting detail. Internally, the next review should focus on explaining the invoice amount from the available contract and usage records.",
+      "source_refs": [
+        "AR-01551",
+        "CUS-078",
+        "CON-078"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

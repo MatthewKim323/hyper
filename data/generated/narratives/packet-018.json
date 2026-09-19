@@ -1,0 +1,75 @@
+{
+  "packet_id": "packet-018",
+  "documents": [
+    {
+      "document_id": "packet-018-doc-1",
+      "kind": "email",
+      "date": "2026-06-30",
+      "subject": "Request for confirmation of external movement",
+      "body": "Hello,\n\nWe are reviewing the 2026-06-30 records associated with Meridian Ledger Labs, Inc. and the payroll reference PAY-018. Please confirm whether any external movement connected with this record has been confirmed. Under the stated settlement policy, only confirmed external movements are settled; proposals are not settlements. If a movement is proposed but not confirmed, please identify it as such and provide any available explanation. No additional approval or payment is established by this draft request.\n\nRegards,\nMeridian Ledger Labs, Inc.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    },
+    {
+      "document_id": "packet-018-doc-2",
+      "kind": "chat",
+      "date": "2026-06-30",
+      "subject": "PAY-018 review",
+      "body": "Casey Team05: I\u2019m reviewing PAY-018 for 2026-06-30. The packet records gross payroll of $438,000.00, withholding of $87,600.00, employer amounts of $35,040.00, and net payroll of $350,400.00.\n\nTaylor Team06: I can help check the record, but the packet does not explain any missing movement or establish an approval or payment beyond the stated payroll facts.\n\nCasey Team05: Agreed. Let\u2019s request explanations for gaps and distinguish confirmed external movements from proposals under the settlement policy.",
+      "source_refs": [
+        "PAY-018"
+      ]
+    },
+    {
+      "document_id": "packet-018-doc-3",
+      "kind": "operational_note",
+      "date": "2026-06-30",
+      "subject": "Payroll record review note",
+      "body": "Operational review for Meridian Ledger Labs, Inc., company ID MERIDIAN-001, covers payroll PAY-018 dated 2026-06-30. Recorded values are gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. The settlement policy states that only confirmed external movements are settled and that proposals are not settlements. Any missing explanation should be requested. This note does not establish an additional approval, payment, or transaction purpose.",
+      "source_refs": [
+        "MERIDIAN-001",
+        "PAY-018"
+      ]
+    },
+    {
+      "document_id": "packet-018-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2026-06-30",
+      "subject": "Service and settlement excerpt",
+      "body": "Excerpt for review on 2026-06-30:\n\n\u201cOnly confirmed external movements are settled; proposals are not settlements.\u201d\n\nThis excerpt is associated with Meridian Ledger Labs, Inc. and company ID MERIDIAN-001. It may be used to distinguish confirmed external movements from proposed activity when reviewing payroll record PAY-018. The available packet does not provide additional service terms, approval requirements, payment evidence, counterparty details, or transaction purpose. Any omitted explanation must be requested rather than inferred from this excerpt.",
+      "source_refs": [
+        "MERIDIAN-001",
+        "PAY-018"
+      ]
+    },
+    {
+      "document_id": "packet-018-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2026-06-30",
+      "subject": "Question regarding PAY-018 reconciliation",
+      "body": "For reconciliation of PAY-018 dated 2026-06-30, can the responsible reviewer identify whether any external movement has been confirmed, or whether the available item remains only a proposal? The packet records gross payroll of $438,000.00, withholding of $87,600.00, employer amount of $35,040.00, and net payroll of $350,400.00. Please also provide explanations for any missing fields or unmatched activity. The settlement policy does not treat proposals as settlements, and no additional approval or payment is established here.",
+      "source_refs": [
+        "PAY-018"
+      ]
+    },
+    {
+      "document_id": "packet-018-doc-6",
+      "kind": "follow_up",
+      "date": "2026-06-30",
+      "subject": "Follow-up on outstanding record explanation",
+      "body": "Follow-up for Meridian Ledger Labs, Inc. regarding PAY-018 and company ID MERIDIAN-001: please supply any missing explanation needed to complete the 2026-06-30 review. In particular, clarify whether an external movement is confirmed or remains a proposal, consistent with the settlement policy. Please do not treat an unconfirmed proposal as settled. The packet establishes payroll figures but does not establish an additional approval, payment, or transaction purpose. We will leave unresolved items open pending supporting explanation.",
+      "source_refs": [
+        "PAY-018",
+        "MERIDIAN-001"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}

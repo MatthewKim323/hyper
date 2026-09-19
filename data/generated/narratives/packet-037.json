@@ -1,0 +1,82 @@
+{
+  "packet_id": "packet-037",
+  "documents": [
+    {
+      "document_id": "packet-037-doc-1",
+      "kind": "email",
+      "date": "2025-01-31",
+      "subject": "Monthly invoice AR-00013",
+      "body": "To Harbor Network 011 finance team,\n\nMeridian Ledger Labs, Inc. has posted monthly invoice AR-00013 for customer CUS-011 under contract CON-011. The invoice date is 2025-01-31, the due date is 2025-03-02, and the recorded amount is $5,089.01. Please review the invoice against your records and let us know if any explanation or supporting detail is needed. This message does not assume payment, approval, or agreement beyond the information currently recorded. We welcome any questions regarding the billing reference or contract linkage.",
+      "source_refs": [
+        "AR-00013",
+        "CUS-011",
+        "CON-011"
+      ]
+    },
+    {
+      "document_id": "packet-037-doc-2",
+      "kind": "chat",
+      "date": "2025-01-31",
+      "subject": "AR-00013 review",
+      "body": "Casey Team05: I\u2019m reviewing posted invoice AR-00013 for Harbor Network 011, customer CUS-011. The invoice is dated 2025-01-31, carries a due date of 2025-03-02, and records $5,089.01. The linked contract is CON-011. I do not see an established payment or additional approval in the packet. Harbor Network 011 may need to confirm whether the invoice aligns with its records. If there is a discrepancy, please request the missing explanation rather than assuming the cause.",
+      "source_refs": [
+        "AR-00013",
+        "CUS-011",
+        "CON-011"
+      ]
+    },
+    {
+      "document_id": "packet-037-doc-3",
+      "kind": "operational_note",
+      "date": "2025-01-31",
+      "subject": "Billing record review note",
+      "body": "Operational review for invoice AR-00013: the record is posted as a monthly invoice for customer CUS-011, Harbor Network 011. The invoice date is 2025-01-31, with a due date of 2025-03-02, and the amount is $5,089.01. Contract CON-011 is associated with the customer. The contract identifies monthly arrears billing for hosted access and metered API blocks, with a monthly base of $5,000.00 and a usage block price of $0.01. No payment or approval status is established here.",
+      "source_refs": [
+        "AR-00013",
+        "CUS-011",
+        "CON-011"
+      ]
+    },
+    {
+      "document_id": "packet-037-doc-4",
+      "kind": "contract_excerpt",
+      "date": "2025-01-31",
+      "subject": "CON-011 service and billing excerpt",
+      "body": "Contract CON-011 is associated with customer CUS-011 and has an effective date of 2025-01-01 and an end date of 2026-12-31. The stated service is hosted access and metered API blocks. Billing is monthly in arrears, with a 30-day term. The monthly base is recorded as $5,000.00, and the usage block price is recorded as $0.01. This excerpt does not establish any invoice explanation, approval, payment, or additional commercial term beyond the contract fields supplied in the packet.",
+      "source_refs": [
+        "CON-011",
+        "CUS-011"
+      ]
+    },
+    {
+      "document_id": "packet-037-doc-5",
+      "kind": "reconciliation_question",
+      "date": "2025-01-31",
+      "subject": "Question on AR-00013 reconciliation",
+      "body": "Please confirm whether posted invoice AR-00013 should be reconciled to customer CUS-011 and contract CON-011 as currently linked. The record shows a monthly invoice dated 2025-01-31, due 2025-03-02, for $5,089.01. The contract describes monthly arrears billing for hosted access and metered API blocks, with a $5,000.00 monthly base and $0.01 usage block price. If the recorded invoice amount does not align with your records, please provide the missing explanation or relevant detail. No payment or approval is assumed.",
+      "source_refs": [
+        "AR-00013",
+        "CUS-011",
+        "CON-011"
+      ]
+    },
+    {
+      "document_id": "packet-037-doc-6",
+      "kind": "follow_up",
+      "date": "2025-01-31",
+      "subject": "Follow-up requested for invoice review",
+      "body": "Follow-up for Harbor Network 011 regarding invoice AR-00013: please review the posted record dated 2025-01-31 and confirm whether the customer, contract, due date, and amount are reflected correctly in your records. The linked customer identifier is CUS-011, the contract identifier is CON-011, the due date is 2025-03-02, and the recorded amount is $5,089.01. If clarification is required, please identify the specific field or billing detail in question. This follow-up records an open request only and does not indicate payment or approval.",
+      "source_refs": [
+        "AR-00013",
+        "CUS-011",
+        "CON-011"
+      ]
+    }
+  ],
+  "synthetic": true,
+  "review_status": "structurally_validated_semantics_not_independently_certified",
+  "normalization": {
+    "removed_grounded_non_id_references": [],
+    "body_modified": false
+  }
+}
