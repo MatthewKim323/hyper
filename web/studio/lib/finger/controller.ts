@@ -16,8 +16,12 @@ const BOX_CENTER = { x: 0.5, y: 0.56 };
 // Pointing anchor: mostly the index knuckle, which barely moves during a pinch, plus some fingertip.
 const TIP_WEIGHT = 0.3;
 // Filter tuned for coordinates where 1 is a full screen width.
-const MIN_CUTOFF = 1.1;
-const BETA = 0.05;
+const MIN_CUTOFF = 0.55;
+const BETA = 0.07;
+// Display-rate glide: the drawn cursor eases toward the target, heavily when slow and barely when fast.
+const GLIDE_SLOW_S = 0.14;
+const GLIDE_FAST_S = 0.022;
+const REST_PX = 2.2;
 // Pinch ratio (thumb tip to index tip over palm length) with hysteresis.
 const PINCH_ON = 0.38;
 const PINCH_OFF = 0.58;
@@ -32,11 +36,6 @@ const PREDICT_S = 0.036;
 const MAGNET_RADIUS = 72;
 const MAGNET_PULL = 0.34;
 const SCROLL_GAIN = 2.4;
-
-const CONNECTIONS = [
-  [0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12],
-  [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17],
-];
 
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
 const smoothstep = (a: number, b: number, v: number) => {
@@ -69,8 +68,8 @@ export class FingerController {
   private pinchTravel = 0;
   private fistSince = 0;
   private scrollVel = 0;
-  private hand: P2[] = [];
   private px: P2 = { x: -100, y: -100 };
+  private lastRender = 0;
   private trail: P2[] = [];
   private pops: { x: number; y: number; t: number }[] = [];
   private alpha = 0;
@@ -195,13 +194,6 @@ export class FingerController {
 
     if (scrolling) this.scrollVel = -delta.y * window.innerHeight * SCROLL_GAIN * (1 / dt / 60);
 
-    // Ghost hand, drawn around the cursor at a fixed on-screen size.
-    const toPx = (p: P2) => ({ x: p.x * f.aspect, y: p.y });
-    const anchor = toPx({ x: ax, y: ay });
-    const scale = 64 / Math.max(Math.hypot((lm[0].x - lm[9].x) * f.aspect, lm[0].y - lm[9].y), 1e-4);
-    const next = lm.map((p) => ({ x: (toPx(p).x - anchor.x) * scale, y: (toPx(p).y - anchor.y) * scale }));
-    this.hand = this.hand.length ? next.map((p, i) => ({ x: this.hand[i].x + (p.x - this.hand[i].x) * 0.55, y: this.hand[i].y + (p.y - this.hand[i].y) * 0.55 })) : next;
-
     this.setState(this.pinched ? (this.dragging ? "drag" : "pinch") : holding ? "hold" : scrolling ? "scroll" : "point");
   };
 
@@ -236,9 +228,26 @@ export class FingerController {
     return { x, y };
   }
 
+  /** Ease the drawn cursor toward its target. Smooths the camera-rate steps and any residual shake. */
+  private glide(target: P2, now: number): P2 {
+    const dt = clamp((now - this.lastRender) / 1000, 1 / 240, 0.1);
+    this.lastRender = now;
+    if (this.px.x < 0) return target;
+    const dx = target.x - this.px.x;
+    const dy = target.y - this.px.y;
+    const d = Math.hypot(dx, dy);
+    const speed = Math.hypot(this.sample.vel.x, this.sample.vel.y);
+    // At rest, ignore sub-pixel-scale wobble entirely.
+    if (d < REST_PX && speed < 0.04) return this.px;
+    const fast = Math.max(smoothstep(0.05, 0.7, speed), smoothstep(40, 260, d));
+    const tau = GLIDE_SLOW_S + (GLIDE_FAST_S - GLIDE_SLOW_S) * fast;
+    const k = 1 - Math.exp(-dt / tau);
+    return { x: this.px.x + dx * k, y: this.px.y + dy * k };
+  }
+
   /** Bring the virtual pointer to where the cursor is drawn right now. */
   private commit(now: number) {
-    const p = this.predict(now);
+    const p = this.px.x < 0 ? this.predict(now) : this.px;
     this.px = p;
     this.pointer.move(p.x, p.y);
   }
@@ -248,7 +257,7 @@ export class FingerController {
     const live = this.state !== "lost";
     this.alpha += ((live ? 1 : 0) - this.alpha) * 0.18;
     if (live) {
-      const p = this.state === "pinch" ? this.px : this.predict(now);
+      const p = this.state === "pinch" ? this.px : this.glide(this.predict(now), now);
       if (Math.hypot(p.x - this.pointer.x, p.y - this.pointer.y) > 0.15) this.pointer.move(p.x, p.y);
       this.px = p;
       if (Math.abs(this.scrollVel) > 0.4) {
@@ -276,28 +285,6 @@ export class FingerController {
       c.moveTo(this.trail[i - 1].x, this.trail[i - 1].y);
       c.lineTo(this.trail[i].x, this.trail[i].y);
       c.stroke();
-    }
-
-    if (this.hand.length) {
-      c.save();
-      c.translate(x, y);
-      c.shadowColor = "rgba(190,170,255,0.9)";
-      c.shadowBlur = 10 + 14 * this.pinchStrength;
-      c.strokeStyle = `rgba(255,255,255,${(0.42 + 0.3 * this.pinchStrength) * this.alpha})`;
-      c.lineWidth = 1.6;
-      c.beginPath();
-      for (const [a, b] of CONNECTIONS) {
-        c.moveTo(this.hand[a].x, this.hand[a].y);
-        c.lineTo(this.hand[b].x, this.hand[b].y);
-      }
-      c.stroke();
-      c.fillStyle = `rgba(255,255,255,${0.85 * this.alpha})`;
-      for (const i of [4, 8, 12, 16, 20]) {
-        c.beginPath();
-        c.arc(this.hand[i].x, this.hand[i].y, i === 4 || i === 8 ? 3.2 : 2.2, 0, Math.PI * 2);
-        c.fill();
-      }
-      c.restore();
     }
 
     // Ring closes as the pinch closes: feedforward for the click.

@@ -1,4 +1,4 @@
-/* Hand cursor: full-screen overlay for the ring, trail and ghost hand, plus the dock with the toggle and camera preview. */
+/* Hand cursor: full-screen overlay for the ring and trail, plus the dock with the toggle and camera preview. */
 .finger-overlay {
   position: fixed;
   inset: 0;
