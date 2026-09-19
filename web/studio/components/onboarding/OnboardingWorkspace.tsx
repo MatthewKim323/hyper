@@ -6,6 +6,7 @@ import { useMicrophone } from "voice-glow";
 import { store } from "@/lib/engine/core/store";
 import { isOnboardingComplete, isOnboardingPresentation, ONBOARDING_EVENTS, setOnboardingComplete, subscribeOnboardingCompletion, type OnboardingPresentation } from "@/lib/onboarding/interface";
 import { OnboardingVoiceClient, type VoiceConnection } from "@/lib/onboarding/voice-client";
+import { runOnboardingWipeHandoff } from "@/lib/onboarding/handoff-wipe";
 import OnboardingSurface from "./OnboardingSurface";
 import AtriumPreview from "../atrium/AtriumPreview";
 
@@ -206,16 +207,27 @@ export default function OnboardingWorkspace() {
   const [skipped, setSkipped] = useState(false);
   const complete = savedComplete || skipped;
   const sceneReady = useSyncExternalStore(subscribeScene, sceneSnapshot, serverSnapshot);
+  const visible = hydrated && pathname === "/projects" && sceneReady;
+  // Finishing a live session hands off through the wipe; a returning user skips it.
+  const [sessionShown, setSessionShown] = useState(false);
+  const [covered, setCovered] = useState(false);
+  const showDashboard = complete && (!sessionShown || covered);
+
+  if (visible && !complete && !sessionShown) setSessionShown(true);
 
   useEffect(() => {
-    document.documentElement.dataset.onboarding = complete ? "complete" : "required";
-    const navigation = document.querySelector<HTMLElement>(".js-project-filters");
-    if (navigation) navigation.inert = !complete;
-    if (store.ProjectMenu && pathname === "/projects") {
-      store.ProjectMenu.allowControl = complete && store.ProjectFilters?.selectedSection !== "timeline";
-    }
-  }, [complete, pathname, sceneReady]);
+    if (complete && sessionShown && !covered) void runOnboardingWipeHandoff(() => setCovered(true));
+  }, [complete, sessionShown, covered]);
 
-  if (!(hydrated && pathname === "/projects" && sceneReady)) return null;
-  return complete ? <AtriumPreview /> : <OnboardingSession onSkip={() => setSkipped(true)} />;
+  useEffect(() => {
+    document.documentElement.dataset.onboarding = showDashboard ? "complete" : "required";
+    const navigation = document.querySelector<HTMLElement>(".js-project-filters");
+    if (navigation) navigation.inert = !showDashboard;
+    if (store.ProjectMenu && pathname === "/projects") {
+      store.ProjectMenu.allowControl = showDashboard && store.ProjectFilters?.selectedSection !== "timeline";
+    }
+  }, [showDashboard, pathname, sceneReady]);
+
+  if (!visible) return null;
+  return showDashboard ? <AtriumPreview /> : <OnboardingSession onSkip={() => setSkipped(true)} />;
 }
