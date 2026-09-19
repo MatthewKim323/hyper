@@ -1,4 +1,4 @@
-# Hyper Studio
+# Hyper
 
 An immersive WebGL landing page with a reflective 3D environment, animated controls, and a camera transition into an empty gallery.
 

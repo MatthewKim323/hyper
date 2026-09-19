@@ -1,0 +1,24 @@
+.loader.loader--minimal {
+  inset: 0;
+  display: grid;
+  place-items: center;
+  height: 100dvh;
+  background: #000;
+}
+
+.loader--minimal .intro-enter {
+  position: relative;
+  bottom: auto;
+  opacity: 1;
+  visibility: visible;
+}
+
+.loader--minimal .intro-enter:disabled {
+  cursor: wait;
+}
+
+.loader--minimal .intro-enter:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 6px;
+  border-radius: 2rem;
+}
