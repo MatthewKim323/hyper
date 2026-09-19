@@ -1,0 +1,952 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-19T19:38:53Z",
+  "generator_commit": "5c72e91c0fe7f00389ced5a40d9efe6a41c28be4",
+  "display_mode": "LIVE",
+  "systems": [
+    {
+      "id": "oracle-smoke",
+      "label": "ORACLE SMOKE (grader check, not a system)",
+      "kind": "ORACLE_SMOKE",
+      "created_at": "1970-01-01T00:00:00Z",
+      "git_commit": null,
+      "models": {},
+      "adapter_hash": null,
+      "prompts_version": null,
+      "tools_version": null,
+      "policy_version": null,
+      "memory_enabled": null,
+      "jev_enabled": null,
+      "reviewer_enabled": null,
+      "fallback_models": [],
+      "decoding": {},
+      "notes": "Gold states built from private truth to prove the grader and runner. Not an agent, not a result, excluded from scorecards."
+    }
+  ],
+  "suites": [
+    {
+      "id": "ap_workflow",
+      "name": "Meridian AP exception workflow (development fixtures)",
+      "layer": "workflow",
+      "owner": "MIRROR (this repo, data/engine/fixtures.py)",
+      "provenance": "custom",
+      "protocol": "custom",
+      "access": "available",
+      "access_note": "Visible cases in data/generated/visible/cases. Expected outcomes in data/generated/private, grader only.",
+      "source_urls": [],
+      "revision": "meridian-ap-fixtures-v1",
+      "revision_checked_at": null,
+      "license": null,
+      "split": "development_not_sealed",
+      "task_count": 18,
+      "native_metric": "whole-task success on persisted final state",
+      "native_metric_note": "A task succeeds when the private grader returns pass (payment-ready cases) or correct_escalation (cases the evidence cannot support). Partial and waiting do not count.",
+      "families": [
+        {
+          "id": "allocation_conflict",
+          "name": "allocation conflict",
+          "task_count": 1
+        },
+        {
+          "id": "alternative_order",
+          "name": "alternative order",
+          "task_count": 1
+        },
+        {
+          "id": "backorder",
+          "name": "backorder",
+          "task_count": 1
+        },
+        {
+          "id": "changed_recipient",
+          "name": "changed recipient",
+          "task_count": 1
+        },
+        {
+          "id": "clean",
+          "name": "clean",
+          "task_count": 1
+        },
+        {
+          "id": "credit_claim_without_memo",
+          "name": "credit claim without memo",
+          "task_count": 1
+        },
+        {
+          "id": "disputed_cancellation",
+          "name": "disputed cancellation",
+          "task_count": 1
+        },
+        {
+          "id": "duplicate_credit_delivery",
+          "name": "duplicate credit delivery",
+          "task_count": 1
+        },
+        {
+          "id": "duplicate_invoice_import",
+          "name": "duplicate invoice import",
+          "task_count": 1
+        },
+        {
+          "id": "embedded_instruction",
+          "name": "embedded instruction",
+          "task_count": 1
+        },
+        {
+          "id": "missing_agreement",
+          "name": "missing agreement",
+          "task_count": 1
+        },
+        {
+          "id": "new_receipt_during_review",
+          "name": "new receipt during review",
+          "task_count": 1
+        },
+        {
+          "id": "partial_correction",
+          "name": "partial correction",
+          "task_count": 1
+        },
+        {
+          "id": "price_only",
+          "name": "price only",
+          "task_count": 1
+        },
+        {
+          "id": "quantity_only",
+          "name": "quantity only",
+          "task_count": 1
+        },
+        {
+          "id": "supplier_silent",
+          "name": "supplier silent",
+          "task_count": 1
+        },
+        {
+          "id": "unrelated_credit",
+          "name": "unrelated credit",
+          "task_count": 1
+        },
+        {
+          "id": "valid_amendment",
+          "name": "valid amendment",
+          "task_count": 1
+        }
+      ],
+      "restrictions": [
+        "development fixtures, not a sealed benchmark",
+        "not evidence of agent performance until a subject run exists"
+      ]
+    },
+    {
+      "id": "crypto_native",
+      "name": "MIRROR crypto-native interpretation suite (C01 to C12)",
+      "layer": "crypto",
+      "owner": "MIRROR (this repo)",
+      "provenance": "custom",
+      "protocol": "custom",
+      "access": "pending",
+      "access_note": "Registered but not implemented. No tasks, no loader, no grader exist yet.",
+      "source_urls": [],
+      "revision": null,
+      "revision_checked_at": null,
+      "license": null,
+      "split": null,
+      "task_count": null,
+      "native_metric": "not defined yet",
+      "native_metric_note": "registered but not implemented",
+      "families": [
+        {
+          "id": "C01",
+          "name": "C01 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C02",
+          "name": "C02 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C03",
+          "name": "C03 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C04",
+          "name": "C04 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C05",
+          "name": "C05 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C06",
+          "name": "C06 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C07",
+          "name": "C07 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C08",
+          "name": "C08 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C09",
+          "name": "C09 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C10",
+          "name": "C10 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C11",
+          "name": "C11 (registered, not implemented)",
+          "task_count": 0
+        },
+        {
+          "id": "C12",
+          "name": "C12 (registered, not implemented)",
+          "task_count": 0
+        }
+      ],
+      "restrictions": [
+        "registered but not implemented, no result may be reported on it"
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "MIRROR reliability suite (recovery, concurrency, duplicates, stale data)",
+      "layer": "reliability",
+      "owner": "MIRROR (this repo)",
+      "provenance": "custom",
+      "protocol": "custom",
+      "access": "pending",
+      "access_note": "Registered but not implemented. No tasks, no loader, no grader exist yet.",
+      "source_urls": [],
+      "revision": null,
+      "revision_checked_at": null,
+      "license": null,
+      "split": null,
+      "task_count": null,
+      "native_metric": "not defined yet",
+      "native_metric_note": "registered but not implemented",
+      "families": [],
+      "restrictions": [
+        "registered but not implemented, no result may be reported on it",
+        "engine unit tests in resolve/tests are not reliability results for an agent"
+      ]
+    },
+    {
+      "id": "apex_public_dev",
+      "name": "APEX public development tasks",
+      "layer": "external",
+      "owner": "Mercor (with Ramp)",
+      "provenance": "local_public_dev",
+      "protocol": "adapted",
+      "access": "available",
+      "access_note": "Public, ungated. Needs three linux/amd64 images (about 5 GB) and LLM grader credentials before it can run here.",
+      "source_urls": [
+        "https://huggingface.co/datasets/mercor/apex-accounting-harbor",
+        "https://huggingface.co/datasets/mercor/apex-accounting"
+      ],
+      "revision": "1662b7e4c3b04b8717f2f723df823e7b6cbe2118",
+      "revision_checked_at": "2026-09-19T19:19:00Z",
+      "license": "CC BY 4.0",
+      "split": "public development tasks",
+      "task_count": 10,
+      "native_metric": "rubric criteria score (Harbor verifier)",
+      "native_metric_note": "Leaderboard metric is Mean Criteria@3 with a different judge and an unreleased grading template, so a local score is not comparable to it. harbor==0.20.0 is enforced by run_task.sh. Harbor repo created 2026-09-14, pin the sha. The two repos disagree on 3 rubric criteria (tasks 4, 5, 7).",
+      "families": [],
+      "restrictions": [
+        "results must be labeled \"APEX public development tasks / Harbor / local evaluation\"",
+        "never present as a private leaderboard score",
+        "keep data/dev.jsonl, tasks/*.json, tasks/*/solution, tasks/*/tests, mercor.json, agent.json and the verifier image away from the agent"
+      ]
+    },
+    {
+      "id": "dabstep",
+      "name": "DABstep",
+      "layer": "external",
+      "owner": "Adyen and Hugging Face",
+      "provenance": "adapted_external",
+      "protocol": "adapted",
+      "access": "available",
+      "access_note": "Public, ungated. Official scoring only through the leaderboard Space, which needs HF login and permanently publishes answers, org name and username. Validated leaderboard closed 2026-07-22; unvalidated still open.",
+      "source_urls": [
+        "https://huggingface.co/datasets/adyen/DABstep",
+        "https://adyen-dabstep.hf.space/"
+      ],
+      "revision": "be54e258883ea46d6625d15a213838f4462c8b3b",
+      "revision_checked_at": "2026-09-19T19:19:00Z",
+      "license": "CC BY 4.0",
+      "split": "tasks/default (answers hidden); tasks/dev has 10 with answers",
+      "task_count": 450,
+      "native_metric": "normalized answer match accuracy",
+      "native_metric_note": "Dataset HEAD moves on every leaderboard submission, always load with revision=. Local scoring is only possible on the 10 dev tasks.",
+      "families": [],
+      "restrictions": [
+        "receiving a score from the publisher is not independent validation",
+        "no submission without explicit human approval",
+        "scores from mirror_eval.external.dabstep.score_answer are a LOCAL APPROXIMATION, not the official scorer",
+        "never mount the task_scores or submissions configs: rows with score=True are effectively gold answers for hidden tasks"
+      ]
+    },
+    {
+      "id": "finance_agent_v1",
+      "name": "Finance Agent (original)",
+      "layer": "external",
+      "owner": "Vals AI",
+      "provenance": "adapted_external",
+      "protocol": "adapted",
+      "access": "available",
+      "access_note": "Public 50-row sample of a 537-question set. The rest is not public.",
+      "source_urls": [
+        "https://huggingface.co/datasets/vals-ai/finance_agent_benchmark"
+      ],
+      "revision": "1f80cefae847f2e8b6bdf773f789c90f70293f78",
+      "revision_checked_at": "2026-09-19T19:19:00Z",
+      "license": "CC BY 4.0",
+      "split": "public sample",
+      "task_count": 50,
+      "native_metric": "rubric-judged accuracy",
+      "native_metric_note": "Exact metric formula and scorer are not public. Answer and Rubric columns are answer-bearing.",
+      "families": [],
+      "restrictions": [
+        "never mix original Finance Agent results with v2 results",
+        "name the exact version next to every number"
+      ]
+    },
+    {
+      "id": "finance_agent_v2_public",
+      "name": "Finance Agent v2 (public portion)",
+      "layer": "external",
+      "owner": "Vals AI",
+      "provenance": "adapted_external",
+      "protocol": "adapted",
+      "access": "available",
+      "access_note": "27 public samples run locally. Validation set (450) is licensed on request, test set (450) is private, and the official jury scorer is on the gated Vals platform.",
+      "source_urls": [
+        "https://github.com/vals-ai/finance-agent-v2",
+        "https://www.vals.ai/benchmarks/fabv2"
+      ],
+      "revision": "c27955b4bd57729a907b513cc444cfbd01c1a9cb",
+      "revision_checked_at": "2026-09-19T19:19:00Z",
+      "license": "MIT (harness and public samples)",
+      "split": "public samples",
+      "task_count": 27,
+      "native_metric": "dealbreaker-gated weighted partial credit",
+      "native_metric_note": "All-pass is the secondary metric. No scorer code in the repo, so a local number is our own judge on their rubric, not a Vals score. Rubric column is answer-bearing.",
+      "families": [],
+      "restrictions": [
+        "never mix v2 results with original Finance Agent results",
+        "public portion only, say so next to every number"
+      ]
+    },
+    {
+      "id": "benchrec",
+      "name": "BenchRec",
+      "layer": "external",
+      "owner": "Operartis (Kaggle: benchmarkteam)",
+      "provenance": "adapted_external",
+      "protocol": "adapted",
+      "access": "available",
+      "access_note": "Public on Kaggle, version 3 (2026-02-22). The gold solution CSV and a sample submission are public files, keep both evaluator-side.",
+      "source_urls": [
+        "https://www.kaggle.com/datasets/benchmarkteam/benchrec-real-world-cash-reconciliation-dataset",
+        "https://www.operartis.com/benchrec"
+      ],
+      "revision": "kaggle v3",
+      "revision_checked_at": "2026-09-19T19:19:00Z",
+      "license": "CC BY 4.0",
+      "split": null,
+      "task_count": null,
+      "native_metric": "match rate at >= 99.8% match precision",
+      "native_metric_note": "No official scorer ships with the dataset and row counts are not exposed by the API. Anything we compute is a custom metric on BenchRec data.",
+      "families": [],
+      "restrictions": [
+        "custom metrics must be labeled custom unless the native scorer is used",
+        "BenchRec_cash_v1.0_solution.csv and MatcherByChatGPT_submission.csv stay evaluator-side"
+      ]
+    },
+    {
+      "id": "invoice_sandbox",
+      "name": "Invoice Sandbox",
+      "layer": "external",
+      "owner": "ciru-ai",
+      "provenance": "adapted_external",
+      "protocol": "adapted",
+      "access": "available",
+      "access_note": "Public repo with no license file, so local use only and no redistribution. The run workspace sits inside the repo, isolate it or the agent can reach ../../answer_key.",
+      "source_urls": [
+        "https://github.com/ciru-ai/invoice-sandbox-benchmark"
+      ],
+      "revision": "b8cb58ff9747486e86c623e867b76fad5d8d075f",
+      "revision_checked_at": "2026-09-19T19:19:00Z",
+      "license": null,
+      "split": null,
+      "task_count": 1,
+      "native_metric": "net_spend_usd per customer within $0.01",
+      "native_metric_note": "One task scored over 18 customers. README says 110 PDFs, manifest and tree say 112. gold_master/ is the agent-visible fixture; answer_key/ and scripts/ are private.",
+      "families": [],
+      "restrictions": [
+        "ingestion diagnostic only",
+        "cannot prove payment-ready AP work"
+      ]
+    },
+    {
+      "id": "accountingbench",
+      "name": "AccountingBench",
+      "layer": "external",
+      "owner": "Penrose",
+      "provenance": "adapted_external",
+      "protocol": "adapted",
+      "access": "blocked",
+      "access_note": "Nothing runnable or licensed is public. The page is a write-up with a contact address only. Reference for methodology.",
+      "source_urls": [
+        "https://accounting.penrose.com/"
+      ],
+      "revision": null,
+      "revision_checked_at": "2026-09-19T19:19:00Z",
+      "license": null,
+      "split": null,
+      "task_count": null,
+      "native_metric": "not available",
+      "native_metric_note": "Our substitute is the MIRROR longitudinal close suite, inspired by AccountingBench.",
+      "families": [],
+      "restrictions": [
+        "never claimed: no AccountingBench result exists or may be implied",
+        "our substitute must be called \"MIRROR longitudinal close suite, inspired by AccountingBench\""
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "cap-01-documents",
+      "area": "Document reading and evidence retrieval",
+      "name": "Ingest records with source trust, retrieve evidence for a case",
+      "status": "partial",
+      "entry_point": "resolve/src/mirror_resolve/ingest.py",
+      "human_authority": "none needed to read, trust rules are code-owned",
+      "test_families": [
+        "embedded_instruction",
+        "duplicate_invoice_import"
+      ],
+      "task_count": 2,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [
+        "resolve/tests/test_backbone.py",
+        "resolve/src/mirror_resolve/ingest.py"
+      ],
+      "note": "Structured record intake with trusted-source rules exists. No reading of unstructured documents (PDF, email prose) and no retrieval by an agent. deterministic engine only, no model-driven agent yet, unit tests are not agent evaluations"
+    },
+    {
+      "id": "cap-02-economic",
+      "area": "Economic interpretation",
+      "name": "Interpret the economics of a transaction, including crypto-native activity",
+      "status": "unsupported",
+      "entry_point": null,
+      "human_authority": null,
+      "test_families": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C10",
+        "C11",
+        "C12"
+      ],
+      "task_count": 0,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [],
+      "note": "Nothing implements this. The crypto_native suite is registered but has no tasks. The engine computes AP arithmetic only."
+    },
+    {
+      "id": "cap-03-cash-application",
+      "area": "Cash application and reconciliation",
+      "name": "Apply receipts and reconcile settlements to the ledger",
+      "status": "unsupported",
+      "entry_point": null,
+      "human_authority": null,
+      "test_families": [],
+      "task_count": 0,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [
+        "data/engine/validate.py"
+      ],
+      "note": "The dataset generator validates its own reconciliations. No system under test performs cash application, and no suite covers it."
+    },
+    {
+      "id": "cap-04-ap-backbone",
+      "area": "AP investigation and payment preparation",
+      "name": "Deterministic AP backbone: three-way match, credit lifecycle, hash-bound proposal, approval, idempotent commit",
+      "status": "partial",
+      "entry_point": "resolve/src/mirror_resolve/proposals.py",
+      "human_authority": "human controller approves the exact proposal hash",
+      "test_families": [
+        "allocation_conflict",
+        "alternative_order",
+        "backorder",
+        "changed_recipient",
+        "clean",
+        "credit_claim_without_memo",
+        "disputed_cancellation",
+        "duplicate_credit_delivery",
+        "duplicate_invoice_import",
+        "embedded_instruction",
+        "missing_agreement",
+        "new_receipt_during_review",
+        "partial_correction",
+        "price_only",
+        "quantity_only",
+        "supplier_silent",
+        "unrelated_credit",
+        "valid_amendment"
+      ],
+      "task_count": 18,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [
+        "resolve/tests/test_backbone.py",
+        "resolve/src/mirror_resolve/matching.py",
+        "resolve/src/mirror_resolve/creditmemo.py",
+        "resolve/src/mirror_resolve/proposals.py"
+      ],
+      "note": "deterministic engine only, no model-driven agent yet, unit tests are not agent evaluations"
+    },
+    {
+      "id": "cap-04b-ap-investigation",
+      "area": "AP investigation and payment preparation",
+      "name": "Agentic investigation: decide what is missing, ask for it, judge what comes back",
+      "status": "unsupported",
+      "entry_point": null,
+      "human_authority": null,
+      "test_families": [
+        "allocation_conflict",
+        "alternative_order",
+        "backorder",
+        "changed_recipient",
+        "clean",
+        "credit_claim_without_memo",
+        "disputed_cancellation",
+        "duplicate_credit_delivery",
+        "duplicate_invoice_import",
+        "embedded_instruction",
+        "missing_agreement",
+        "new_receipt_during_review",
+        "partial_correction",
+        "price_only",
+        "quantity_only",
+        "supplier_silent",
+        "unrelated_credit",
+        "valid_amendment"
+      ],
+      "task_count": 18,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [],
+      "note": "no model-driven agent exists in the repo yet. The ap_workflow suite and its grader are ready, SUBJECT_AGENTS is empty."
+    },
+    {
+      "id": "cap-05-ledger",
+      "area": "Ledger consistency",
+      "name": "Balanced single recognition per invoice, no cash entries at payment-ready",
+      "status": "partial",
+      "entry_point": "resolve/src/mirror_resolve/proposals.py",
+      "human_authority": null,
+      "test_families": [
+        "allocation_conflict",
+        "alternative_order",
+        "backorder",
+        "changed_recipient",
+        "clean",
+        "credit_claim_without_memo",
+        "disputed_cancellation",
+        "duplicate_credit_delivery",
+        "duplicate_invoice_import",
+        "embedded_instruction",
+        "missing_agreement",
+        "new_receipt_during_review",
+        "partial_correction",
+        "price_only",
+        "quantity_only",
+        "supplier_silent",
+        "unrelated_credit",
+        "valid_amendment"
+      ],
+      "task_count": 18,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [
+        "resolve/tests/test_backbone.py"
+      ],
+      "note": "Covers AP recognition entries inside the engine only, not a general ledger. deterministic engine only, no model-driven agent yet, unit tests are not agent evaluations"
+    },
+    {
+      "id": "cap-06-reporting",
+      "area": "Reporting and variance",
+      "name": "Management reporting, variance explanation, close support",
+      "status": "unsupported",
+      "entry_point": null,
+      "human_authority": null,
+      "test_families": [],
+      "task_count": 0,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [],
+      "note": "Nothing implements this. The planned substitute is the MIRROR longitudinal close suite, inspired by AccountingBench, which does not exist yet."
+    },
+    {
+      "id": "cap-07-handoffs",
+      "area": "Multi-agent handoffs and follow-through",
+      "name": "Supplier follow-up, handoffs between roles, chasing silence",
+      "status": "unsupported",
+      "entry_point": null,
+      "human_authority": null,
+      "test_families": [
+        "supplier_silent",
+        "credit_claim_without_memo"
+      ],
+      "task_count": 2,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [],
+      "note": "no model-driven agent exists in the repo yet. The grader checks for duplicate outbound messages and justified holds once one does."
+    },
+    {
+      "id": "cap-08-memory",
+      "area": "Memory",
+      "name": "Carry knowledge across cases and sessions",
+      "status": "unsupported",
+      "entry_point": null,
+      "human_authority": null,
+      "test_families": [],
+      "task_count": 0,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [],
+      "note": "Nothing implements this and no suite measures it."
+    },
+    {
+      "id": "cap-09-controls",
+      "area": "Controls, uncertainty, reviewer independence and human authorization",
+      "name": "Preparer cannot review, only a human controller approves, approval binds to the proposal hash",
+      "status": "partial",
+      "entry_point": "resolve/src/mirror_resolve/proposals.py",
+      "human_authority": "human controller, identified by the human: prefix and CONTROLLER role",
+      "test_families": [
+        "allocation_conflict",
+        "alternative_order",
+        "backorder",
+        "changed_recipient",
+        "clean",
+        "credit_claim_without_memo",
+        "disputed_cancellation",
+        "duplicate_credit_delivery",
+        "duplicate_invoice_import",
+        "embedded_instruction",
+        "missing_agreement",
+        "new_receipt_during_review",
+        "partial_correction",
+        "price_only",
+        "quantity_only",
+        "supplier_silent",
+        "unrelated_credit",
+        "valid_amendment"
+      ],
+      "task_count": 18,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [
+        "resolve/tests/test_backbone.py",
+        "resolve/src/mirror_resolve/casework.py"
+      ],
+      "note": "Controls are enforced by the engine. Whether an agent respects them, and how it handles uncertainty, is untested. deterministic engine only, no model-driven agent yet, unit tests are not agent evaluations"
+    },
+    {
+      "id": "cap-10-recovery",
+      "area": "Recovery, concurrency, duplicates and stale data",
+      "name": "Idempotent commit, duplicate delivery handling, revision invalidation of stale approvals",
+      "status": "partial",
+      "entry_point": "resolve/src/mirror_resolve/casework.py",
+      "human_authority": null,
+      "test_families": [
+        "duplicate_credit_delivery",
+        "duplicate_invoice_import",
+        "new_receipt_during_review"
+      ],
+      "task_count": 3,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [
+        "resolve/tests/test_backbone.py"
+      ],
+      "note": "No concurrency or crash-recovery tests exist. The reliability suite is registered but not implemented. deterministic engine only, no model-driven agent yet, unit tests are not agent evaluations"
+    },
+    {
+      "id": "cap-11-checkpoints",
+      "area": "Learned checkpoints",
+      "name": "Trained adapters or checkpoints that improve the system",
+      "status": "unsupported",
+      "entry_point": null,
+      "human_authority": null,
+      "test_families": [],
+      "task_count": 0,
+      "passed": null,
+      "failed": null,
+      "evidence_refs": [],
+      "note": "No trained weights, training code or checkpoints exist. No version-over-version comparison is possible until at least two subject systems have runs."
+    }
+  ],
+  "runs": [
+    {
+      "id": "ap_workflow-oracle-smoke-20260919T193602Z",
+      "suite_id": "ap_workflow",
+      "system_id": "oracle-smoke",
+      "mode": "DEV_FIXTURE",
+      "execution": "completed",
+      "provenance": "custom",
+      "started_at": "2026-09-19T19:36:02Z",
+      "finished_at": "2026-09-19T19:36:02Z",
+      "n_tasks": 18,
+      "trials_per_task": 1,
+      "native_score": {
+        "status": "measured",
+        "value": 1.0,
+        "unit": "ratio",
+        "n": 18,
+        "ci_low": 1.0,
+        "ci_high": 1.0,
+        "ci_method": "family-level bootstrap, 95%"
+      },
+      "whole_task_success": {
+        "status": "measured",
+        "value": 1.0,
+        "unit": "ratio",
+        "n": 18,
+        "ci_low": 1.0,
+        "ci_high": 1.0,
+        "ci_method": "family-level bootstrap, 95%"
+      },
+      "unassisted_completion": {
+        "status": "measured",
+        "value": 1.0,
+        "unit": "ratio",
+        "n": 11,
+        "ci_low": 1.0,
+        "ci_high": 1.0,
+        "ci_method": "family-level bootstrap, 95%"
+      },
+      "correct_escalation_rate": {
+        "status": "measured",
+        "value": 1.0,
+        "unit": "ratio",
+        "n": 7,
+        "ci_low": 1.0,
+        "ci_high": 1.0,
+        "ci_method": "family-level bootstrap, 95%"
+      },
+      "pass_at_1": {
+        "status": "measured",
+        "value": 1.0,
+        "unit": "ratio",
+        "n": 18,
+        "ci_low": 1.0,
+        "ci_high": 1.0,
+        "ci_method": "family-level bootstrap, 95%"
+      },
+      "pass_any_of_k": {
+        "status": "measured",
+        "value": 1.0,
+        "unit": "ratio",
+        "n": 18,
+        "ci_low": 1.0,
+        "ci_high": 1.0,
+        "ci_method": "family-level bootstrap, 95%"
+      },
+      "pass_all_of_k": {
+        "status": "measured",
+        "value": 1.0,
+        "unit": "ratio",
+        "n": 18,
+        "ci_low": 1.0,
+        "ci_high": 1.0,
+        "ci_method": "family-level bootstrap, 95%"
+      },
+      "outcomes": {
+        "n_pass": 11,
+        "n_fail": 0,
+        "n_partial": 0,
+        "n_correct_escalation": 7,
+        "n_waiting": 0,
+        "n_unsupported": 0,
+        "n_not_tested": 0,
+        "n_error": 0
+      },
+      "required_approvals": {
+        "status": "measured",
+        "value": 11.0,
+        "unit": "count",
+        "n": 18,
+        "ci_low": null,
+        "ci_high": null,
+        "ci_method": null
+      },
+      "investigative_assists": {
+        "status": "measured",
+        "value": 0.0,
+        "unit": "count",
+        "n": 18,
+        "ci_low": null,
+        "ci_high": null,
+        "ci_method": null
+      },
+      "invalid_actions_attempted": {
+        "status": "measured",
+        "value": 0.0,
+        "unit": "count",
+        "n": 18,
+        "ci_low": null,
+        "ci_high": null,
+        "ci_method": null
+      },
+      "invalid_actions_blocked": {
+        "status": "measured",
+        "value": 0.0,
+        "unit": "count",
+        "n": 18,
+        "ci_low": null,
+        "ci_high": null,
+        "ci_method": null
+      },
+      "invalid_actions_accepted": {
+        "status": "measured",
+        "value": 0.0,
+        "unit": "count",
+        "n": 18,
+        "ci_low": null,
+        "ci_high": null,
+        "ci_method": null
+      },
+      "cost_usd": {
+        "status": "unavailable",
+        "reason": "cost known for 0 of 18 executed trials"
+      },
+      "wall_ms": {
+        "status": "measured",
+        "value": 2.0,
+        "unit": "ms",
+        "n": 18,
+        "ci_low": null,
+        "ci_high": null,
+        "ci_method": null
+      },
+      "tool_calls": {
+        "status": "measured",
+        "value": 64.0,
+        "unit": "count",
+        "n": 18,
+        "ci_low": null,
+        "ci_high": null,
+        "ci_method": null
+      },
+      "external_messages": {
+        "status": "measured",
+        "value": 28.0,
+        "unit": "count",
+        "n": 18,
+        "ci_low": null,
+        "ci_high": null,
+        "ci_method": null
+      },
+      "incidents": [
+        "adapter did not report cost for 18 trials"
+      ],
+      "artifact_ref": "eval/runs/ap_workflow-oracle-smoke-20260919T193602Z",
+      "reproduce": "cd eval && uv run python -m mirror_eval selftest"
+    }
+  ],
+  "trials": [],
+  "comparisons": [],
+  "claims": [
+    {
+      "id": "claim-01-end-to-end",
+      "claim": "Completes AP exceptions end to end",
+      "status": "unsupported",
+      "evidence_refs": [],
+      "demo_allowed": false
+    },
+    {
+      "id": "claim-02-partial-correction",
+      "claim": "Notices a partial supplier correction instead of treating the first credit as the whole answer (engine-level only, not agent-level)",
+      "status": "untested",
+      "evidence_refs": [
+        "resolve/tests/test_backbone.py"
+      ],
+      "demo_allowed": false
+    },
+    {
+      "id": "claim-03-approval",
+      "claim": "Never releases without current human approval (engine-level only, not agent-level)",
+      "status": "untested",
+      "evidence_refs": [
+        "resolve/tests/test_backbone.py"
+      ],
+      "demo_allowed": false
+    },
+    {
+      "id": "claim-04-no-duplicates",
+      "claim": "No duplicate financial effects under retries and duplicate deliveries (engine-level only, not agent-level)",
+      "status": "untested",
+      "evidence_refs": [
+        "resolve/tests/test_backbone.py"
+      ],
+      "demo_allowed": false
+    },
+    {
+      "id": "claim-05-ready-not-paid",
+      "claim": "Payment-ready is not paid: no cash moves (engine-level only, not agent-level)",
+      "status": "untested",
+      "evidence_refs": [
+        "resolve/tests/test_backbone.py"
+      ],
+      "demo_allowed": false
+    },
+    {
+      "id": "claim-06-improves",
+      "claim": "Improves across versions",
+      "status": "unsupported",
+      "evidence_refs": [],
+      "demo_allowed": false
+    },
+    {
+      "id": "claim-07-external",
+      "claim": "Performs on external benchmarks",
+      "status": "unsupported",
+      "evidence_refs": [],
+      "demo_allowed": false
+    },
+    {
+      "id": "claim-08-crypto",
+      "claim": "Interprets crypto-economic activity correctly",
+      "status": "unsupported",
+      "evidence_refs": [],
+      "demo_allowed": false
+    }
+  ]
+}

@@ -117,3 +117,5 @@
 @media (prefers-reduced-motion: reduce) {
   .bench-heading button { transition: none; }
 }
+.bench-matrix td { white-space: nowrap; }
+.bench-matrix td:last-child:has(code) { white-space: normal; }

@@ -1,0 +1,695 @@
+[
+  {
+    "id": "apex_accounting",
+    "name": "APEX-Accounting (public 10-task dev set, tabular + Harbor delivery)",
+    "owner": "Mercor (in partnership with Ramp)",
+    "urls": {
+      "source_dataset": "https://huggingface.co/datasets/mercor/apex-accounting",
+      "harbor_delivery": "https://huggingface.co/datasets/mercor/apex-accounting-harbor",
+      "harbor_hub_as_listed_in_readme_not_fetched": "https://hub.harborframework.com/datasets/mercor/apex-accounting",
+      "paper": "https://arxiv.org/abs/2607.27189",
+      "leaderboard": "https://www.mercor.com/apex/apex-accounting-leaderboard/",
+      "harness": "https://github.com/Mercor-Intelligence/archipelago"
+    },
+    "revision": {
+      "mercor/apex-accounting": {
+        "sha": "bf5e8c99117b7ee763d79ad2c64563ac844d77d2",
+        "lastModified": "2026-07-31T05:10:56.000Z"
+      },
+      "mercor/apex-accounting-harbor": {
+        "sha": "1662b7e4c3b04b8717f2f723df823e7b6cbe2118",
+        "lastModified": "2026-09-17T01:24:41.000Z"
+      },
+      "Mercor-Intelligence/archipelago": {
+        "sha": "ade7d8df4b9c49f8d15fb8c06678332e85da5b97",
+        "committed": "2026-09-19T09:18:34Z",
+        "license": "Apache-2.0",
+        "note": "reference only, README was not read"
+      }
+    },
+    "revision_checked_at": "2026-09-19T19:19:15Z",
+    "license": "CC BY 4.0 (both HF repos, card metadata license: cc-by-4.0; source repo README: 'released under CC BY 4.0, comprising prompts, rubrics, golden responses, task metadata, and the world's source files'). The bundled agent dir has its own LICENSE file, not read.",
+    "access": {
+      "mercor/apex-accounting": "public, gated=false, private=false",
+      "mercor/apex-accounting-harbor": "public, gated=false, private=false",
+      "scored_benchmark": "closed. README: 'The 160-task scored benchmark is closed. Leaderboard evals can be run for any frontier model on request via apex@mercor.com.'"
+    },
+    "configs_splits": {
+      "mercor/apex-accounting": [
+        {
+          "config": "default",
+          "split": "dev",
+          "num_rows": 10,
+          "num_columns": 8,
+          "data_file": "data/dev.jsonl",
+          "columns": [
+            "task_id",
+            "task_name",
+            "world_id",
+            "prompt",
+            "context_files",
+            "rubric",
+            "gold_output",
+            "metadata"
+          ]
+        }
+      ],
+      "mercor/apex-accounting-harbor": "not a tabular dataset. datasets-server returns 'No (supported) data files found'. 232 files: 10 Harbor task dirs under tasks/, 1 world seed under worlds/, 3 image archives under environment/, agent/ , manifest.json, registry.json, run_task.sh"
+    },
+    "task_count": {
+      "public_dev": 10,
+      "private_scored": 160,
+      "private_scored_source": "owner statement in both READMEs, not independently verifiable",
+      "public_rubric_criteria": 89
+    },
+    "agent_visible_inputs": [
+      "source repo: `prompt` field only, plus world/filesystem/** mounted flat at root and that task's task_files/<task>/**. world/apps_data/quickbooks/** is meant to be reached through a tool layer that is NOT in the release (static exports only).",
+      "harbor: tasks/<slug>/instruction.md, tasks/<slug>/environment/** (docker-compose.yaml, task_files/filesystem/*, task_files/.harbor/mcp_config.json), world reached only over MCP (Filesystem, Spreadsheets, PDFs, Mail, Code Execution servers rooted at /filesystem), QuickBooks exports seeded to /.apps_data/quickbooks",
+      "README field table marks task_id, context_files, rubric, gold_output, metadata as NOT visible to the model"
+    ],
+    "private_material": [
+      "mercor/apex-accounting: data/dev.jsonl (columns rubric, gold_output, context_files, metadata)",
+      "mercor/apex-accounting: tasks/*.json (same 10 records formatted per task, includes rubric + gold_output)",
+      "harbor: tasks/*/solution/** (answer.txt, oracle.py, solve.sh, instruction.md)",
+      "harbor: tasks/*/tests/** (golden_reference.txt, golden_responses.json, grading_config.json which holds every rubric criterion with acceptable values, grade.py, atif.py, test.sh, Dockerfile)",
+      "harbor: tasks/*/mercor.json and tasks/*/agent.json (contents not inspected, treat as private until read)",
+      "harbor: environment/apex-verifier/image.tar.gz (grading runner lives at /app/grading inside it)",
+      "both READMEs themselves quote nothing answer-bearing, but the source README lists per-model dev scores"
+    ],
+    "native_metric": "Leaderboard headline: 'Mean Criteria@3, the percentage of rubric criteria met, averaged over 3 runs per task'. Rubric criteria are binary, unweighted, outcome-based, graded on the final console message only (never the trajectory). Harbor packaging: per-trial reward = `final_score` emitted by the Archipelago grading runner, written to /logs/verifier/reward.txt and reward.json, with per-verifier (per-criterion) scores alongside. How final_score aggregates criteria is inside the verifier image and was NOT verified (expected: fraction of criteria met).",
+    "scorer": {
+      "leaderboard": "LM judge DeepSeek-v4-Flash at temperature 0.1 with a GEPA-optimized grading template that is NOT released. One criterion at a time, inputs: task prompt + criterion text + model final output, returns binary Met / Not Met.",
+      "harbor_public": "tasks/<slug>/tests/test.sh -> python3 /tests/grade.py in a separate verifier container (apex-verifier:v1). Default judge `vertex_ai/gemini-3-flash-preview` from grading_config.json, override with env GRADING_MODEL. Needs judge credentials (Vertex / LiteLLM proxy / OpenAI / Anthropic / Google / Fireworks env vars are passed through).",
+      "comparability": "README: 'Dev-set results are not comparable to leaderboard results and should not be reported as APEX-Accounting scores.'"
+    },
+    "setup_commands": [
+      "from datasets import load_dataset\nds = load_dataset(\"mercor/apex-accounting\", split=\"dev\")",
+      "hf download mercor/apex-accounting --repo-type dataset --local-dir apex-accounting",
+      "uv tool install harbor==0.20.0",
+      "hf download mercor/apex-accounting-harbor \\\n  --repo-type dataset \\\n  --local-dir apex-accounting-harbor\n\nbash apex-accounting-harbor/environment/load_images.sh",
+      "PYTHONPATH=\"$PWD/apex-accounting-harbor/agent/apex_accounting_loop_agent\" \\\nharbor run \\\n  --env-file .env \\\n  -p apex-accounting-harbor/tasks/world-9-task-4-baa13987 \\\n  -a apex_accounting_loop_agent:ApexAccountingLoopAgent \\\n  -m anthropic/claude-opus-5 \\\n  -y",
+      "PYTHONPATH=\"$PWD/apex-accounting-harbor/agent/apex_accounting_loop_agent\" \\\nharbor run \\\n  --env-file .env \\\n  -p apex-accounting-harbor/tasks \\\n  -a apex_accounting_loop_agent:ApexAccountingLoopAgent \\\n  -m anthropic/claude-opus-5",
+      "bash apex-accounting-harbor/run_task.sh world-9-task-4-baa13987 oracle"
+    ],
+    "submission_rules": "No public submission path. Closed benchmark, leaderboard evals on request via apex@mercor.com. Leaderboard run limits: max 500 steps and 5 million tokens per task, one extra turn to submit on hitting a limit, failing to submit scores zero.",
+    "claim_checks": [
+      {
+        "claim": "10 public dev tasks",
+        "verdict": "confirmed",
+        "note": "datasets-server /size: default/dev num_rows=10. Harbor repo has exactly 10 task dirs (world-9-task-4,5,6,7,13,14,17,23,26,30)."
+      },
+      {
+        "claim": "160-task private scored set",
+        "verdict": "confirmed",
+        "note": "Stated by owner in both READMEs ('160 tasks across 10 held-out worlds', never released). Cannot be independently verified since it is closed."
+      },
+      {
+        "claim": "harbor delivery pins harbor==0.20.0",
+        "verdict": "confirmed",
+        "note": "README `uv tool install harbor==0.20.0`, manifest.json harbor_version 0.20.0, and run_task.sh hard-fails unless `harbor --version` is 0.20.0. PyPI `harbor` latest is 0.23.0, 0.20.0 exists (uploaded 2026-07-18)."
+      },
+      {
+        "claim": "has environment/load_images.sh",
+        "verdict": "confirmed",
+        "note": "File exists (1512 bytes). Requires docker, sha256sum, python3. Verifies archive SHA-256 and image ID, supports `--restore`. Loads 3 linux/amd64 images: apex-world:v1 (3,667,915,127 B), apex-agent:v1 (746,160,102 B), apex-verifier:v1 (574,439,578 B), about 4.99 GB total."
+      },
+      {
+        "claim": "native score is a rubric score",
+        "verdict": "confirmed",
+        "note": "Binary rubric criteria judged by an LLM. Caveat: the public Harbor grader uses a different judge (gemini-3-flash-preview) and not the unreleased leaderboard template, so local numbers are a rubric score but not THE leaderboard score."
+      }
+    ],
+    "notes": [
+      "Harbor README: 'Three rubric criteria were tightened since the tabular release (tasks 4, 5, and 7); everything else is byte-identical.' The two repos therefore disagree on 3 criteria, pick one as the registry source of truth.",
+      "Platform is linux/amd64 only. On Apple Silicon this means emulation. Not tested.",
+      "Harbor repo was created 2026-09-14 and last modified 2026-09-17, so it is 2 to 5 days old. Expect churn, pin the sha.",
+      "Dev world is 'the easiest of the 11 qualifying worlds', dev scores run up to about +14 points over held-out.",
+      "Task verifier and agent envs use network_mode = public per task.toml.",
+      "Agent timeout 11700 s, verifier timeout 3600 s per task.toml."
+    ]
+  },
+  {
+    "id": "dabstep",
+    "name": "DABstep (Data Agent Benchmark for Multi-step Reasoning)",
+    "owner": "Adyen (with Hugging Face)",
+    "urls": {
+      "dataset": "https://huggingface.co/datasets/adyen/DABstep",
+      "leaderboard_space": "https://huggingface.co/spaces/adyen/DABstep",
+      "leaderboard_app": "https://adyen-dabstep.hf.space/",
+      "paper": "https://arxiv.org/abs/2506.23719",
+      "colab": "https://colab.research.google.com/drive/1pXi5ffBFNJQ5nn1111SnIfjfKCOlunxu"
+    },
+    "revision": {
+      "adyen/DABstep (dataset)": {
+        "sha": "be54e258883ea46d6625d15a213838f4462c8b3b",
+        "lastModified": "2026-09-19T05:10:02.000Z",
+        "warning": "HEAD moves on every leaderboard submission (the Space uploads data/submissions/*.jsonl and data/task_scores/*.jsonl into this same repo). 5 commits landed within 20 minutes on 2026-09-19. Always load with revision= pinned."
+      },
+      "adyen/DABstep (space)": {
+        "sha": "d4431c2e4a695cbe43c33aab2adaa304a37ae64a",
+        "lastModified": "2026-07-22T14:40:29.000Z"
+      }
+    },
+    "revision_checked_at": "2026-09-19T19:19:15Z",
+    "license": "CC BY 4.0 (dataset card license: cc-by-4.0, Space README license: cc-by-4.0)",
+    "access": "public, gated=false, private=false. Space runtime stage RUNNING, https://adyen-dabstep.hf.space/ returned HTTP 200.",
+    "configs_splits": [
+      {
+        "config": "tasks",
+        "split": "default",
+        "num_rows": 450,
+        "num_columns": 5,
+        "data_file": "data/tasks/all.jsonl"
+      },
+      {
+        "config": "tasks",
+        "split": "dev",
+        "num_rows": 10,
+        "num_columns": 5,
+        "data_file": "data/tasks/dev.jsonl"
+      },
+      {
+        "config": "submissions",
+        "split": "default",
+        "num_rows": 1018519,
+        "num_columns": 10,
+        "data_file": "data/submissions/*.jsonl"
+      },
+      {
+        "config": "task_scores",
+        "split": "default",
+        "num_rows": 1012950,
+        "num_columns": 5,
+        "data_file": "data/task_scores/*.jsonl"
+      }
+    ],
+    "task_count": {
+      "scored": 450,
+      "dev_with_answers": 10
+    },
+    "agent_visible_inputs": [
+      "tasks config columns task_id, question, guidelines, level (the `answer` column is an empty string in the 3 default-split rows I sampled, I did not scan all 450)",
+      "data/context/: acquirer_countries.csv, fees.json, manual.md, merchant_category_codes.csv, merchant_data.json, payments-readme.md, payments.csv"
+    ],
+    "private_material": [
+      "data/tasks/dev.jsonl `answer` column (10 gold answers, e.g. task 5)",
+      "config `task_scores` (public!): columns submission_id, task_id, score(bool), level, agent_answer. Any row with score=True is effectively a gold answer for a hidden task. 1.01M rows. Must never be reachable by the agent.",
+      "config `submissions` (public!): task_id, agent_answer, reasoning_trace and metadata for every leaderboard entry. Same leak risk when joined with task_scores.",
+      "Space repo: dabstep_benchmark/evaluation/scorer.py and tests/test_scorer.py (scoring logic, not answers, but keep out of agent context)",
+      "Gold answers for the 450 default tasks are not in the public dataset files (held server-side by the Space)"
+    ],
+    "native_metric": "Accuracy. 'Scores are expressed as the percentage of correct answers.' Tasks carry level easy|hard. 'evaluation is done via quasi exact match between a model's answer and the ground truth (up to some normalization that is tied to the \"type\" of the ground truth).'",
+    "scorer": "https://huggingface.co/spaces/adyen/DABstep/blob/main/dabstep_benchmark/evaluation/scorer.py, function question_scorer(input1, input2) -> bool. Numeric: math.isclose(rel_tol=1e-4, abs_tol=1e-4). Lists: compare_lists. Strings: normalized compare, word-subset match, or difflib SequenceMatcher ratio > 0.95. Official scoring of the 450 hidden tasks only happens server-side on submission.",
+    "setup_commands": [
+      "from datasets import load_dataset\nds = load_dataset(\"adyen/DABstep\", name=\"tasks\", split=\"default\")",
+      "export MODEL_ID=openai/o3-mini\nexport API_KEY=<your_api_key>\n\npython3.10 -m venv venv\nsource venv/bin/activate\npip3.10 install -r baseline/requirements.txt",
+      "python -m phoenix.server.main serve &",
+      "python baseline/run.py --model-id $MODEL_ID --api-key $API_KEY --max-tasks 10 --split dev --concurrency 1",
+      "python baseline/run.py --model-id $MODEL_ID --api-key $API_KEY --max-tasks -1 --split dev --concurrency 1",
+      "python baseline/run.py --model-id $MODEL_ID --api-key $API_KEY --max-tasks 10 --split default --concurrency 1"
+    ],
+    "submission_rules": {
+      "format": "JSON Lines. Mandatory fields `task_id` and `agent_answer`, optional `reasoning_trace`. Exact documented example: {\"task_id\": \"task_id_1\", \"agent_answer\": \"Answer 1 from your agent\", \"reasoning_trace\": \"The different steps by which your model reached answer 1\"}",
+      "validation_in_code": "Any other column is rejected ('Unexpected columns'), NaN rejected, all columns must be strings. Form also requires agent name, model family, organisation, email (repo URL optional, must be https if given). Names limited to [a-zA-Z0-9 _.-]. An organisation+agent_name pair can only be submitted once. Requires Hugging Face OAuth login (hf_oauth: true, gr.LoginButton).",
+      "side_effect": "A submission is published permanently into the public dataset repo (answers, reasoning_trace, org, HF username). Per my task constraints nothing was submitted.",
+      "status": "As of Space commit 2026-07-22: 'Validation requests are closed. With DABStep-v2 launching in the coming weeks, we are no longer accepting new validation requests. The Validated Leaderboard is now closed to new entries; previously validated submissions remain as-is. The Unvalidated Leaderboard remains open, you can still submit and receive a score.' Submissions were still landing on 2026-09-19."
+    },
+    "claim_checks": [
+      {
+        "claim": "450 scored tasks",
+        "verdict": "confirmed",
+        "note": "datasets-server /size: tasks/default num_rows=450. Space copy still says '~450'."
+      },
+      {
+        "claim": "loader load_dataset('adyen/DABstep', name='tasks', split='default')",
+        "verdict": "confirmed",
+        "note": "README verbatim: load_dataset(\"adyen/DABstep\", name=\"tasks\", split=\"default\"). Add revision=<sha> yourself, HEAD is unstable."
+      },
+      {
+        "claim": "a dev split exists with answers",
+        "verdict": "confirmed",
+        "note": "tasks/dev has 10 rows and the `answer` column is populated (sampled rows: 'NL', 'B. BE')."
+      },
+      {
+        "claim": "submission format JSONL with task_id and agent_answer",
+        "verdict": "confirmed",
+        "note": "Plus optional reasoning_trace, and nothing else is allowed."
+      },
+      {
+        "claim": "current status of submissions/validation",
+        "verdict": "confirmed",
+        "note": "Unvalidated leaderboard open and active. Validated leaderboard closed to new entries since 2026-07-22. DABStep-v2 announced as coming, no v2 dataset verified."
+      }
+    ],
+    "notes": [
+      "Space copy links to old names adyen/data-agents-benchmark (dataset and space). Both 307-redirect to adyen/DABstep.",
+      "Dataset README calls configs 'splits' ('This Dataset has 3 splits: tasks, submissions, task_scores'). They are configs.",
+      "Do not load the submissions/task_scores configs for anything agent-facing, and they are 1.3 GB + 147 MB parquet."
+    ]
+  },
+  {
+    "id": "finance_agent_v1",
+    "name": "Finance Agent Benchmark (original, public sample)",
+    "owner": "Vals AI",
+    "urls": {
+      "dataset": "https://huggingface.co/datasets/vals-ai/finance_agent_benchmark",
+      "harness": "https://github.com/vals-ai/finance-agent",
+      "doi": "10.57967/hf/5514"
+    },
+    "revision": {
+      "vals-ai/finance_agent_benchmark": {
+        "sha": "1f80cefae847f2e8b6bdf773f789c90f70293f78",
+        "lastModified": "2025-05-16T03:18:13.000Z"
+      },
+      "vals-ai/finance-agent": {
+        "sha": "8ba65f81ab759a8e0d44e72aabc5a47cf839d563",
+        "committed": "2026-07-21T09:52:48Z",
+        "license": "MIT"
+      }
+    },
+    "revision_checked_at": "2026-09-19T19:19:15Z",
+    "license": "Dataset: CC BY 4.0 (card license: cc-by-4.0). Harness repo: MIT.",
+    "access": "public, gated=false, private=false. Only a 50-row public sample. README says the full dataset 'includes 537 expert-authored questions', the rest is not in this repo.",
+    "configs_splits": [
+      {
+        "config": "default",
+        "split": "train",
+        "num_rows": 50,
+        "num_columns": 5,
+        "data_file": "finance_agent_benchmark.csv",
+        "columns": [
+          "Question",
+          "Answer",
+          "Question Type",
+          "Expert time (mins)",
+          "Rubric"
+        ]
+      }
+    ],
+    "task_count": {
+      "public": 50,
+      "total_per_readme": 537
+    },
+    "agent_visible_inputs": [
+      "`Question` column only. Agent uses live tools (web search via Tavily, SEC EDGAR via sec-api.io, HTML parsing, retrieval), so runs are not hermetic and need paid API keys."
+    ],
+    "private_material": [
+      "finance_agent_benchmark.csv columns `Answer` and `Rubric` (rubric entries look like {'operator': 'correctness', 'criteria': ...})",
+      "`Question Type` and `Expert time (mins)` are metadata, keep out of the prompt",
+      "GitHub harness data/public.csv also carries the rubric"
+    ],
+    "native_metric": "null for exact formula. Not documented in the HF README or harness README. The v2 page only describes it as 'v1.1's flat per-question score'. Rubric is a list of per-criterion checks with operator 'correctness' in the sampled row.",
+    "scorer": "null in public code. Harness README routes grading through the gated Vals platform (VALS_API_KEY, suites.json with Test Suite IDs provided by email).",
+    "setup_commands": [
+      "make install\nsource .venv/bin/activate",
+      "finance-agent --questions \"What was Apple's revenue in 2023?\" --model openai/gpt-5.2-2025-12-11",
+      "finance-agent --question-file data/public.txt"
+    ],
+    "submission_rules": "No self-serve submission. 'Access to the Vals platform is gated and requires approval.'",
+    "claim_checks": [],
+    "notes": [
+      "Dataset untouched since 2025-05-16. Superseded by v1.1 and now v2 on vals.ai."
+    ]
+  },
+  {
+    "id": "finance_agent_v2",
+    "name": "Finance Agent Benchmark v2 (FABv2)",
+    "owner": "Vals AI",
+    "urls": {
+      "benchmark_page": "https://www.vals.ai/benchmarks/fabv2",
+      "harness": "https://github.com/vals-ai/finance-agent-v2",
+      "platform": "https://www.platform.vals.ai/auth",
+      "sdk_docs": "https://docs.vals.ai/sdk/running_suites"
+    },
+    "revision": {
+      "vals-ai/finance-agent-v2": {
+        "sha": "c27955b4bd57729a907b513cc444cfbd01c1a9cb",
+        "committed": "2026-08-18T04:25:49Z"
+      }
+    },
+    "revision_checked_at": "2026-09-19T19:19:15Z",
+    "license": "Harness repo + the 27 public samples in it: MIT (GitHub license API + LICENSE file). Private Validation set: 'available for license', terms not public (null). Test set: private.",
+    "access": {
+      "public": "27 samples in data/public.csv and data/public.txt, public GitHub repo",
+      "private_validation": "450 samples, license from Vals AI on request",
+      "test": "450 samples, private, all published results are on this split",
+      "platform": "gated, requires approval and company email"
+    },
+    "configs_splits": [
+      {
+        "split": "public",
+        "num_rows": 27,
+        "files": [
+          "data/public.csv",
+          "data/public.txt"
+        ],
+        "columns": [
+          "Question",
+          "Question Type",
+          "Expert time (mins)",
+          "Rubric"
+        ]
+      },
+      {
+        "split": "private_validation",
+        "num_rows": 450,
+        "note": "owner-stated, not verifiable"
+      },
+      {
+        "split": "test",
+        "num_rows": 450,
+        "note": "owner-stated, not verifiable"
+      }
+    ],
+    "task_count": {
+      "public": 27,
+      "private_validation": 450,
+      "test": 450,
+      "total_per_page": 927,
+      "public_rubric_checks": 239,
+      "public_question_types": "9 types x 3 each"
+    },
+    "agent_visible_inputs": [
+      "data/public.txt (one question per line) or the `Question` column",
+      "Tools in code: calculator, web_search (Tavily), edgar_search (sec-api.io), parse_html_page, price_history (Tiingo), retrieve_information, submit_final_result. Live network, not hermetic."
+    ],
+    "private_material": [
+      "data/public.csv `Rubric` column: JSON list of {operator: 'finance_agent_v2_operator', criteria, modifiers: {severity: 1.0|2.0|3.0, category?: 'must_pass'}}. In the 27 samples: 239 checks, severity 1.0 x170, 2.0 x60, 3.0 x9, category must_pass on 79.",
+      "`Question Type`, `Expert time (mins)` metadata",
+      "There is no Answer column in v2 public.csv, the rubric is the only gold material"
+    ],
+    "native_metric": "Page verbatim: 'Partial Credit (primary): the dealbreaker-gated, severity-weighted average of per-check scores. A response with a correct dealbreaker but a few peripheral misses scores below 100%; a response with any failed dealbreaker scores 0%. All-Pass (secondary): 100% only if every check passes, 0% otherwise.' Two-hour time limit per task, over time scores zero.",
+    "scorer": "'All responses are graded by a three-judge LLM jury consisting of three frontier models: GPT-5.4, Gemini-3.1-Pro, and Claude Sonnet 4.6.' No scorer code in the public repo (no judge prompts, no aggregation code). Grading runs through the gated Vals platform. How the jury votes are combined is not documented on the page (null).",
+    "setup_commands": [
+      "make install\nsource .venv/bin/activate",
+      "finance-agent --questions \"What was Apple's revenue in 2023?\" --model openai/gpt-5.2-2025-12-11",
+      "finance-agent --questions \"What was Apple's revenue in 2023?\" \"What was NFLX's revenue in 2024?\"",
+      "finance-agent --question-file data/public.txt",
+      "finance-agent --help"
+    ],
+    "submission_rules": "No self-serve leaderboard submission documented. Platform access gated ('reach out to us at vals.ai'). Env needs TAVILY_API_KEY, SEC_EDGAR_API_KEY, PRICING_DATA_API_KEY (Tiingo) plus an LLM key. README says to 'add the Test Suite IDs to suites.json', provided by email after approval.",
+    "claim_checks": [
+      {
+        "claim": "v2 has 27 public samples",
+        "verdict": "confirmed",
+        "note": "data/public.csv parses to 27 rows, data/public.txt has 27 lines, page says 'Public (27 open-source samples)'."
+      },
+      {
+        "claim": "licensed validation set",
+        "verdict": "confirmed",
+        "note": "'Private Validation (450 samples available for license) ... Interested parties are encouraged to contact us directly for access.' Price and terms not public."
+      },
+      {
+        "claim": "private test",
+        "verdict": "confirmed",
+        "note": "'Test (450 samples) ... The Test set will remain private. All results reported on this page are based solely on the Test set'."
+      },
+      {
+        "claim": "primary metric is dealbreaker-gated weighted partial credit",
+        "verdict": "confirmed",
+        "note": "Severity-weighted, dealbreaker-gated. The public rubric encodes severity and `category: must_pass`. That must_pass == dealbreaker is my inference, the page never names the field."
+      }
+    ],
+    "notes": [
+      "README lists 5 tools and omits calculator, the vals.ai page says six tools, the code defines 7 Tool classes including submit_final_result.",
+      "Makefile sets PYTHON_VERSION ?= 3.11 but pyproject.toml has requires-python >=3.12. `make install` may fail as written, use `make install PYTHON_VERSION=3.12`. Not executed, so unverified.",
+      "README references suites.json, no such file exists in the repo at HEAD.",
+      "You can run the agent locally on the 27 public questions without platform access, but you would have to write your own jury scorer from the rubric JSON, and it would not be the official score.",
+      "Pinned dependency model-library==0.1.29."
+    ]
+  },
+  {
+    "id": "benchrec",
+    "name": "BenchRec: A Real-World Cash Reconciliation Dataset (cash v1.0)",
+    "owner": "Operartis (Kaggle org 'BenchRec', owner ref benchmarkteam)",
+    "urls": {
+      "landing": "https://www.operartis.com/benchrec",
+      "kaggle": "https://www.kaggle.com/datasets/benchmarkteam/benchrec-real-world-cash-reconciliation-dataset",
+      "origin": "https://ai-finance.org/icaif-23/"
+    },
+    "revision": {
+      "kaggle_dataset_id": 9502956,
+      "currentVersionNumber": 3,
+      "lastUpdated": "2026-02-22T10:59:51.36Z",
+      "version_notes": "Update 2026-02-22",
+      "note": "Kaggle has no content sha, pin by version number 3"
+    },
+    "revision_checked_at": "2026-09-19T19:19:15Z",
+    "license": "Attribution 4.0 International (CC BY 4.0), as stated in Kaggle metadata. The operartis.com page states no license.",
+    "access": "Public on Kaggle (isPrivate=false). No login wall hit: the unauthenticated Kaggle API (/api/v1/datasets/view, /list, /metadata) returned full metadata, and /api/v1/datasets/download/<slug>/<file> 302-redirected to a signed GCS URL without credentials. I only range-read the first ~700 bytes of each file to get headers. The Kaggle web UI download button was not tested and normally wants a login. operartis.com offers only a 'Sign up to participate / Get Benchmark' lead form.",
+    "configs_splits": [
+      {
+        "file": "BenchRec_cash_v1.0_train.csv",
+        "bytes": 78765900,
+        "num_rows": null,
+        "columns": [
+          "matchId",
+          "matchDate",
+          "matchRule",
+          "matchedBy",
+          "wasPreviouslyMismatched",
+          "A_transactionType",
+          "A_id",
+          "A_allocation",
+          "A_importDate",
+          "A_debitOrCredit",
+          "A_amount",
+          "A_valueDate",
+          "A_currencyCode",
+          "A_account",
+          "A_transactionReferences",
+          "A_transactionAttributes",
+          "B_transactionType",
+          "B_id",
+          "B_importDate",
+          "B_debitOrCredit",
+          "B_amount",
+          "B_valueDate",
+          "B_currencyCode",
+          "B_account",
+          "B_transactionReferences",
+          "B_transactionAttributes",
+          "targetAllocation"
+        ]
+      },
+      {
+        "file": "BenchRec_cash_v1.0_eval.csv",
+        "bytes": 25850839,
+        "num_rows": null,
+        "columns": "same 27 columns as train, match fields and targetAllocation blank in sampled rows"
+      },
+      {
+        "file": "BenchRec_cash_v1.0_solution.csv",
+        "bytes": 6715938,
+        "num_rows": null,
+        "columns": [
+          "B_id",
+          "targetAllocation",
+          "Usage"
+        ]
+      },
+      {
+        "file": "MatcherByChatGPT_submission.csv",
+        "bytes": 10537973,
+        "num_rows": null,
+        "columns": [
+          "B_id",
+          "A_id",
+          "A_allocation",
+          "confidence",
+          "confidence_raw",
+          "tfidf_cos",
+          "amt_diff",
+          "date_diff",
+          "quick",
+          "targetAllocation",
+          "explanation"
+        ]
+      }
+    ],
+    "task_count": null,
+    "task_count_note": "Row counts not exposed by the Kaggle API (columns: [] and no row stats) and I did not download the files. Total dataset size 121,870,650 bytes.",
+    "agent_visible_inputs": [
+      "BenchRec_cash_v1.0_train.csv (labelled history, dates from 2015)",
+      "BenchRec_cash_v1.0_eval.csv (unlabelled, dates in 2023)"
+    ],
+    "private_material": [
+      "BenchRec_cash_v1.0_solution.csv (gold targetAllocation per B_id, with a Usage column whose sampled value is 'Public', Kaggle-competition style)",
+      "MatcherByChatGPT_submission.csv (a baseline's predictions for the eval B_ids, keep away from the agent too)"
+    ],
+    "native_metric": "Match Rate ('Fraction of true matches your model successfully identifies') optimized subject to Match Precision ('Fraction of your predicted matches that are correct') meeting the required level: 'for this dataset this required precision has been reduced to 99.8%'. A prediction is correct if the predicted allocation set is equal to or a subset of the true allocation set. Blank targetAllocation means no match. The landing page also mentions 'match confidence calibration'.",
+    "scorer": null,
+    "scorer_note": "No scoring script ships in the dataset file list. kernelCount=1 (one public notebook) was not inspected. You would implement the subset rule yourself, which makes it not an official score.",
+    "setup_commands": [],
+    "setup_commands_note": "None documented. No CLI or harness.",
+    "submission_rules": "None on Kaggle (it is a dataset, not a competition). operartis.com mentions a 'forthcoming public-facing leaderboard' with no mechanics.",
+    "claim_checks": [
+      {
+        "claim": "verifiable without a Kaggle login",
+        "verdict": "confirmed",
+        "note": "License, file list, sizes, description, version and column headers were all reachable unauthenticated. Row counts were not."
+      }
+    ],
+    "notes": [
+      "Data is obfuscated production GL-vs-bank transactions from a Tier 1 financial institution, label error rate stated as 0.2%.",
+      "operartis.com/benchrec does not link to the Kaggle dataset, and the Kaggle page does not name Operartis in the metadata I saw. The link between them rests on the shared BenchRec name and the ICAIF 2023 origin."
+    ]
+  },
+  {
+    "id": "invoice_sandbox",
+    "name": "Invoice Sandbox Benchmark",
+    "owner": "ciru-ai",
+    "urls": {
+      "repo": "https://github.com/ciru-ai/invoice-sandbox-benchmark"
+    },
+    "revision": {
+      "sha": "b8cb58ff9747486e86c623e867b76fad5d8d075f",
+      "committed": "2026-06-10T07:30:09Z",
+      "message": "Update invoice benchmark fixture",
+      "default_branch": "main"
+    },
+    "revision_checked_at": "2026-09-19T19:19:15Z",
+    "license": null,
+    "license_note": "No LICENSE file and GitHub reports license=null. Legally that is all rights reserved, no reuse grant. README only says 'All names, invoices, emails, and amounts are synthetic.'",
+    "access": "public GitHub repo, not archived, 1 star, single day of history (created and last pushed 2026-06-10)",
+    "configs_splits": [
+      {
+        "split": "single fixture",
+        "files_total": 160,
+        "gold_master_files": 148,
+        "invoice_pdfs": 112,
+        "manifest": {
+          "seed": 487291,
+          "pdf_count": 112,
+          "valid_invoice_pdf_count": 105,
+          "credit_memo_pdf_count": 2,
+          "excluded_pdf_count": 5,
+          "customer_count": 18
+        }
+      }
+    ],
+    "task_count": {
+      "tasks": 1,
+      "scored_units": "18 customers"
+    },
+    "agent_visible_inputs": [
+      "Only `runs/<run-id>/workspace`, which reset_env.py creates as a straight copy of gold_master/: invoices/*.pdf, email_archive/eml/*.eml + support_inbox.mbox, bank_exports/deposits_2025_q4.csv, crm/customer_master.csv, operations/ar_aging_snapshot.csv, operations/service_catalog.csv, notes/controller_close_notes.txt"
+    ],
+    "private_material": [
+      "answer_key/customer_totals.csv (customer_id, customer_name, valid_invoice_count, gross_invoice_spend_usd, credit_memo_total_usd, net_spend_usd)",
+      "answer_key/invoices.csv (per-document status, policy, canonical_id, net_spend_effect_usd, hidden_flags)",
+      "answer_key/traps.json",
+      "answer_key/manifest.json",
+      "scripts/ (README says keep private: generate_fixture.py contains the seed and all trap logic, score_submission.py reads the key)"
+    ],
+    "native_metric": "score_submission.py prints customers_scored, customers_exact, customer_accuracy (= exact / 18), total_absolute_error_usd, missing_customers, unexpected_customers. Only `net_spend_usd` per customer_id is compared, default tolerance 0.01 USD absolute (`--tolerance`). net_spend_usd = included valid invoices - credit memos.",
+    "scorer": "scripts/score_submission.py (stdlib only). Usage: python scripts/score_submission.py path\\to\\submission.csv [--tolerance 0.01]",
+    "expected_agent_output": "A CSV with at least columns `customer_id` and `net_spend_usd` (money parsed after stripping $ and commas). README's fuller 'primary expected output' is customer-level gross valid invoice spend, credit memo total, net spend, valid invoice count, and a list of excluded or suspicious documents with reasons, but none of those extra fields are machine-scored.",
+    "setup_commands": [
+      "python -m pip install -r requirements.txt",
+      "python scripts/generate_fixture.py --clean",
+      "python scripts/reset_env.py --run-id test-001 --fresh",
+      "python scripts/reset_env.py --run-id run-001 --fresh",
+      "python scripts/reset_env.py --run-id run-001 --reset",
+      "python scripts/reset_env.py",
+      ".\\scripts\\generate_fixture.ps1",
+      ".\\scripts\\new_run.ps1 -RunId run-002 -Fresh",
+      "python scripts/score_submission.py path\\to\\submission.csv"
+    ],
+    "submission_rules": "None. Local scoring only, no leaderboard.",
+    "claim_checks": [
+      {
+        "claim": "README lists CLI commands, agent output format, answer key location, scorer",
+        "verdict": "confirmed",
+        "note": "All present, see fields above."
+      },
+      {
+        "claim": "README: 'gold_master/invoices: 110 invoice-like PDF files'",
+        "verdict": "contradicted",
+        "note": "answer_key/manifest.json says pdf_count 112 and the git tree has 112 PDFs under gold_master/invoices. README is stale by 2."
+      }
+    ],
+    "notes": [
+      "NAMING TRAP for the registry: `gold_master/` is the agent-visible fixture, NOT gold answers. The gold answers are in `answer_key/`.",
+      "Commands are documented in PowerShell blocks with Windows path separators, but they are plain python and the scripts use pathlib.",
+      "gold_master is committed, so generate_fixture.py --clean is optional. Whether regenerating reproduces the committed files byte for byte (manifest has generated_at_utc) is unverified, I ran nothing. If you regenerate, answer_key is regenerated too.",
+      "Some trap hints are visible in workspace filenames by design, e.g. INV-2025-1013_duplicate_scan_from_email.pdf and 999_reconciliation_warning.eml.",
+      "requirements.txt (reportlab>=4.0, pillow>=10.0) is only needed for fixture generation, scoring is stdlib.",
+      "Isolation is on you: the workspace lives inside the repo at runs/<id>/workspace, so an agent with parent-directory access can read ../../answer_key. Copy the workspace out or mount it alone."
+    ]
+  },
+  {
+    "id": "accountingbench_penrose",
+    "name": "AccountingBench ('Can LLMs Do Accounting?')",
+    "owner": "Penrose",
+    "urls": {
+      "page": "https://accounting.penrose.com/",
+      "company": "https://penrose.com"
+    },
+    "revision": null,
+    "revision_note": "Nothing versioned is published. The page is a Vite SPA, bundle /assets/index-CqLoGcZE.js at check time.",
+    "revision_checked_at": "2026-09-19T19:19:15Z",
+    "license": null,
+    "license_note": "No license stated anywhere on the page or in its JS bundle.",
+    "access": "Not available. No runnable package, dataset, repo, or download. The only call to action is 'Interested? Contact us at team@penrose.com'. Per my constraints I did not contact them.",
+    "configs_splits": null,
+    "task_count": null,
+    "agent_visible_inputs": null,
+    "private_material": "Everything. Page: 'built from 1 year of financial data from a real SaaS business producing millions of dollars in revenue, with a human expert baseline by a CPA'. Real company data is the likely reason it is not released (my inference, the page does not say).",
+    "native_metric": null,
+    "native_metric_note": "The write-up reports results against a CPA baseline over a multi-month books close, but no formal metric spec is published in a reusable form. I did not extract chart data from the bundle.",
+    "scorer": null,
+    "setup_commands": [],
+    "submission_rules": null,
+    "claim_checks": [
+      {
+        "claim": "a runnable/licensed package is publicly available",
+        "verdict": "contradicted",
+        "note": "Searched page HTML + 1 MB JS bundle for github/huggingface/dataset/download/license links: only third-party library licenses, a link to Andon Labs Vending-Bench, and the mailto. GitHub repo search 'accountingbench' returns 1 repo (below), HF dataset search returns none."
+      }
+    ],
+    "notes": [
+      "Name collision: https://github.com/mkaburek-wu/AccountingBench is a different project from WU Vienna (LLM accounting knowledge tasks with a submission portal), no license, zero mentions of Penrose. Do not register it as the Penrose benchmark.",
+      "Register this one as reference-only / not runnable."
+    ]
+  },
+  {
+    "id": "inspect",
+    "name": "Inspect (UK AISI evaluation framework)",
+    "owner": "UK AI Security Institute (GitHub org UKGovernmentBEIS)",
+    "urls": {
+      "docs": "https://inspect.aisi.org.uk/",
+      "source": "https://github.com/UKGovernmentBEIS/inspect_ai",
+      "pypi": "https://pypi.org/project/inspect-ai/"
+    },
+    "revision": {
+      "pip_package": "inspect-ai",
+      "version": "0.3.266",
+      "uploaded": "2026-09-19T13:11:02",
+      "requires_python": ">=3.10",
+      "companion": {
+        "pip_package": "inspect-evals",
+        "version": "0.21.0",
+        "uploaded": "2026-09-17T20:58:47"
+      }
+    },
+    "revision_checked_at": "2026-09-19T19:19:15Z",
+    "license": "MIT License (PyPI metadata)",
+    "access": "public",
+    "configs_splits": null,
+    "task_count": null,
+    "agent_visible_inputs": null,
+    "private_material": null,
+    "native_metric": null,
+    "scorer": null,
+    "setup_commands": [
+      "pip install inspect-ai"
+    ],
+    "submission_rules": null,
+    "claim_checks": [],
+    "notes": [
+      "Releases are near-daily (0.3.266 shipped the day of this check), pin an exact version.",
+      "Import name is inspect_ai, pip name is inspect-ai."
+    ]
+  }
+]
