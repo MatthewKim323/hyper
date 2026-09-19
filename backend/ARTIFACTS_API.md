@@ -37,3 +37,31 @@ uv run --directory backend python -m app.artifact_worker
 Worker supports `--once`. Generation leases recover after four minutes. Evaluator errors or rejected artifacts become `failed`; submit a new request key to regenerate. Reusing an existing key returns its saved snapshot/status, and changing its request returns 422. Output is stored in Postgres. Source originals remain in object storage. End-to-end provider latency has not been measured; 202 acceptance is quick, readiness waits for generation and Jev.
 
 Catalog and renderer: `backend/evaluator/artifacts.mjs`. Framework reference: https://github.com/vercel-labs/json-render
+
+## Fast agent tool: compose_financial_artifact
+
+`compose_financial_artifact` is available through the existing agent tool bridge and voice data-tool registry. Its authenticated HTTP equivalent is `POST /artifacts/compose`.
+
+```json
+{
+  "request_key": "monthly-revenue-chart-1",
+  "prompt": "Show the monthly revenue trend",
+  "query": {
+    "dataset": "monthly",
+    "operation": "sum",
+    "field": "revenue",
+    "group_by": ["month"]
+  },
+  "unit": "major_currency"
+}
+```
+
+Dataset and field names must come from `list_datasets`; the names above are illustrative.
+
+The fast path snapshots an exact aggregate, prepares factual labels/citations, and uses `experimental_createEvaluator` plus `experimental_composeSpec` to choose one complete line/bar card in one evaluation. It does not call the presentation-writing model or wait for the artifact worker. Requires the evaluator service, `EVALUATOR_SECRET`, and server-side `AI_GATEWAY_API_KEY` with Jev access. An overall composition deadline is six seconds; this is a timeout, not a measured latency guarantee.
+
+The response contains the saved artifact `id`, `status`, `spec`, `snapshot`, and `evaluation`. Only `status: ready` is renderable. An overlapping request can return `composing`; use `get_financial_artifact` or `GET /artifacts/{id}` to poll. Retry `failed` results with the same request key to reuse the same snapshot. Reusing a key with a different request is rejected.
+
+`spec` contains a single `FinancialArtifactCard` with `title`, `chart`, `currency`, `unit`, and state-bound `points`/`notes`. Initialize the client renderer with `spec.state` and register `FinancialArtifactCard` to a Bklit component. This backend change supplies that contract; it does not install or wire the frontend registry. `/artifacts/{id}/html` provides a static SVG/table export immediately.
+
+Jev's evaluation here selects presentation only; it is not the separate financial-content review used by the existing generative artifact path. Values and notes are application-owned and checked unchanged before persistence. The fast tool accepts historical observations only (`projection_months: 0`); use `create_financial_artifact` for reviewed scenario projections.

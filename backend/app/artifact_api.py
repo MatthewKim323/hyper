@@ -6,6 +6,12 @@ router=APIRouter(prefix='/artifacts',tags=['artifacts'])
 @router.post('',status_code=202)
 def create(body:CreateArtifact,data=Depends(service)):
     return invoke(ArtifactService(data).create,body)
+from .fast_artifacts import ComposeArtifact,compose
+
+@router.post('/compose')
+def compose_fast(body:ComposeArtifact,data=Depends(service)):
+    return invoke(compose,data,body)
+
 @router.get('/{aid}')
 def get(aid:str,data=Depends(service)):
     return invoke(ArtifactService(data).get,aid)

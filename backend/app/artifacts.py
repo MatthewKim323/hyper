@@ -35,7 +35,7 @@ class ArtifactID(StrictModel):
 class ArtifactService:
     def __init__(self,data):self.data,self.engine,self.oid=data,data.engine,data.oid
 
-    def create(self,args):
+    def create(self,args, initial_status='pending'):
         with self.engine.connect() as db:
             old=db.execute(select(artifacts).where(artifacts.c.organization_id==self.oid,artifacts.c.request_key==args.request_key)).mappings().first()
         if old:
@@ -54,7 +54,7 @@ class ArtifactService:
         rid='artifact_'+uuid.uuid4().hex
         with self.engine.begin() as db:
             insert_ignore(db,artifacts,dict(id=rid,organization_id=self.oid,request_key=args.request_key,
-                request=args.model_dump(),snapshot=snapshot,status='pending',lease_until=0,created_at=int(time.time()*1000)))
+                request=args.model_dump(),snapshot=snapshot,status=initial_status,lease_until=0,created_at=int(time.time()*1000)))
             row=db.execute(select(artifacts).where(artifacts.c.organization_id==self.oid,artifacts.c.request_key==args.request_key)).mappings().one()
             if row['request']!=args.model_dump():raise ValueError('Request key already used')
         return self.get(row['id'])
