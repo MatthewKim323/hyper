@@ -43,9 +43,6 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   camera.position.copy(homePosition);
   camera.lookAt(homeTarget);
   camera.updateMatrixWorld();
-  const atmosphere = createAtriumAtmosphere(renderer);
-  scene.add(atmosphere.sky);
-  scene.environment = atmosphere.environment;
   scene.add(new AmbientLight(0xffe9dd, .12), new HemisphereLight(0xf2ecff, 0x9f7769, .35));
   const sun = new DirectionalLight(0xffe6d5, 2.4);
   sun.position.set(8, 13, -12);
@@ -57,6 +54,10 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   sun.shadow.bias = -.0002;
   sun.shadow.radius = 3;
   scene.add(sun, sun.target);
+  const sunDirection = new Vector3().subVectors(sun.position, sun.target.position).normalize();
+  const atmosphere = createAtriumAtmosphere(renderer, sunDirection);
+  scene.add(atmosphere.sky);
+  scene.environment = atmosphere.environment;
   const fill = new DirectionalLight(0xdedfff, .52);
   fill.position.set(8, 5, 10);
   scene.add(fill);
@@ -66,9 +67,9 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const pearlLight = new PointLight(0xffe9d1, .65, 6, 2);
   pearlLight.position.set(0, 1.7, -1.5);
   scene.add(pearlLight);
-  const water = createAtriumWater({ reflectionSize: 512, sunDirection: new Vector3().subVectors(sun.position, sun.target.position) });
+  const water = createAtriumWater({ reflectionSize: 512, sunDirection });
   scene.add(water.group);
-  const sunlight = createAtriumSunlight();
+  const sunlight = createAtriumSunlight(sunDirection);
   scene.add(sunlight.group);
   const stationsGroup = new Group();
   scene.add(stationsGroup);

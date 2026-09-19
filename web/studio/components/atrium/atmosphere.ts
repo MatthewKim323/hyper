@@ -1,4 +1,4 @@
-import { BackSide, Color, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PlaneGeometry, PMREMGenerator, Scene, ShaderChunk, ShaderMaterial, SphereGeometry, WebGLRenderer } from "three";
+import { BackSide, Color, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PlaneGeometry, PMREMGenerator, Scene, ShaderChunk, ShaderMaterial, SphereGeometry, Vector3, WebGLRenderer } from "three";
 
 const noise = `
   float atriumHash(vec3 p) { p = fract(p * .3183099 + vec3(.1,.2,.3)); p *= 17.; return fract(p.x * p.y * p.z * (p.x+p.y+p.z)); }
@@ -10,14 +10,14 @@ const noise = `
 `;
 
 /** Live sky and surface shading. No photographic or rendered backdrop is used. */
-export function createAtriumAtmosphere(renderer: WebGLRenderer) {
+export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Vector3) {
   const time = { value: 0 };
   const skyGeometry = new SphereGeometry(160, 32, 24);
   const skyMaterial = new ShaderMaterial({
     side: BackSide, depthWrite: false,
-    uniforms: { uTime: time },
+    uniforms: { uTime: time, uSunDirection: { value: sunDirection.clone().normalize() } },
     vertexShader: "varying vec3 vDirection; void main(){ vDirection=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
-    fragmentShader: `varying vec3 vDirection; uniform float uTime; ${noise}
+    fragmentShader: `varying vec3 vDirection; uniform float uTime; uniform vec3 uSunDirection; ${noise}
       void main() {
         vec3 direction = normalize(vDirection);
         float height = smoothstep(-.03,.38,direction.y);
@@ -25,7 +25,7 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer) {
         float clouds = atriumCloud(direction*vec3(4.0,8.,4.)+vec3(uTime*.0015,0.,0.));
         clouds = smoothstep(.43,.69,clouds) * (1.-smoothstep(.35,.95,direction.y));
         color = mix(color,vec3(1.,.92,.85),clouds*.72);
-        float sunlight=pow(max(0.,dot(direction,normalize(vec3(-.5,.35,-.8)))),32.);
+        float sunlight=pow(max(0.,dot(direction,uSunDirection)),32.);
         color += vec3(.5,.31,.18)*sunlight;
         gl_FragColor=vec4(color,1.);
         #include <tonemapping_fragment>

@@ -1,7 +1,7 @@
 import { AdditiveBlending, BufferGeometry, DoubleSide, Float32BufferAttribute, Group, Mesh, Points, ShaderMaterial, Vector3 } from "three";
 
 /** Depth-tested shafts follow light entering the actual rear windows. */
-export function createAtriumSunlight() {
+export function createAtriumSunlight(sunDirection: Vector3) {
   const group = new Group();
   group.name = "Window light and suspended dust";
   const time = { value: 0 };
@@ -21,11 +21,14 @@ export function createAtriumSunlight() {
       }`,
   });
   const geometries: BufferGeometry[] = [];
-  for (const [x, width, height] of [[-7.1, 2.9, 10.8], [0, 6, 12.5], [7.1, 2.9, 10.8], [13.1, 2, 7]]) {
+  const travel = sunDirection.clone().normalize().negate();
+  for (const [x, width, apex] of [[-13.1, 2, 7.5], [-7.1, 2.9, 10.7], [0, 6, 13.3], [7.1, 2.9, 10.7], [13.1, 2, 7.5]]) {
+    // Keep both upper corners inside the circular cap of the actual aperture.
+    const height = apex - width * .3;
     const origin = new Vector3(x, height, -7.45);
-    const end = origin.clone().add(new Vector3(-height * .62, -height + .3, height * .8));
+    const end = origin.clone().addScaledVector(travel, (height - .3) / -travel.y);
     const geometry = new BufferGeometry();
-    const vertices = [origin.x-width*.45,origin.y,origin.z, origin.x+width*.45,origin.y,origin.z, end.x-width*.66,end.y,end.z, end.x+width*.66,end.y,end.z];
+    const vertices = [origin.x-width*.45,origin.y,origin.z, origin.x+width*.45,origin.y,origin.z, end.x-width*.45,end.y,end.z, end.x+width*.45,end.y,end.z];
     geometry.setAttribute("position", new Float32BufferAttribute(vertices, 3));
     geometry.setAttribute("uv", new Float32BufferAttribute([0,0,1,0,0,1,1,1], 2));
     geometry.setIndex([0,2,1,1,2,3]);
