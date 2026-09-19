@@ -53,7 +53,7 @@ test("actual local playback takes precedence over runtime state and status", () 
   let state = reduceVoiceEvent(createVoiceProtocol(), { type: "agent.state", state: "researching", generation: 0 });
   state = reduceVoiceEvent(state, { type: "status", text: "Searching records" });
   assert.equal(voicePresentation(state, false).orbState, "searching");
-  assert.deepEqual(voicePresentation(state, true), { orbState: "composing", status: "Hyper is speaking", processing: false });
+  assert.deepEqual(voicePresentation(state, true), { orbState: "weaving", status: "Hyper is speaking", processing: false });
   state = reduceVoiceEvent(state, { type: "agent.state", state: "thinking", generation: 0 });
   assert.equal(voicePresentation(state, false).orbState, "solving");
   state = reduceVoiceEvent(state, { type: "agent.state", state: "idle", generation: 0 });
@@ -219,7 +219,7 @@ test("client preserves unacknowledged drafts across reconnects and drains real p
     assert.equal(frames.length, 1);
     sockets[1].emit({ type: "audio", generation: 2, sample_rate: 24000, pcm: "AAAAAA==" });
     sockets[1].emit({ type: "agent.state", generation: 2, state: "thinking" });
-    assert.equal(presentations.at(-1)?.orbState, "composing");
+    assert.equal(presentations.at(-1)?.orbState, "weaving");
     sockets[1].emit({ type: "readiness", status: "ready" });
     sockets[1].emit({ type: "audio.done", generation: 2, next_state: "ready" });
     assert.equal(completions, 0);

@@ -25,6 +25,7 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
   const [connection, setConnection] = useState<VoiceConnection>("idle");
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [paused, setPaused] = useState(false);
+  const [agentStream, setAgentStream] = useState<MediaStream | null>(null);
   const client = useRef<OnboardingVoiceClient | null>(null);
   const request = useRef(0);
   const pendingStart = useRef(false);
@@ -53,6 +54,9 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
       },
       onComplete: () => {
         if (active) setOnboardingComplete(true);
+      },
+      onPlaybackStream: next => {
+        if (active) setAgentStream(next);
       },
     });
     client.current = session;
@@ -186,6 +190,7 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
     microphoneState={microphoneError || connectionError ? "error" : mic.state === "live" || mic.state === "requesting" ? mic.state : "idle"}
     microphoneError={microphoneError ?? connectionError}
     stream={stream}
+    agentStream={agentStream}
     processing={presentation.processing ?? false}
     paused={paused}
     onToggleMicrophone={() => void toggleMicrophone()}

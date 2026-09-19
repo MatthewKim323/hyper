@@ -11,6 +11,8 @@ export interface VoiceClientCallbacks {
   onError: (message: string) => void;
   onComplete: () => void;
   onReadiness?: (ready: boolean) => void;
+  /** The agent's own playback as a stream while it is audible, so the voice beam can follow it. Null when silent. */
+  onPlaybackStream?: (stream: MediaStream | null) => void;
 }
 
 export interface VoiceProtocolState {
@@ -122,7 +124,8 @@ export function voicePresentation(state: VoiceProtocolState, playing: boolean): 
     ready: { orbState: "composing", status: "Your brief is ready", processing: false },
     error: { orbState: "composing", status: "Tap the orb or send a message to reconnect.", processing: false },
   };
-  const base = playing ? { orbState: "composing" as const, status: "Hyper is speaking", processing: false } : presentations[state.agent];
+  // Speaking needs its own look. Resting is "composing", so reusing it made a typed reply look idle.
+  const base = playing ? { orbState: "weaving" as const, status: "Hyper is speaking", processing: false } : presentations[state.agent];
   return { ...base, ...(state.status && !playing ? { status: state.status } : {}), ...(state.transcript ? { transcript: state.transcript } : {}) };
 }
 
@@ -156,6 +159,8 @@ export class OnboardingVoiceClient {
   private context: AudioContext | null = null;
   private sources = new Set<AudioBufferSourceNode>();
   private audioClock = 0;
+  private playbackTap: MediaStreamAudioDestinationNode | null = null;
+  private playbackShared = false;
   private microphone: MediaStream | null = null;
   private captureVersion = 0;
   private captureSource: MediaStreamAudioSourceNode | null = null;
@@ -176,7 +181,12 @@ export class OnboardingVoiceClient {
 
   private publish() {
     if (this.disposed) return;
-    this.callbacks.onPresentation(voicePresentation(this.protocol, this.context?.state === "running" && this.sources.size > 0));
+    const playing = this.context?.state === "running" && this.sources.size > 0;
+    if (playing !== this.playbackShared) {
+      this.playbackShared = playing;
+      this.callbacks.onPlaybackStream?.(playing ? this.playbackTap?.stream ?? null : null);
+    }
+    this.callbacks.onPresentation(voicePresentation(this.protocol, playing));
     this.callbacks.onReadiness?.(this.protocol.ready);
     if (!this.completed && canCompleteVoice(this.protocol, this.sources.size > 0)) {
       this.completed = true;
@@ -452,6 +462,11 @@ export class OnboardingVoiceClient {
     const source = this.context.createBufferSource();
     source.buffer = buffer;
     source.connect(this.context.destination);
+    // A silent tap of the same audio. Typed turns have no microphone stream to animate the beam.
+    if (typeof this.context.createMediaStreamDestination === "function") {
+      if (!this.playbackTap || this.playbackTap.context !== this.context) this.playbackTap = this.context.createMediaStreamDestination();
+      source.connect(this.playbackTap);
+    }
     const start = Math.max(this.context.currentTime, this.audioClock);
     this.audioClock = start + buffer.duration;
     this.sources.add(source);

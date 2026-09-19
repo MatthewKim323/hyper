@@ -14,6 +14,8 @@ export interface OnboardingSurfaceProps {
   microphoneState: "idle" | "requesting" | "live" | "error";
   microphoneError?: string | null;
   stream: MediaStream | null;
+  /** Agent playback while it is speaking. Takes over the beam so a typed turn still animates. */
+  agentStream?: MediaStream | null;
   processing: boolean;
   onToggleMicrophone: () => void;
   onSendText: (text: string) => Promise<boolean>;
@@ -28,6 +30,7 @@ export default function OnboardingSurface({
   microphoneState,
   microphoneError,
   stream,
+  agentStream,
   processing,
   onToggleMicrophone,
   onSendText,
@@ -116,12 +119,12 @@ export default function OnboardingSurface({
       <div className="hyper-onboarding__bottom">
         <VoiceBeam
           className="hyper-onboarding__voice"
-          stream={stream}
+          stream={agentStream ?? stream}
           processing={processing}
           theme="light"
           colorVariant="colorful"
           paused={paused}
-          active={live || processing}
+          active={live || processing || !!agentStream}
           idle={0}
           strength={0.8}
           scale={1.1}
