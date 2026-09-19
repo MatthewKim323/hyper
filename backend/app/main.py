@@ -213,3 +213,6 @@ app.include_router(artifact_router)
 
 from .orchestrator_api import router as orchestrator_router
 app.include_router(orchestrator_router)
+
+from .elastic_api import router as elastic_router
+app.include_router(elastic_router)

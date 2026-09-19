@@ -4,8 +4,12 @@ from .retrieval import ElasticSearch
 from .artifacts import ArtifactService,CreateArtifact,ArtifactID
 from .concerns import ConcernService, RaiseConcern, ConcernID, Finish, ListConcerns, Renew
 
-TOOL_MODELS={'renew_concern_claim':Renew,'create_financial_artifact':CreateArtifact,'get_financial_artifact':ArtifactID,'list_concerns':ListConcerns,'raise_concern':RaiseConcern,'get_concern':ConcernID,'claim_concern':ConcernID,'resolve_concern':Finish,'query_financials':FinancialQuery,'search_evidence':EvidenceQuery,'get_source':SourceQuery}
+from .elastic_investigations import InvestigationService, Investigate, InvestigationID, ElasticCloud
+
+TOOL_MODELS={'investigate_financial_evidence':Investigate,'get_evidence_investigation':InvestigationID,'renew_concern_claim':Renew,'create_financial_artifact':CreateArtifact,'get_financial_artifact':ArtifactID,'list_concerns':ListConcerns,'raise_concern':RaiseConcern,'get_concern':ConcernID,'claim_concern':ConcernID,'resolve_concern':Finish,'query_financials':FinancialQuery,'search_evidence':EvidenceQuery,'get_source':SourceQuery}
 DESCRIPTIONS={
+    'investigate_financial_evidence':'Queue an Elastic Agent Builder investigation of an indexed source. Requires source_id, question and stable request_key. Returns an investigation ID, not an immediate finding.',
+    'get_evidence_investigation':'Read a saved Elastic investigation and its cited finding or concern ID. Only complete means processing finished; inspect concern status separately.',
     'renew_concern_claim':'Renew a still-valid concern resolution claim for 15 minutes using its claim token.',
     'create_financial_artifact':'Queue a saved json-render financial chart with Jev review. Supply a complete aggregate query, units and optional scenario projection months; returns artifact ID and pending status.',
     'get_financial_artifact':'Read artifact generation status and validated chart specification. Ready artifacts have an authenticated /artifacts/{id}/html view.',
@@ -42,6 +46,10 @@ def execute(store, oid, name, args):
         return svc.catalog()
     model=TOOL_MODELS[name]
     parsed=model.model_validate(args)
+    if name=='investigate_financial_evidence':
+        ElasticCloud().require(oid)
+        return InvestigationService(svc).create(parsed)
+    if name=='get_evidence_investigation':return InvestigationService(svc).get(parsed.investigation_id)
     if name=='create_financial_artifact':return ArtifactService(svc).create(parsed)
     if name=='get_financial_artifact':return ArtifactService(svc).get(parsed.artifact_id)
     if name in ('renew_concern_claim','list_concerns','raise_concern','get_concern','claim_concern','resolve_concern'):

@@ -239,7 +239,7 @@ class DataService:
         with self.engine.connect() as db:
             for hit in hits:
                 row=db.execute(select(chunks.c.id,chunks.c.source_id,chunks.c.locator,chunks.c.content,
-                    sources.c.filename,sources.c.version,sources.c.dataset,sources.c.currency).select_from(chunks.join(sources,chunks.c.source_id==sources.c.id))
+                    sources.c.filename,sources.c.version,sources.c.dataset,sources.c.currency,sources.c.source_key).select_from(chunks.join(sources,chunks.c.source_id==sources.c.id))
                     .where(chunks.c.id==hit['_source']['chunk_id'],chunks.c.organization_id==self.oid,
                         sources.c.organization_id==self.oid,sources.c.active.is_(True),
                         sources.c.index_status=='ready')).mappings().first()
