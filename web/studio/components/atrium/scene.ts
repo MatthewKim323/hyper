@@ -160,10 +160,12 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       }
       const hover = Math.max(0, Math.min(1.06, instance.hover.value));
       const movement = still ? 0 : 1;
-      instance.glass.rotation.x = target ? -hoverPointer.y * 0.012 * hover * movement : instance.glass.rotation.x * Math.exp(-delta * 12);
-      instance.glass.rotation.y = target ? hoverPointer.x * 0.025 * hover * movement : instance.glass.rotation.y * Math.exp(-delta * 12);
+      const settle = still ? 1 : 1 - Math.exp(-delta * 16);
+      instance.glass.rotation.x += ((target ? -hoverPointer.y * .012 * hover * movement : 0) - instance.glass.rotation.x) * settle;
+      instance.glass.rotation.y += ((target ? hoverPointer.x * .025 * hover * movement : 0) - instance.glass.rotation.y) * settle;
       if (still) instance.glass.rotation.set(0, 0, 0);
-      instance.glass.scale.setScalar(pressed === instance.station.id && !still ? 0.989 : 1);
+      const pressScale = pressed === instance.station.id && !still ? .989 : 1;
+      instance.glass.scale.setScalar(instance.glass.scale.x + (pressScale - instance.glass.scale.x) * (still ? 1 : 1 - Math.exp(-delta * 24)));
       instance.icon.position.y = movement * (Math.sin(elapsed * 0.65 + instance.phase) * 0.035 + hover * 0.065);
       instance.icon.rotation.y = movement * Math.sin(elapsed * 0.24 + instance.phase) * 0.028;
 

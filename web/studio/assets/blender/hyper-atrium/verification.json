@@ -1,0 +1,28 @@
+{
+  "blender": "4.5.13 LTS",
+  "station_templates": [
+    "accounts-payable",
+    "wallet-identity",
+    "audit-evidence",
+    "training-arena",
+    "approvals",
+    "crystal-tall",
+    "crystal-wide",
+    "crystal-orbit",
+    "crystal-stack",
+    "crystal-clear"
+  ],
+  "water_vertices": 130005,
+  "water_animation_verified": true,
+  "camera": [
+    0.0,
+    -21.0,
+    3.9000000953674316
+  ],
+  "resolution": [
+    2560,
+    1441
+  ],
+  "packed_fonts": 1,
+  "glb_assets_verified": 10
+}

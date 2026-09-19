@@ -4,6 +4,7 @@ export default function HomePage() {
   return (
     <main {...{ asscroll: "" }} data-router-view="homeContact" role="main" itemScope itemProp="mainContentOfPage">
       <h1>hyper.</h1>
+      <p>Blocked invoices, investigated and resolved</p>
       <p>Matthew Kim &amp; Stephen Hung · HackMIT</p>
     </main>
   );

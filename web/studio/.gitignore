@@ -14,3 +14,6 @@ next-env.d.ts
 public/media/
 *.blend1
 reference/
+
+# Temporary Blender review render.
+assets/blender/hyper-atrium/review.png

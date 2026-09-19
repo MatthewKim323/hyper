@@ -128,6 +128,7 @@ export class HomeContact {
   homeText!: Group & { bbox?: Box3 };
   introText!: any;
   titleText!: any;
+  descriptorText!: any;
   homeTextMesh!: Mesh<PlaneGeometry, ShaderMaterial>;
   textFluidSim!: any;
   contactText!: Group;
@@ -497,6 +498,21 @@ export class HomeContact {
     });
     this.titleText.position.y = 0.0015;
     this.homeText.add(this.titleText);
+
+    this.descriptorText = new Text();
+    Object.assign(this.descriptorText, {
+      text: 'Blocked invoices, investigated and resolved',
+      font: o.Gl.webglFonts['Neue Montreal'].url,
+      fontSize: 0.00135,
+      letterSpacing: 0.01,
+      anchorX: 'center',
+      anchorY: 'middle',
+      color: 3487029,
+      sdfGlyphSize: o.Gl.webglFonts['Neue Montreal'].sdfGlyphSize,
+      textAlign: 'center',
+    });
+    this.descriptorText.position.y = -0.0112;
+    this.homeText.add(this.descriptorText);
     this.textScene.add(this.homeText);
 
     this.homeTextMesh = new Mesh(
@@ -524,8 +540,8 @@ export class HomeContact {
     this.container.add(this.homeTextMesh);
     this.water.ignoreObjects.push(this.homeTextMesh);
 
-    // Both lines must be ready before measuring and rendering the shared reveal texture.
-    let pendingText = 2;
+    // All three lines must be ready before measuring and rendering the shared reveal texture.
+    let pendingText = 3;
     const renderText = () => {
       if (--pendingText > 0) return;
       const bounds = this.homeText.bbox = new Box3().setFromObject(this.homeText);
@@ -544,6 +560,7 @@ export class HomeContact {
     };
     this.introText.sync(renderText);
     this.titleText.sync(renderText);
+    this.descriptorText.sync(renderText);
 
     this.textFluidSim = new FluidSim({
       raycastPointer: o.mouse.glNormalized,
@@ -666,7 +683,7 @@ export class HomeContact {
     });
     this.viewProjectsBtn3D = new CSS3DObject(this.dom.viewProjectsBtn);
     this.viewProjectsBtn3D.position.copy(this.homeTextMesh.position).multiplyScalar(1e3);
-    this.viewProjectsBtn3D.position.y -= 15;
+    this.viewProjectsBtn3D.position.y -= 17.5;
     this.viewProjectsBtn3D.rotation.copy(this.homeTextMesh.rotation);
     const e = 1e3 * -(this.objectsData.ho.position.z - this.objectsData.cam.children[3].position.z);
     this.viewProjectsBtn3D.scale.setScalar(e / o.Gl.cssRenderer.cache.camera.fov);

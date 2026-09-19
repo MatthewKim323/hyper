@@ -325,12 +325,12 @@
           0.7799999713897705,
           1.0
         ],
-        "Roughness": 0.12999999523162842,
+        "Roughness": 0.1899999976158142,
         "Metallic": 0.03999999910593033,
         "Transmission Weight": 0.41999998688697815,
         "IOR": 1.4500000476837158,
         "Coat Weight": 0.30000001192092896,
-        "Coat Roughness": 0.029999999329447746,
+        "Coat Roughness": 0.15000000596046448,
         "Emission Color": [
           1.0,
           1.0,
@@ -1126,9 +1126,9 @@
     "objects": 85,
     "meshes": 85,
     "primitives": 85,
-    "vertices": 181941,
-    "triangles": 197588,
-    "bytes": 7133744
+    "vertices": 185471,
+    "triangles": 206786,
+    "bytes": 7243704
   },
   "glbObjectNames": [
     "Walkway | left water curve",
