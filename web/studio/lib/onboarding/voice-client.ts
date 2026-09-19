@@ -28,6 +28,8 @@ export interface VoiceProtocolState {
 const STATES = new Set<AgentState>(["idle", "listening", "thinking", "researching", "speaking", "ready", "error"]);
 const SESSION_KEY = "hyper.onboarding.voice-session.v1";
 const BASE = "/api/onboarding";
+const RECONNECT_DELAYS = [1000, 2000, 4000];
+class TransportError extends Error {}
 const record = (value: unknown): value is WireEvent => !!value && typeof value === "object" && !Array.isArray(value);
 const generation = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
 
@@ -129,6 +131,8 @@ export class OnboardingVoiceClient {
   private authenticated = false;
   private connecting: Promise<void> | null = null;
   private connectionVersion = 0;
+  private reconnectAttempts = 0;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private abort = new AbortController();
   private disposed = false;
   private completed = false;
@@ -209,8 +213,35 @@ export class OnboardingVoiceClient {
     return saved;
   }
 
+  private canConnect() {
+    return !this.disposed && (typeof document === "undefined" || !document.hidden)
+      && (typeof navigator === "undefined" || navigator.onLine !== false);
+  }
+
+  private cancelReconnect() {
+    if (this.reconnectTimer !== null) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+  }
+
+  private scheduleReconnect() {
+    if (!this.canConnect() || this.reconnectAttempts >= RECONNECT_DELAYS.length) return;
+    const delay = RECONNECT_DELAYS[this.reconnectAttempts++];
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      if (this.canConnect()) void this.openConnection().catch(() => {});
+    }, delay);
+  }
+
+  /** Connect or explicitly retry. Recovery restores metadata only, never microphone input or a turn. */
   connect(): Promise<void> {
+    this.cancelReconnect();
+    this.reconnectAttempts = 0;
+    return this.openConnection();
+  }
+
+  private openConnection(): Promise<void> {
     if (this.disposed) return Promise.reject(new Error("Session closed"));
+    if (!this.canConnect()) return Promise.reject(new Error("The onboarding connection is paused while this page is hidden or offline."));
     if (this.socket?.readyState === WebSocket.OPEN && this.authenticated) return Promise.resolve();
     if (this.connecting) return this.connecting;
     const version = ++this.connectionVersion;
@@ -228,7 +259,6 @@ export class OnboardingVoiceClient {
           const socket = new WebSocket(url);
           this.socket = socket;
           let accepted = false;
-          const timeout = setTimeout(() => reject(new Error("The onboarding connection timed out. Try again.")), 12000);
           const current = () => !this.disposed && this.socket === socket;
           const abort = () => { clearTimeout(timeout); reject(new Error("Session closed")); };
           signal.addEventListener("abort", abort, { once: true });
@@ -237,38 +267,42 @@ export class OnboardingVoiceClient {
             signal.removeEventListener("abort", abort);
             if (error) reject(error); else resolve();
           };
+          const timeout = setTimeout(() => settle(new TransportError("The onboarding connection timed out. Try again.")), 12000);
           socket.onopen = () => { if (current()) socket.send(JSON.stringify({ token: capability.token })); };
           socket.onmessage = message => {
             if (!current() || typeof message.data !== "string") return;
             try {
               const event: unknown = JSON.parse(message.data);
               if (!record(event)) return;
+              if (!accepted && (event.type === "error" || event.type === "connection.closed")) {
+                settle(new Error(typeof event.message === "string" ? event.message : "The onboarding agent is unavailable. Try reconnecting."));
+                return;
+              }
               if (event.type === "session" && record(event.session)) {
                 accepted = true;
                 this.authenticated = true;
+                this.reconnectAttempts = 0;
                 this.notifyConnection("connected");
                 settle();
               }
               this.receive(event);
-            } catch { this.fail("The voice connection returned an unreadable response. Try reconnecting."); }
+            } catch {
+              const error = new Error("The voice connection returned an unreadable response. Try reconnecting.");
+              if (!accepted) settle(error); else this.fail(error.message);
+            }
           };
-          socket.onerror = () => { if (current() && !accepted) settle(new Error("Could not connect to the onboarding agent. Try again.")); };
-          socket.onclose = () => {
+          socket.onerror = () => { if (current() && !accepted) settle(new TransportError("Could not connect to the onboarding agent. Try again.")); };
+          socket.onclose = event => {
             if (!current()) return;
-            settle(new Error("The onboarding connection closed. Tap the orb or send a message to reconnect."));
+            const retryable = [1000, 1001, 1005, 1006, 1011, 1012, 1013, 1014].includes(event?.code ?? 1006);
+            const message = "The onboarding connection closed. Tap the orb or send a message to reconnect.";
             this.socket = null;
-            this.authenticated = false;
-            this.stopCapture();
-            this.clearPlayback();
-            this.finishPendingText(false);
-            this.protocol = { ...this.protocol, agent: "error", audioDone: false, status: "Disconnected. Tap the orb or send a message to reconnect." };
-            this.notifyConnection("disconnected");
-            this.publish();
-            if (accepted) this.callbacks.onError(this.protocol.status);
+            if (!accepted) settle(retryable ? new TransportError(message) : new Error(message));
+            else this.fail(message, retryable);
           };
         });
       } catch (error) {
-        if (!this.disposed && version === this.connectionVersion) this.fail(error instanceof Error && error.name !== "AbortError" ? error.message : "The onboarding service did not respond. Try reconnecting.");
+        if (!this.disposed && version === this.connectionVersion) this.fail(error instanceof Error && error.name !== "AbortError" ? error.message : "The onboarding service did not respond. Try reconnecting.", error instanceof TransportError);
         throw error;
       } finally { if (version === this.connectionVersion) this.connecting = null; }
     })();
@@ -448,8 +482,9 @@ export class OnboardingVoiceClient {
     this.publish();
   }
 
-  private fail(message: string) {
+  private fail(message: string, retryable = false) {
     if (this.disposed) return;
+    this.cancelReconnect();
     this.send({ type: "voice.stop" });
     const socket = this.socket;
     this.socket = null;
@@ -463,6 +498,7 @@ export class OnboardingVoiceClient {
     this.notifyConnection("error");
     this.publish();
     this.callbacks.onError(this.protocol.status);
+    if (retryable) this.scheduleReconnect();
   }
 
   private finishPendingText(acknowledged: boolean) {
@@ -476,6 +512,7 @@ export class OnboardingVoiceClient {
   /** Suspend a hidden interface without forgetting the saved conversation. */
   disconnect() {
     if (this.disposed) return;
+    this.cancelReconnect();
     this.send({ type: "voice.stop" });
     this.connectionVersion++;
     this.abort.abort();
@@ -497,6 +534,7 @@ export class OnboardingVoiceClient {
 
   dispose() {
     if (this.disposed) return;
+    this.cancelReconnect();
     this.send({ type: "voice.stop" });
     this.disposed = true;
     this.connectionVersion++;

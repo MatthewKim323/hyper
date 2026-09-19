@@ -278,3 +278,181 @@ test("client preserves unacknowledged drafts across reconnects and drains real p
     }
   }
 });
+
+class RecoverySocket {
+  static OPEN = 1;
+  readyState = 0;
+  bufferedAmount = 0;
+  sent: Record<string, unknown>[] = [];
+  onopen: (() => void) | null = null;
+  onmessage: ((event: { data: string }) => void) | null = null;
+  onclose: ((event: { code: number }) => void) | null = null;
+  onerror: (() => void) | null = null;
+  constructor(public url: URL, private controls: { authenticate: boolean }) {}
+  send(raw: string) {
+    const value = JSON.parse(raw);
+    this.sent.push(value);
+    if (value.token && this.controls.authenticate) queueMicrotask(() => this.emit({
+      type: "session", session: { transcript: [{ id: "saved-turn", sequence: 1, role: "assistant", text: "Saved reply" }], readiness: { status: "collecting" } },
+    }));
+  }
+  emit(event: Record<string, unknown>) { this.onmessage?.({ data: JSON.stringify(event) }); }
+  close(code = 1000) { this.readyState = 3; queueMicrotask(() => this.onclose?.({ code })); }
+}
+
+async function withRecoveryHarness(run: (harness: {
+  client: OnboardingVoiceClient;
+  sockets: RecoverySocket[];
+  controls: { authenticate: boolean; hidden: boolean; online: boolean };
+  flush: () => Promise<void>;
+  advance: (delay: number) => Promise<void>;
+  delays: () => number[];
+  sessions: () => number;
+  presentations: { transcript?: string }[];
+}) => Promise<void>) {
+  const keys = ["fetch", "sessionStorage", "location", "WebSocket", "AudioContext", "setTimeout", "clearTimeout", "document", "navigator"];
+  const originals = new Map(keys.map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  const controls = { authenticate: false, hidden: false, online: true };
+  const sockets: RecoverySocket[] = [];
+  const timers = new Map<number, { callback: () => void; delay: number }>();
+  const storage = new Map<string, string>();
+  const presentations: { transcript?: string }[] = [];
+  let nextTimer = 0;
+  let sessions = 0;
+  const flush = async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); };
+  class Socket extends RecoverySocket {
+    constructor(url: URL) {
+      super(url, controls);
+      sockets.push(this);
+      queueMicrotask(() => { this.readyState = 1; this.onopen?.(); });
+    }
+  }
+  const client = new OnboardingVoiceClient({ onPresentation: value => presentations.push(value), onConnection() {}, onError() {}, onComplete() {} });
+  try {
+    const globals: Record<string, unknown> = {
+      document: { get hidden() { return controls.hidden; } },
+      navigator: { get onLine() { return controls.online; } },
+      location: { href: "http://localhost:3888/projects", protocol: "http:" },
+      sessionStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) },
+      WebSocket: Socket,
+      AudioContext: class { constructor() { assert.fail("Recovery must not start audio or microphone capture"); } },
+      setTimeout: (callback: () => void, delay = 0) => { const id = ++nextTimer; timers.set(id, { callback, delay }); return id; },
+      clearTimeout: (id: number) => timers.delete(id),
+      fetch: async (_url: string, init: RequestInit) => {
+        if (init.method === "POST") {
+          sessions++;
+          return new Response(JSON.stringify({ session: { id: "recovery-session" }, token: "test-session-capability" }));
+        }
+        return new Response(JSON.stringify({ id: "recovery-session" }));
+      },
+    };
+    for (const [key, value] of Object.entries(globals)) Object.defineProperty(globalThis, key, { configurable: true, value });
+    await run({
+      client, sockets, controls, flush, presentations,
+      sessions: () => sessions,
+      delays: () => [...timers.values()].map(timer => timer.delay),
+      advance: async delay => {
+        const entry = [...timers.entries()].find(([, timer]) => timer.delay === delay);
+        assert.ok(entry, `Expected a pending ${delay} ms timer`);
+        timers.delete(entry[0]);
+        entry[1].callback();
+        await flush();
+      },
+    });
+  } finally {
+    client.dispose();
+    for (const [key, descriptor] of originals) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+      else Reflect.deleteProperty(globalThis, key);
+    }
+  }
+}
+
+test("a timed-out handshake automatically restores the same session without restarting voice or text", async () => {
+  await withRecoveryHarness(async h => {
+    const first = h.client.connect().catch(error => error);
+    await h.flush();
+    await h.advance(12000);
+    assert.match((await first).message, /timed out/);
+    assert.equal(h.sockets[0].readyState, 3);
+    h.controls.authenticate = true;
+    await h.advance(1000);
+    assert.equal(h.sockets.length, 2);
+    assert.equal(h.sessions(), 1);
+    assert.equal(h.presentations.at(-1)?.transcript, "Saved reply");
+    for (const socket of h.sockets) assert.ok(socket.sent.every(event => event.token || event.type === "voice.stop"));
+    assert.deepEqual(h.delays(), []);
+    // Successful authentication resets the retry budget for a later transport loss.
+    h.sockets[1].close(1006);
+    await h.flush();
+    await h.advance(1000);
+    assert.equal(h.sockets.length, 3);
+    assert.deepEqual(h.sockets[2].sent, [{ token: "test-session-capability" }]);
+  });
+});
+
+test("transport recovery stops after three retries and a manual retry resets the budget", async () => {
+  await withRecoveryHarness(async h => {
+    const first = h.client.connect().catch(() => {});
+    await h.flush();
+    await h.advance(12000);
+    await first;
+    for (const delay of [1000, 2000, 4000]) {
+      await h.advance(delay);
+      await h.advance(12000);
+    }
+    assert.equal(h.sockets.length, 4);
+    assert.equal(h.sessions(), 1);
+    assert.deepEqual(h.delays(), []);
+    h.controls.authenticate = true;
+    await h.client.connect();
+    h.sockets.at(-1)!.close(1006);
+    await h.flush();
+    await h.advance(1000);
+    assert.equal(h.sockets.length, 6);
+    assert.deepEqual(h.delays(), []);
+  });
+});
+
+test("pending recovery stops when hidden, offline, disconnected, or disposed", async () => {
+  for (const stop of ["hidden", "offline", "disconnect", "dispose"] as const) {
+    await withRecoveryHarness(async h => {
+      const first = h.client.connect().catch(() => {});
+      await h.flush();
+      await h.advance(12000);
+      await first;
+      if (stop === "hidden") h.controls.hidden = true;
+      if (stop === "offline") h.controls.online = false;
+      if (stop === "disconnect") h.client.disconnect();
+      if (stop === "dispose") h.client.dispose();
+      if (stop === "hidden" || stop === "offline") await h.advance(1000);
+      assert.equal(h.sockets.length, 1);
+      assert.deepEqual(h.delays(), []);
+    });
+  }
+});
+
+test("provider errors and authentication rejections require explicit retry", async () => {
+  for (const failure of ["provider", "policy"] as const) {
+    await withRecoveryHarness(async h => {
+      h.controls.authenticate = true;
+      await h.client.connect();
+      if (failure === "provider") h.sockets[0].emit({ type: "error", message: "Deepgram unavailable" });
+      else h.sockets[0].close(1008);
+      await h.flush();
+      assert.equal(h.sockets.length, 1);
+      assert.deepEqual(h.delays(), []);
+    });
+  }
+});
+
+test("an error before session authentication settles immediately without retrying", async () => {
+  await withRecoveryHarness(async h => {
+    const connection = h.client.connect().catch(error => error);
+    await h.flush();
+    h.sockets[0].emit({ type: "error", message: "Session configuration rejected" });
+    assert.equal((await connection).message, "Session configuration rejected");
+    assert.deepEqual(h.delays(), []);
+    assert.equal(h.sockets[0].readyState, 3);
+  });
+});

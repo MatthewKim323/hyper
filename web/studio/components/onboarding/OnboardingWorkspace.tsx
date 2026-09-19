@@ -38,7 +38,7 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
       onConnection: next => {
         if (!active) return;
         setConnection(next);
-        if (next === "connected") setConnectionError(null);
+        if (next === "connecting" || next === "connected") setConnectionError(null);
         if (next === "error" || next === "disconnected") {
           request.current++;
           stop();
@@ -72,13 +72,17 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
   useEffect(() => {
     const preference = matchMedia("(prefers-reduced-motion: reduce)");
     const updateMotion = () => setPaused(preference.matches || document.hidden);
+    const resumeConnection = () => {
+      // Reopen session metadata only. The microphone still requires an orb click.
+      if (!document.hidden && navigator.onLine) void client.current?.connect().catch(() => {});
+    };
     const onHidden = () => {
       updateMotion();
       if (document.hidden) {
         request.current++;
         stop();
         client.current?.disconnect();
-      }
+      } else resumeConnection();
     };
     const update = (event: Event) => {
       const detail: unknown = (event as CustomEvent).detail;
@@ -87,6 +91,7 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
     updateMotion();
     preference.addEventListener("change", updateMotion);
     document.addEventListener("visibilitychange", onHidden);
+    window.addEventListener("online", resumeConnection);
     window.addEventListener(ONBOARDING_EVENTS.presentation, update);
     return () => {
       // This counter invalidates pending media requests; it is not a DOM ref.
@@ -95,6 +100,7 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
       stop();
       preference.removeEventListener("change", updateMotion);
       document.removeEventListener("visibilitychange", onHidden);
+      window.removeEventListener("online", resumeConnection);
       window.removeEventListener(ONBOARDING_EVENTS.presentation, update);
     };
   }, [stop]);
