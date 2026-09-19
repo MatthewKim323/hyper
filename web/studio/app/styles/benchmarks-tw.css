@@ -1,0 +1,100 @@
+/* Tailwind for the Benchmarks workspace only.
+   No preflight (it would reset the engine's hand-written CSS). Class detection is limited
+   to the chart and benchmark folders, and every utility is emitted under .bench, because
+   the site already owns names like .grid, .w-12 and .px-2 with different meanings.
+   Scoped utilities outrank those inside the workspace and do not exist outside it. */
+@layer theme;
+@import "tailwindcss/theme.css" layer(theme);
+.bench {
+    @tailwind utilities source(none);
+}
+@source "../../components/charts";
+@source "../../components/ui";
+@source "../../components/benchmarks";
+
+/* Chart tokens live on the workspace root, never on :root, so the engine's own
+   variables cannot collide. Series order is fixed and validated for CVD on this surface
+   (validate_palette.js, light, #f6f2f0): identity always ships with a label or the table view. */
+.bench {
+    --background: #f6f2f0;
+    --foreground: #252321;
+    --muted: #efe8e4;
+    --muted-foreground: #716860;
+    --border: rgb(37 35 33 / 14%);
+    --legend: rgb(255 255 255 / 70%);
+    --legend-foreground: #252321;
+    --legend-muted: #efe8e4;
+    --legend-muted-foreground: #716860;
+    --legend-track: #e4dbd5;
+    --chart-1: #2a78d6;
+    --chart-2: #eb6834;
+    --chart-3: #1baf7a;
+    --chart-4: #eda100;
+    --chart-5: #e87ba4;
+    --chart-background: transparent;
+    --chart-foreground: #252321;
+    --chart-foreground-muted: #716860;
+    --chart-line-primary: var(--chart-1);
+    --chart-line-secondary: var(--chart-2);
+    --chart-crosshair: #252321;
+    --chart-grid: #ddd5cf;
+    --chart-brush-border: var(--chart-grid);
+    --chart-indicator-color: #252321;
+    --chart-indicator-secondary-color: #716860;
+    --chart-tooltip-background: rgb(37 35 33 / 92%);
+    --chart-tooltip-foreground: #fbf8f6;
+    --chart-tooltip-muted: #b9aea6;
+    --chart-marker-background: #fbf8f6;
+    --chart-marker-border: #cfc6bf;
+    --chart-marker-foreground: #252321;
+    --chart-label: #716860;
+    /* sequential, one hue, light to dark */
+    --chart-scale-01: #ece6e2;
+    --chart-scale-02: #b7d3f6;
+    --chart-scale-03: #6da7ec;
+    --chart-scale-04: #2a78d6;
+    --chart-scale-05: #184f95;
+    --chart-scale-pattern-color: #d6cec8;
+    /* status: reserved for outcomes, never reused as a series colour */
+    --status-good: #0ca30c;
+    --status-warning: #fab219;
+    --status-serious: #ec835a;
+    --status-critical: #d03b3b;
+    --status-neutral: #b9aea6;
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-legend: var(--legend);
+    --color-legend-foreground: var(--legend-foreground);
+    --color-legend-muted: var(--legend-muted);
+    --color-legend-muted-foreground: var(--legend-muted-foreground);
+    --color-legend-track: var(--legend-track);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-chart-background: var(--chart-background);
+    --color-chart-foreground: var(--chart-foreground);
+    --color-chart-foreground-muted: var(--chart-foreground-muted);
+    --color-chart-crosshair: var(--chart-crosshair);
+    --color-chart-grid: var(--chart-grid);
+    --color-chart-tooltip-background: var(--chart-tooltip-background);
+    --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
+    --color-chart-tooltip-muted: var(--chart-tooltip-muted);
+    --color-chart-marker-background: var(--chart-marker-background);
+    --color-chart-marker-border: var(--chart-marker-border);
+    --color-chart-marker-foreground: var(--chart-marker-foreground);
+    --color-chart-label: var(--chart-label);
+    --color-chart-scale-01: var(--chart-scale-01);
+    --color-chart-scale-02: var(--chart-scale-02);
+    --color-chart-scale-03: var(--chart-scale-03);
+    --color-chart-scale-04: var(--chart-scale-04);
+    --color-chart-scale-05: var(--chart-scale-05);
+    --color-chart-scale-pattern-color: var(--chart-scale-pattern-color);
+}

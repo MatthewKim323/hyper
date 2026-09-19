@@ -11,6 +11,8 @@ const $ = (sel: string, ctx: ParentNode = document) => ctx.querySelector(sel) as
 const $$ = (sel: string, ctx: ParentNode = document) => Array.from(ctx.querySelectorAll(sel)) as HTMLElement[];
 
 type SectionKey = "overview" | "cases" | "evidence" | "activity" | "review" | "timeline" | "benchmarks";
+// Sections that cover the scene with a DOM workspace, so the scene must not take pointer control.
+const OVERLAY_SECTIONS = new Set<SectionKey>(["timeline", "benchmarks"]);
 
 export class ProjectFilters {
   static get selector() {
@@ -58,7 +60,7 @@ export class ProjectFilters {
     }
     const t = target.dataset.filter as SectionKey;
     this.selectedSection = t;
-    store.ProjectMenu.allowControl = t !== "timeline";
+    store.ProjectMenu.allowControl = !OVERLAY_SECTIONS.has(t);
     window.dispatchEvent(new CustomEvent("hyper:section-change", { detail: { section: t } }));
     if (this.hasProjects) E.emit("ProjectFilters:change", this.items[t]);
   };
@@ -70,7 +72,7 @@ export class ProjectFilters {
   };
 
   onResize = () => {
-    if (this.toggleOpen) store.ProjectMenu.allowControl = this.selectedSection !== "timeline";
+    if (this.toggleOpen) store.ProjectMenu.allowControl = !OVERLAY_SECTIONS.has(this.selectedSection);
     this.reset();
     this.toggleOpen = false;
   };
@@ -145,7 +147,7 @@ export class ProjectFilters {
     this.tl.reverse();
     this.toggleOpen = false;
     this.dom.toggle.setAttribute("aria-expanded", "false");
-    store.ProjectMenu.allowControl = this.selectedSection !== "timeline";
+    store.ProjectMenu.allowControl = !OVERLAY_SECTIONS.has(this.selectedSection);
   }
 
   reset() {

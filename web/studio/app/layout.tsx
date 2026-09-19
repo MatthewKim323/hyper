@@ -7,9 +7,12 @@ import "./styles/gallery-nav.css";
 import "./styles/timeline.css";
 import "./styles/timeline-carousel.css";
 import "./styles/onboarding.css";
+import "./styles/benchmarks-tw.css";
+import "./styles/benchmarks.css";
 import Shell, { ShellPost } from "@/components/Shell";
 import EngineRoot from "@/components/EngineRoot";
 import TimelineWorkspace from "@/components/timeline/TimelineWorkspace";
+import BenchmarksWorkspace from "@/components/benchmarks/BenchmarksWorkspace";
 import OnboardingWorkspace from "@/components/onboarding/OnboardingWorkspace";
 
 export const metadata: Metadata = {
@@ -40,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </div>
         <ShellPost />
         <TimelineWorkspace />
+        <BenchmarksWorkspace />
         <OnboardingWorkspace />
         <EngineRoot />
       </body>
