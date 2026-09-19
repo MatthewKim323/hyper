@@ -204,6 +204,8 @@ export class Audio {
       for (let i = 0; i < sprite._sounds.length; i++) {
         const s = sprite._sounds[i];
         if (s._sprite === sound) {
+          // No buffer source until the context is unlocked by a user gesture.
+          if (!s._node?.bufferSource) break;
           const filter: any = (Howler as any).ctx.createBiquadFilter();
           filter.type = type;
           filter.frequency.value = a.frequency;
