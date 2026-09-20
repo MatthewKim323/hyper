@@ -5,7 +5,7 @@ import { captureWarmFrame } from "@/components/atrium/warm-frame";
 
 export const WORLD_EVENTS = { shown: "hyper:world-shown" } as const;
 
-/** Null while onboarding still owns /projects, or when the world is not ready to draw. */
+/** Null until onboarding is complete, or when the world is not ready to draw. */
 export function captureWorldStill(): Texture | null {
   // The attribute, not the saved flag: skipping onboarding opens the world for the page session only.
   if (document.documentElement.dataset.onboarding !== "complete") return null;

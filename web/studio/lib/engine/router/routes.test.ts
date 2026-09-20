@@ -56,21 +56,31 @@ describe("route table", () => {
   });
 
   test("no source file still points at the removed /projects route", () => {
+    // This guard used to skip .test.ts files and match only two literal spellings, so it
+    // passed while voice-client.test.ts still hardcoded the old path. Scan styles too.
     const roots = ["app", "components", "lib"].map(d => join(import.meta.dirname, "../../..", d));
     const offenders: string[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const full = join(dir, entry.name);
         if (entry.isDirectory()) { if (entry.name !== "node_modules") walk(full); continue; }
-        if (!/\.tsx?$/.test(entry.name) || entry.name.endsWith(".test.ts")) continue;
-        const text = readFileSync(full, "utf8");
-        if (text.includes('"/projects"') || text.includes("href=\"/projects\"")) offenders.push(full);
+        if (!/\.(tsx?|css)$/.test(entry.name)) continue;
+        if (entry.name === "routes.test.ts") continue;
+        // Any /projects URL path, however it is spelled: quoted, in a template literal, or
+        // inside a longer string. Module specifiers and data files legitimately keep the
+        // name (./renderers/projects, lib/data/projects.json), so require a path boundary
+        // that is not a further path segment or extension.
+        // Strip module specifiers and asset paths first: ./renderers/projects and
+        // lib/data/projects.json legitimately keep the name.
+        const text = readFileSync(full, "utf8")
+          .replace(/from\s+["'][^"']*["']/g, "")
+          .replace(/[\w./@-]*projects\.json/g, "");
+        if (/\/projects(?![A-Za-z0-9_-])/.test(text)) offenders.push(full);
       }
     };
     roots.forEach(walk);
     assert.deepEqual(offenders, []);
   });
-
 
   test("the route-level back link outranks every full-viewport overlay it shares a page with", () => {
     // .hyper-onboarding (80) and .ws-signin (90) are fixed, inset:0 and take pointer events,

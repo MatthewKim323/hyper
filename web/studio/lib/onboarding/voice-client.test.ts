@@ -173,7 +173,7 @@ test("client preserves unacknowledged drafts across reconnects and drains real p
   const client = new OnboardingVoiceClient(callbacks);
   let lateClient: OnboardingVoiceClient | undefined;
   try {
-    Object.defineProperty(globalThis, "location", { configurable: true, value: { href: "http://localhost:3888/projects", protocol: "http:" } });
+    Object.defineProperty(globalThis, "location", { configurable: true, value: { href: "http://localhost:3888/world", protocol: "http:" } });
     Object.defineProperty(globalThis, "sessionStorage", { configurable: true, value: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) } });
     Object.defineProperty(globalThis, "WebSocket", { configurable: true, value: FakeSocket });
     Object.defineProperty(globalThis, "AudioContext", { configurable: true, value: FakeAudioContext });
@@ -332,7 +332,7 @@ async function withRecoveryHarness(run: (harness: {
     const globals: Record<string, unknown> = {
       document: { get hidden() { return controls.hidden; } },
       navigator: { get onLine() { return controls.online; } },
-      location: { href: "http://localhost:3888/projects", protocol: "http:" },
+      location: { href: "http://localhost:3888/world", protocol: "http:" },
       sessionStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) },
       WebSocket: Socket,
       AudioContext: class { constructor() { assert.fail("Recovery must not start audio or microphone capture"); } },
@@ -505,7 +505,7 @@ test("world introduction waits for output unlock, uses provider audio, and never
   try {
     const globals = {
       navigator: { onLine: true, mediaDevices: { getUserMedia() { assert.fail("Greeting must not request microphone permission"); } } },
-      location: { href: "http://localhost:3888/projects", protocol: "http:" },
+      location: { href: "http://localhost:3888/world", protocol: "http:" },
       sessionStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) },
       WebSocket: Socket,
       AudioContext: OutputContext,
