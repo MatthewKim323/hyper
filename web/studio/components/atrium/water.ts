@@ -15,10 +15,10 @@ export type AtriumWater = {
 // Shallow gravity-wave spectrum shared with the editable Blender scene. The
 // frequency is sqrt(g * k * tanh(k * depth)); amplitudes are in meters.
 const WAVES = [
-  [0.016, 3.8, 0.22, 0.5], [0.012, 2.35, 1.12, 1.8],
-  [0.009, 1.55, -0.64, 3.25], [0.0065, 1.1, 0.55, 4.4],
-  [0.004, 0.79, 1.94, 0.85], [0.003, 0.63, -1.36, 2.6],
-  [0.002, 0.51, 2.8, 4], [0.0014, 0.43, 0.14, 5.1],
+  [0.006, 3.8, 0.22, 0.5], [0.005, 2.35, 1.12, 1.8],
+  [0.004, 1.55, -0.64, 3.25], [0.0045, 1.1, 0.55, 4.4],
+  [0.004, 0.79, 1.94, 0.85], [0.004, 0.63, -1.36, 2.6],
+  [0.003, 0.51, 2.8, 4], [0.0024, 0.43, 0.14, 5.1],
 ] as const;
 
 const waveShader = WAVES.map(([amplitude, wavelength, angle, phase]) => {
@@ -192,7 +192,11 @@ const fragmentShader = `
     // Air/water IOR 1.333 gives a normal-incidence reflectance of 0.02037.
     float fresnel = 0.02037 + 0.97963 * pow(1.0 - facing, 5.0);
     vec2 projected = vReflection.xy / max(vReflection.w, 0.0001);
-    vec2 distortion = normal.xz * vec2(0.030, 0.038);
+    // A fixed UV offset flattened the nearby reflections to almost a mirror.
+    // Scale the wave response with distance, as in Three's planar water, so
+    // foreground ripples break up highlights while distant arches stay calm.
+    float distanceToEye = max(1.0, length(cameraPosition - vWorld));
+    vec2 distortion = normal.xz * (0.001 + 1.0 / distanceToEye) * 6.0;
     vec2 sampleUv = clamp(projected + distortion, uReflectionTexel, vec2(1.0) - uReflectionTexel);
     // Three r143 writes ordinary render targets in linear encoding, regardless
     // of Reflector's texture.encoding label. Decode again and reflections darken.

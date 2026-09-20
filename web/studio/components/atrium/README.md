@@ -14,6 +14,8 @@ Stone uses sparse diagonal rose-gray mineral veins, fine grain, and separate rou
 
 Surface shading is optimized for WebGL. It is not the same renderer as Blender Cycles: browser light shafts approximate volumetric scattering, environment lighting is prefiltered, and water uses analytical waves rather than a fluid simulation.
 
+Water uses the authored eight-wave amplitude spectrum, with subdued long swells and finer short ripples. Its planar reflection distortion scales with viewing distance, breaking up nearby reflected highlights without making distant arches excessively wavy. The browser retains a slower animation clock than the Blender authoring preview.
+
 The botanical garden contains 2,500 flowering crowns and 16,900 blossoms across 221,300 triangles. The complete environment uses Draco compression. `geometry-loader.ts` shares a two-worker decoder pool, serves decoder files locally, and disposes workers when pending loads settle. Station GLBs can remain uncompressed. Scene camera, sun direction, and rear apertures come from the Blender export rather than separate guessed browser coordinates.
 
 Relics have a few slow orbiting glints at rest. Hover strengthens these glints and reveals a thin warm base arc. These are depth-tested geometry in `ethereal.ts`, sized from each relic's actual bounds, and freeze under reduced motion.
