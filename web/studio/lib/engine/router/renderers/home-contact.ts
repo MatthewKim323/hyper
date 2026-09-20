@@ -12,11 +12,16 @@ export class HomeContactRenderer extends BaseRenderer {
     (store.AssetLoader!.loaded as Promise<void>).then(() => {
       store.PageLoader.hiddenPromise.then(() => {
         // Let the reveal actually play on first load. progress(1) jumped the timeline to
-        // its end, so the enter button popped in fully formed while the loader was still
-        // clearing; showHome's own GSAP tween now eases it in after the wipe.
-        store.HomeContact.isHome
-          ? store.HomeContact.showHome()
-          : store.HomeContact.showContact().pause().progress(1);
+        // its end, so the enter button popped in fully formed. hiddenPromise only means the
+        // loading layer has begun fading, so pause the reveal until clearedPromise says it
+        // is actually gone; the camera and text tweens below still start under the fade,
+        // which is the authored overlap.
+        if (store.HomeContact.isHome) {
+          const reveal = store.HomeContact.showHome().pause();
+          store.PageLoader.clearedPromise.then(() => reveal.play());
+        } else {
+          store.HomeContact.showContact().pause().progress(1);
+        }
         gsap.fromTo(
           store.HomeContact.options,
           { cameraTranslateZ: 0.05 },

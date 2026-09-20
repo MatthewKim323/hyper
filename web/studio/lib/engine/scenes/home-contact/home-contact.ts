@@ -765,8 +765,11 @@ export class HomeContact {
 
   showHome(e = false) {
     this.showUI();
-    // showUI only clears visibility:hidden; without this the button would paint at full
-    // opacity for a frame before the fromTo below takes hold.
+    // showUI only clears visibility:hidden, and PageLoader resolves hiddenPromise when the
+    // layer STARTS fading, so without this the enter button is painted (and tweened to full
+    // opacity) while the loading screen is still on screen. Hold it at zero and let the
+    // timeline below reveal it; on the intro path that timeline is started by the caller
+    // only once PageLoader.clearedPromise has resolved.
     if (this.dom.viewProjectsBtn) gsap.set(this.dom.viewProjectsBtn, { autoAlpha: 0 });
     return gsap
       .timeline()

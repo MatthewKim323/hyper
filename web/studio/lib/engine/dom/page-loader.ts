@@ -34,6 +34,10 @@ export class PageLoader {
   };
   hidden = false;
   hiddenPromise: Promise<void>;
+  // hiddenPromise resolves when the layer STARTS fading, so the scene can enter underneath
+  // it. Anything that must not be seen through that fade waits on this instead.
+  clearedPromise: Promise<void>;
+  private clearedResolve!: () => void;
   private hiddenResolve!: () => void;
   private assetsLoaded = false;
   private assetsReady: Promise<void>;
@@ -53,6 +57,9 @@ export class PageLoader {
     };
     this.hiddenPromise = new Promise((resolve) => {
       this.hiddenResolve = resolve;
+    });
+    this.clearedPromise = new Promise((resolve) => {
+      this.clearedResolve = resolve;
     });
     this.assetsReady = new Promise((resolve) => {
       this.assetsResolve = resolve;
@@ -108,6 +115,7 @@ export class PageLoader {
     this.fade = animate(colors, { opacity: 0 }, STAGE);
     await this.fade;
     if (this.fade) gsap.set(this.dom.loader, { autoAlpha: 0 });
+    this.clearedResolve();
   }
 
   // Scene enters as the layer starts to fade, matching the authored overlap.
@@ -116,7 +124,12 @@ export class PageLoader {
     this.removeEvents();
     this.hidden = true;
     store.Audio?.muteAll(false);
-    if (!this.introDone) gsap.set(this.dom.loader, { autoAlpha: 0 });
+    if (!this.introDone) {
+      // skiploader and the capped/failed paths jump straight to a hidden layer, so there is
+      // no fade to wait through and "cleared" is true immediately.
+      gsap.set(this.dom.loader, { autoAlpha: 0 });
+      this.clearedResolve();
+    }
     this.hiddenResolve();
     this.hidingPromise = this.hiddenPromise;
   }
