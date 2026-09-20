@@ -2,11 +2,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { OnboardingVoiceClient } from "@/lib/onboarding/voice-client";
 import { cfoJson, cfoRequest, CfoApiError } from "@/lib/command/cfo-api";
+import { createAudioLeadership } from "@/lib/command/audio-leadership";
 import { eligible, mergeNarrationHistory, queueNarrations, readWorkflowPage, takeNarration, type CommentaryMode, type NarrationRecord, type WorkflowEvent } from "@/lib/command/cfo-commentary";
 
 type State = { mode: CommentaryMode; history: NarrationRecord[]; caption: NarrationRecord | null; error: string; needsAudio: boolean; leader: boolean; connected: boolean };
 type DecisionCue = { event_id: string; text: string; textHash: string };
-type Runtime = { interrupt: () => void; conversation: (busy: boolean) => void; wake: () => void; decisions: (key: string, cues: DecisionCue[]) => void };
+type Runtime = { interrupt: () => void; conversation: (busy: boolean) => void; acquire: () => void; wake: () => void; decisions: (key: string, cues: DecisionCue[]) => void };
 const initial: State = { mode: "demo", history: [], caption: null, error: "", needsAudio: false, leader: false, connected: false };
 export function useCfoCommentary(scope: string, getClient: () => OnboardingVoiceClient | null, decisionActive: boolean) {
   const [state, setState] = useState<State>(initial);
@@ -19,7 +20,6 @@ export function useCfoCommentary(scope: string, getClient: () => OnboardingVoice
     let lastCaption: WorkflowEvent | null = null, greetingEvent: WorkflowEvent | null = null;
     let queue: WorkflowEvent[] = [], cursor: number | null = null, workspace = "", disposed = false, occupied = false, leader = false;
     let playing: AbortController | null = null, active: WorkflowEvent | null = null, timer: ReturnType<typeof setTimeout>, pollTimer: ReturnType<typeof setTimeout>;
-    let lockAbort: AbortController | null = null, releaseLock: (() => void) | null = null;
     let conversationBusy = false, userQuietUntil = 0, audioEnabled: boolean | null = null, hydrated = false, loadingConfig = false;
     let configTimer: ReturnType<typeof setTimeout> | undefined;
     const clientId = crypto.randomUUID();
@@ -115,29 +115,24 @@ export function useCfoCommentary(scope: string, getClient: () => OnboardingVoice
         }
       } finally { if (!disposed) pollTimer = setTimeout(poll, delay); }
     };
-    const acquire = () => {
-      if (document.hidden || disposed || lockAbort) return;
-      lockAbort = new AbortController();
-      if (!navigator.locks) { leader = true; publish({ leader: true }); return; }
-      const owned = lockAbort;
-      void navigator.locks.request(`hyper-cfo-audio:${scope}`, { signal: owned.signal }, async () => {
-        if (owned.signal.aborted || disposed || document.hidden) return;
-        leader = true; publish({ leader: true });
-        await new Promise<void>(resolve => { releaseLock = resolve; });
-        leader = false; publish({ leader: false }); releaseLock = null;
-      }).catch(() => {});
-    };
+    const audioOwner = createAudioLeadership({
+      locks: navigator.locks, name: `hyper-cfo-audio:${scope}`, visible: () => !document.hidden,
+      onChange: next => { leader = next; publish({ leader: next }); },
+      onError: () => publish({ error: "CFO audio could not start. Tap the orb to retry." }),
+    });
     const visibility = () => {
       if (document.hidden) {
         interrupt(); getClient()?.disconnect(); queue = []; hydrated = false; leader = false; publish({ leader: false });
-        lockAbort?.abort(); lockAbort = null; releaseLock?.();
-      } else { acquire(); userQuietUntil = Date.now() + 500; }
+        audioOwner.release();
+      } else { audioOwner.acquire(); userQuietUntil = Date.now() + 500; }
     };
     const owner: Runtime = {
       interrupt,
+      acquire: audioOwner.acquire,
       conversation: busy => { conversationBusy = busy; if (busy) { interrupt(); publish({ caption: null }); } },
       wake: () => {
         publish({ needsAudio: audioEnabled !== false && !getClient()?.playbackEnabled(), error: audioEnabled === false ? "CFO voice is unavailable. Captions are still live." : "" });
+        audioOwner.acquire();
         if (audioEnabled === null) void loadConfig();
         const replay = lastCaption ?? greetingEvent;
         if (replay && !occupied && !decisionQueue.some(item => item.id === replay.id) && !queue.some(item => item.id === replay.id)
@@ -154,7 +149,7 @@ export function useCfoCommentary(scope: string, getClient: () => OnboardingVoice
     };
     runtime.current = owner;
     const tick = () => { if (disposed) return; void drain(); timer = setTimeout(tick, 250); };
-    acquire(); void poll(); tick();
+    audioOwner.acquire(); void poll(); tick();
     document.addEventListener("visibilitychange", visibility);
     // The introduction uses the same literal REST route; it never starts STT.
     async function loadConfig() {
@@ -179,7 +174,7 @@ export function useCfoCommentary(scope: string, getClient: () => OnboardingVoice
     void loadConfig();
     return () => {
       disposed = true; lifetime.abort(); playing?.abort(); clearTimeout(timer); clearTimeout(pollTimer); clearTimeout(configTimer);
-      lockAbort?.abort(); releaseLock?.(); document.removeEventListener("visibilitychange", visibility);
+      audioOwner.dispose(); document.removeEventListener("visibilitychange", visibility);
       if (runtime.current === owner) runtime.current = null;
     };
   }, [scope, getClient]);
@@ -187,6 +182,7 @@ export function useCfoCommentary(scope: string, getClient: () => OnboardingVoice
   const interrupt = useCallback(() => runtime.current?.interrupt(), []);
   const conversation = useCallback((busy: boolean) => runtime.current?.conversation(busy), []);
   const enableAudio = useCallback(async () => { await getClient()?.primePlayback(); runtime.current?.wake(); }, [getClient]);
+  const retryAudio = useCallback(() => runtime.current?.acquire(), []);
   const setDecisionCues = useCallback((key: string, cues: DecisionCue[]) => runtime.current?.decisions(key, cues), []);
-  return { ...state, setMode, interrupt, conversation, enableAudio, setDecisionCues };
+  return { ...state, setMode, interrupt, conversation, enableAudio, retryAudio, setDecisionCues };
 }
