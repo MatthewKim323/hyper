@@ -50,6 +50,6 @@
 
 .tradeoff { margin-top: 1.2rem; }
 .tradeoff i { display: inline-block; width: 0.55rem; height: 0.55rem; margin: 0 0.3rem 0 0.7rem; border-radius: 2px; vertical-align: baseline; }
-.tradeoff i[data-series="precision"] { background: #252321; }
-.tradeoff i[data-series="recall"] { background: #2a78d6; }
+.tradeoff i[data-series="precision"] { background: #2a78d6; }
+.tradeoff i[data-series="recall"] { background: #eb6834; }
 .tradeoff svg { overflow: visible; } .tradeoff svg text { font-family: inherit; font-size: 11px; }

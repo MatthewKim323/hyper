@@ -5,7 +5,7 @@
 import { useRef, useState } from "react";
 import { backend, BackendError } from "@/lib/backend/client";
 import type { EngineCase, PayableProposal } from "@/lib/backend/types";
-import { ChecksRing, PayableWaterfall, RouteBars } from "./charts";
+import { ChecksRing, PayableFunnel, RouteBars } from "./charts";
 import { useBackend } from "./useBackend";
 
 const cents = (value: number, currency: string) => {
@@ -52,7 +52,7 @@ function ProposalCard({ proposal, onDecided, onBusy }: { proposal: PayablePropos
       <h3>{cents(payload.net_payable_cents, payload.currency)}</h3>
       <ChecksRing passed={proposal.checks.filter(check => check.ok).length} total={proposal.checks.length} />
     </div>
-    <PayableWaterfall billed={payload.invoice_face_cents} credits={payload.credits.map(credit => ({ id: credit.credit_id, cents: credit.amount_cents }))} currency={payload.currency} />
+    <PayableFunnel billed={payload.invoice_face_cents} credits={payload.credits.map(credit => ({ id: credit.credit_id, cents: credit.amount_cents }))} currency={payload.currency} />
     {!passing && <ul className="ws-checks">{proposal.checks.filter(check => !check.ok).map(check => <li key={check.name} data-ok="false">{words(check.name)}</li>)}</ul>}
     {pending && <div className="ws-actions">
       <button type="button" disabled={busy || !passing} onClick={() => void decide("APPROVED")}>Approve</button>
