@@ -70,6 +70,44 @@ settlement_runs = Table('settlement_runs', metadata,
     Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
     Column('result_hash', Text, nullable=False), Column('result', json_type, nullable=False),
     Column('verified_by', Text), UniqueConstraint('organization_id','result_hash'))
+journal_drafts = Table('journal_drafts', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('request_key', Text, nullable=False), Column('result', json_type, nullable=False),
+    Column('status', Text, nullable=False),
+    Column('approved_by', Text), Column('approved_at', BigInteger),
+    Column('entry_id', Text), UniqueConstraint('organization_id','request_key'))
+journal_entries = Table('journal_entries', metadata,
+    Column('sequence', Integer, primary_key=True, autoincrement=True),
+    Column('id', Text, unique=True, nullable=False), Column('organization_id', Text, nullable=False),
+    Column('request_key', Text, nullable=False), Column('entry', json_type, nullable=False),
+    Column('origin', json_type, nullable=False), Column('reverses_id', Text),
+    Column('posted_by', Text, nullable=False), Column('posted_at', BigInteger, nullable=False),
+    UniqueConstraint('organization_id','request_key'))
+Index('journal_org_sequence', journal_entries.c.organization_id, journal_entries.c.sequence)
+anomaly_scans = Table('anomaly_scans', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('request_key', Text, nullable=False), Column('result', json_type, nullable=False),
+    Column('created_at', BigInteger, nullable=False), UniqueConstraint('organization_id','request_key'))
+anomaly_findings = Table('anomaly_findings', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('scan_id', Text, ForeignKey('anomaly_scans.id'), nullable=False),
+    Column('fingerprint', Text, nullable=False), Column('kind', Text, nullable=False),
+    Column('severity', Text, nullable=False), Column('summary', Text, nullable=False),
+    Column('evidence', json_type, nullable=False), Column('status', Text, nullable=False),
+    Column('concern_id', Text), Column('created_at', BigInteger, nullable=False),
+    UniqueConstraint('organization_id','fingerprint'))
+Index('anomaly_org', anomaly_findings.c.organization_id, anomaly_findings.c.kind, anomaly_findings.c.status)
+skill_extractions = Table('skill_extractions', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('request_key', Text, nullable=False), Column('skill_id', Text, nullable=False),
+    Column('origin', json_type, nullable=False), Column('report', json_type, nullable=False),
+    Column('created_at', BigInteger, nullable=False), UniqueConstraint('organization_id','request_key'))
+adapter_imports = Table('adapter_imports', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('request_key', Text, nullable=False), Column('provider', Text, nullable=False),
+    Column('input_source_id', Text, nullable=False), Column('output_source_id', Text),
+    Column('result', json_type, nullable=False), Column('created_at', BigInteger, nullable=False),
+    UniqueConstraint('organization_id','request_key'))
 users = Table('users', metadata, Column('id', Text, primary_key=True))
 organizations = Table('organizations', metadata,
     Column('id', Text, primary_key=True), Column('name', Text, nullable=False),
@@ -215,6 +253,11 @@ Index('graph_mention_source', graph_mentions.c.source_id)
 
 def make_engine(location=None):
     location = location or os.getenv('DATABASE_URL') or os.getenv('DATABASE_PATH','var/onboarding.sqlite')
+    # A missing DATABASE_URL in a deployment would otherwise boot an empty local SQLite
+    # file and look healthy while serving no real data. Fail loudly instead.
+    deployed = bool(os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('APP_ENV') == 'production')
+    if deployed and '://' not in location:
+        raise RuntimeError('DATABASE_URL must be set in a deployed environment; refusing the SQLite fallback')
     if location.startswith('postgres://'):
         location = 'postgresql+psycopg://' + location[len('postgres://'):]
     elif location.startswith('postgresql://'):
