@@ -52,6 +52,36 @@ Before provisioning, create a Kibana HTTP connector with the public backend HTTP
 
 Use a dedicated space and least-privilege credentials. Do not add unrestricted platform search/ES|QL tools to this agent. The fixed query scopes protect the shipped tools, but space access alone is not index authorization. For multiple organizations, provision separate scoped definitions and credentials; this implementation intentionally rejects other organization IDs.
 
+## Production
+
+Railway, `production` environment. The evidence index is configured on every service that
+reaches retrieval, directly or through `data_service`: `api`, `ingestion-worker`,
+`counterparty-worker`, `artifact-worker`. A worker that indexes without these set writes to
+`http://127.0.0.1:9200`, which does not exist in the container.
+
+| Variable | Value |
+| --- | --- |
+| `ELASTICSEARCH_URL` | the Serverless project endpoint |
+| `ELASTICSEARCH_API_KEY` | project API key |
+| `ELASTICSEARCH_INDEX` | `hyper-evidence-v1` |
+| `ELASTIC_INFERENCE_ID` | `.jina-embeddings-v5-text-small` |
+| `ELASTIC_RERANK_INFERENCE_ID` | `.jina-reranker-v3.5` |
+
+Both inference endpoints are preconfigured by Serverless; nothing needs provisioning to use
+them. Retrieval reports its own mode at construction, which is the cheapest way to tell what a
+deployment is actually doing: `keyword` means `ELASTIC_INFERENCE_ID` never arrived, and the
+index is being searched by BM25 alone.
+
+`ensure_index` refuses to reuse an index whose `semantic` mapping names a different model,
+because the stored vectors would not be comparable to the ones a query produces. Changing
+either model means a new `ELASTICSEARCH_INDEX` and a reindex — cheap only while the index is
+empty. The guard raises rather than silently degrading, so a mismatch surfaces as a failed
+ingestion job, not as quietly wrong search results.
+
+Object storage is configured separately (`backend/STORAGE.md`). Search and ingestion both
+depend on it: the worker reads the uploaded file from the bucket before it indexes anything, so
+Elasticsearch alone does not make uploads work.
+
 ## API
 
 All investigation create/list/read/retry/refresh routes use the existing user organization authentication. The callback uses its separate server credential.

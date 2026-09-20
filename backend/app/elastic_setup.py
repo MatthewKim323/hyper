@@ -103,7 +103,9 @@ def main():
         checks={}
         calls={'elasticsearch':lambda:search.request('GET',''),
                'agent_builder':lambda:cloud.request('GET','/api/agent_builder/agents'),
-               'workflows':lambda:cloud.request('GET','/api/workflows/schema')}
+               # The schema route requires `loose`; without it Kibana answers 400 and the check
+               # reports a present Workflows API as unavailable.
+               'workflows':lambda:cloud.request('GET','/api/workflows/schema?loose=true')}
         if cloud.agent_id:
             from .elastic_a2a import ElasticA2A
             calls['a2a_agent_card']=lambda:ElasticA2A(cloud).prepare()
