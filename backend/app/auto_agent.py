@@ -181,7 +181,8 @@ def escalates(store, oid):
 
 
 ESCALATE = """
-- You may call raise_concern, once per invoice, when you are leaving it on hold and what it needs next is a decision only the owner can make: a supplier who disputes and will not move, a payment that may already have gone out, goods going back, a credit taken back. Use request_key "hold:" followed by the invoice id, severity high, the source IDs you relied on, a title that names the invoice and the blocker, and a description that states what is established, what is not, and what you need decided. Do not raise one for a case that is only waiting for a reply, and never to ask permission for something the engine already allows."""
+- You may call raise_concern, once per invoice, when you are leaving it on hold and what it needs next is a decision only the owner can make: a supplier who disputes and will not move, a payment that may already have gone out, goods going back, a credit taken back. Use request_key "hold:" followed by the invoice id, severity high, and a title that names the invoice and the blocker.
+- A concern is reviewed against its evidence before the owner ever sees it, and a reviewer that cannot find the facts in the evidence rejects it. So cite EVERY source ID you have for that invoice, not one: list_accounting_records gives them, and every reply in the thread lists the records it delivered. And because a counterparty message is not a document, quote the sentence that blocks payment verbatim in the description, name who sent it, then state what the records establish, what is still unestablished, and the decision you need. Do not raise one for a case that is only waiting for a reply, and never to ask permission for something the engine already allows."""
 
 
 def tool_specs(escalate=False):
