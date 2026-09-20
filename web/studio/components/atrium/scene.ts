@@ -153,7 +153,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const poolHit = new Vector3();
   const basinHit = new Vector3();
   const lastSplash = new Vector3(999, 0, 999);
-  type MovingObject = { object: Object3D; position: Vector3; rotation: Vector3; phase: number; amplitude: number };
+  type MovingObject = { object: Object3D; position: Vector3; rotation: Vector3; phase: number; amplitude: number; drift: number };
   const floating: MovingObject[] = [];
   const orbit = new Group();
   orbit.position.set(0, 3.07, -1.5);
@@ -247,11 +247,21 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
 
   function animateRoom(delta: number, still = false) {
     for (const item of floating) {
-      item.object.position.y = item.position.y + (still ? 0 : Math.sin(elapsed * .65 + item.phase) * item.amplitude);
+      // A single sine on one axis reads as a mechanical bob. Two incommensurate
+      // frequencies per axis, offset per object, keep the drift from ever visibly
+      // repeating, and a slight tilt sells buoyancy rather than a vertical rail.
+      const bob = Math.sin(elapsed * .65 + item.phase) * .82 + Math.sin(elapsed * .41 + item.phase * 1.7) * .18;
+      item.object.position.y = item.position.y + (still ? 0 : bob * item.amplitude);
+      item.object.position.x = item.position.x + (still ? 0 : Math.sin(elapsed * .29 + item.phase * .8) * item.drift);
+      item.object.position.z = item.position.z + (still ? 0 : Math.cos(elapsed * .23 + item.phase * 1.3) * item.drift);
       item.object.rotation.y = item.rotation.y + (still ? 0 : Math.sin(elapsed * .17 + item.phase) * .1);
+      item.object.rotation.x = item.rotation.x + (still ? 0 : Math.sin(elapsed * .21 + item.phase * 1.1) * .035);
+      item.object.rotation.z = item.rotation.z + (still ? 0 : Math.cos(elapsed * .19 + item.phase * .9) * .035);
     }
-    orbit.rotation.y = still ? 0 : Math.sin(elapsed * .23) * .14;
-    orbit.rotation.z = still ? 0 : Math.sin(elapsed * .33) * .018;
+    // A slow continuous sweep with a sine riding on it, so the ring keeps turning
+    // instead of stalling and reversing at the ends of a pure oscillation.
+    orbit.rotation.y = still ? 0 : elapsed * .035 + Math.sin(elapsed * .23) * .14;
+    orbit.rotation.z = still ? 0 : Math.sin(elapsed * .33) * .018 + Math.sin(elapsed * .12) * .01;
     focusRig.update(delta, roomPointer, still);
     canvas.dataset.focusProgress = focusRig.progress.toFixed(3);
     if (focusListener && focusSubject && (focusRig.focused || focusRig.progress > .002 || lastFocusProgress !== 0)) {
@@ -602,7 +612,9 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       if (object instanceof Mesh && /floating pearl marble sphere/.test(name)) agentPearl = object;
       if (/delicate orbital ring|suspended satellite/.test(name)) orbitParts.push(object);
       if (/floating pearl marble sphere|floating mineral|floating pearl light/.test(name)) {
-        floating.push({ object, position: object.position.clone(), rotation: new Vector3(object.rotation.x, object.rotation.y, object.rotation.z), phase: /marble sphere|lower pole/.test(name) ? 0 : floating.length * 1.73, amplitude: /marble sphere|lower pole/.test(name) ? .18 : .12 });
+        // The pearl is the agent's anchor and its aura tracks it, so it bobs but never drifts.
+        const anchored = /marble sphere|lower pole/.test(name);
+        floating.push({ object, position: object.position.clone(), rotation: new Vector3(object.rotation.x, object.rotation.y, object.rotation.z), phase: anchored ? 0 : floating.length * 1.73, amplitude: anchored ? .18 : .12, drift: anchored ? 0 : .045 });
       }
     });
     scene.updateMatrixWorld(true);
