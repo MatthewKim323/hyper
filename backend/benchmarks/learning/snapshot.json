@@ -1,0 +1,83 @@
+{
+ "level": 6,
+ "top_tier": 6,
+ "hard": {
+  "with_memory": {
+   "graded": 58,
+   "correct": 56,
+   "wrong_releases": 2,
+   "timeouts": 0
+  },
+  "without_memory": {
+   "graded": 60,
+   "correct": 35,
+   "wrong_releases": 25,
+   "timeouts": 0
+  }
+ },
+ "routine": {
+  "with_memory": {
+   "graded": 91,
+   "correct": 91,
+   "wrong_releases": 0,
+   "timeouts": 0
+  },
+  "without_memory": {
+   "graded": 91,
+   "correct": 91,
+   "wrong_releases": 0,
+   "timeouts": 0
+  }
+ },
+ "families": {
+  "internal_hold": {
+   "tier": 5,
+   "with_memory": "XHHHHHHHHHHHHHHHH",
+   "without_memory": "XXHHHXXXXXXXXXXHHH"
+  },
+  "short_credit": {
+   "tier": 5,
+   "with_memory": "PPPPPP",
+   "without_memory": "PPPPPP"
+  },
+  "withdrawn_credit": {
+   "tier": 5,
+   "with_memory": "XHHHHHHHHHHHHHHH",
+   "without_memory": "HHHHHHXHXXXXXXHH"
+  },
+  "cleared_hold": {
+   "tier": 6,
+   "with_memory": "PPPPPP",
+   "without_memory": "PPPPPP"
+  },
+  "misdirected_hold": {
+   "tier": 6,
+   "with_memory": "PPPPP",
+   "without_memory": "PPPP"
+  },
+  "superseded_invoice": {
+   "tier": 6,
+   "with_memory": "HHHHHHHH",
+   "without_memory": "XXXXXHHXHH"
+  }
+ },
+ "lessons": 151,
+ "mistakes": [
+  {
+   "at": 1789888266920,
+   "invoice_id": "INV-0081",
+   "family": "internal_hold",
+   "outcome": "fail",
+   "finding": "Every accounting check passed, but the approved internal desk had said in the thread that the goods failed inspection and payment must wait. A proposal was prepared anyway.",
+   "lesson": "When an authorized internal procurement or receiving message states that goods failed inspection and instructs that payment be withheld, treat it as a payment-blocking exception even if invoice matching and accounting checks pass. Do not prepare a payable proposal; keep the case on hold and obtain documented resolution of the inspection issue."
+  },
+  {
+   "at": 1789888795039,
+   "invoice_id": "INV-0091",
+   "family": "withdrawn_credit",
+   "outcome": "fail",
+   "finding": "The supplier delivered a credit memo that passed inspection, then withdrew it in the next message. The engine still counted the memo, so the checks passed, and a proposal was prepared on a credit that no longer exists.",
+   "lesson": "If a supplier-issued credit memo is later withdrawn or superseded in the message thread, treat the credit as unusable even if an earlier inspection passed. Re-check the latest document status and obtain a currently valid replacement or correction before analyzing or preparing any payable proposal."
+  }
+ ]
+}
