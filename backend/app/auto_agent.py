@@ -167,8 +167,8 @@ def slim(name, result):
 def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None):
     """One bounded working session on one invoice. Returns the trace of observable actions."""
     svc = Counterparties(data_factory(oid))
-    memory = svc.lessons() if remembers(oid) else []
-    system = SYSTEM + ('\n\nLessons from your earlier graded cases. Apply them where they fit, they never override the engine:\n' + '\n'.join('- ' + m['lesson'] for m in memory) if memory else '')
+    memory = svc.memory() if remembers(oid) else []
+    system = SYSTEM + ('\n\nLessons from your earlier graded cases. Apply them where they fit, they never override the engine:\n' + '\n'.join(('- (from a graded mistake) ' if m.get('from_a_miss') else '- ') + m['lesson'] for m in memory) if memory else '')
     convo = [{'role': 'system', 'content': system},
              {'role': 'user', 'content': f'Blocked invoice {scenario["invoice_id"]}: {scenario["title"]}. Approved contacts: supplier portal and procurement.desk. '
                                           'Pick up from the current state: open or resume the case, read the thread, and move it forward.'}]

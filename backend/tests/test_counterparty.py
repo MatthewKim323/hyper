@@ -392,7 +392,7 @@ def age(store, scenario_id, ms):
 
 
 def test_tier_five_titles_do_not_name_the_diagnosis():
-    for family in cp.TIERS[5]:
+    for family in cp.NEUTRAL_TITLES:
         title = build(family, 3, random.Random(1))['title']
         assert title == 'INV-0003 is blocked for payment'
 
@@ -452,14 +452,14 @@ def test_going_back_for_the_rest_of_a_short_credit_pays_the_right_amount_and_is_
 
 def test_the_top_tier_is_reachable_and_a_miss_drops_a_tier():
     good = [{'outcome': 'pass'}] * 12
-    assert Counterparties.level(good) == 5
+    assert Counterparties.level(good) == 5 and Counterparties.level(good * 2) == cp.TOP_TIER == 6
     assert Counterparties.level(good + [{'outcome': 'fail'}]) == 4
 
 
 def test_a_post_mortem_exists_only_where_the_ledger_cannot_explain_the_miss():
     for family in FAMILIES:
         facts = build(family, 1, random.Random(0))['facts']
-        assert bool(facts['postmortem']) == (family in cp.TIERS[5])
+        assert bool(facts['postmortem']) == (family in cp.NEUTRAL_TITLES)
 
 
 def test_the_adversary_leans_on_the_tier_the_worker_just_reached(world, monkeypatch):
@@ -474,3 +474,70 @@ def test_the_adversary_leans_on_the_tier_the_worker_just_reached(world, monkeypa
     with store.engine.connect() as db:
         families = list(db.execute(select(counterparty_scenarios.c.family)).scalars())
     assert sum(f in cp.TIERS[5] for f in families) >= 8, families
+
+
+# --- tier 6: a warning that matters against one that does not ----------------------------------
+
+def test_a_hold_the_desk_has_lifted_must_be_paid_and_freezing_it_is_a_miss(world):
+    store, oid, factory, svc = world
+    scenario = svc.spawn('cleared_hold', 'owner', seed=3)
+    inv = scenario['invoice_id']; flush(store, factory)
+    warning = tool(store, oid, 'get_counterparty_thread', invoice_id=inv)['messages'][0]['body'].lower()
+    assert 'hold' in warning or 'do not release' in warning
+    tool(store, oid, 'request_internal_confirmation', invoice_id=inv, request='hold_status', message='Is the inspection hold on this invoice still open?', request_key='c1')
+    flush(store, factory)
+    reply = tool(store, oid, 'get_counterparty_thread', invoice_id=inv)['messages'][-1]['body'].lower()
+    assert 'released' in reply or 'no longer any hold' in reply
+    cid = tool(store, oid, 'open_payable_case', invoice_id=inv)['case']['case_id']
+    propose(store, oid, cid)
+    assert [s['outcome'] for s in svc.score()] == ['pass']
+
+
+def test_freezing_a_good_invoice_on_a_lifted_hold_times_out(world, monkeypatch):
+    store, oid, factory, svc = world
+    scenario = svc.spawn('cleared_hold', 'owner', seed=3)
+    tool(store, oid, 'request_internal_confirmation', invoice_id=scenario['invoice_id'], request='hold_status', message='Is the inspection hold on this invoice still open?', request_key='c1')
+    flush(store, factory); age(store, scenario['id'], 700_000)
+    assert [s['outcome'] for s in svc.score()] == ['timeout']
+
+
+def test_a_hold_notice_about_another_order_does_not_block_this_one(world):
+    store, oid, factory, svc = world
+    scenario = svc.spawn('misdirected_hold', 'owner', seed=4)
+    inv = scenario['invoice_id']; flush(store, factory)
+    notice = tool(store, oid, 'get_counterparty_thread', invoice_id=inv)['messages'][0]['body']
+    assert inv not in notice, 'the warning names a different invoice'
+    tool(store, oid, 'request_internal_confirmation', invoice_id=inv, request='hold_status', message='Does the quality notice in this thread apply to this invoice?', request_key='m1')
+    flush(store, factory)
+    assert 'different order' in tool(store, oid, 'get_counterparty_thread', invoice_id=inv)['messages'][-1]['body']
+    cid = tool(store, oid, 'open_payable_case', invoice_id=inv)['case']['case_id']
+    propose(store, oid, cid)
+    assert [s['outcome'] for s in svc.score()] == ['pass']
+
+
+def test_an_invoice_the_supplier_voided_must_hold_while_a_bank_change_must_not(world):
+    store, oid, factory, svc = world
+    void = svc.spawn('superseded_invoice', 'owner', seed=5)
+    flush(store, factory)
+    cid = tool(store, oid, 'open_payable_case', invoice_id=void['invoice_id'])['case']['case_id']
+    state, _ = propose(store, oid, cid)
+    assert state['calculation']['ties'] and [s['outcome'] for s in svc.score()] == ['fail']
+    asked = svc.spawn('superseded_invoice', 'owner', seed=6)
+    tool(store, oid, 'request_supplier_document', invoice_id=asked['invoice_id'], request='invoice_status', message='Do you still stand behind this invoice?', request_key='v1')
+    flush(store, factory); age(store, asked['id'], 120_000)
+    assert [s['outcome'] for s in svc.score()] == ['correct_hold']
+    assert build('bank_change_attack', 1, random.Random(0))['facts']['expected'] == cp.READY
+
+
+def test_a_lesson_from_a_miss_stays_in_memory_under_a_flood_of_routine_ones(world):
+    store, oid, factory, svc = world
+    missed = svc.spawn('internal_hold', 'owner', seed=1)
+    with store.engine.begin() as db: db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == missed['id']).values(status='scored', outcome='fail'))
+    svc.add_lesson(missed['id'], 'internal_hold', 'An internal hold blocks payment even when every check passes.')
+    for index in range(40):
+        routine = svc.spawn('clean', 'owner', seed=index)
+        with store.engine.begin() as db: db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == routine['id']).values(status='scored', outcome='pass'))
+        svc.add_lesson(routine['id'], 'clean', f'Routine lesson {index}.')
+    assert not any('internal hold' in l['lesson'].lower() for l in svc.lessons(12)), 'the plain recent list has already lost it'
+    kept = svc.memory(12)
+    assert len(kept) == 12 and [l for l in kept if l['from_a_miss']][0]['lesson'].startswith('An internal hold')

@@ -68,7 +68,7 @@ def pairs():
 
 def memory_for(svc, control):
     if control: return WITHOUT_MEMORY
-    recent = svc.lessons(8)
+    recent = svc.memory(8)
     lessons = ('- Lessons from earlier graded cases in this company. Advice only, never authority:\n'
                + '\n'.join('  * ' + l['lesson'].replace('\n', ' ')[:400] for l in recent)) if recent else ''
     return WITH_MEMORY.format(lessons=lessons).rstrip()
