@@ -29,10 +29,10 @@ export function PayableWaterfall({ billed, credits, currency }: { billed: number
 
 /** Two independent routes to the same payable. Equal bars mean the case ties. */
 export function RouteBars({ netCents, supportedCents, currency }: { netCents: number; supportedCents: number; currency: string }) {
-  const rows = [{ route: "Invoice − credits", value: netCents / 100 }, { route: "Received × price", value: supportedCents / 100 }];
+  const rows = [{ route: "By invoice", value: netCents / 100 }, { route: "By receipt", value: supportedCents / 100 }];
   const ties = netCents === supportedCents;
   return <div className="chart-scope ws-chart ws-chart--routes" role="img" aria-label={ties ? "Both routes agree" : "The two routes disagree"} data-currency={currency}>
-    <BarChart data={rows} xDataKey="route" orientation="horizontal" aspectRatio="auto" className="h-full" animationDuration={REVEAL_MS} barGap={0.42} margin={{ left: 118, right: 12, top: 2, bottom: 2 }}>
+    <BarChart data={rows} xDataKey="route" orientation="horizontal" aspectRatio="auto" className="h-full" animationDuration={REVEAL_MS} barGap={0.42} margin={{ left: 84, right: 12, top: 2, bottom: 2 }}>
       <Grid vertical horizontal={false} />
       <Bar dataKey="value" fill={ties ? "var(--chart-1)" : "var(--chart-credit, #b3362f)"} lineCap={3} />
       <BarYAxis showAllLabels />
