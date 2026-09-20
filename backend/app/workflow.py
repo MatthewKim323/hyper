@@ -154,7 +154,8 @@ def sentence(event):
     }
     text = lines[kind]
     if event['simulated']:
-        text = 'In the simulation, ' + text[0].lower() + text[1:]
+        # An identifier that opens the sentence keeps its capitals: "iNV-0057 arrived" is not a word.
+        text = 'In the simulation, ' + (text if text.startswith(invoice) and invoice != 'the invoice' else text[0].lower() + text[1:])
     if len(text) > 240:
         raise ValueError('Narration exceeds one short utterance')
     return text

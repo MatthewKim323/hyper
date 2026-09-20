@@ -340,3 +340,9 @@ def test_an_unknown_kind_of_case_is_refused(world):
     store, oid, factory, svc = world
     with store.engine.begin() as db, pytest.raises(ValueError):
         workflow.emit(db, oid, 'k1', 'case.graded', workflow_id='invoice:INV-1', actor='engine', facts={'invoiceId': 'INV-1', 'outcome': 'pass', 'trap': 'whatever the model says'}, simulated=True)
+
+
+def test_an_invoice_number_that_opens_a_sentence_keeps_its_capitals():
+    say = lambda kind, **facts: workflow.sentence({'kind': kind, 'facts': facts, 'actor': {'kind': 'engine', 'id': 'engine'}, 'simulated': True})
+    assert say('invoice.received', invoiceId='INV-0057').startswith('In the simulation, INV-0057 arrived')
+    assert say('work.started', invoiceId='INV-0057').startswith('In the simulation, accounts payable has started')
