@@ -40,8 +40,13 @@ CAVEATS = ('Development results. The cases, the worker prompt and the grader wer
 def stamp(ms): return time.strftime('%Y-%m-%d %H:%M', time.localtime(ms / 1000))
 
 
+def unworked(row):
+    """A timeout on a case no worker ever opened is the machine (asleep, offline, workers down), not the agent."""
+    return row['outcome'] == 'timeout' and not ((row.get('state') or {}).get('agent') or {}).get('sessions')
+
+
 def arm(rows):
-    rows = [r for r in rows if not raced(r)]
+    rows = [r for r in rows if not raced(r) and not unworked(r)]
     return {'graded': len(rows), 'correct': sum(r['outcome'] in GOOD for r in rows), 'wrong_releases': sum(r['outcome'] == 'fail' for r in rows),
             'timeouts': sum(r['outcome'] == 'timeout' for r in rows)}
 
@@ -54,10 +59,10 @@ def snapshot(store, treatment, control):
                                                .select_from(lessons.join(scenarios, scenarios.c.id == lessons.c.scenario_id))
                                                .where(lessons.c.organization_id == treatment, lessons.c.created_at >= VALID_SINCE).order_by(lessons.c.created_at)).mappings()]
     side = lambda oid, hard: [r for r in rows if r['organization_id'] == oid and (TIER.get(r['family'], 0) >= HARD) == hard]
-    mistakes = [l for l in learned if l['outcome'] not in GOOD and not raced({**l, 'family': l['family']})]
+    mistakes = [l for l in learned if l['outcome'] not in GOOD and not raced({**l, 'family': l['family']}) and not unworked(l)]
     families = {}
     for r in rows:
-        if TIER.get(r['family'], 0) < HARD or raced(r): continue
+        if TIER.get(r['family'], 0) < HARD or raced(r) or unworked(r): continue
         entry = families.setdefault(r['family'], {treatment: '', control: ''})
         entry[r['organization_id']] += {'pass': 'P', 'correct_hold': 'H', 'fail': 'X', 'timeout': 'T'}[r['outcome']]
     return {'level': Counterparties(DataService(store, treatment)).scoreboard()['level'], 'top_tier': max(TIERS),

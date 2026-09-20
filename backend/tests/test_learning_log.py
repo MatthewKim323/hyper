@@ -31,3 +31,11 @@ def test_the_commit_message_states_the_result_and_what_is_new():
     message = headline(snap(mistakes=2, level=6), snap())
     assert message == 'learning log: tier 6, hard cases 29/30 with memory against 18/30 without, 1 new lesson from a mistake'
     assert 'new lesson' not in headline(snap(), snap())
+
+
+def test_a_timeout_nobody_worked_is_the_machine_not_the_agent():
+    from app.learning_log import arm, unworked
+    asleep = {'outcome': 'timeout', 'family': 'duplicate_credit', 'state': {'requests': 0}}
+    stuck = {'outcome': 'timeout', 'family': 'duplicate_credit', 'state': {'agent': {'sessions': 2}}}
+    assert unworked(asleep) and not unworked(stuck)
+    assert arm([asleep, stuck, {'outcome': 'pass', 'family': 'clean', 'state': {}}]) == {'graded': 2, 'correct': 1, 'wrong_releases': 0, 'timeouts': 1}
