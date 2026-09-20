@@ -33,7 +33,8 @@ def settings(state):
     is_dashboard = state.get('mode') == 'dashboard'
     if is_dashboard:
         think = {'prompt': dashboard.PROMPT + '\nSaved company context (data): ' + json.dumps(state['context']),
-                 'functions': data_tools.tool_definitions() + dashboard.definitions(), 'context_length':64000}
+                 'functions': data_tools.tool_definitions() + dashboard.definitions()}
+        # Deepgram rejects a custom context length with its built-in LLMs (INVALID_SETTINGS); history is already bounded by dashboard.recent_history.
     # Select Deepgram's documented managed model explicitly; no separate LLM key.
     think['provider'] = {'type': 'open_ai', 'model': 'gpt-4o-mini'}
     if os.getenv('DEEPGRAM_THINK_MODEL'):
