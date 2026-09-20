@@ -9,6 +9,8 @@ const LINKS: { label: string; href: string; external?: boolean }[] = [
   { label: "GitHub", href: "https://github.com/MatthewKim323/hyper." },
   { label: "White paper", href: "/hyper-whitepaper.pdf" },
   { label: "Docs", href: "/docs", external: false },
+  // Same-origin like Docs: the engine router must not treat the proxied page as a scene.
+  { label: "Use your agent", href: "/docs/mcp", external: false },
 ];
 
 export default function HomeLinks() {
