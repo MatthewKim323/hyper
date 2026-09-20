@@ -43,6 +43,7 @@ EVENTS = [
     {'at': 1789887482298, 'label': 'tier 5 live'},
     {'at': 1789888077210, 'label': 'adversary leans on the newest tier'},
     {'at': 1789889366247, 'label': 'tier 6 live; memory keeps lessons from misses'},
+    {'at': 1789890592692, 'label': 'sandbox fix: opening warnings delivered at spawn'},
 ]
 HARD_TIER = max(TIERS)
 CAVEATS = [

@@ -541,3 +541,11 @@ def test_a_lesson_from_a_miss_stays_in_memory_under_a_flood_of_routine_ones(worl
     assert not any('internal hold' in l['lesson'].lower() for l in svc.lessons(12)), 'the plain recent list has already lost it'
     kept = svc.memory(12)
     assert len(kept) == 12 and [l for l in kept if l['from_a_miss']][0]['lesson'].startswith('An internal hold')
+
+
+def test_a_warning_that_opens_a_case_is_in_the_thread_before_any_delivery_pass(world):
+    """No flush here: a worker that reads the thread the instant the case exists must already see the warning."""
+    store, oid, factory, svc = world
+    for family in ('internal_hold', 'cleared_hold', 'misdirected_hold', 'superseded_invoice'):
+        scenario = svc.spawn(family, 'owner', seed=8)
+        assert len(tool(store, oid, 'get_counterparty_thread', invoice_id=scenario['invoice_id'])['messages']) == 1, family

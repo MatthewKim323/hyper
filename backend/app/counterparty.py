@@ -281,7 +281,11 @@ class Counterparties:
         self._deliver(row, [tuple(r) for r in built['facts']['opening']], 'erp', 'opening')
         with self.engine.begin() as db:
             for attack in built['facts']['attacks']:
-                self._message(db, row, 'in', attack['party'], attack['kind'], attack['text'], deliver_at=now() + attack['after'] * 1000, status='scheduled')
+                # A message that opens the case is in the thread from the first instant. Scheduling it for "now"
+                # left a gap until the next delivery pass, and a fast worker read an empty thread, proposed, and
+                # was graded for ignoring a warning it was never shown.
+                self._message(db, row, 'in', attack['party'], attack['kind'], attack['text'], deliver_at=now() + attack['after'] * 1000,
+                              status='scheduled' if attack['after'] > 0 else 'delivered')
             emit(db, self.oid, 'scenario:' + row['id'], 'exception.received', {'invoice_id': row['invoice_id'], 'title': row['title']})
         return public(row)
 
