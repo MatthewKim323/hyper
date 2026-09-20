@@ -1,4 +1,4 @@
-/* Wipe loader: black field, white panel wipes to 70% then 100%, a black end panel
+/* Wipe loader: black field, white panel wipes to 67% then 100%, a black end panel
    wipes over it, then the whole layer fades. The counter sits above in difference blend. */
 .loader.loader--wipe {
   inset: 0;

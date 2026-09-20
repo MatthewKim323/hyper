@@ -1,4 +1,4 @@
-// PageLoader: the intro wipe. Black field, white panel springs to 70% while the counter runs,
+// PageLoader: the intro wipe. Black field, white panel springs to 67% while the counter runs,
 // then to 100% once assets are ready, a black end panel wipes over, and the layer fades out.
 // After the first entry the router reuses this overlay as a plain black curtain (show / hide).
 import gsap from "gsap";
@@ -7,18 +7,20 @@ import { store } from "../core/store";
 import { E } from "../core/event-bus";
 
 // Stage timings (ms) and springs, in the order the stages run.
-const TO_70 = { type: "spring", duration: 1.6, bounce: 0 } as const;
+// The loader parks here while the scene's assets finish.
+const HOLD_AT = 67;
+const TO_HOLD = { type: "spring", duration: 1.6, bounce: 0 } as const;
 const STAGE = { type: "spring", duration: 1.1, bounce: 0 } as const;
 const WORLD_WAIT_CAP = 15000;
-const HOLD_70 = 1500;
+const HOLD_MS = 1500;
 const HOLD_FULL = 600;
 const HOLD_END = 600;
 
-// Counter: 0 to 100 over 1s easeOut, paused for 1s at 70%.
+// Counter: 0 to 100 over 1s easeOut, paused for 1s at the hold.
 const COUNT_EASE = [0, 0, 0.58, 1] as const;
-const COUNT_FIRST = 0.7;
+const COUNT_FIRST = HOLD_AT / 100;
 const COUNT_PAUSE = 1000;
-const COUNT_REST = 0.3;
+const COUNT_REST = 1 - HOLD_AT / 100;
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -75,8 +77,8 @@ export class PageLoader {
 
   private async intro() {
     const { white, end, colors, count } = this.dom;
-    animate(white, { width: "70%" }, TO_70);
-    const counter = animate(0, 70, {
+    animate(white, { width: `${HOLD_AT}%` }, TO_HOLD);
+    const counter = animate(0, HOLD_AT, {
       duration: COUNT_FIRST,
       ease: COUNT_EASE,
       onUpdate: (v) => this.setCount(v),
@@ -90,10 +92,10 @@ export class PageLoader {
       window.addEventListener("hyper:atrium-ready", () => resolve(), { once: true });
       setTimeout(resolve, WORLD_WAIT_CAP);
     });
-    await Promise.all([wait(HOLD_70), this.assetsReady, worldReady]);
+    await Promise.all([wait(HOLD_MS), this.assetsReady, worldReady]);
     animate(white, { width: "100%" }, STAGE);
     wait(200).then(() => counter).then(() =>
-      animate(70, 100, { duration: COUNT_REST, ease: COUNT_EASE, onUpdate: (v) => this.setCount(v) }),
+      animate(HOLD_AT, 100, { duration: COUNT_REST, ease: COUNT_EASE, onUpdate: (v) => this.setCount(v) }),
     );
 
     await wait(HOLD_FULL);
