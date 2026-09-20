@@ -31,7 +31,7 @@ export default function WorkspaceSections() {
   const usable = auth.ready && auth.signedIn;
   if (!Body) return section === "overview" && usable ? <OverviewStrip active /> : null;
 
-  return <main className="workspace bench-tokens" aria-label={section}>
+  return <main className="workspace bench-tokens" aria-label={section} data-section={section}>
     <div className="ws-content">
       <button type="button" className="ws-back" onClick={() => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "overview" } }))}>← Back to the atrium</button>
       {usable ? <Body active /> : <section className="ws-gate">

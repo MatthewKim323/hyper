@@ -36,7 +36,7 @@ function ConcernCard({ concern, onAnswered }: { concern: Concern; onAnswered: ()
     finally { setBusy(false); }
   }
 
-  return <article className="ws-card ws-card--decision">
+  return <article className="ws-card ws-card--decision" data-pointable={`concern:${concern.id}`} data-pointable-label={concern.request.title} data-pointable-data={JSON.stringify({ severity: concern.request.severity, status: concern.status, source_ids: concern.request.source_ids })}>
     <header>
       <span className="ws-chip"><i style={{ background: SEVERITY[concern.request.severity] }} aria-hidden="true" />{concern.request.severity}</span>
       <time>{when(concern.created_at)}</time>
@@ -89,7 +89,7 @@ export function Review({ active }: { active: boolean }) {
 
 function CaseCard({ item, tasks }: { item: AgentCase; tasks: AgentTask[] }) {
   const list = (label: string, values: string[], tone?: string) => values.length > 0 && <div className="ws-list" data-tone={tone}><span className="ws-eyebrow">{label}</span><ul>{values.map((v) => <li key={v}>{v}</li>)}</ul></div>;
-  return <article className="ws-card">
+  return <article className="ws-card" data-pointable={`case:${item.id}`} data-pointable-label={`Case ${item.case_key}`} data-pointable-data={JSON.stringify({ source_ids: item.state.source_ids, concern_ids: item.state.concern_ids })}>
     <header><span className="ws-chip">{item.case_key}</span><time>Updated {item.version} time{item.version === 1 ? "" : "s"} · {when(item.updated_at)}</time></header>
     <h3>{item.title}</h3>
     <div className="ws-columns">
@@ -149,7 +149,7 @@ export function Evidence({ active }: { active: boolean }) {
     {result && <section className="ws-section">
       <span className="ws-eyebrow">{result.hits.length} passage{result.hits.length === 1 ? "" : "s"} · {result.mode} search</span>
       {!result.coverage_complete && <p className="ws-warning">{result.unindexed_sources} source{result.unindexed_sources === 1 ? " is" : "s are"} not indexed yet, so this is not the whole picture.</p>}
-      <ul className="ws-rows">{result.hits.map((hit) => <li key={hit.id}>
+      <ul className="ws-rows">{result.hits.map((hit) => <li key={hit.id} data-pointable={`source:${hit.source_id}`} data-pointable-label={`${hit.filename} ${hit.locator}`} data-pointable-data={JSON.stringify({ dataset: hit.dataset })}>
         <div><button type="button" className="ws-link" onClick={() => open(hit.source_id)}>{hit.filename}</button><small>{hit.locator}{hit.dataset ? ` · ${hit.dataset}` : ""}</small></div>
         <p className="ws-mono">{hit.content.slice(0, 320)}{hit.content.length > 320 ? "…" : ""}</p>
       </li>)}</ul>
@@ -161,7 +161,7 @@ export function Evidence({ active }: { active: boolean }) {
       {detail.has_more && <p className="ws-note">Showing the first {detail.chunks.length} passages.</p>}
     </section>}
     <div className="ws-grid">
-      <section className="ws-section">
+      <section className="ws-section" data-pointable="chart:records-by-dataset" data-pointable-label="Records by dataset chart" data-pointable-data={JSON.stringify({ datasets: rows.map((r) => r.dataset) })}>
         <span className="ws-eyebrow">Records by dataset</span>
         <Status error={datasets.error} empty={datasets.data && !rows.length && "No datasets imported."}>
           {rows.length > 0 && <div className="ws-chart" style={{ height: rows.length * 26 + 40 }}>
@@ -177,7 +177,7 @@ export function Evidence({ active }: { active: boolean }) {
       <section className="ws-section">
         <span className="ws-eyebrow">Sources</span>
         <Status error={sources.error} empty={sources.data && !sources.data.sources.length && "No sources yet. Upload a file or connect an account."}>
-          <ul className="ws-rows ws-rows--tight">{sources.data?.sources.map((s) => <li key={s.id}>
+          <ul className="ws-rows ws-rows--tight">{sources.data?.sources.map((s) => <li key={s.id} data-pointable={`source:${s.id}`} data-pointable-label={s.filename} data-pointable-data={JSON.stringify({ dataset: s.dataset, records: s.record_count })}>
             <div><button type="button" className="ws-link" onClick={() => open(s.id)}>{s.filename}</button>
               <small>{s.dataset ?? "document"}{s.record_count ? ` · ${s.record_count.toLocaleString("en-US")} records` : ""} · {s.index_status === "ready" ? "searchable" : s.index_status === "failed" ? `indexing failed${s.index_error ? `: ${s.index_error}` : ""}` : "indexing"}</small></div>
           </li>)}</ul>

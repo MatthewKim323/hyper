@@ -14,7 +14,12 @@ export interface VoiceClientCallbacks {
   onReadiness?: (ready: boolean) => void;
   /** The agent's own playback as a stream while it is audible, so the voice beam can follow it. Null when silent. */
   onPlaybackStream?: (stream: MediaStream | null) => void;
+  /** Every accepted server event, for consumers that need more than the presentation (tool results, investigations). */
+  onEvent?: (event: Record<string, unknown>) => void;
 }
+
+/** "world" is the persistent dashboard agent: one saved conversation per member, no readiness gate. */
+export type VoiceClientMode = "onboarding" | "world";
 
 export interface VoiceProtocolState {
   generation: number;
@@ -37,8 +42,8 @@ const BASE = "/api/onboarding";
 // the 12 s timeout. In local development the stream therefore goes straight to the backend,
 // which already allows this origin. NEXT_PUBLIC_ONBOARDING_WS_URL overrides it (set it to
 // "proxy" to force the same-origin path, or to a ws(s):// base for a hosted backend).
-function streamUrl(sessionId: string): URL {
-  const path = `/sessions/${encodeURIComponent(sessionId)}/stream`;
+function streamUrl(sessionId: string, mode: VoiceClientMode): URL {
+  const path = mode === "world" ? "/world/agent/stream" : `/sessions/${encodeURIComponent(sessionId)}/stream`;
   const configured = process.env.NEXT_PUBLIC_ONBOARDING_WS_URL;
   const local = location.hostname === "localhost" || location.hostname === "127.0.0.1";
   const direct = configured && configured !== "proxy" ? configured
@@ -173,7 +178,17 @@ export class OnboardingVoiceClient {
   private unacknowledged: { id: string; text: string } | null = null;
   private pendingText = new Map<string, { resolve: (acknowledged: boolean) => void; timer: ReturnType<typeof setTimeout> }>();
 
-  constructor(callbacks: VoiceClientCallbacks) { this.callbacks = callbacks; }
+  private mode: VoiceClientMode;
+
+  constructor(callbacks: VoiceClientCallbacks, mode: VoiceClientMode = "onboarding") {
+    this.callbacks = callbacks;
+    this.mode = mode;
+  }
+
+  /** Tell the dashboard agent what the user is pointing at. Read by its get_pointer_context tool. */
+  sendPointer(pointer: unknown) {
+    if (this.mode === "world" && this.authenticated) this.send({ type: "pointer", pointer });
+  }
 
   private notifyConnection(value: VoiceConnection) {
     if (this.disposed) return;
@@ -190,7 +205,7 @@ export class OnboardingVoiceClient {
     }
     this.callbacks.onPresentation(voicePresentation(this.protocol, playing));
     this.callbacks.onReadiness?.(this.protocol.ready);
-    if (!this.completed && canCompleteVoice(this.protocol, this.sources.size > 0)) {
+    if (this.mode === "onboarding" && !this.completed && canCompleteVoice(this.protocol, this.sources.size > 0)) {
       this.completed = true;
       this.callbacks.onComplete();
     }
@@ -218,6 +233,14 @@ export class OnboardingVoiceClient {
   // capability token is issued, and the workspace remembers the latest session to resume.
   private async getSignedInSession(bearer: string): Promise<Capability> {
     const headers = { Authorization: `Bearer ${bearer}` };
+    if (this.mode === "world") {
+      const response = await this.request("/world/agent", { method: "POST", headers });
+      if (response.status === 401) throw new Error("Sign in to talk to your agent.");
+      if (!response.ok) throw new Error("Your agent is unavailable. Try again in a moment.");
+      const data: unknown = await response.json();
+      if (!record(data) || !record(data.session) || typeof data.session.id !== "string") throw new Error("Your agent returned an invalid session.");
+      return { id: data.session.id, token: bearer };
+    }
     const known = this.capability?.id;
     if (known) {
       const response = await this.request(`/sessions/${encodeURIComponent(known)}`, { headers });
@@ -330,7 +353,7 @@ export class OnboardingVoiceClient {
         if (this.disposed || version !== this.connectionVersion) throw new Error("Session closed");
         this.capability = capability;
         await new Promise<void>((resolve, reject) => {
-          const socket = new WebSocket(streamUrl(capability.id));
+          const socket = new WebSocket(streamUrl(capability.id, this.mode));
           this.socket = socket;
           let accepted = false;
           const current = () => !this.disposed && this.socket === socket;
@@ -541,6 +564,7 @@ export class OnboardingVoiceClient {
     }
     if (this.suppressAudioUntilInterrupt && (event.type === "audio" || event.type === "audio.done")) return;
     this.protocol = reduceVoiceEvent(this.protocol, event);
+    this.callbacks.onEvent?.(event);
     if (event.type === "transcript" && event.role === "user" && typeof event.id === "string" && this.protocol.seen.has(event.id)) {
       const pending = this.pendingText.get(event.id);
       if (pending) {

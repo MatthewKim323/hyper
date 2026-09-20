@@ -1,0 +1,212 @@
+/* Command layer: mic bar, the highlight of what is being pointed at, and composed chart cards. */
+.cmd {
+  position: fixed;
+  inset: 0;
+  z-index: 2147481000;
+  pointer-events: none;
+  font-family: Neue Montreal, sans-serif;
+  color: #212121;
+}
+
+.cmd-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(640px, calc(100vw - 420px));
+  padding: 5px 16px 5px 5px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(33, 33, 33, 0.1);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  pointer-events: auto;
+}
+
+.cmd-bar p {
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+}
+
+.cmd-bar[data-error="true"] p {
+  color: #8a1f1f;
+  opacity: 1;
+}
+
+.cmd-mic {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(33, 33, 33, 0.07);
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.cmd-mic[aria-pressed="true"] {
+  background: #212121;
+  color: #fff;
+  animation: cmd-pulse 1.6s ease-in-out infinite;
+}
+
+.cmd-mic:focus-visible {
+  outline: 2px solid #212121;
+  outline-offset: 3px;
+}
+
+@keyframes cmd-pulse {
+  50% { box-shadow: 0 0 0 7px rgba(33, 33, 33, 0.1); }
+}
+
+.cmd-target {
+  position: absolute;
+  border: 1.5px solid #212121;
+  border-radius: 10px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.55);
+  transition: left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease;
+}
+
+.cmd-target span {
+  position: absolute;
+  left: -1.5px;
+  bottom: calc(100% + 6px);
+  max-width: 320px;
+  padding: 3px 9px;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #212121;
+  color: #fff;
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cmd-cards {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+  width: min(420px, calc(100vw - 44px));
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.cmd-card {
+  padding: 16px 16px 12px;
+  border: 1px solid rgba(33, 33, 33, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 18px 50px rgba(33, 33, 33, 0.16);
+  animation: cmd-in 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cmd-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+}
+
+.cmd-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cmd-card h3 {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.cmd-card header button {
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.cmd-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.cmd-chart {
+  height: 210px;
+  margin: 10px 0 6px;
+}
+
+.cmd-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  opacity: 0.65;
+}
+
+.cmd-detail {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.cmd-detail table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmd-detail th {
+  font-weight: 400;
+  text-align: left;
+  opacity: 0.6;
+}
+
+.cmd-detail td {
+  text-align: right;
+}
+
+.cmd-detail th,
+.cmd-detail td {
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(33, 33, 33, 0.07);
+}
+
+.cmd-detail p {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  opacity: 0.6;
+}
+
+@media (max-width: 809.98px) {
+  .cmd-bar { max-width: calc(100vw - 32px); }
+  .cmd-cards { bottom: 78px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmd-card, .cmd-mic[aria-pressed="true"] { animation: none; }
+}
