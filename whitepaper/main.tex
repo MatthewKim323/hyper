@@ -29,6 +29,7 @@
 \author{Team hyper.\thanks{Built at HackMIT 2026. Repository: \texttt{github.com/MatthewKim323/hyper.}}}
 \date{September 19, 2026}
 
+\input{live-results}
 \begin{document}
 \maketitle
 \vspace{-1em}
@@ -100,6 +101,8 @@ Agents never hold user credentials. Each worker session receives a scoped machin
 \subsection{Evidence and retrieval}
 
 Connectors (Gmail, Drive, Ramp, Plaid) ingest read-only source material into Postgres/S3, indexed into Elasticsearch with hybrid retrieval (BM25 + semantic embeddings via Jina, reciprocal-rank fusion, optional Jina reranking). Beyond search, the backend delegates \emph{investigations} to Elastic Agent Builder over the A2A protocol: the Elastic agent iteratively discovers related records through bounded ES|QL tools whose organization constraint is fixed in the tool definition, not supplied by the model. Returned findings are validated by our backend---chunk ownership, current source status, citation integrity---before becoming concerns.
+
+Every active source also feeds a \textbf{company knowledge graph} held in Postgres beside the records it is derived from: typed entities (vendors, customers, employees, invoices, orders, agreements, payments, journals, accounts), relationships that each cite the source row asserting them, and a record of which entities every evidence chunk mentions. It is built deterministically during indexing and is rebuildable; no model writes to it. Declared foreign keys become edges at full confidence, untyped keys are typed by identifier prefix, and free text is linked by exact identifier or by a name only one entity uses. Identity is never merged: \texttt{po 62} is returned as a \emph{candidate} for \texttt{PO-00062}, because the fixtures reuse identifiers across unrelated companies and a silent merge would be a wrong payment. Search reads the entities a question names, walks two recorded hops, and adds an exact-match retriever over those entity IDs to the fusion, so a question about a vendor reaches the documents that cite only that vendor's order or receipt numbers. Agents get four cited graph tools (resolve, explore, shortest path, evidence for an entity), and traversal never passes through general-ledger accounts, since ``both were paid from the operating account'' explains nothing.
 
 \subsection{Deterministic engines}
 
@@ -184,6 +187,39 @@ Verified-v2 adds source-grounded checklists, executable calculations and cross-c
 
 A separate post-hoc conservation gate on the original BenchRec assignments raises precision only to 95.92\% while reducing recall to 84.92\%. This negative result shows that balanced amounts are insufficient to establish identity. The rules-only precision result likewise cannot be presented without its low recall. Source-only DABstep diagnostics identified count-versus-volume denominators, null wildcard handling, and unsupported fine thresholds as concrete targets for executable checks rather than further prompt expansion.
 
+\subsection{Retrieval with the knowledge graph}
+
+We measured evidence retrieval on the synthetic Meridian company: 612 draft emails, chats, notes and contract excerpts among 115{,}348 ledger rows, against a local Elasticsearch 9.3 with ELSER v2 embeddings on documents and no reranker. The answer key is the list of record identifiers each document was authored from, which is never indexed. 172 templated questions fall in three families: an identifier the documents also contain, a counterparty name only, and an identifier \emph{no document mentions} (a payment, a journal entry) that only a recorded relationship connects to the correspondence. That last family is keyed by joining the raw exports, not by asking the graph. Scores are over the top ten documents.
+
+\begin{table}[h]
+\centering\small
+\liveretrievaltable
+\end{table}
+
+\noindent Embeddings alone move little here, because the documents that matter cite \texttt{VEN-002}, not the vendor's name. An identifier nobody wrote down is nearly unfindable by text and is recovered by one or two recorded hops. The first fusion treated BM25, embeddings and the graph retriever as three equal voters and scored 0.735 recall@10, \emph{below} the graph with no embeddings at all: two text voters outvoted an exact match. Text is now fused first and the graph fused against the result. The limits are plain: the documents are synthetic drafts that repeat their identifiers, which flatters every lexical mode; the questions are templated, so this measures entity and relationship recall and says nothing about paraphrase; relevance is binary and document-level; the reranking path is unmeasured. The questions are asked again whenever retrieval code changes and the scores are appended to the timeline below.
+
+\subsection{A continuous adversarial loop, measured over time}
+
+The product-level test the previous section called for now runs unattended. An adversary spawns accounts-payable exceptions into a sandbox organization and role-plays the supplier and the internal desks; a worker (\texttt{gpt-5.6-terra}) resolves each case through the real tool bridge and deterministic engine; grading reads persisted engine state against a private expectation, never the worker's prose. After each graded case the worker may write one short lesson, which later sessions receive. Difficulty adapts: three correct results raise the tier and a miss lowers it. A recorder runs beside the loop, rebuilds every series from graded cases on each read, and stamps suite and retrieval snapshots with the commit, so the figures below are generated from the database at build time (\liveasof; backend suite \livetests).
+
+The experiment that isolates learning is a twin: every case is mirrored, by family and tier, into a control organization whose worker is identical but receives no lessons.
+
+\begin{table}[h]
+\centering\small
+\livememorytable
+\end{table}
+
+\noindent Tiers one to four name their own diagnosis in the case title and are saturated in both arms; they show a competent worker, not learning. The trap tiers are the only ones where every engine check passes while the right answer is to hold (an approved contact has said not to pay, a verified credit was withdrawn, an invoice was superseded), so they are the only place a wrong release can occur. There the control arm mostly read the warning and paid anyway. The arm with memory missed each new kind of trap the first time it met it and not again:
+
+\begin{center}
+\small
+\livefamilytable
+\end{center}
+
+Memory buys this by checking: it sends more requests per trap case and costs more per case at list prices. It also finishes released cases sooner, though the median time on a hold is set by the grader's fixed wait and not by the worker. We report the cost beside the accuracy rather than instead of it.
+
+What these numbers are not. This is a \textbf{development} result: one author wrote the scenarios, the worker prompt and the grader, and nothing is held out. It is one continuous run with simulated counterparties, and the twins are matched by family and tier, not by invoice, so each arm sees its own amounts. Three sandbox defects were found during the run and cut from every figure rather than averaged in: cases created before two fixes (ignored follow-ups, unusable record identifiers) are excluded outright, and \liveexcluded{} wrong releases were dropped because the opening warning was delivered about a second late and the worker was graded for ignoring a message it had never been shown. One of those cuts reversed an early reading in which memory appeared to \emph{hurt}. Rates are never computed under twenty cases. The honest next step is a trap battery written by someone other than the prompt's author.
+
 \subsection{Published comparisons and limitations}
 
 The \href{https://huggingface.co/blog/dabstep}{DABstep launch report} gives historical hard-test baselines, including approximately 16\% for o3-mini. These are neither current frontier results nor comparable to our ten-question development split. The \href{https://www.mercor.com/apex/apex-accounting-leaderboard/}{APEX leaderboard} evaluates 160 private tasks across ten worlds; its current headline table reports 61.0\% for Fable 5.1 and 60.0\% for GPT-6 Astra. Different inputs, task isolation, harnesses and graders prohibit claiming that our public-development scores beat those systems.
@@ -192,12 +228,12 @@ Repeated public-fixture trials measure variation, not held-out generalization. T
 
 \section{Current state and limitations}
 
-Implemented and test-covered: the full tool bridge and dispatcher, all three engines with owner-only approval paths, the learned-skill lifecycle with quarantine, Elastic A2A delegation with backend citation validation, concern cards, artifacts, and the benchmark harness itself.
+Implemented and test-covered: the full tool bridge and dispatcher, all three engines with owner-only approval paths, the learned-skill lifecycle with quarantine, Elastic A2A delegation with backend citation validation, the knowledge graph and graph-widened retrieval, the adversarial exception loop with its memory-off twin, the benchmark timeline recorder, concern cards, artifacts, and the benchmark harness itself.
 
 Not yet proven live: Clerk-authenticated onboarding end-to-end, the Elastic A2A path against a provisioned agent (credentials pending), a live Devin session through a public tunnel, and Postgres-backed aggregates outside the compose stack. BenchRec precision (95.8\%) shows real headroom on high-precision matching. The engines deliberately cover narrow ground: whole-unit records, USD/EUR/GBP, no taxes, no FX, no split deposits, no external posting.
 
 \section{Conclusion}
 
-Hyperfinance Agent treats accounting agents as investigators operating under engineering controls, not as oracles. The measurable claim today is a competent isolated worker; the architectural claim---which the benchmark harness is built to test next---is that binding agent proposals to deterministic engines and hash-bound human approval converts fluent output into auditable financial work.
+Hyperfinance Agent treats accounting agents as investigators operating under engineering controls, not as oracles. The measurable claims today are a competent isolated worker, a retrieval layer whose recall comes from recorded relationships rather than from embeddings, and, on a development set, a worker that stops repeating a mistake once it has written it down. The architectural claim---which the held-out battery is needed to test---is that binding agent proposals to deterministic engines and hash-bound human approval converts fluent output into auditable financial work.
 
 \end{document}
