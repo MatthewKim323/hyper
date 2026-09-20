@@ -6,7 +6,9 @@
 #   LOOP_PAIRS    treatment:control organizations   (default hyper-lab:hyper-lab-control)
 #   LOOP_WORKERS  model workers                     (default 2)
 #   LOOP_MODEL    model                             (default gpt-5.6-terra)
-#   SPEND_CAP     dollars an hour across everything, SPEND_GUARD_ORGS which organizations it paces (default 5, hyper-lab demo-meridian)
+#   SPEND_CAP     dollars an hour across everything (default 5). SPEND_GUARD_ORGS is what it paces to get there:
+#                 the lab only. The demo company's pace is set by tools/demo-mode.sh, because every case there adds
+#                 simulated documents to evidence a person will search.
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/backend"; mkdir -p var
@@ -21,7 +23,7 @@ DEVIN_EXCEPTION_TASKS=false DEVIN_CONTROL_PAIRS="$PAIRS" nohup uv run python -m 
 k=0; while [ $k -lt "$WORKERS" ]; do
   AUTO_AGENT_SHARD="$k/$WORKERS" AUTO_AGENT_MODEL="$MODEL" DEVIN_CONTROL_PAIRS="$PAIRS" nohup uv run python -m app.auto_agent > "var/auto-agent-$k.log" 2>&1 &
   k=$((k+1)); done
-nohup uv run python -m app.spend_guard --cap "${SPEND_CAP:-5}" ${SPEND_GUARD_ORGS:-hyper-lab demo-meridian} > var/spend-guard.log 2>&1 &
+nohup uv run python -m app.spend_guard --cap "${SPEND_CAP:-5}" ${SPEND_GUARD_ORGS:-hyper-lab} > var/spend-guard.log 2>&1 &
 nohup uv run python -m app.bench_timeline hyper-lab demo-meridian --every 300 > var/bench-timeline.log 2>&1 &
 # Copies the worker's lessons and the with/without-memory score into backend/benchmarks/learning/ and commits
 # and pushes that, and only that, when there is something new: the agent's learning shows up in git history.

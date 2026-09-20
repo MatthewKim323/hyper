@@ -49,7 +49,7 @@ Same image as the API, one Railway service each, `START_MODULE` set, no health c
 | `app.counterparty_worker` | delivers simulated replies, grades cases, runs the adversary | `COUNTERPARTY_TIMEOUT_MS=600000` |
 | `app.auto_agent` | the worker that resolves the cases | `OPENAI_API_KEY`, `AUTO_AGENT_MODEL=gpt-5.6-terra`, `DEVIN_CONTROL_PAIRS=hyper-lab:hyper-lab-control` |
 | `app.devin_exceptions` | mirrors each lab case into the memory-off control company | `DEVIN_EXCEPTION_TASKS=false`, `DEVIN_CONTROL_PAIRS=hyper-lab:hyper-lab-control` |
-| `app.spend_guard` | paces the adversary to a dollar cap, from metered usage in the database | `SPEND_CAP=5`, `SPEND_GUARD_ORGS=hyper-lab demo-meridian` |
+| `app.spend_guard` | paces the adversary to a dollar cap, from metered usage in the database | `SPEND_CAP=5`, `SPEND_GUARD_ORGS=hyper-lab` (the lab only: left to the guard, the demo company gets sped up to the floor whenever spend is low, and fills with simulated documents) |
 
 Set `AUTO_AGENT_MODEL` explicitly. The code's fallback is `gpt-6-astra`, which costs about fifty times what
 `gpt-5.6-terra` does for the same cases. Measured on terra: about 6 cents a case, the guard holds the total at
