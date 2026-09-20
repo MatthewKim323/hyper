@@ -194,3 +194,38 @@
 .ws-queue strong { font-weight: 400; font-variant-numeric: tabular-nums; }
 .ws-queue i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #a89f97; }
 .ws-queue i[data-state="ready"] { background: #5f8a70; } .ws-queue i[data-state="approved"] { background: #6f5a8c; } .ws-queue i[data-state="blocked"] { background: #a0524f; }
+
+/* Bulk source upload. Matches the flat, bordered look of the surrounding workspace sections
+   rather than introducing a card: this sits inside panels that are already surfaces. */
+.ws-upload { margin: 0 0 1rem; }
+.ws-upload__zone {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 1.4rem 1rem;
+  border: 1px dashed #c9bfb7;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 45%);
+  text-align: center;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.ws-upload__zone[data-dragging] { border-color: #8a6f68; background: rgb(138 111 104 / 8%); }
+.ws-upload__zone[data-busy] { opacity: 0.75; }
+.ws-upload__lead { margin: 0; font-size: 0.95rem; }
+.ws-upload__hint { margin: 0; color: #6d635c; font-size: 0.8rem; }
+.ws-upload__pick {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #c9bfb7;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.ws-upload__pick:hover:not(:disabled) { background: #f4efe9; }
+.ws-upload__pick:disabled { cursor: default; opacity: 0.6; }
+.ws-upload__rows li > div { align-items: center; }
+.ws-upload__name { overflow-wrap: anywhere; font-size: 0.9rem; }
+.ws-upload__state { flex-shrink: 0; font-size: 0.8rem; }
+.ws-upload__rows li[data-state="done"] .ws-upload__state { color: #3f7d55; }
+.ws-upload__rows li[data-state="error"] .ws-upload__state { color: #a3402f; }

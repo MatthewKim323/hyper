@@ -10,7 +10,7 @@ import type {
   SkillDetail, SkillSummary,
   AccountingRecord, EngineCase, PayableProposal,
   AgentCase, AgentTask, Artifact, Concern, ConcernStatus, Controller, Dataset, EvidenceSearch, FinancialAggregate,
-  AdversaryState, ExceptionFamily, FinancialQuery, Scenario, Simulation, SimulationEvent, Source, SourceDetail, Workspace, Connection, ConnectionItem, ProviderInfo,
+  AdversaryState, ExceptionFamily, FinancialQuery, Scenario, Simulation, SimulationEvent, Source, SourceDetail, SourceStatus, Workspace, Connection, ConnectionItem, ProviderInfo,
 } from "./types";
 
 const BASE = "/api/onboarding";
@@ -41,6 +41,36 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>;
 }
 const post = <T>(path: string, body?: unknown) => call<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+
+/** The server's own cap. Rejecting here costs one comparison instead of a 20 MiB round trip. */
+export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+
+/**
+ * Upload one source file.
+ *
+ * This cannot go through `call`: that stamps a JSON content type on any request with a body,
+ * which strips the multipart boundary the browser generates and leaves FastAPI unable to parse
+ * the parts. The browser must set Content-Type itself, so only Authorization is passed here.
+ */
+export async function uploadSource(file: File, options: { dataset?: string; signal?: AbortSignal } = {}) {
+  if (file.size > MAX_UPLOAD_BYTES) throw new BackendError(413, "File exceeds 20 MiB");
+  const token = await tokenProvider();
+  if (!token) throw new BackendError(401, "Sign in required");
+  const form = new FormData();
+  form.append("file", file);
+  // An empty dataset is not the same as an absent one: the server treats "" as a real name.
+  if (options.dataset?.trim()) form.append("dataset", options.dataset.trim());
+  const response = await fetch(`${BASE}/sources`, {
+    method: "POST", body: form, cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` }, signal: options.signal,
+  });
+  if (!response.ok) {
+    let detail = response.statusText;
+    try { const body = await response.json(); if (typeof body?.detail === "string") detail = body.detail; } catch { /* non-JSON error body */ }
+    throw new BackendError(response.status, detail);
+  }
+  return response.json() as Promise<Source>;
+}
 const query = (params: Record<string, string | number | undefined>) => {
   const entries = Object.entries(params).filter(([, v]) => v !== undefined) as [string, string | number][];
   return entries.length ? `?${new URLSearchParams(entries.map(([k, v]) => [k, String(v)]))}` : "";
@@ -81,6 +111,7 @@ export const backend = {
   datasets: () => call<{ datasets: Dataset[]; rules: string[] }>("/datasets"),
   sources: (limit = 50, offset = 0) => call<{ sources: Source[]; has_more: boolean; next_offset: number | null }>(`/sources${query({ limit, offset })}`),
   source: (id: string, offset = 0, limit = 10) => call<SourceDetail>(`/sources/${encodeURIComponent(id)}${query({ offset, limit })}`),
+  sourceStatus: (id: string) => call<SourceStatus>(`/sources/${encodeURIComponent(id)}/status`),
   searchEvidence: (text: string, dataset?: string, limit = 8) => post<EvidenceSearch>("/evidence/search", { query: text, dataset, limit }),
   aggregate: (q: FinancialQuery) => post<FinancialAggregate>("/financials/query", q),
   artifact: (id: string) => call<Artifact>(`/artifacts/${encodeURIComponent(id)}`),

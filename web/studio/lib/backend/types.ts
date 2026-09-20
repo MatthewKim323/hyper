@@ -49,6 +49,11 @@ export type Source = {
   dataset: string | null; currency: string | null; record_count: number | null; created_at: number; active: boolean;
   index_status: "pending" | "running" | "ready" | "failed"; index_error: string | null;
 };
+/** The ingestion job behind one source. `status` mirrors the worker's own lifecycle. */
+export type SourceStatus = {
+  id: string; source_id: string; status: "pending" | "running" | "ready" | "failed";
+  attempts: number; lease_until: number; error: string | null; created_at: number;
+};
 export type SourceDetail = { source: Source; chunks: { id: string; locator: string; content: string }[]; has_more: boolean; next_offset: number | null; download_url: string };
 export type EvidenceSearch = {
   mode: "keyword" | "hybrid"; unindexed_sources: number;

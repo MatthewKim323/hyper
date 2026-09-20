@@ -294,3 +294,25 @@
   color: #171819;
   text-decoration: underline;
 }
+
+/* Attach control inside the composer. `display: contents` puts the button directly into the
+   composer's flex row, so it inherits the same 44px circle as the send button with no extra rules.
+   The note is absolutely positioned instead of wrapping the row, which would otherwise grow the
+   card and shift the whole card mid-conversation. */
+.hyper-onboarding__attach {
+  display: contents;
+}
+
+.hyper-onboarding__attach-note {
+  position: absolute;
+  bottom: calc(100% + 0.35rem);
+  left: 1.5rem;
+  color: #52565a;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.hyper-onboarding__composer {
+  position: relative;
+}
