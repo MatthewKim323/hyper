@@ -21,13 +21,22 @@ export function captureWorldStill(): Texture | null {
 export function worldShown(timeout = 4000): Promise<void> {
   return new Promise(resolve => {
     let settled = false;
-    const finish = () => {
+    const done = () => {
       if (settled) return;
       settled = true;
       window.removeEventListener(WORLD_EVENTS.shown, finish);
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      clearTimeout(deadline);
+      resolve();
+    };
+    // Two frames let the world actually paint before the caller blends from it. That is a
+    // nicety, so it must not be the only way out: rAF does not tick in a background tab, and
+    // resolving *into* a double-rAF meant the timeout below fired and the promise still never
+    // settled. Race the frames against a real timer.
+    const finish = () => {
+      requestAnimationFrame(() => requestAnimationFrame(done));
+      setTimeout(done, 100);
     };
     window.addEventListener(WORLD_EVENTS.shown, finish);
-    window.setTimeout(finish, timeout);
+    const deadline = setTimeout(done, timeout);
   });
 }

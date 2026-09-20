@@ -163,6 +163,20 @@ function worldReady(): Promise<HTMLCanvasElement | null> {
 }
 
 /** Same contract as the slab handoff: `onCovered` fires while the page is hidden, the promise resolves when the world is revealed. */
+/** Await a GSAP animation, but never longer than it should take.
+ *
+ * GSAP's ticker is rAF-driven and rAF is throttled to a standstill in a background tab, so a
+ * bare `await timeline` can hang for the life of the page -- taking its `finally` with it, and
+ * with that the overlay teardown and the `running` guard that every later handoff checks.
+ */
+function bounded(animation: gsap.core.Tween | gsap.core.Timeline, ms = DURATION * 1000 + 1500): Promise<void> {
+  return new Promise<void>(resolve => {
+    const timer = setTimeout(resolve, ms);
+    // GSAP tweens are thenables, not Promises; adapt rather than fight the generic signature.
+    void animation.then(() => { clearTimeout(timer); resolve(); });
+  });
+}
+
 async function runOverlayFallback(onCovered: () => void): Promise<void> {
   if (running) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { onCovered(); return; }
@@ -171,7 +185,7 @@ async function runOverlayFallback(onCovered: () => void): Promise<void> {
   try {
     // The voice surface is DOM, not part of the frozen frame, so ease it away first instead of cutting.
     const surface = document.querySelector<HTMLElement>(".hyper-onboarding");
-    if (surface) await gsap.to(surface, { autoAlpha: 0, y: 12, duration: 0.5, ease: "power2.in" });
+    if (surface) await bounded(gsap.to(surface, { autoAlpha: 0, y: 12, duration: 0.5, ease: "power2.in" }), 1500);
     const frame = await captureGallery();
     overlay = frame ? buildOverlay(frame) : null;
     // Observable stage for tests and debugging: capture-failed | covering | revealing.
@@ -196,7 +210,7 @@ async function runOverlayFallback(onCovered: () => void): Promise<void> {
       // Stand-in for the incoming camera rising into place on the landing transition.
       timeline.fromTo(world, { yPercent: 14, scale: 1.12, transformOrigin: "50% 50%" }, { yPercent: 0, scale: 1, clearProps: "transform,transformOrigin" }, 0);
     }
-    await timeline;
+    await bounded(timeline);
   } finally {
     overlay?.dispose();
     if (document.documentElement.dataset.handoff !== "capture-failed") delete document.documentElement.dataset.handoff;

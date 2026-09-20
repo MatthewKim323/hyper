@@ -23,6 +23,8 @@ import { CONTEXTUAL_ROUTES, bodyClassFor, matchContextualRoute, type ContextualR
 
 // Longest authored out transition is 3 s (the landing wipe); allow headroom, then move on.
 const OUT_TRANSITION_CAP_MS = 5000;
+// Next has never taken this long to commit a view; past it, fall back to a hard navigation.
+const VIEW_WAIT_CAP_MS = 15000;
 
 /** Internal links eligible for scene transitions. */
 export const LINK_SELECTOR =
@@ -462,11 +464,15 @@ export class Router {
           return resolve(oldView);
         }
         // Highway hard-navigates when the fetch fails; same if Next never commits.
-        if (performance.now() - started > 15000) {
+        if (performance.now() - started > VIEW_WAIT_CAP_MS) {
           window.location.href = this.location.href;
           return;
         }
-        requestAnimationFrame(tick);
+        // setTimeout, not requestAnimationFrame: rAF is throttled to a standstill in a
+        // background tab, so a cap checked inside an rAF callback is never evaluated there.
+        // This poll and its own deadline then both stop, `running` stays true, and the router
+        // is wedged for the life of the page. A timer keeps running when the tab is hidden.
+        setTimeout(tick, 16);
       };
       tick();
     });
