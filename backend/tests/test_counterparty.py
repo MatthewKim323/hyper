@@ -631,3 +631,19 @@ def test_memory_keeps_one_lesson_per_kind_of_mistake_before_a_second_of_any(worl
     assert 'OLDEST: an internal hold blocks payment.' in kept, 'the first failure mode survives seven newer ones and a run of repeats'
     assert all(any(family in lesson or lesson.startswith('OLDEST') or 'already-paid' in lesson for lesson in kept) for family in kinds[1:])
     assert len(svc.memory(12)) <= 12
+
+
+def test_the_learning_page_is_served_live_for_a_deployment_with_no_checkout(world, monkeypatch):
+    from types import SimpleNamespace
+    from app import counterparty_api
+    store, oid, factory, svc = world
+    monkeypatch.setenv('LEARNING_ORGS', oid + ':nobody-control')
+    missed = svc.spawn('internal_hold', 'adversary', seed=1)
+    with store.engine.begin() as db:
+        db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == missed['id']).values(
+            status='scored', outcome='fail', scored_at=cp.now(), created_at=cp.now(), state={'agent': {'sessions': 1, 'trace': []}}))
+    svc.add_lesson(missed['id'], 'internal_hold', 'An internal hold blocks payment even when every check passes.')
+    page = counterparty_api.learning(SimpleNamespace(store=store))
+    assert page['hard']['with_memory'] == {'graded': 1, 'correct': 0, 'wrong_releases': 1, 'timeouts': 0}
+    assert page['mistakes'][0]['lesson'].startswith('An internal hold') and 'check passed' in page['mistakes'][0]['finding'].lower()
+    assert 'Development results' in page['caveats'] and page['families']['internal_hold']['with_memory'] == 'X'

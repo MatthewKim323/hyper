@@ -38,6 +38,13 @@ agent_lessons = Table('agent_lessons', metadata,
     Column('family', Text, nullable=False), Column('lesson', Text, nullable=False),
     Column('scenario_id', Text, nullable=False), Column('created_at', BigInteger, nullable=False),
     UniqueConstraint('organization_id','scenario_id'))
+# Metered model usage, one row per call. In the database and not only a local file, because in production
+# the worker and the spend guard are separate services with separate disks.
+agent_usage = Table('agent_usage', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text), Column('scenario_id', Text),
+    Column('invoice_id', Text), Column('purpose', Text), Column('model', Text, nullable=False),
+    Column('input_tokens', BigInteger, nullable=False), Column('cached_tokens', BigInteger, nullable=False),
+    Column('output_tokens', BigInteger, nullable=False), Column('at', BigInteger, nullable=False, index=True))
 accounting_evidence = Table('accounting_evidence', metadata,
     Column('organization_id', Text, primary_key=True), Column('source_id', Text, primary_key=True),
     Column('row_number', Integer, primary_key=True), Column('record_type', Text, nullable=False),

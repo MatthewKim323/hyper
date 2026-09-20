@@ -41,6 +41,15 @@ def hourly(lines, now_ms, window_ms=WINDOW_MS):
     return spent * 3_600_000 / window_ms
 
 
+def hourly_from_database(engine, now_ms, window_ms=WINDOW_MS):
+    """The same rate from the agent_usage table, which is what a guard on another machine can see."""
+    from sqlalchemy import select
+    from .database import agent_usage as usage
+    with engine.connect() as db:
+        rows = db.execute(select(usage.c.model, usage.c.input_tokens, usage.c.cached_tokens, usage.c.output_tokens).where(usage.c.at >= now_ms - window_ms)).all()
+    return hourly([json.dumps({'at': now_ms, 'model': r.model, 'input': r.input_tokens, 'cached': r.cached_tokens, 'output': r.output_tokens}) for r in rows], now_ms, window_ms)
+
+
 def next_interval(current, rate, cap):
     """Spend scales with how often exceptions arrive, so scale the interval by how far off the cap we are. Damped, so it settles instead of swinging."""
     if rate <= 0: return current
@@ -50,8 +59,9 @@ def next_interval(current, rate, cap):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('organizations', nargs='+')
-    parser.add_argument('--cap', type=float, required=True, help='dollars per hour across every worker')
+    # Arguments or environment: a hosted worker is started as a bare module, with no command line to put them on.
+    parser.add_argument('organizations', nargs='*', default=os.getenv('SPEND_GUARD_ORGS', 'hyper-lab').replace(',', ' ').split())
+    parser.add_argument('--cap', type=float, default=float(os.getenv('SPEND_CAP', '5')), help='dollars per hour across every worker')
     parser.add_argument('--once', action='store_true')
     args = parser.parse_args()
     store, paused = Store(), set()  # only what this guard paused is ever resumed by it
@@ -60,7 +70,7 @@ if __name__ == '__main__':
         # Spend from before this guard started was someone else's pace: judging by it would stall a fresh start.
         now_ms = int(time.time() * 1000)
         window = max(60_000, min(WINDOW_MS, now_ms - started))
-        rate = hourly(USAGE.read_text().splitlines() if USAGE.exists() else [], now_ms, window) if now_ms - started >= 60_000 else 0
+        rate = hourly_from_database(store.engine, now_ms, window) if now_ms - started >= 60_000 else 0
         for oid in args.organizations:
             svc = Counterparties(DataService(store, oid))
             control = svc.control()

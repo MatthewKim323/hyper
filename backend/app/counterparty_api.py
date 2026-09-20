@@ -43,3 +43,15 @@ def adversary(data=Depends(service)):
 @router.post('/adversary')
 def set_adversary(body: Adversary, data=Depends(service)):
     return invoke(Counterparties(data).control, {**body.model_dump(), 'next_spawn_at': 0})
+
+
+@router.get('/learning')
+def learning(data=Depends(service)):
+    """The loop's own account of what the worker learned: the score with and without memory, each trap case by
+    case, and every miss with the audit finding and the lesson written from it. The same content the loop commits
+    to backend/benchmarks/learning/ on a machine with a checkout; production has none, so it is served live.
+    Reads the lab pair named by LEARNING_ORGS ("treatment:control"), simulated cases only, any signed-in user."""
+    import os
+    from .learning_log import CAVEATS, snapshot
+    treatment, _, control = os.getenv('LEARNING_ORGS', 'hyper-lab:hyper-lab-control').partition(':')
+    return {**snapshot(data.store, treatment, control or treatment + '-control'), 'treatment': treatment, 'control': control or treatment + '-control', 'caveats': CAVEATS}

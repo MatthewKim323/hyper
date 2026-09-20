@@ -83,6 +83,7 @@ def build_stamp():
 BUILD = build_stamp()
 # The case a model call belongs to, so usage can be priced per case. One session at a time per process.
 METER_CONTEXT = {}
+METER_STORE = {}
 
 
 def remembers(oid):
@@ -95,6 +96,14 @@ def meter(model, usage):
     if not usage: return
     cached = (usage.get('input_tokens_details') or usage.get('prompt_tokens_details') or {}).get('cached_tokens', 0)
     line = {**METER_CONTEXT, 'at': now(), 'model': model, 'input': usage.get('input_tokens', usage.get('prompt_tokens', 0)), 'cached': cached, 'output': usage.get('output_tokens', usage.get('completion_tokens', 0))}
+    try:
+        # The database is what the spend guard reads. A worker and its guard do not share a disk in production.
+        from .database import agent_usage
+        if METER_STORE.get('engine') is not None:
+            with METER_STORE['engine'].begin() as db:
+                db.execute(agent_usage.insert().values(id='use_' + os.urandom(12).hex(), organization_id=line.get('organization_id'), scenario_id=line.get('scenario_id'),
+                           invoice_id=line.get('invoice_id'), purpose=line.get('purpose'), model=model, input_tokens=line['input'], cached_tokens=line['cached'], output_tokens=line['output'], at=line['at']))
+    except Exception: pass
     try:
         path = Path(__file__).resolve().parents[1] / 'var' / 'auto-agent-usage.jsonl'
         path.parent.mkdir(exist_ok=True)
@@ -257,6 +266,7 @@ def owns(scenario_id):
 
 def run_once(store, data_factory=None, llm=None):
     data_factory = data_factory or (lambda oid: DataService(store, oid))
+    METER_STORE['engine'] = store.engine
     model = provider()[2]
     with store.engine.connect() as db:
         open_rows = [dict(r) for r in db.execute(select(scenarios).where(scenarios.c.status == 'open').order_by(scenarios.c.created_at)).mappings()]
