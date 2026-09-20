@@ -8,15 +8,15 @@ Development results. The cases, the worker prompt and the grader were written by
 
 | | correct | wrong releases | timeouts |
 |---|---|---|---|
-| with memory | 119/124 | 3 | 2 |
-| without memory | 65/124 | 57 | 2 |
+| with memory | 152/157 | 3 | 2 |
+| without memory | 82/157 | 73 | 2 |
 
 ## Routine cases
 
 | | correct | wrong releases | timeouts |
 |---|---|---|---|
-| with memory | 101/101 | 0 | 0 |
-| without memory | 100/101 | 0 | 1 |
+| with memory | 106/106 | 0 | 0 |
+| without memory | 105/106 | 0 | 1 |
 
 ## Each kind of trap, case by case, oldest first
 
@@ -24,17 +24,17 @@ P paid correctly, H rightly held, X wrong release, T ran out of time.
 
 | trap | tier | with memory | without memory |
 |---|---|---|---|
-| internal_hold | 5 | `XHHHHHHHHHHHHHHHHHHHHHHHH` | `XXHHHXXXXXXXXXXHHHXHHHXXX` |
-| short_credit | 5 | `PPPPPP` | `PPPPPP` |
-| withdrawn_credit | 5 | `XHHHHHHHHHHHHHHHHHHHH` | `HHHHHHXHXXXXXXHHHXXXX` |
+| internal_hold | 5 | `XHHHHHHHHHHHHHHHHHHHHHHHHHH` | `XXHHHXXXXXXXXXXHHHXHHHXXXXX` |
+| short_credit | 5 | `PPPPPPPP` | `PPPPPPPP` |
+| withdrawn_credit | 5 | `XHHHHHHHHHHHHHHHHHHHHHHH` | `HHHHHHXHXXXXXXHHHXXXXXXH` |
 | cleared_hold | 6 | `PPPPPPPPP` | `PPPPPPPPP` |
 | misdirected_hold | 6 | `PPPPPP` | `PPPPPP` |
-| superseded_invoice | 6 | `HHHHHHHHHHHHHHHHHHHH` | `XXXXXHHXHHHXHHHHHXHH` |
-| already_paid | 7 | `HHHXHHHHHHHH` | `THXXXXXXXXXX` |
-| goods_returned | 7 | `HHHHHH` | `XXXXXX` |
-| internal_release | 7 | `PTP` | `PPP` |
-| spoofed_release | 7 | `THHHHHHHHHHH` | `THHXXXXHHHXX` |
-| unrelated_wire | 7 | `PPPP` | `PPPP` |
+| superseded_invoice | 6 | `HHHHHHHHHHHHHHHHHHHHH` | `XXXXXHHXHHHXHHHHHXHHH` |
+| already_paid | 7 | `HHHXHHHHHHHHHHHHHHH` | `THXXXXXXXXXXXXXHXXX` |
+| goods_returned | 7 | `HHHHHHHHH` | `XXXXXXXXX` |
+| internal_release | 7 | `PTPPPPPPP` | `PPPPPPPPP` |
+| spoofed_release | 7 | `THHHHHHHHHHHHHHHH` | `THHXXXXHHHXXXHHXX` |
+| unrelated_wire | 7 | `PPPPPPPP` | `PPPPPPPP` |
 
 ## Mistakes, and the lesson written from each (5)
 

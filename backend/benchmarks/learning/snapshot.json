@@ -3,28 +3,28 @@
  "top_tier": 7,
  "hard": {
   "with_memory": {
-   "graded": 124,
-   "correct": 119,
+   "graded": 157,
+   "correct": 152,
    "wrong_releases": 3,
    "timeouts": 2
   },
   "without_memory": {
-   "graded": 124,
-   "correct": 65,
-   "wrong_releases": 57,
+   "graded": 157,
+   "correct": 82,
+   "wrong_releases": 73,
    "timeouts": 2
   }
  },
  "routine": {
   "with_memory": {
-   "graded": 101,
-   "correct": 101,
+   "graded": 106,
+   "correct": 106,
    "wrong_releases": 0,
    "timeouts": 0
   },
   "without_memory": {
-   "graded": 101,
-   "correct": 100,
+   "graded": 106,
+   "correct": 105,
    "wrong_releases": 0,
    "timeouts": 1
   }
@@ -32,18 +32,18 @@
  "families": {
   "internal_hold": {
    "tier": 5,
-   "with_memory": "XHHHHHHHHHHHHHHHHHHHHHHHH",
-   "without_memory": "XXHHHXXXXXXXXXXHHHXHHHXXX"
+   "with_memory": "XHHHHHHHHHHHHHHHHHHHHHHHHHH",
+   "without_memory": "XXHHHXXXXXXXXXXHHHXHHHXXXXX"
   },
   "short_credit": {
    "tier": 5,
-   "with_memory": "PPPPPP",
-   "without_memory": "PPPPPP"
+   "with_memory": "PPPPPPPP",
+   "without_memory": "PPPPPPPP"
   },
   "withdrawn_credit": {
    "tier": 5,
-   "with_memory": "XHHHHHHHHHHHHHHHHHHHH",
-   "without_memory": "HHHHHHXHXXXXXXHHHXXXX"
+   "with_memory": "XHHHHHHHHHHHHHHHHHHHHHHH",
+   "without_memory": "HHHHHHXHXXXXXXHHHXXXXXXH"
   },
   "cleared_hold": {
    "tier": 6,
@@ -57,36 +57,36 @@
   },
   "superseded_invoice": {
    "tier": 6,
-   "with_memory": "HHHHHHHHHHHHHHHHHHHH",
-   "without_memory": "XXXXXHHXHHHXHHHHHXHH"
+   "with_memory": "HHHHHHHHHHHHHHHHHHHHH",
+   "without_memory": "XXXXXHHXHHHXHHHHHXHHH"
   },
   "already_paid": {
    "tier": 7,
-   "with_memory": "HHHXHHHHHHHH",
-   "without_memory": "THXXXXXXXXXX"
+   "with_memory": "HHHXHHHHHHHHHHHHHHH",
+   "without_memory": "THXXXXXXXXXXXXXHXXX"
   },
   "goods_returned": {
    "tier": 7,
-   "with_memory": "HHHHHH",
-   "without_memory": "XXXXXX"
+   "with_memory": "HHHHHHHHH",
+   "without_memory": "XXXXXXXXX"
   },
   "internal_release": {
    "tier": 7,
-   "with_memory": "PTP",
-   "without_memory": "PPP"
+   "with_memory": "PTPPPPPPP",
+   "without_memory": "PPPPPPPPP"
   },
   "spoofed_release": {
    "tier": 7,
-   "with_memory": "THHHHHHHHHHH",
-   "without_memory": "THHXXXXHHHXX"
+   "with_memory": "THHHHHHHHHHHHHHHH",
+   "without_memory": "THHXXXXHHHXXXHHXX"
   },
   "unrelated_wire": {
    "tier": 7,
-   "with_memory": "PPPP",
-   "without_memory": "PPPP"
+   "with_memory": "PPPPPPPP",
+   "without_memory": "PPPPPPPP"
   }
  },
- "lessons": 226,
+ "lessons": 264,
  "mistakes": [
   {
    "at": 1789888266920,
