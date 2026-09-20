@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { useMicrophone } from "voice-glow";
 import { store } from "@/lib/engine/core/store";
+import { ONBOARDING_PATH, WORLD_PATH } from "@/lib/engine/router/routes";
 import { isOnboardingComplete, isOnboardingPresentation, ONBOARDING_EVENTS, setOnboardingComplete, subscribeOnboardingCompletion, type OnboardingPresentation } from "@/lib/onboarding/interface";
 import { OnboardingVoiceClient, type VoiceConnection } from "@/lib/onboarding/voice-client";
 import { runOnboardingWipeHandoff } from "@/lib/onboarding/handoff-wipe";
@@ -213,32 +214,48 @@ export default function OnboardingWorkspace() {
   const [skipped, setSkipped] = useState(false);
   const complete = savedComplete || skipped;
   const sceneReady = useSyncExternalStore(subscribeScene, sceneSnapshot, serverSnapshot);
-  const visible = hydrated && pathname === "/projects" && sceneReady;
+  const onOnboarding = pathname === ONBOARDING_PATH;
+  const onWorld = pathname === WORLD_PATH;
+  const visible = hydrated && onOnboarding && sceneReady;
   // Finishing a live session hands off through the wipe; a returning user skips it.
   const [sessionShown, setSessionShown] = useState(false);
   const [covered, setCovered] = useState(false);
-  const showDashboard = complete && (!sessionShown || covered);
+  // On /world the world is simply shown: there is no session to hand off from.
+  const showDashboard = onWorld || (complete && (!sessionShown || covered));
 
   if (visible && !complete && !sessionShown) setSessionShown(true);
 
   useEffect(() => {
-    if (complete && sessionShown && !covered) void runOnboardingWipeHandoff(() => setCovered(true));
-  }, [complete, sessionShown, covered]);
+    if (onOnboarding && complete && sessionShown && !covered) void runOnboardingWipeHandoff(() => setCovered(true));
+  }, [onOnboarding, complete, sessionShown, covered]);
+
+  // The wipe leaves the world already on screen, so move the URL to /world underneath it.
+  // replace(), not push(), so Back from the world returns to the landing page rather than to
+  // a completed onboarding that would immediately hand off again.
+  useEffect(() => {
+    if (onOnboarding && covered) window.history.replaceState(window.history.state, "", WORLD_PATH);
+  }, [onOnboarding, covered]);
+
+  // A returning visitor who lands on /onboarding with it already done belongs in the world.
+  useEffect(() => {
+    if (onOnboarding && hydrated && savedComplete && !sessionShown) location.replace(WORLD_PATH);
+  }, [onOnboarding, hydrated, savedComplete, sessionShown]);
 
   useEffect(() => {
     document.documentElement.dataset.onboarding = showDashboard ? "complete" : "required";
     const navigation = document.querySelector<HTMLElement>(".js-project-filters");
     if (navigation) navigation.inert = !showDashboard;
-    if (store.ProjectMenu && pathname === "/projects") {
+    if (store.ProjectMenu && (onOnboarding || onWorld)) {
       store.ProjectMenu.allowControl = showDashboard && store.ProjectFilters?.selectedSection !== "timeline";
     }
-  }, [showDashboard, pathname, sceneReady]);
+  }, [showDashboard, onOnboarding, onWorld, sceneReady]);
 
   // The world mounts once, hidden, as soon as the page hydrates (so during the first loader, on
-  // any route) and is only revealed here. Remounting it at the handoff is what used to freeze.
+  // any route) and is only revealed here. Remounting it at the handoff is what used to freeze,
+  // which is also why it stays mounted across the /onboarding -> /world move.
   if (!hydrated || pathname.startsWith("/dev/")) return null;
   return <>
-    <AtriumPreview warm={!(visible && showDashboard)} />
+    <AtriumPreview warm={!showDashboard} />
     {visible && !showDashboard && <OnboardingSession onSkip={() => setSkipped(true)} />}
   </>;
 }

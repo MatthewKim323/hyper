@@ -1,4 +1,4 @@
-// Projects renderer: route /projects/, data-router-view="projects".
+// Projects renderer: serves /onboarding and /world, data-router-view="projects".
 import gsap from "gsap";
 import { store as storeRaw } from "../../core/store";
 import { BaseRenderer } from "./base";

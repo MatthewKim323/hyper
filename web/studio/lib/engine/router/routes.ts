@@ -8,6 +8,11 @@ export type TransitionName =
   | "toContact"
   | "toProjectMenu";
 
+/** Voice onboarding. Hands off to WORLD_PATH when it completes. */
+export const ONBOARDING_PATH = "/onboarding";
+/** The 3D atrium. Previously shared the gallery route, which is now removed. */
+export const WORLD_PATH = "/world";
+
 export interface ContextualRoute {
   toPattern: string;
   transition: TransitionName;
@@ -15,13 +20,22 @@ export interface ContextualRoute {
 
 // Insertion order matters: the first `from` key
 // that matches wins, and the lookup stops there even when no `to` pattern matched.
+// Onboarding and the world both use the project-menu scene, so they share its transition.
+// Every ordered pair between the four real routes is listed: an unmatched pair falls back to
+// the default transition, which does not drive the WebGL scenes and leaves a blank canvas.
 export const CONTEXTUAL_ROUTES: [from: string, to: string, transition: TransitionName][] = [
   ["/", "/contact/", "toContact"],
-  ["/", "/projects/", "toProjectMenu"],
+  ["/", "/onboarding/", "toProjectMenu"],
+  ["/", "/world/", "toProjectMenu"],
   ["/contact/", "/", "toHome"],
-  ["/contact/", "/projects/", "toProjectMenu"],
-  ["/projects/", "/", "toHome"],
-  ["/projects/", "/contact/", "toContact"],
+  ["/contact/", "/onboarding/", "toProjectMenu"],
+  ["/contact/", "/world/", "toProjectMenu"],
+  ["/onboarding/", "/", "toHome"],
+  ["/onboarding/", "/contact/", "toContact"],
+  ["/onboarding/", "/world/", "toProjectMenu"],
+  ["/world/", "/", "toHome"],
+  ["/world/", "/contact/", "toContact"],
+  ["/world/", "/onboarding/", "toProjectMenu"],
 ];
 
 /**
@@ -61,6 +75,7 @@ export function bodyClassFor(pathname: string, view?: Element | null): string {
   const p = pathname.replace(/\/+$/, "") || "/";
   if (p === "/") return "home page-template-home-contact";
   if (p === "/contact") return "page-template-home-contact";
-  if (p === "/projects") return "archive post-type-archive post-type-archive-project";
+  // Both run the project-menu scene, so they keep its archive body classes.
+  if (p === ONBOARDING_PATH || p === WORLD_PATH) return "archive post-type-archive post-type-archive-project";
   return "error404 dark";
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { WORLD_PATH } from "@/lib/engine/router/routes";
 import { openSignIn } from "@/lib/backend/auth";
 import { Activity } from "./sections";
 import { useAuth } from "./useBackend";
@@ -35,7 +36,7 @@ export default function WorkspaceSections() {
     return () => { clearTimeout(exit); observer.disconnect(); window.removeEventListener("hyper:section-change", onSection); };
   }, []);
 
-  if (pathname !== "/projects" || !unlocked) return null;
+  if (pathname !== WORLD_PATH || !unlocked) return null;
   const usable = auth.ready && auth.signedIn;
   if (!shown) return null;
   const Body = SCREENS[shown.section as Screen];

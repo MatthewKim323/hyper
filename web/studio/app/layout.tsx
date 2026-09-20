@@ -21,6 +21,7 @@ import OnboardingWorkspace from "@/components/onboarding/OnboardingWorkspace";
 import FingerCursor from "@/components/finger/FingerCursor";
 import CommandLayer from "@/components/command/CommandLayer";
 import HomeLinks from "@/components/HomeLinks";
+import RouteBack from "@/components/RouteBack";
 
 export const metadata: Metadata = {
   title: "hyper. | HackMIT 2026",
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
 const BODY_CLASS_SCRIPT = `(function(){var p=location.pathname.replace(/\\/+$/,"")||"/";var c;
 if(p==="/")c="home page-template-home-contact";
 else if(p==="/contact")c="page-template-home-contact";
-else if(p==="/projects")c="archive post-type-archive post-type-archive-project";
+else if(p==="/onboarding"||p==="/world")c="archive post-type-archive post-type-archive-project";
 else c="error404 dark";
 document.body.className=c;
 var done=false;if(!${ALWAYS_ONBOARD}){try{done=localStorage.getItem("hyper.onboarding.v1")==="complete";}catch(e){}}
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <OnboardingWorkspace />
         <CommandLayer />
         <HomeLinks />
+        <RouteBack />
         <FingerCursor />
         <EngineRoot />
       </body>

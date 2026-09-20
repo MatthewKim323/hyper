@@ -5,6 +5,7 @@
 // composed charts land here as bklit cards.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
+import { WORLD_PATH } from "@/lib/engine/router/routes";
 import { getAudioContext } from "voice-glow";
 import ArtifactCard from "./ArtifactCard";
 import WorldVoiceBox from "./WorldVoiceBox";
@@ -40,13 +41,13 @@ export default function CommandLayer() {
   useEffect(() => {
     // Entry gestures unlock output only. No microphone or provider request starts here.
     const prime = (event: MouseEvent) => {
-      if (!(event.target instanceof Element) || !event.target.closest('.js-view-projects-btn a[href="/projects"], .hyper-onboarding__skip, .hyper-onboarding__orb, .hyper-onboarding__composer button[type="submit"]')) return;
+      if (!(event.target instanceof Element) || !event.target.closest('.js-view-projects-btn a[href^="/onboarding"], .hyper-onboarding__skip, .hyper-onboarding__orb, .hyper-onboarding__composer button[type="submit"]')) return;
       void primeWorldVoicePlayback().catch(() => {});
     };
     document.addEventListener("click", prime, true);
     return () => document.removeEventListener("click", prime, true);
   }, []);
-  return pathname === "/projects" && ready ? <CommandSession key={auth.scope || "signed-out"} allowGreeting={auth.ready && auth.signedIn} /> : null;
+  return pathname === WORLD_PATH && ready ? <CommandSession key={auth.scope || "signed-out"} allowGreeting={auth.ready && auth.signedIn} /> : null;
 }
 
 function CommandSession({ allowGreeting }: { allowGreeting: boolean }) {

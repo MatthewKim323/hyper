@@ -63,7 +63,7 @@ function Logo() {
 
 const NAV = [
   { href: "/", label: "Index", extra: " js-nav-home", hoverStyle: undefined },
-  { href: "/projects", label: "Gallery", extra: "", hoverStyle: { paddingLeft: "0.1rem" } },
+  { href: "/world", label: "World", extra: " js-nav-world", hoverStyle: { paddingLeft: "0.1rem" } },
   { href: "/contact", label: "Contact", extra: " js-nav-contact", hoverStyle: undefined },
 ];
 
@@ -126,7 +126,7 @@ function Header() {
 
 const MENU = [
   { href: "/", label: "Index", num: "01", extra: " js-nav-home", serif: true },
-  { href: "/projects", label: "Gallery", num: "02", extra: "", serif: true },
+  { href: "/world", label: "World", num: "02", extra: " js-nav-world", serif: true },
   { href: "/contact", label: "Contact", num: "03", extra: " js-nav-contact", serif: true },
 ];
 
