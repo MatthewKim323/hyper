@@ -36,6 +36,11 @@ start counterparty-worker "" uv run python -m app.counterparty_worker
 # double every request to the supplier.
 #   EXCEPTION_WORKER=devin (default)  queue each exception as a Devin task. Needs tools/devin-up.sh too.
 #   EXCEPTION_WORKER=openai           the in-process worker on OPENAI_API_KEY. Spends tokens while exceptions are open.
-if [ "${EXCEPTION_WORKER:-devin}" = "openai" ]; then start auto-agent "" uv run python -m app.auto_agent
+#   AUTO_AGENT_MODEL                  defaults here to gpt-5.6-luna: measured at about a cent a case, under a dollar an hour.
+#                                     gpt-6-astra is roughly fifty times that.
+export DEVIN_CONTROL_PAIRS="${DEVIN_CONTROL_PAIRS-demo-meridian:demo-meridian-control}"
+if [ "${EXCEPTION_WORKER:-devin}" = "openai" ]; then
+  AUTO_AGENT_MODEL="${AUTO_AGENT_MODEL:-gpt-5.6-luna}" start auto-agent "" uv run python -m app.auto_agent
+  DEVIN_EXCEPTION_TASKS=false start devin-exceptions "" uv run python -m app.devin_exceptions  # mirroring only
 else start devin-exceptions "" uv run python -m app.devin_exceptions; fi
 echo "frontend: cd web/studio && bun run dev   (http://localhost:3888)"

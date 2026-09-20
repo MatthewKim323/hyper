@@ -62,6 +62,24 @@ def provider():
     return GATEWAY, os.getenv('AI_GATEWAY_API_KEY'), os.getenv('AUTO_AGENT_MODEL', 'openai/gpt-5-mini'), False
 
 
+def control_orgs():
+    """Organizations that run with memory off, as the measured baseline: no lessons read, none written."""
+    named = {x.strip() for x in os.getenv('AUTO_AGENT_CONTROL_ORGS', '').split(',') if x.strip()}
+    return named | {p.split(':', 1)[1] for p in os.getenv('DEVIN_CONTROL_PAIRS', '').split(',') if ':' in p}
+
+
+def meter(model, usage):
+    """Token usage per model call, appended as JSON lines, so cost is measured rather than estimated."""
+    if not usage: return
+    cached = (usage.get('input_tokens_details') or usage.get('prompt_tokens_details') or {}).get('cached_tokens', 0)
+    line = {'at': now(), 'model': model, 'input': usage.get('input_tokens', usage.get('prompt_tokens', 0)), 'cached': cached, 'output': usage.get('output_tokens', usage.get('completion_tokens', 0))}
+    try:
+        path = Path(__file__).resolve().parents[1] / 'var' / 'auto-agent-usage.jsonl'
+        path.parent.mkdir(exist_ok=True)
+        with path.open('a') as out: out.write(json.dumps(line) + '\n')
+    except OSError: pass
+
+
 def complete(payload):
     """Chat-completions shaped call. Used for the gateway, and for one-shot prompts on either provider."""
     url, key, model, direct = provider()
@@ -70,6 +88,7 @@ def complete(payload):
     with httpx.Client(timeout=120) as client:
         res = client.post(url, headers={'Authorization': 'Bearer ' + key}, json={**payload, 'model': model})
         if res.status_code >= 400: raise RuntimeError(f'model provider {res.status_code}: {res.text[:300]}')
+        meter(model, res.json().get('usage'))
         return res.json()
 
 
@@ -95,6 +114,7 @@ class Responses:
             res = client.post('https://api.openai.com/v1/responses', headers={'Authorization': 'Bearer ' + key}, json=body)
             if res.status_code >= 400: raise RuntimeError(f'model provider {res.status_code}: {res.text[:300]}')
             data = res.json()
+        meter(model, data.get('usage'))
         self.previous = data['id']
         text = ''.join(part.get('text', '') for item in data['output'] if item['type'] == 'message' for part in item['content'])
         calls = [{'id': item['call_id'], 'type': 'function', 'function': {'name': item['name'], 'arguments': item['arguments']}} for item in data['output'] if item['type'] == 'function_call']
@@ -126,7 +146,7 @@ def slim(name, result):
 def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None):
     """One bounded working session on one invoice. Returns the trace of observable actions."""
     svc = Counterparties(data_factory(oid))
-    memory = svc.lessons() if os.getenv('AUTO_AGENT_MEMORY', 'true').lower() == 'true' else []
+    memory = svc.lessons() if os.getenv('AUTO_AGENT_MEMORY', 'true').lower() == 'true' and oid not in control_orgs() else []
     system = SYSTEM + ('\n\nLessons from your earlier graded cases. Apply them where they fit, they never override the engine:\n' + '\n'.join('- ' + m['lesson'] for m in memory) if memory else '')
     convo = [{'role': 'system', 'content': system},
              {'role': 'user', 'content': f'Blocked invoice {scenario["invoice_id"]}: {scenario["title"]}. Approved contacts: supplier portal and procurement.desk. '
@@ -217,7 +237,8 @@ def run_once(store, data_factory=None, llm=None):
         work += 1
     for row in unlearned:
         if not row['state'].get('agent', {}).get('trace'): continue
-        try: write_lesson(Counterparties(data_factory(row['organization_id'])), row, model, llm or complete)
+        try:
+            if row['organization_id'] not in control_orgs(): write_lesson(Counterparties(data_factory(row['organization_id'])), row, model, llm or complete)
         finally:
             with store.engine.begin() as db:
                 state = dict(row['state']); state['agent'] = {**state.get('agent', {}), 'lesson_written': True}

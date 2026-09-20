@@ -25,7 +25,10 @@ class Devin:
             r=client.request(method,self.base+path,headers=self.headers,json=body)
             r.raise_for_status();return r.json() if r.content else {}
     def create(self,prompt,key,token):
-        return self.request('POST','/sessions',{'prompt':prompt,'title':'Mirror finance '+key,
+        # DEVIN_MODE: normal (default), fast, lite, ultra or fusion. Devin offers no choice of underlying model.
+        mode=os.getenv('DEVIN_MODE','').strip()
+        if mode and mode not in ('normal','fast','lite','ultra','fusion'):raise ValueError('Unknown DEVIN_MODE')
+        return self.request('POST','/sessions',{**({'devin_mode':mode} if mode else {}),'prompt':prompt,'title':'Mirror finance '+key,
             'tags':[key],'resumable':True,'max_acu_limit':int(os.getenv('DEVIN_SESSION_ACU_LIMIT','5')),
             'session_secrets':[{'key':'APP_AGENT_TOKEN','value':token,'sensitive':True}],
             'structured_output_schema':{'type':'object','properties':{'summary':{'type':'string'}},'required':['summary'],'additionalProperties':False}})
@@ -125,7 +128,7 @@ def run_once(store,provider=None):
             work=[dict(r) for r in db.execute(select(tasks).where(tasks.c.organization_id==oid,tasks.c.status.in_(['queued','launching','launch_uncertain','running'])).order_by(tasks.c.created_at)).mappings()]
         active=sum(t['status']!='queued' for t in work)
         for task in work:
-            if task['status']=='queued' and active>=2:continue
+            if task['status']=='queued' and active>=int(os.getenv('DEVIN_MAX_ACTIVE_PER_ORG','2')):continue
             if task['status']!='running':
                 sid=launch(store,provider,svc,tasks,task,task['id'],fence)
                 if task['status']=='queued':active+=1

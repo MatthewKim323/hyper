@@ -121,6 +121,9 @@ def learn(store, data_factory):
 def run_once(store, data_factory=None):
     data_factory = data_factory or (lambda oid: DataService(store, oid))
     controls = set(pairs().values())
+    # DEVIN_EXCEPTION_TASKS=false keeps only the mirroring, for when the in-process worker owns the
+    # cases (it reads and writes its own lessons) but the control organization should still get its twins.
+    if os.getenv('DEVIN_EXCEPTION_TASKS', 'true').lower() != 'true': return mirror(store, data_factory)
     made = mirror(store, data_factory) + learn(store, data_factory)
     with store.engine.connect() as db:
         rows = [dict(r) for r in db.execute(select(scenarios).where(scenarios.c.status == 'open').order_by(scenarios.c.created_at)).mappings()]

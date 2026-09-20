@@ -3,8 +3,10 @@
 # Run tools/dev-up.sh first. Devin sessions call back into THIS machine through the tunnel, with a
 # scoped per-session token; the tunnel URL changes on every start, so it is passed by environment
 # and never written to .env.
-#   DEVIN_MAX_SESSIONS_PER_ORG  lifetime session budget per organization (default here: 200)
+#   DEVIN_MAX_SESSIONS_PER_ORG  lifetime session budget per organization (default here: 400)
+#   DEVIN_MAX_ACTIVE_PER_ORG    sessions at once per organization (default here: 4)
 #   DEVIN_SESSION_ACU_LIMIT     ACU cap per session (default 5)
+#   DEVIN_MODE                  normal, fast, lite, ultra or fusion (default here: ultra)
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/backend"
@@ -26,12 +28,12 @@ curl -s -m 10 -o /dev/null -w "api through the tunnel: %{http_code}\n" "$URL/hea
 # Replies and Devin's spin-up take minutes, not seconds: give a case 45 minutes before it times out.
 pkill -f "app.counterparty_worker" 2>/dev/null || true
 COUNTERPARTY_TIMEOUT_MS="${COUNTERPARTY_TIMEOUT_MS:-2700000}" nohup uv run python -m app.counterparty_worker > var/counterparty-worker.log 2>&1 &
-AGENT_PUBLIC_BASE_URL="$URL" DEVIN_MAX_SESSIONS_PER_ORG="${DEVIN_MAX_SESSIONS_PER_ORG:-200}" \
+AGENT_PUBLIC_BASE_URL="$URL" DEVIN_MODE="${DEVIN_MODE:-ultra}" DEVIN_MAX_SESSIONS_PER_ORG="${DEVIN_MAX_SESSIONS_PER_ORG:-400}" DEVIN_MAX_ACTIVE_PER_ORG="${DEVIN_MAX_ACTIVE_PER_ORG:-4}" \
   nohup uv run python -m app.devin_worker > var/devin-worker.log 2>&1 &
 # Memory on against memory off: every exception the adversary sends the first organization is mirrored
 # into the second, whose tasks get no lessons and no skills. Set DEVIN_CONTROL_PAIRS="" to run without it.
 pkill -f "app.devin_exceptions" 2>/dev/null || true
-DEVIN_CONTROL_PAIRS="${DEVIN_CONTROL_PAIRS-demo-meridian:demo-meridian-control}" nohup uv run python -m app.devin_exceptions > var/devin-exceptions.log 2>&1 &
+DEVIN_EXCEPTION_MAX_PENDING="${DEVIN_EXCEPTION_MAX_PENDING:-6}" DEVIN_CONTROL_PAIRS="${DEVIN_CONTROL_PAIRS-demo-meridian:demo-meridian-control}" nohup uv run python -m app.devin_exceptions > var/devin-exceptions.log 2>&1 &
 # Sessions already in flight were given the previous address.
 uv run python -m app.devin_exceptions_ctl moved "$URL" || true
 echo "devin worker, exception bridge and counterparty worker started (logs in backend/var/)"

@@ -1,7 +1,7 @@
 """Turn the autonomous exception loop on or off for one organization, and show where it stands.
 
     uv run --directory backend python -m app.devin_exceptions_ctl on|off|status ORG [--every SECONDS] [--open N]
-    uv run --directory backend python -m app.devin_exceptions_ctl compare ORG CONTROL_ORG
+    uv run --directory backend python -m app.devin_exceptions_ctl compare ORG [CONTROL_ORG] [--since EPOCH_MS]
     uv run --directory backend python -m app.devin_exceptions_ctl skills ORG
     uv run --directory backend python -m app.devin_exceptions_ctl moved NEW_BASE_URL
 
@@ -26,10 +26,10 @@ from .store import Store  # noqa: E402
 GOOD = ('pass', 'correct_hold')
 
 
-def compare(store, treatment, control):
+def compare(store, treatment, control, since=0):
     """Memory on against memory off, on the cases the two organizations share. Small samples stay labelled small."""
     with store.engine.connect() as db:
-        rows = db.execute(select(scenarios).where(scenarios.c.organization_id.in_([treatment, control]), scenarios.c.status == 'scored')).mappings().all()
+        rows = db.execute(select(scenarios).where(scenarios.c.organization_id.in_([treatment, control]), scenarios.c.status == 'scored', scenarios.c.created_at >= since)).mappings().all()
     twins = {r['created_by'][7:]: r for r in rows if r['organization_id'] == control and r['created_by'].startswith('mirror:')}
     paired = [(r, twins[r['id']]) for r in rows if r['organization_id'] == treatment and r['id'] in twins]
     print(f'paired graded cases: {len(paired)}' + ('   (too few to read anything into)' if len(paired) < 20 else ''))
@@ -78,9 +78,11 @@ if __name__ == '__main__':
     # Devin takes minutes per case, so the default pace is slow: a faster adversary only produces timeouts.
     parser.add_argument('--every', type=int, default=300)
     parser.add_argument('--open', type=int, default=2)
+    # compare: only cases created at or after this epoch-millisecond mark, e.g. when the worker or model changed.
+    parser.add_argument('--since', type=int, default=0)
     args = parser.parse_args()
     store = Store()
-    if args.action == 'compare': compare(store, args.organization, args.control or args.organization + '-control'); raise SystemExit
+    if args.action == 'compare': compare(store, args.organization, args.control or args.organization + '-control', args.since); raise SystemExit
     if args.action == 'skills': skills(store, args.organization); raise SystemExit
     if args.action == 'moved': moved(store, args.organization); raise SystemExit
     adversary, agents = Counterparties(DataService(store, args.organization)), AgentService(store, args.organization)
