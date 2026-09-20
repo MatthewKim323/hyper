@@ -6,6 +6,11 @@ from . import auth
 from .data_api import service
 from .database import memberships
 from .accounting import Accounting, PromoteRecord, OpenInvoice, CaseID, InspectCredit, Propose, Approval
+from .data_service import StrictModel
+from . import handoff
+
+class Commit(StrictModel):
+    proposal_hash: str
 
 router=APIRouter(prefix='/accounting',tags=['accounting'])
 def invoke(fn,*args):
@@ -46,6 +51,13 @@ def inspect(body:InspectCredit,data=Depends(service)):
 @router.post('/proposals')
 def propose(body:Propose,data=Depends(service)):
     return invoke(Accounting(data.store,data.oid).execute,'prepare_payable_proposal',body.model_dump())
+@router.get('/proposals/{proposal_id}/handoff')
+def handoff_packet(proposal_id:str,data=Depends(service)):
+    return invoke(handoff.packet,data.store,data.oid,proposal_id)
+@router.post('/proposals/{proposal_id}/commit')
+def commit_payable(proposal_id:str,body:Commit,access=Depends(owner)):
+    data,identity=access
+    return invoke(handoff.commit,data.store,data.oid,proposal_id,body.proposal_hash,identity.user_id)
 @router.post('/approvals')
 def approve(body:Approval,access=Depends(owner)):
     data,identity=access
