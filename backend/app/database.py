@@ -251,6 +251,15 @@ graph_mentions = Table('graph_mentions', metadata,
 Index('graph_mention_node', graph_mentions.c.organization_id, graph_mentions.c.node_id)
 Index('graph_mention_source', graph_mentions.c.source_id)
 
+# Append-only benchmark snapshots: facts that cannot be rebuilt later (spend rate, suite results, the commit
+# they were measured at). Series that can be rebuilt from graded cases are computed on read instead.
+benchmark_points = Table('benchmark_points', metadata,
+    Column('sequence', Integer, primary_key=True, autoincrement=True),
+    Column('series', Text, nullable=False), Column('subject', Text, nullable=False),
+    Column('bucket', BigInteger, nullable=False), Column('at', BigInteger, nullable=False),
+    Column('metrics', json_type, nullable=False), Column('context', json_type, nullable=False),
+    UniqueConstraint('series', 'subject', 'bucket'))
+
 def make_engine(location=None):
     location = location or os.getenv('DATABASE_URL') or os.getenv('DATABASE_PATH','var/onboarding.sqlite')
     # A missing DATABASE_URL in a deployment would otherwise boot an empty local SQLite

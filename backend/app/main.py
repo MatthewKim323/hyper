@@ -376,3 +376,6 @@ app.include_router(graph_router)
 
 from .swarm_feed import router as swarm_router
 app.include_router(swarm_router)
+
+from .bench_api import router as bench_router
+app.include_router(bench_router)

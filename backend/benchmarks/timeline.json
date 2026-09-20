@@ -1,0 +1,1807 @@
+{
+ "schema_version": 1,
+ "display_mode": "LIVE",
+ "generated_at": 1789887956841,
+ "bucket_ms": 600000,
+ "rolling_cases": 20,
+ "commit": {
+  "sha": "dd57a33",
+  "dirty": true
+ },
+ "valid_since": 1789885421544,
+ "events": [
+  {
+   "at": 1789884159876,
+   "label": "worker: devin to gpt-5.6-luna"
+  },
+  {
+   "at": 1789885130249,
+   "label": "sandbox fix: follow-ups answered"
+  },
+  {
+   "at": 1789885421544,
+   "label": "sandbox fix: record ids",
+   "valid_since": true
+  },
+  {
+   "at": 1789885593318,
+   "label": "worker: gpt-5.6-terra"
+  },
+  {
+   "at": 1789885984942,
+   "label": "memory-off twin started (hyper-lab)"
+  },
+  {
+   "at": 1789887482298,
+   "label": "tier 5 live"
+  }
+ ],
+ "series": [
+  {
+   "id": "exceptions",
+   "subject": "hyper-lab",
+   "role": "memory_on",
+   "points": [
+    {
+     "at": 1789886400000,
+     "valid": true,
+     "bucket": {
+      "n": 47,
+      "correct": 47,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 14,
+      "median_seconds": 39.5,
+      "median_seconds_released": 28.6,
+      "requests_per_case": 1.98,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.98,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 7,
+      "median_seconds": 71.8,
+      "median_seconds_released": 32.1,
+      "requests_per_case": 2.1,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.75,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "cumulative": {
+      "n": 47,
+      "correct": 47,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 5,
+     "by_tier": {
+      "1": {
+       "n": 5,
+       "correct": 5
+      },
+      "2": {
+       "n": 4,
+       "correct": 4
+      },
+      "3": {
+       "n": 5,
+       "correct": 5
+      },
+      "4": {
+       "n": 33,
+       "correct": 33
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 42
+    },
+    {
+     "at": 1789887000000,
+     "valid": true,
+     "bucket": {
+      "n": 16,
+      "correct": 16,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 7,
+      "median_seconds": 90.4,
+      "median_seconds_released": 75.0,
+      "requests_per_case": 1.69,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.8,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 8,
+      "median_seconds": 85.6,
+      "median_seconds_released": 73.2,
+      "requests_per_case": 1.7,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.68,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "cumulative": {
+      "n": 63,
+      "correct": 63,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 5,
+     "by_tier": {
+      "4": {
+       "n": 16,
+       "correct": 16
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 60
+    },
+    {
+     "at": 1789887600000,
+     "valid": true,
+     "bucket": {
+      "n": 11,
+      "correct": 11,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 6,
+      "median_seconds": 90.5,
+      "median_seconds_released": 39.3,
+      "requests_per_case": 2.73,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.82,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 5
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 11,
+      "median_seconds": 90.7,
+      "median_seconds_released": 41.0,
+      "requests_per_case": 2.2,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.3,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 5
+     },
+     "cumulative": {
+      "n": 74,
+      "correct": 74,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 5,
+     "by_tier": {
+      "4": {
+       "n": 10,
+       "correct": 10
+      },
+      "5": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 71
+    },
+    {
+     "at": 1789888200000,
+     "valid": true,
+     "bucket": {
+      "n": 4,
+      "correct": 4,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 2,
+      "median_seconds": 60.4,
+      "median_seconds_released": 27.6,
+      "requests_per_case": 2.25,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.5,
+      "median_usd_per_case": 0.0226,
+      "median_tokens_per_case": 21842,
+      "costed_cases": 2,
+      "top_tier": 5
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 11,
+      "median_seconds": 90.9,
+      "median_seconds_released": 29.5,
+      "requests_per_case": 2.35,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.5,
+      "median_usd_per_case": 0.0226,
+      "median_tokens_per_case": 21842,
+      "costed_cases": 2,
+      "top_tier": 5
+     },
+     "cumulative": {
+      "n": 78,
+      "correct": 78,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 5,
+     "by_tier": {
+      "5": {
+       "n": 4,
+       "correct": 4
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "dd57a33"
+     ],
+     "worker_kinds": [
+      "auto_agent",
+      "unknown"
+     ],
+     "lessons_at_start": 76
+    }
+   ]
+  },
+  {
+   "id": "exceptions",
+   "subject": "hyper-lab-control",
+   "role": "memory_off",
+   "twin_of": "hyper-lab",
+   "points": [
+    {
+     "at": 1789886400000,
+     "valid": true,
+     "bucket": {
+      "n": 46,
+      "correct": 46,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 14,
+      "median_seconds": 47.8,
+      "median_seconds_released": 34.2,
+      "requests_per_case": 1.74,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.02,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 7,
+      "median_seconds": 85.1,
+      "median_seconds_released": 44.1,
+      "requests_per_case": 1.75,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.1,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "cumulative": {
+      "n": 46,
+      "correct": 46,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 5,
+     "by_tier": {
+      "1": {
+       "n": 5,
+       "correct": 5
+      },
+      "2": {
+       "n": 4,
+       "correct": 4
+      },
+      "3": {
+       "n": 5,
+       "correct": 5
+      },
+      "4": {
+       "n": 32,
+       "correct": 32
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789887000000,
+     "valid": true,
+     "bucket": {
+      "n": 17,
+      "correct": 17,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 7,
+      "median_seconds": 91.2,
+      "median_seconds_released": 95.3,
+      "requests_per_case": 1.59,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.94,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 8,
+      "median_seconds": 91.0,
+      "median_seconds_released": 89.3,
+      "requests_per_case": 1.5,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.84,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "cumulative": {
+      "n": 63,
+      "correct": 63,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 5,
+     "by_tier": {
+      "4": {
+       "n": 17,
+       "correct": 17
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789887600000,
+     "valid": true,
+     "bucket": {
+      "n": 11,
+      "correct": 11,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 6,
+      "median_seconds": 90.6,
+      "median_seconds_released": 36.7,
+      "requests_per_case": 2.64,
+      "repeated_requests": 0,
+      "sessions_per_case": 3.0,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 5
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 11,
+      "median_seconds": 90.9,
+      "median_seconds_released": 36.8,
+      "requests_per_case": 2.3,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.6,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 5
+     },
+     "cumulative": {
+      "n": 74,
+      "correct": 74,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 5,
+     "by_tier": {
+      "4": {
+       "n": 10,
+       "correct": 10
+      },
+      "5": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789888200000,
+     "valid": true,
+     "bucket": {
+      "n": 4,
+      "correct": 4,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 2,
+      "median_seconds": 69.4,
+      "median_seconds_released": 44.1,
+      "requests_per_case": 2.0,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.25,
+      "median_usd_per_case": 0.0329,
+      "median_tokens_per_case": 34593,
+      "costed_cases": 1,
+      "top_tier": 5
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 11,
+      "median_seconds": 91.0,
+      "median_seconds_released": 36.8,
+      "requests_per_case": 2.3,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.65,
+      "median_usd_per_case": 0.0329,
+      "median_tokens_per_case": 34593,
+      "costed_cases": 1,
+      "top_tier": 5
+     },
+     "cumulative": {
+      "n": 78,
+      "correct": 78,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 5,
+     "by_tier": {
+      "5": {
+       "n": 4,
+       "correct": 4
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "dd57a33"
+     ],
+     "worker_kinds": [
+      "auto_agent",
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    }
+   ]
+  },
+  {
+   "id": "memory_effect",
+   "subject": "hyper-lab",
+   "against": "hyper-lab-control",
+   "points": [
+    {
+     "at": 1789886400000,
+     "pairs": 43,
+     "with_memory": {
+      "n": 43,
+      "correct": 43,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 28.1,
+      "requests_per_case": 2.0,
+      "sessions_per_case": 2.02,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     },
+     "without_memory": {
+      "n": 43,
+      "correct": 43,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 34.4,
+      "requests_per_case": 1.77,
+      "sessions_per_case": 2.05,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     }
+    },
+    {
+     "at": 1789887000000,
+     "pairs": 63,
+     "with_memory": {
+      "n": 63,
+      "correct": 63,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 32.1,
+      "requests_per_case": 1.9,
+      "sessions_per_case": 1.94,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     },
+     "without_memory": {
+      "n": 63,
+      "correct": 63,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 40.5,
+      "requests_per_case": 1.7,
+      "sessions_per_case": 2.0,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     }
+    },
+    {
+     "at": 1789887600000,
+     "pairs": 74,
+     "with_memory": {
+      "n": 74,
+      "correct": 74,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 32.1,
+      "requests_per_case": 2.03,
+      "sessions_per_case": 2.07,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     },
+     "without_memory": {
+      "n": 74,
+      "correct": 74,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 36.8,
+      "requests_per_case": 1.84,
+      "sessions_per_case": 2.15,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     }
+    },
+    {
+     "at": 1789888200000,
+     "pairs": 78,
+     "with_memory": {
+      "n": 78,
+      "correct": 78,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 32.1,
+      "requests_per_case": 2.04,
+      "sessions_per_case": 2.09,
+      "median_usd_per_case": 0.0226,
+      "costed_cases": 2
+     },
+     "without_memory": {
+      "n": 78,
+      "correct": 78,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 40.1,
+      "requests_per_case": 1.85,
+      "sessions_per_case": 2.16,
+      "median_usd_per_case": 0.0329,
+      "costed_cases": 1
+     }
+    }
+   ]
+  },
+  {
+   "id": "memory_effect_hard_tier",
+   "subject": "hyper-lab",
+   "against": "hyper-lab-control",
+   "tier": 5,
+   "points": [
+    {
+     "at": 1789887600000,
+     "pairs": 1,
+     "with_memory": {
+      "n": 1,
+      "correct": 1,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 39.3,
+      "requests_per_case": 2.0,
+      "sessions_per_case": 3.0,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     },
+     "without_memory": {
+      "n": 1,
+      "correct": 1,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 27.8,
+      "requests_per_case": 2.0,
+      "sessions_per_case": 3.0,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     }
+    },
+    {
+     "at": 1789888200000,
+     "pairs": 5,
+     "with_memory": {
+      "n": 5,
+      "correct": 5,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 29.5,
+      "requests_per_case": 2.2,
+      "sessions_per_case": 2.6,
+      "median_usd_per_case": 0.0226,
+      "costed_cases": 2
+     },
+     "without_memory": {
+      "n": 5,
+      "correct": 5,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 41.5,
+      "requests_per_case": 2.0,
+      "sessions_per_case": 2.4,
+      "median_usd_per_case": 0.0329,
+      "costed_cases": 1
+     }
+    }
+   ]
+  },
+  {
+   "id": "exceptions",
+   "subject": "demo-meridian",
+   "role": "memory_on",
+   "points": [
+    {
+     "at": 1789876200000,
+     "valid": false,
+     "bucket": {
+      "n": 1,
+      "correct": 1,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 51.6,
+      "median_seconds_released": 51.6,
+      "requests_per_case": 3.0,
+      "repeated_requests": 0,
+      "sessions_per_case": 3.0,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 1
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "1": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-6-astra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789878600000,
+     "valid": false,
+     "bucket": {
+      "n": 1,
+      "correct": 1,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 223.3,
+      "median_seconds_released": 223.3,
+      "requests_per_case": 3.0,
+      "repeated_requests": 0,
+      "sessions_per_case": 3.0,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 1
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "1": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-6-astra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 1
+    },
+    {
+     "at": 1789881600000,
+     "valid": false,
+     "bucket": {
+      "n": 1,
+      "correct": 1,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 9.5,
+      "median_seconds_released": 9.5,
+      "requests_per_case": 0.0,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.0,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 1
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "1": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-6-astra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 2
+    },
+    {
+     "at": 1789882200000,
+     "valid": false,
+     "bucket": {
+      "n": 2,
+      "correct": 2,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 19.4,
+      "median_seconds_released": 19.4,
+      "requests_per_case": 0.5,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.0,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 2
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "2": {
+       "n": 2,
+       "correct": 2
+      }
+     },
+     "models": [
+      "gpt-6-astra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 4
+    },
+    {
+     "at": 1789882800000,
+     "valid": false,
+     "bucket": {
+      "n": 1,
+      "correct": 1,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 60.8,
+      "median_seconds_released": 60.8,
+      "requests_per_case": 0.0,
+      "repeated_requests": 0,
+      "sessions_per_case": null,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 2
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "2": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789884000000,
+     "valid": false,
+     "bucket": {
+      "n": 2,
+      "correct": 2,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 1,
+      "median_seconds": 355.3,
+      "median_seconds_released": 132.4,
+      "requests_per_case": 2.0,
+      "repeated_requests": 0,
+      "sessions_per_case": null,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 3
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "3": {
+       "n": 2,
+       "correct": 2
+      }
+     },
+     "models": [],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789884600000,
+     "valid": false,
+     "bucket": {
+      "n": 2,
+      "correct": 2,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 1,
+      "median_seconds": 207.5,
+      "median_seconds_released": 270.6,
+      "requests_per_case": 1.5,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.5,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 3
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "3": {
+       "n": 2,
+       "correct": 2
+      }
+     },
+     "models": [
+      "gpt-5.6-luna"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 8
+    },
+    {
+     "at": 1789885200000,
+     "valid": false,
+     "bucket": {
+      "n": 4,
+      "correct": 0,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 4,
+      "correct_holds": 0,
+      "median_seconds": 748.0,
+      "median_seconds_released": null,
+      "requests_per_case": 3.5,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.75,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "3": {
+       "n": 2,
+       "correct": 0
+      },
+      "4": {
+       "n": 2,
+       "correct": 0
+      }
+     },
+     "models": [
+      "gpt-5.6-luna"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 10
+    },
+    {
+     "at": 1789885800000,
+     "valid": false,
+     "bucket": {
+      "n": 8,
+      "correct": 4,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 4,
+      "correct_holds": 0,
+      "median_seconds": 305.4,
+      "median_seconds_released": 8.8,
+      "requests_per_case": 1.25,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.5,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 2
+     },
+     "rolling": {
+      "n": 3,
+      "correct": 3,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 8.7,
+      "median_seconds_released": 8.7,
+      "requests_per_case": 0.0,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.0,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 1
+     },
+     "cumulative": {
+      "n": 3,
+      "correct": 3,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 2,
+     "by_tier": {
+      "2": {
+       "n": 1,
+       "correct": 0
+      },
+      "1": {
+       "n": 7,
+       "correct": 4
+      }
+     },
+     "models": [
+      "gpt-5.6-luna",
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 20
+    },
+    {
+     "at": 1789886400000,
+     "valid": true,
+     "bucket": {
+      "n": 7,
+      "correct": 6,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1,
+      "correct_holds": 0,
+      "median_seconds": 18.6,
+      "median_seconds_released": 14.4,
+      "requests_per_case": 1.0,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.57,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 3
+     },
+     "rolling": {
+      "n": 10,
+      "correct": 9,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1,
+      "correct_holds": 0,
+      "median_seconds": 9.6,
+      "median_seconds_released": 8.9,
+      "requests_per_case": 0.7,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.4,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 3
+     },
+     "cumulative": {
+      "n": 10,
+      "correct": 9,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1
+     },
+     "level": 3,
+     "by_tier": {
+      "1": {
+       "n": 3,
+       "correct": 2
+      },
+      "2": {
+       "n": 3,
+       "correct": 3
+      },
+      "3": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 27
+    },
+    {
+     "at": 1789887000000,
+     "valid": true,
+     "bucket": {
+      "n": 2,
+      "correct": 2,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 25.2,
+      "median_seconds_released": 25.2,
+      "requests_per_case": 1.0,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.0,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 2
+     },
+     "rolling": {
+      "n": 12,
+      "correct": 11,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1,
+      "correct_holds": 0,
+      "median_seconds": 14.4,
+      "median_seconds_released": 10.2,
+      "requests_per_case": 0.75,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.5,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 3
+     },
+     "cumulative": {
+      "n": 12,
+      "correct": 11,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1
+     },
+     "level": 3,
+     "by_tier": {
+      "2": {
+       "n": 2,
+       "correct": 2
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 30
+    },
+    {
+     "at": 1789887600000,
+     "valid": true,
+     "bucket": {
+      "n": 2,
+      "correct": 2,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 37.0,
+      "median_seconds_released": 37.0,
+      "requests_per_case": 3.0,
+      "repeated_requests": 0,
+      "sessions_per_case": 3.0,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 3
+     },
+     "rolling": {
+      "n": 14,
+      "correct": 13,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1,
+      "correct_holds": 0,
+      "median_seconds": 20.7,
+      "median_seconds_released": 18.6,
+      "requests_per_case": 1.07,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.71,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 3
+     },
+     "cumulative": {
+      "n": 14,
+      "correct": 13,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1
+     },
+     "level": 4,
+     "by_tier": {
+      "2": {
+       "n": 1,
+       "correct": 1
+      },
+      "3": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 32
+    },
+    {
+     "at": 1789888200000,
+     "valid": true,
+     "bucket": {
+      "n": 1,
+      "correct": 1,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 67.0,
+      "median_seconds_released": 67.0,
+      "requests_per_case": 3.0,
+      "repeated_requests": 0,
+      "sessions_per_case": 3.0,
+      "median_usd_per_case": 0.0444,
+      "median_tokens_per_case": 50302,
+      "costed_cases": 1,
+      "top_tier": 3
+     },
+     "rolling": {
+      "n": 15,
+      "correct": 14,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1,
+      "correct_holds": 0,
+      "median_seconds": 22.8,
+      "median_seconds_released": 20.7,
+      "requests_per_case": 1.2,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.8,
+      "median_usd_per_case": 0.0444,
+      "median_tokens_per_case": 50302,
+      "costed_cases": 1,
+      "top_tier": 3
+     },
+     "cumulative": {
+      "n": 15,
+      "correct": 14,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1
+     },
+     "level": 4,
+     "by_tier": {
+      "3": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "dd57a33"
+     ],
+     "worker_kinds": [
+      "auto_agent"
+     ],
+     "lessons_at_start": 33
+    }
+   ]
+  },
+  {
+   "id": "exceptions",
+   "subject": "demo-meridian-control",
+   "role": "memory_off",
+   "twin_of": "demo-meridian",
+   "points": [
+    {
+     "at": 1789884000000,
+     "valid": false,
+     "bucket": {
+      "n": 2,
+      "correct": 2,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 1,
+      "median_seconds": 333.1,
+      "median_seconds_released": 107.2,
+      "requests_per_case": 2.0,
+      "repeated_requests": 0,
+      "sessions_per_case": null,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 3
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "3": {
+       "n": 2,
+       "correct": 2
+      }
+     },
+     "models": [],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789884600000,
+     "valid": false,
+     "bucket": {
+      "n": 4,
+      "correct": 4,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 1,
+      "median_seconds": 272.5,
+      "median_seconds_released": 276.8,
+      "requests_per_case": 2.5,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.5,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 3
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "3": {
+       "n": 4,
+       "correct": 4
+      }
+     },
+     "models": [
+      "gpt-5.6-luna"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789885200000,
+     "valid": false,
+     "bucket": {
+      "n": 4,
+      "correct": 2,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 2,
+      "correct_holds": 0,
+      "median_seconds": 321.0,
+      "median_seconds_released": 38.9,
+      "requests_per_case": 4.0,
+      "repeated_requests": 1,
+      "sessions_per_case": 2.5,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 4
+     },
+     "rolling": {
+      "n": 0
+     },
+     "cumulative": {
+      "n": 0
+     },
+     "level": 1,
+     "by_tier": {
+      "4": {
+       "n": 2,
+       "correct": 0
+      },
+      "1": {
+       "n": 2,
+       "correct": 2
+      }
+     },
+     "models": [
+      "gpt-5.6-luna"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789885800000,
+     "valid": false,
+     "bucket": {
+      "n": 7,
+      "correct": 5,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 2,
+      "correct_holds": 0,
+      "median_seconds": 16.6,
+      "median_seconds_released": 15.4,
+      "requests_per_case": 1.29,
+      "repeated_requests": 1,
+      "sessions_per_case": 1.14,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 2
+     },
+     "rolling": {
+      "n": 4,
+      "correct": 4,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 16.0,
+      "median_seconds_released": 16.0,
+      "requests_per_case": 0.75,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.0,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 1
+     },
+     "cumulative": {
+      "n": 4,
+      "correct": 4,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 2,
+     "by_tier": {
+      "2": {
+       "n": 1,
+       "correct": 0
+      },
+      "1": {
+       "n": 6,
+       "correct": 5
+      }
+     },
+     "models": [
+      "gpt-5.6-luna",
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789886400000,
+     "valid": true,
+     "bucket": {
+      "n": 4,
+      "correct": 4,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 35.1,
+      "median_seconds_released": 35.1,
+      "requests_per_case": 0.75,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.75,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 2
+     },
+     "rolling": {
+      "n": 8,
+      "correct": 8,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 25.8,
+      "median_seconds_released": 25.8,
+      "requests_per_case": 0.75,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.38,
+      "median_usd_per_case": null,
+      "median_tokens_per_case": null,
+      "costed_cases": 0,
+      "top_tier": 2
+     },
+     "cumulative": {
+      "n": 8,
+      "correct": 8,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0
+     },
+     "level": 3,
+     "by_tier": {
+      "1": {
+       "n": 2,
+       "correct": 2
+      },
+      "2": {
+       "n": 2,
+       "correct": 2
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [],
+     "worker_kinds": [
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    }
+   ]
+  },
+  {
+   "id": "memory_effect",
+   "subject": "demo-meridian",
+   "against": "demo-meridian-control",
+   "points": [
+    {
+     "at": 1789885800000,
+     "pairs": 3,
+     "with_memory": {
+      "n": 3,
+      "correct": 3,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 8.7,
+      "requests_per_case": 0.0,
+      "sessions_per_case": 1.0,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     },
+     "without_memory": {
+      "n": 3,
+      "correct": 3,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 15.4,
+      "requests_per_case": 0.0,
+      "sessions_per_case": 1.0,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     }
+    },
+    {
+     "at": 1789886400000,
+     "pairs": 8,
+     "with_memory": {
+      "n": 8,
+      "correct": 7,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 1,
+      "median_seconds_released": 10.2,
+      "requests_per_case": 0.88,
+      "sessions_per_case": 1.5,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     },
+     "without_memory": {
+      "n": 8,
+      "correct": 8,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "median_seconds_released": 25.8,
+      "requests_per_case": 0.75,
+      "sessions_per_case": 1.38,
+      "median_usd_per_case": null,
+      "costed_cases": 0
+     }
+    }
+   ]
+  },
+  {
+   "id": "memory_effect_hard_tier",
+   "subject": "demo-meridian",
+   "against": "demo-meridian-control",
+   "tier": 5,
+   "points": []
+  },
+  {
+   "id": "loop_state",
+   "subject": "hyper-lab",
+   "points": [
+    {
+     "at": 1789887887018,
+     "skills": {},
+     "lessons": 75,
+     "adversary": {
+      "enabled": true,
+      "spawned": 77,
+      "interval_seconds": 117
+     },
+     "open_cases": 0,
+     "usd_per_hour_all_workers": 4.73,
+     "commit": {
+      "sha": "dd57a33",
+      "dirty": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "loop_state",
+   "subject": "demo-meridian",
+   "points": [
+    {
+     "at": 1789887887098,
+     "skills": {
+      "draft": 2
+     },
+     "lessons": 34,
+     "adversary": {
+      "enabled": true,
+      "spawned": 32,
+      "interval_seconds": 300
+     },
+     "open_cases": 0,
+     "usd_per_hour_all_workers": 4.73,
+     "commit": {
+      "sha": "dd57a33",
+      "dirty": true
+     }
+    }
+   ]
+  }
+ ],
+ "caveats": [
+  "Tiers 1 to 4 name their own diagnosis in the case title and are saturated. Tier 5 is the only tier where a wrong release is possible, so it is the only accuracy series worth reading.",
+  "Development series: no battery is held out from the worker prompt.",
+  "Difficulty adapts to the worker, so flat accuracy at a rising level is improvement and rising accuracy at a falling level is not.",
+  "Memory on and memory off are matched by family and tier, not by invoice. Simulated counterparties.",
+  "Counts under 20 are shown as counts. No rate is computed from them."
+ ]
+}
