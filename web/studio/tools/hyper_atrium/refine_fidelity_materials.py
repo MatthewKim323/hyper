@@ -264,7 +264,7 @@ def apply(scene):
         inner_light = (0, 1.5, 1.98)
     _light(scene, "Fidelity | pearl inner illumination", "POINT", inner_light, 24, (1, 0.87, 0.80), size=0.26)
     for obj in tuple(scene.objects):
-        if obj.type != "MESH" or obj.hide_render or "solid clear arched crystal" not in obj.name:
+        if obj.type != "MESH" or (obj.hide_render and not obj.get("station_cover_reference")) or "solid clear arched crystal" not in obj.name:
             continue
         if obj.users_collection and all(collection.hide_render for collection in obj.users_collection):
             continue

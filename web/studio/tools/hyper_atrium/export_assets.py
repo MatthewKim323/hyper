@@ -1,4 +1,4 @@
-"""Export independently reusable crystal stations from the authored Blender scene."""
+"""Export reusable uncovered relic stations from the authored Blender scene."""
 from pathlib import Path
 import sys
 import math
@@ -13,6 +13,7 @@ ROOT=HERE.parents[1]
 OUT=ROOT/'public/assets/hyper-atrium'
 OUT.mkdir(parents=True,exist_ok=True)
 scene=bpy.context.scene
+props.hide_station_covers(scene)
 materials={
  'stone':bpy.data.materials['Hyper | blush ivory honed limestone'],
  'glass':bpy.data.materials['Portals | optically clear rose crystal'],
@@ -25,6 +26,7 @@ materials={
  'paper':bpy.data.materials['Icons | milky lilac opal glass'],
  'white':bpy.data.materials['Icons | white enamel lettering'],
 }
+props.illuminate_relic_materials(materials)
 for old_library in list(bpy.data.collections):
     if old_library.name.startswith('Crystal library | reusable onboarding stations'):
         for obj in list(old_library.objects):
@@ -34,9 +36,9 @@ library=bpy.data.collections.new('Crystal library | reusable onboarding stations
 scene.collection.children.link(library)
 variants=[
  *[(key,icon,width,height) for key,name,x,y,width,height,label,icon in STATIONS],
- ('crystal-tall',None,1.8,4.0),
- ('crystal-wide',None,2.7,3.4),('crystal-orbit','rings',2.1,3.65),
- ('crystal-stack','cubes',2.0,3.25),('crystal-clear',None,2.2,3.6),
+ ('crystal-tall','quartz-tall',1.8,4.0),
+ ('crystal-wide','quartz-cluster',2.7,3.4),('crystal-orbit','rings',2.1,3.65),
+ ('crystal-stack','cubes',2.0,3.25),('crystal-clear','quartz-octahedron',2.2,3.6),
 ]
 manifest=[]
 for index,(key,icon,width,height) in enumerate(variants):
@@ -52,7 +54,8 @@ for index,(key,icon,width,height) in enumerate(variants):
         ob.parent=parent
     bpy.ops.object.select_all(action='DESELECT')
     parent.select_set(True)
-    for ob in created:ob.select_set(True)
+    for ob in created:
+        if not props.is_station_cover(ob):ob.select_set(True)
     bpy.context.view_layer.objects.active=parent
     bpy.ops.export_scene.gltf(filepath=str(OUT/f'crystal-{key}.glb'),export_format='GLB',use_selection=True,export_apply=True,export_yup=True,export_cameras=False,export_lights=False,export_animations=False)
     nominal_width={'invoice':2.7,'ethereum':2.,'audit':2.,'cubes':2.2,'rings':2.5}.get(icon,2.2)

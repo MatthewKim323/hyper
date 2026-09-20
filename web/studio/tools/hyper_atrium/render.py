@@ -5,6 +5,9 @@ import sys
 
 import bpy
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from props import is_station_cover, hide_station_covers
+
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "assets/blender/hyper-atrium"
 parser = argparse.ArgumentParser()
@@ -22,11 +25,12 @@ for obj in bpy.data.objects:
     if obj.get("station") and not obj.get("station_template"):
         obj.hide_render = False
         for child in obj.children_recursive:
-            child.hide_render = False
+            child.hide_render = is_station_cover(child)
     if obj.get("station_template"):
         obj.hide_render = True
         for child in obj.children_recursive:
             child.hide_render = True
+hide_station_covers(scene)
 
 # The web now renders true geometry and does not consume masks or backplates.
 if scene.use_nodes:

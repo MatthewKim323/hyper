@@ -32,6 +32,22 @@
     "pearl crown": true,
     "basin center": true
   },
+  "uncovered_relics_verified": {
+    "hidden_aperture_guides": 30,
+    "cover_free_station_assets": 10,
+    "relic_meshes_by_template": {
+      "accounts-payable": 7,
+      "wallet-identity": 2,
+      "audit-evidence": 7,
+      "training-arena": 7,
+      "approvals": 2,
+      "crystal-tall": 1,
+      "crystal-wide": 3,
+      "crystal-orbit": 2,
+      "crystal-stack": 7,
+      "crystal-clear": 1
+    }
+  },
   "side_aperture_verified": {
     "targets": [
       "pearl",

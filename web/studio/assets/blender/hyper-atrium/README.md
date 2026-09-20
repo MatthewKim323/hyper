@@ -1,10 +1,10 @@
 # Hyper atrium
 
-An editable Blender reconstruction of the supplied concept image, with the architecture, water, pearl, landscape, and glass stations together in one scene. This is a modeled interpretation, not a pixel-identical reconstruction.
+An editable Blender reconstruction of the supplied concept image, with the architecture, water, pearl, landscape, and uncovered relic stations together in one scene. This is a modeled interpretation, not a pixel-identical reconstruction.
 
 ## Files
 
-- `hyper-atrium.blend`: authored camera, carved stone architecture, floating pearl and orbit, five main glass stations, warm window lighting, rose gardens, and animated water. The hidden **Crystal library | reusable onboarding stations** collection holds ten standalone station variants.
+- `hyper-atrium.blend`: authored camera, carved stone architecture, floating pearl and orbit, five main relic stations, warm window lighting, rose gardens, and animated water. The hidden **Crystal library | reusable onboarding stations** collection holds ten standalone station variants. Glass covers and their polished rims remain hidden only as composition guides and are excluded from station exports.
 - `hyper-atrium.png`: 2560×1441 Cycles render of the unified scene.
 - `hotspots.json`: normalized camera projections for the original five-station composition.
 - `verification.json`: saved-scene and reusable-asset checks.
@@ -15,9 +15,9 @@ The Blender water uses eight small gravity-wave components with finite-depth dis
 
 The rose garden uses three merged meshes: rolling ridges, stems and leaves, and 215,000 cupped petals across 43,000 floral sprigs. The garden totals 500,000 triangles. Linear vertex colors preserve rose, pink, and lilac variation in both Blender and glTF. Cycles petals transmit sunlight through thin surfaces; the browser shader approximates that backlighting. Draco compresses the environment's complete topology with 20-bit positions and 12-bit colors/normals. Decoder files and licenses are served locally under `public/assets/draco/`.
 
-The camera's height and pitch match the reference basin ellipse. Rear stations sit at their measured depth, and the carved wall sits behind every station. The five glass aperture bounds project within five pixels of their manually measured targets at 1672 by 941. The browser's sixth station is Benchmarks, added opposite Training Arena.
+The camera's height and pitch match the reference basin ellipse. Rear stations sit at their measured depth, and the carved wall sits behind every station. The five hidden aperture guides preserve the original composition measurements. The browser's sixth station is Benchmarks, added opposite Training Arena.
 
-The browser loads the room and independently configurable crystal models into a single Three.js scene. Procedural sky, animated water, lighting, reflections, and material shaders run live. The crystals are workspace navigation; the old pill navigation is removed. If WebGL cannot start, accessible workspace links remain available.
+The browser loads the room and independently configurable relic models into a single Three.js scene. Procedural sky, animated water, lighting, reflections, and material shaders run live. The relics are workspace navigation; the old pill navigation is removed. If WebGL cannot start, accessible workspace links remain available.
 
 ## Render the saved scene
 
@@ -41,7 +41,9 @@ Add `--cpu` after `--` if the local macOS Metal shader compiler fails. This sele
 "/Volumes/Vault/Applications/Blender.app/Contents/MacOS/Blender" -b assets/blender/hyper-atrium/hyper-atrium.blend --python tools/hyper_atrium/verify.py
 ```
 
-Rebuilding replaces the authored source, so export the station library afterward to repopulate all ten templates. `update_landscape.py` replaces only the garden and updates directional lighting in the existing saved scene, preserving all stations and templates. Run the environment exporter after changes to the source geometry. No command generates backplates or water masks.
+Rebuilding replaces the authored source, so export the station library afterward to repopulate all ten templates. `props.hide_station_covers(scene)` persistently hides the two aperture guides per station; both rendering and station export enforce this. Relic icons, plinths, and labels remain intact. `update_landscape.py` replaces only the garden and updates directional lighting in the existing saved scene, preserving all stations and templates. Run the environment exporter after changes to room geometry. No command generates backplates or water masks.
+
+Every reusable template includes a floating relic. The generic `crystal-tall`, `crystal-wide`, and `crystal-clear` variants use a faceted quartz shard, a three-shard cluster, and an opal octahedron. Their names and navigation destinations still come from onboarding. Verification rejects templates or exported GLBs that contain only a plinth.
 
 `refine_reference.py` reapplies measured composition, botanical geometry, and physical materials to an existing source. It writes fresh aperture measurements. `refine_fidelity_materials.apply(scene)` is also callable in memory; it never saves or renders on its own. Source volumetric haze, actual portal uplights, limestone pores, and cloudy pearl transmission are editable node graphs.
 

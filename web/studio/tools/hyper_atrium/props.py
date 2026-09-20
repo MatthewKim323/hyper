@@ -1,4 +1,4 @@
-"""Editable hero, glass portals, icons, and stone basin for the Hyper atrium.
+"""Editable hero, uncovered relic stations, and stone basin for the Hyper atrium.
 
 The build entry point adds objects to the active scene without changing the camera,
 world, render settings, water, or existing architecture. All dimensions are meters.
@@ -14,6 +14,35 @@ from mathutils import Vector
 
 COLLECTION_NAME = "Hyper | Hero and glass portals"
 FONT = None
+
+
+def is_station_cover(obj):
+    return bool(obj.get("station_cover_reference")) or any(
+        part in obj.name for part in (" | solid clear arched crystal", " | front polished rim")
+    )
+
+
+def hide_station_covers(scene):
+    """Retain aperture measurement guides without showing or exporting covers."""
+    covers = [obj for obj in scene.objects if is_station_cover(obj)]
+    for obj in covers:
+        obj["station_cover_reference"] = True
+        obj.hide_render = True
+        obj.hide_viewport = True
+    scene["station_display"] = "Uncovered relics and plinths; glass aperture guides are hidden."
+    return len(covers)
+
+
+def illuminate_relic_materials(materials):
+    """Give icon-only opal and lettering a restrained inner illumination."""
+    for key, strength in (("paper", 0.22), ("white", 0.10)):
+        material = materials[key]
+        if not material.use_nodes:
+            continue
+        for shader in material.node_tree.nodes:
+            if shader.type == "BSDF_PRINCIPLED":
+                shader.inputs["Emission Color"].default_value = (0.98, 0.84, 0.72, 1)
+                shader.inputs["Emission Strength"].default_value = strength
 
 
 def _collection():
@@ -278,6 +307,39 @@ def _rings_icon(x, y, z, materials):
         obj.rotation_euler = (math.pi / 2, math.radians(18 if i else -18), math.radians(8))
 
 
+def _quartz_shard(name, x, y, z, radius, height, material, tilt=0):
+    sides = 6
+    vertices = [
+        (radius * math.cos(i * math.tau / sides), radius * math.sin(i * math.tau / sides), shoulder * height)
+        for shoulder in (-0.29, 0.25) for i in range(sides)
+    ]
+    vertices += [(0.018, 0.012, -height * 0.5), (-0.025, -0.008, height * 0.5)]
+    faces = []
+    for i in range(sides):
+        following = (i + 1) % sides
+        faces.extend(((i, following, following + sides, i + sides), (12, following, i), (13, i + sides, following + sides)))
+    obj = _mesh(name, vertices, faces, material)
+    obj.location = (x, y, z)
+    obj.rotation_euler = (0.07, tilt, 0.24)
+    _bevel(obj, 0.008, 2)
+    return obj
+
+
+def _generic_relic(x, y, z, variant, material):
+    if variant == "quartz-tall":
+        _quartz_shard("Generic relic | tall faceted quartz", x, y, z, 0.26, 1.48, material, -0.12)
+    elif variant == "quartz-cluster":
+        for index, (dx, dy, dz, height, tilt) in enumerate(((-0.32, 0.04, -0.10, 1.00, -0.24), (0, -0.07, 0.10, 1.30, 0.035), (0.34, 0.06, -0.09, 0.96, 0.25))):
+            _quartz_shard("Generic relic | quartz cluster %d" % (index + 1), x + dx, y + dy, z + dz, 0.22, height, material, tilt)
+    elif variant == "quartz-octahedron":
+        vertices = [(0.48, 0, 0), (0, 0.33, 0), (-0.48, 0, 0), (0, -0.33, 0), (0, 0, 0.67), (0, 0, -0.59)]
+        faces = [(i, (i + 1) % 4, 4) for i in range(4)] + [((i + 1) % 4, i, 5) for i in range(4)]
+        obj = _mesh("Generic relic | suspended opal octahedron", vertices, faces, material)
+        obj.location = (x, y, z)
+        obj.rotation_euler = (0.09, -0.12, 0.16)
+        _bevel(obj, 0.012, 3)
+
+
 def _portal(name, x, y, width, height, label, icon, materials):
     existing = set(bpy.data.objects)
     radius = width * 0.59
@@ -285,9 +347,13 @@ def _portal(name, x, y, width, height, label, icon, materials):
     _cylinder(name + " | upper porcelain plinth", (x, y, 0.38), radius, 0.13, materials["stone"], 0.022)
     _cylinder(name + " | concealed warm light seam", (x, y, 0.465), radius * 0.97, 0.025, materials["glow"], 0.009)
     base = 0.48
-    _arch(name + " | solid clear arched crystal", x, y, base, width, height, 0.16, materials["portal_glass"])
-    _arch_edge(name + " | front polished rim", x, y - 0.073, base + 0.025, width - 0.025, height - 0.018, materials["edge"])
-    # Labels and icons are held just in front of the optical face, like etched displays.
+    cover = _arch(name + " | solid clear arched crystal", x, y, base, width, height, 0.16, materials["portal_glass"])
+    rim = _arch_edge(name + " | front polished rim", x, y - 0.073, base + 0.025, width - 0.025, height - 0.018, materials["edge"])
+    for guide in (cover, rim):
+        guide["station_cover_reference"] = True
+        guide.hide_render = True
+        guide.hide_viewport = True
+    # Preserve the established label and relic positions above each open plinth.
     front = y - 0.095
     nominal_width = {"invoice": 2.7, "ethereum": 2.0, "audit": 2.0, "cubes": 2.2, "rings": 2.5}.get(icon, 2.2)
     detail_scale = width / nominal_width
@@ -306,8 +372,11 @@ def _portal(name, x, y, width, height, label, icon, materials):
         _cube_icon(x, front - 0.05, icon_z, materials["paper"])
     elif icon == "rings":
         _rings_icon(x, front - 0.05, icon_z, materials)
+    elif icon in {"quartz-tall", "quartz-cluster", "quartz-octahedron"}:
+        _generic_relic(x, front - 0.05, icon_z, icon, materials["paper"])
     pivot = Vector((x, front, icon_z))
     for obj in set(bpy.data.objects) - before_icon:
+        obj["station_relic"] = True
         obj.location = pivot + (obj.location - pivot) * detail_scale
         obj.scale *= detail_scale
     parent = bpy.data.objects.new("Station | " + name, None)
@@ -404,6 +473,7 @@ def build_props(materials):
     mats["portal_glass"] = _portal_material()
     mats["paper"] = _principled("Icons | milky lilac opal glass", (0.90, 0.85, 0.96), 0.16, 0.48, 0.03)
     mats["white"] = _principled("Icons | white enamel lettering", (0.98, 0.97, 0.95), 0.28)
+    illuminate_relic_materials(mats)
     mats["edge"] = _principled("Portals | polished clear edge", (0.99, 0.97, 0.96), 0.07, 0.65, 0.12)
     _pool(mats)
     hero = _hero(mats)
