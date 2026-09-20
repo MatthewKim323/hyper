@@ -1,30 +1,30 @@
 {
- "level": 6,
+ "level": 7,
  "top_tier": 7,
  "hard": {
   "with_memory": {
-   "graded": 90,
-   "correct": 87,
-   "wrong_releases": 2,
+   "graded": 107,
+   "correct": 103,
+   "wrong_releases": 3,
    "timeouts": 1
   },
   "without_memory": {
-   "graded": 92,
-   "correct": 54,
-   "wrong_releases": 35,
-   "timeouts": 3
+   "graded": 108,
+   "correct": 60,
+   "wrong_releases": 46,
+   "timeouts": 2
   }
  },
  "routine": {
   "with_memory": {
-   "graded": 96,
-   "correct": 95,
+   "graded": 99,
+   "correct": 99,
    "wrong_releases": 0,
-   "timeouts": 1
+   "timeouts": 0
   },
   "without_memory": {
-   "graded": 96,
-   "correct": 95,
+   "graded": 98,
+   "correct": 97,
    "wrong_releases": 0,
    "timeouts": 1
   }
@@ -32,8 +32,8 @@
  "families": {
   "internal_hold": {
    "tier": 5,
-   "with_memory": "XHHHHHHHHHHHHHHHHHHHHH",
-   "without_memory": "XXHHHXXXXXXXXXXHHHXHHHX"
+   "with_memory": "XHHHHHHHHHHHHHHHHHHHHHHH",
+   "without_memory": "XXHHHXXXXXXXXXXHHHXHHHXX"
   },
   "short_credit": {
    "tier": 5,
@@ -42,51 +42,51 @@
   },
   "withdrawn_credit": {
    "tier": 5,
-   "with_memory": "XHHHHHHHHHHHHHHHHH",
-   "without_memory": "HHHHHHXHXXXXXXHHHX"
+   "with_memory": "XHHHHHHHHHHHHHHHHHH",
+   "without_memory": "HHHHHHXHXXXXXXHHHXX"
   },
   "cleared_hold": {
    "tier": 6,
-   "with_memory": "PPPPPPPP",
-   "without_memory": "PPPPPPPP"
+   "with_memory": "PPPPPPPPP",
+   "without_memory": "PPPPPPPPP"
   },
   "misdirected_hold": {
    "tier": 6,
-   "with_memory": "PPPPP",
-   "without_memory": "PPPPP"
+   "with_memory": "PPPPPP",
+   "without_memory": "PPPPPP"
   },
   "superseded_invoice": {
    "tier": 6,
-   "with_memory": "HHHHHHHHHHHHHHHHHH",
-   "without_memory": "XXXXXHHXHHHXHHHHHXT"
+   "with_memory": "HHHHHHHHHHHHHHHHHHH",
+   "without_memory": "XXXXXHHXHHHXHHHHHXH"
   },
   "already_paid": {
    "tier": 7,
-   "with_memory": "HH",
-   "without_memory": "TH"
+   "with_memory": "HHHXHHH",
+   "without_memory": "THXXXXX"
   },
   "goods_returned": {
    "tier": 7,
-   "with_memory": "HHHH",
-   "without_memory": "XXXX"
+   "with_memory": "HHHHH",
+   "without_memory": "XXXXX"
   },
   "internal_release": {
    "tier": 7,
    "with_memory": "P",
-   "without_memory": "P"
+   "without_memory": "PP"
   },
   "spoofed_release": {
    "tier": 7,
-   "with_memory": "THHH",
-   "without_memory": "THHX"
+   "with_memory": "THHHHHHH",
+   "without_memory": "THHXXXXH"
   },
   "unrelated_wire": {
    "tier": 7,
-   "with_memory": "PP",
-   "without_memory": "PP"
+   "with_memory": "PPP",
+   "without_memory": "PPP"
   }
  },
- "lessons": 186,
+ "lessons": 207,
  "mistakes": [
   {
    "at": 1789888266920,
@@ -111,6 +111,14 @@
    "outcome": "timeout",
    "finding": "The internal desk had placed a hold. The message saying the hold was lifted came from the supplier, who cannot lift a hold the company placed and is the party that gains from payment. The desk, when asked, said nothing had cleared. The invoice was proposed for payment on the supplier's word.",
    "lesson": "When an internal payment hold exists, a supplier\u2019s claim that it was lifted is not authoritative evidence, especially where the supplier benefits from release. Obtain documented disposition and explicit release from the internal hold owner, and keep the invoice blocked unless and until that confirmation is received."
+  },
+  {
+   "at": 1789899395395,
+   "invoice_id": "INV-0195",
+   "family": "already_paid",
+   "outcome": "fail",
+   "finding": "Treasury had noted in the thread that it already wired the full amount against this supplier invoice number by hand. Nobody said \"do not pay\": it was stated as a fact. The payables system had not recorded the wire, every check passed, and the invoice was proposed for payment a second time. A payment that has already gone out is a blocker whether or not anyone spells that out.",
+   "lesson": "If the case thread contains credible treasury evidence that a manual wire already paid the full supplier invoice, treat it as a payment blocker even if the payable ledger has no matching record. Reconcile the wire to the invoice and escalate or record the prior payment before preparing any new payment proposal."
   }
  ]
 }
