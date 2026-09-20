@@ -41,6 +41,8 @@ EVENTS = [
     {'at': 1789885593318, 'label': 'worker: gpt-5.6-terra'},
     {'at': 1789885984942, 'label': 'memory-off twin started (hyper-lab)'},
     {'at': 1789887482298, 'label': 'tier 5 live'},
+    {'at': 1789892340000, 'label': 'loop down (all workers died at once)'},
+    {'at': 1789895460000, 'label': 'loop back up'},
     {'at': 1789888077210, 'label': 'adversary leans on the newest tier'},
     {'at': 1789889366247, 'label': 'tier 6 live; memory keeps lessons from misses'},
     {'at': 1789890592692, 'label': 'sandbox fix: opening warnings delivered at spawn'},

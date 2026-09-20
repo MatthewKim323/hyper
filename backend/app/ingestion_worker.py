@@ -33,6 +33,14 @@ def run_once(store, search, organization_id=None):
             status='running',lease_until=now+600,claim_token=token,attempts=jobs.c.attempts+1,error=None))
         source=dict(db.execute(select(sources).where(sources.c.id==job['source_id'])).mappings().one())
         db.execute(update(sources).where(sources.c.id==source['id']).values(index_status='indexing',index_error=None))
+    skipped={x.strip() for x in os.getenv('ELASTIC_SKIP_ORGS','').split(',') if x.strip()}
+    if source['organization_id'] in skipped:
+        # Sandbox organizations never search their evidence. Indexing it would only cost inference and storage.
+        with store.engine.begin() as db:
+            if db.execute(update(jobs).where(jobs.c.id==job['id'],jobs.c.claim_token==token)
+                    .values(status='complete',lease_until=0,claim_token=None)).rowcount:
+                db.execute(update(sources).where(sources.c.id==source['id']).values(index_status='skipped',index_error=None))
+        return True
     try:
         search.ensure_index()
         # Graph first: the index stores which entities each chunk mentions.

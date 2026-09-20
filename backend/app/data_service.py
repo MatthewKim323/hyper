@@ -237,7 +237,8 @@ class DataService:
             cond=[sources.c.organization_id==self.oid,sources.c.active.is_(True)]
             if args.dataset:cond.append(sources.c.dataset==args.dataset)
             if args.documents_only:cond.append(sources.c.dataset.is_(None))
-            all_sources=db.execute(select(sources.c.id,sources.c.index_status).where(*cond)).mappings().all()
+            # A source skipped on purpose is not evidence waiting to be indexed, so it does not make coverage incomplete.
+            all_sources=db.execute(select(sources.c.id,sources.c.index_status).where(*cond,sources.c.index_status!='skipped')).mappings().all()
         ready=[s['id'] for s in all_sources if s['index_status']=='ready']
         pending=len(all_sources)-len(ready)
         if not ready:

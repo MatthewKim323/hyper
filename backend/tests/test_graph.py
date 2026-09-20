@@ -162,3 +162,11 @@ def test_graph_routes_are_scoped_to_the_signed_in_user(world,monkeypatch):
         assert client.get('/graph/stats').json()['nodes']==0
         assert client.post('/graph/entity',json={'entity':'VEN-002'}).json()['resolved'] is False
     finally:main.app.dependency_overrides.clear()
+
+def test_skipped_organizations_are_not_indexed_and_do_not_break_coverage(world,monkeypatch):
+    store,svc,search,_,_=world
+    monkeypatch.setenv('ELASTIC_SKIP_ORGS',svc.oid)
+    extra=svc.ingest('later.txt',b'A later note about VEN-002.',source_key='later')
+    while run_once(store,search):pass
+    assert svc.source(extra['id'])['index_status']=='skipped' and extra['id']+':0' not in search.docs
+    assert svc.search_evidence(EvidenceQuery(query='Granite Legal'))['coverage_complete'] is True
