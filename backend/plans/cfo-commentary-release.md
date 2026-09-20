@@ -34,7 +34,7 @@ Verification recorded so far:
 
 | Check | Result |
 | --- | --- |
-| Full backend suite before final regression additions | 436 passed, 11 skipped |
+| Full backend suite after integration with current main | 447 passed, 11 skipped |
 | Focused concern, journal, and audio suite with PostgreSQL checks enabled | 57 passed, no skips |
 | Frontend tests | 42 passed |
 | Frontend type check, lint, production build | Passed |
