@@ -15,6 +15,8 @@ i=0; until pg_isready -h 127.0.0.1 -p 15432 >/dev/null 2>&1 && curl -s -m 2 http
   i=$((i+1)); [ $i -gt 90 ] && { echo " timed out"; exit 1; }; printf "."; sleep 2; done; echo " ok"
 uv sync -q
 [ -d evaluator/node_modules ] || npm ci --silent --prefix evaluator
+# Create or upgrade tables once, up front. Several processes doing it at the same moment collide in Postgres.
+uv run python -c "from app.store import Store; Store()" >/dev/null
 start() { # name, port-or-empty, command...
   name=$1; port=$2; shift 2
   if [ -n "$port" ] && lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then echo "$name: already on :$port"; return; fi
