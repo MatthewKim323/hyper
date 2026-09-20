@@ -7,6 +7,9 @@
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/backend"
+# The key in backend/.env pays for the loop. A key exported in the shell would win over it silently
+# (dotenv never overrides), and has billed the wrong account before.
+unset OPENAI_API_KEY AI_GATEWAY_API_KEY
 mkdir -p var
 docker info >/dev/null 2>&1 || { command -v orbctl >/dev/null && orbctl start >/dev/null 2>&1; }
 docker compose -f compose.yaml up -d

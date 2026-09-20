@@ -10,6 +10,9 @@
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/backend"; mkdir -p var
+# The key in backend/.env pays for the loop. A key exported in the shell would win over it silently
+# (dotenv never overrides), and has billed the wrong account before.
+unset OPENAI_API_KEY AI_GATEWAY_API_KEY
 PAIRS="${LOOP_PAIRS:-hyper-lab:hyper-lab-control}"; WORKERS="${LOOP_WORKERS:-2}"; MODEL="${LOOP_MODEL:-gpt-5.6-terra}"
 for name in app.counterparty_worker "app.devin_exceptions\$" app.auto_agent app.spend_guard app.bench_timeline; do pkill -f "python -m $name" 2>/dev/null || true; done
 sleep 1
