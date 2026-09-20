@@ -27,7 +27,13 @@ Hyperfinance Agent runs accounts-payable exception resolution end to end for a c
 
 **It plays the auditor on itself.** A deterministic anomaly scanner sweeps the books for duplicate invoices, vendor bank-detail changes, price variances, unmatched invoices, and settlement residuals. Findings carry evidence citations, become real decision cards, and an agent can propose a dismissal but only a human can dismiss one.
 
-**It talks.** A voice CFO briefs you on the live loop: what is waiting for you, what was held and why, what mistakes the grader caught, what the system learned.
+**A second model has to agree before you are asked anything.** Decision cards, onboarding readiness and every saved chart are gated by an independent evaluator (`typesafe-ai/jev`) that answers boolean questions with probabilities and must clear 0.85 on every one — is this grounded in the cited evidence, are these options actually distinct, does this stay inside the authority the agent has. A card that fails is not shown: the concern is marked `card_failed` and the human gets a free-text box instead of three plausible-sounding options. The agent cannot declare itself ready either; the evaluator owns that decision.
+
+**It talks, and it knows what you are pointing at.** A voice CFO runs on Deepgram's Voice Agent API with 61 tools, and the browser streams what is under your cursor as you speak — reading the last 2.5 seconds of pointer trail, because people point about a second before they say "this one". Its on-screen state cannot be faked: it only shows *researching* when a real data tool is executing.
+
+**Its narration is not generated.** The running commentary over your workspace is deterministic application prose, written from recorded database facts with a closed table of explanations, spoken by Deepgram TTS. The browser refuses to play any audio whose hash does not match the caption it was given, and only one browser tab holds the speech lease. An agent narrating its own actions can lie about them; this one reads from the ledger.
+
+**You can point your own agent at it.** A published read-only MCP server exposes 11 tools — datasets, exact financial queries, evidence search, payable cases, AP aging, anomalies, proposals, trial balance — so Claude Code or Codex can work the company through the same authenticated API, with no second authorization path and no ability to approve anything.
 
 **And it grades itself, continuously.** An adversary spawns new exceptions around the clock across **21 scenario families in 7 difficulty tiers**, role-plays the supplier and the internal desks from a private fact sheet the agent cannot see, and grades the result **against persisted engine state, never against what the agent said**. Difficulty adapts: three correct in a row raises the tier, a miss drops it. It has reached tier 7 of 7.
 
@@ -75,6 +81,8 @@ Memory costs about **2x per hard case** ($0.028 vs $0.016) because it asks more 
 
 **Models.** OpenAI `gpt-5.6-terra` via the Responses API drives the unattended exception worker; Deepgram's Voice Agent API runs the listen → reason → speak loop for the voice CFO; Elastic Cloud Serverless carries the index with Jina embeddings and reranking. An Elastic Agent Builder investigator is provisioned on the same project over A2A, with the organization ID compiled into each ES|QL tool so it cannot read another tenant's evidence even if asked — its A2A agent card answers over protocol 0.3.0 and advertises all three scoped tools, including one that searches the knowledge graph. It has not yet run an investigation end to end, because the production index has no company in it yet, so nothing we claim above depends on it.
 
+**The interface.** One continuous Three.js scene — no react-three-fiber, a pinned and patched `three@0.143.0` — with a Draco-compressed environment, planar-reflected water, light shafts and a garden of 221,300 triangles. The six workspaces are physical objects in that room, and opening one flies the camera to it rather than opening a modal. The agent is the pearl at the centre: its surface displaces to the real RMS of the playback stream, so it moves only when sound is actually leaving your speakers.
+
 **Everything that runs, runs unattended.** Durable leased jobs, idempotency keys on every mutation, a spend guard that paces the adversary against metered token cost to hold a dollar-per-hour cap, and a keepalive that restarts the loop if any worker dies. A recorder snapshots the whole system every five minutes into a benchmark timeline, stamped with the git commit, and regenerates the tables in our whitepaper so no figure is ever typed by hand.
 
 **1,125 tests** (493 backend, 334 eval, 281 web, 17 engine). **288 commits in about 20 hours.**
@@ -85,7 +93,7 @@ Two of us, and we split along the seam between the world and the machine.
 
 **Matt** built the front of the system: the 3D atrium the product lives in, the relic workspaces, the charts and shaders, the voice CFO surface, and the command layer — plus the knowledge graph, the graph-widened retrieval, the adversary and its 21 scenario families, the benchmark timeline, and the evaluation harness. (163 commits in the atrium alone.)
 
-**Stephen** built the spine: the tool bridge and orchestrator, the deterministic accounting engines, connectors (Gmail, Drive, Ramp, Plaid), the posting and anomaly APIs, the MCP server, Clerk auth and organization isolation, and the Railway deployment.
+**Stephen** built the spine: the tool bridge and orchestrator, the deterministic accounting engines, connectors (Gmail, Drive, Ramp, Plaid), the posting and anomaly APIs, the evaluator service, the MCP server, Clerk auth and organization isolation, and the Railway deployment.
 
 We both committed heavily to `backend/app`, and we used AI teammates the way the tracks intend: **Codex** and **Claude Code** for implementation and review, **Devin** as a cloud worker inside the product's own tool bridge. Several of the results above came from one of us reviewing the other's work — including the reranker regression below, which an agent found by disbelieving its own benchmark.
 
@@ -149,6 +157,6 @@ We both committed heavily to `backend/app`, and we used AI teammates the way the
 
 **Devin.** Ran real exception work as a cloud worker inside the product's own authenticated tool bridge (5 completed tasks), with scoped machine tokens, idempotent request keys, and no ability to approve its own proposals.
 
-**Deepgram.** Voice Agent API runs the full listen → reason → tool-call → speak loop for the CFO you talk to; it briefs from live loop state.
+**Deepgram.** Voice Agent API runs the full listen → reason → tool-call → speak loop for the CFO you talk to (`flux-general-en` in, `aura-2-thalia-en` out, 61 tools, pointer-aware). A separate Aura TTS path speaks the deterministic workflow narration, with hash-verified audio-to-caption matching and a per-organization character budget.
 
 **Ramp.** Read-only Ramp bills and transactions ingest into the same evidence pipeline, normalized into minor units with the raw payload retained.
