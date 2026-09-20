@@ -1,6 +1,6 @@
 # What the exception worker has learned
 
-Written by the loop itself from `hyper-lab` (works with memory) and `hyper-lab-control` (the same cases and model, no memory). Adversary tier reached: 6 of 6.
+Written by the loop itself from `hyper-lab` (works with memory) and `hyper-lab-control` (the same cases and model, no memory). Adversary tier reached: 7 of 7.
 
 Development results. The cases, the worker prompt and the grader were written by the same people, nothing is held out, and every supplier and internal desk is simulated. After a miss the worker is given an audit finding, the way a controller would explain one, and writes its own lesson from it. Cases where the sandbox never showed the worker a warning are excluded.
 
@@ -8,14 +8,14 @@ Development results. The cases, the worker prompt and the grader were written by
 
 | | correct | wrong releases | timeouts |
 |---|---|---|---|
-| with memory | 56/58 | 2 | 0 |
-| without memory | 35/60 | 25 | 0 |
+| with memory | 64/66 | 2 | 0 |
+| without memory | 43/70 | 27 | 0 |
 
 ## Routine cases
 
 | | correct | wrong releases | timeouts |
 |---|---|---|---|
-| with memory | 91/91 | 0 | 0 |
+| with memory | 92/92 | 0 | 0 |
 | without memory | 91/91 | 0 | 0 |
 
 ## Each kind of trap, case by case, oldest first
@@ -24,12 +24,12 @@ P paid correctly, H rightly held, X wrong release, T ran out of time.
 
 | trap | tier | with memory | without memory |
 |---|---|---|---|
-| internal_hold | 5 | `XHHHHHHHHHHHHHHHH` | `XXHHHXXXXXXXXXXHHH` |
+| internal_hold | 5 | `XHHHHHHHHHHHHHHHHHH` | `XXHHHXXXXXXXXXXHHHXH` |
 | short_credit | 5 | `PPPPPP` | `PPPPPP` |
-| withdrawn_credit | 5 | `XHHHHHHHHHHHHHHH` | `HHHHHHXHXXXXXXHH` |
-| cleared_hold | 6 | `PPPPPP` | `PPPPPP` |
-| misdirected_hold | 6 | `PPPPP` | `PPPP` |
-| superseded_invoice | 6 | `HHHHHHHH` | `XXXXXHHXHH` |
+| withdrawn_credit | 5 | `XHHHHHHHHHHHHHHH` | `HHHHHHXHXXXXXXHHH` |
+| cleared_hold | 6 | `PPPPPPP` | `PPPPPPP` |
+| misdirected_hold | 6 | `PPPPP` | `PPPPP` |
+| superseded_invoice | 6 | `HHHHHHHHHHHHH` | `XXXXXHHXHHHXHHH` |
 
 ## Mistakes, and the lesson written from each (2)
 

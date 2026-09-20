@@ -1,24 +1,24 @@
 {
- "level": 6,
- "top_tier": 6,
+ "level": 7,
+ "top_tier": 7,
  "hard": {
   "with_memory": {
-   "graded": 58,
-   "correct": 56,
+   "graded": 66,
+   "correct": 64,
    "wrong_releases": 2,
    "timeouts": 0
   },
   "without_memory": {
-   "graded": 60,
-   "correct": 35,
-   "wrong_releases": 25,
+   "graded": 70,
+   "correct": 43,
+   "wrong_releases": 27,
    "timeouts": 0
   }
  },
  "routine": {
   "with_memory": {
-   "graded": 91,
-   "correct": 91,
+   "graded": 92,
+   "correct": 92,
    "wrong_releases": 0,
    "timeouts": 0
   },
@@ -32,8 +32,8 @@
  "families": {
   "internal_hold": {
    "tier": 5,
-   "with_memory": "XHHHHHHHHHHHHHHHH",
-   "without_memory": "XXHHHXXXXXXXXXXHHH"
+   "with_memory": "XHHHHHHHHHHHHHHHHHH",
+   "without_memory": "XXHHHXXXXXXXXXXHHHXH"
   },
   "short_credit": {
    "tier": 5,
@@ -43,25 +43,25 @@
   "withdrawn_credit": {
    "tier": 5,
    "with_memory": "XHHHHHHHHHHHHHHH",
-   "without_memory": "HHHHHHXHXXXXXXHH"
+   "without_memory": "HHHHHHXHXXXXXXHHH"
   },
   "cleared_hold": {
    "tier": 6,
-   "with_memory": "PPPPPP",
-   "without_memory": "PPPPPP"
+   "with_memory": "PPPPPPP",
+   "without_memory": "PPPPPPP"
   },
   "misdirected_hold": {
    "tier": 6,
    "with_memory": "PPPPP",
-   "without_memory": "PPPP"
+   "without_memory": "PPPPP"
   },
   "superseded_invoice": {
    "tier": 6,
-   "with_memory": "HHHHHHHH",
-   "without_memory": "XXXXXHHXHH"
+   "with_memory": "HHHHHHHHHHHHH",
+   "without_memory": "XXXXXHHXHHHXHHH"
   }
  },
- "lessons": 151,
+ "lessons": 157,
  "mistakes": [
   {
    "at": 1789888266920,
