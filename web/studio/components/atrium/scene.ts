@@ -38,6 +38,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const renderer = new WebGLRenderer({ canvas, alpha: false, antialias: false, powerPreference: "high-performance" });
   const restoreTransmission = configureAtriumTransmission(renderer, matchMedia("(pointer: coarse)").matches ? 512 : 1024);
   if (process.env.NODE_ENV === "development") {
+    renderer.info.autoReset = false;
     const gl = renderer.getContext();
     const debug = gl.getExtension("WEBGL_debug_renderer_info");
     canvas.dataset.gpu = String(gl.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
@@ -239,15 +240,26 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       return { station, depth: model.position.distanceTo(camera.position), left, top, width, height, labelLeft: ((label.x + 1) / 2 - left) / width, labelTop: ((1 - label.y) / 2 - top) / height, arrowTop: ((1 - arrow.y) / 2 - top) / height, fontWidth: Math.abs(letter.y - label.y) / 2 / ratio };
     }));
   }
-  function render() {
+  function render(forceReflections = true) {
     if (disposed || !ready) return;
-    water.prepareFrame(renderer, scene, camera);
+    const captureStarted = process.env.NODE_ENV === "development" ? performance.now() : 0;
+    if (process.env.NODE_ENV === "development") renderer.info.reset();
+    water.prepareFrame(renderer, scene, camera, forceReflections);
+    const beautyStarted = process.env.NODE_ENV === "development" ? performance.now() : 0;
     // Refraction already refreshed complete-scene shadows for this frame.
     const autoUpdate = renderer.shadowMap.autoUpdate;
     const needsUpdate = renderer.shadowMap.needsUpdate;
     renderer.shadowMap.autoUpdate = false;
     renderer.shadowMap.needsUpdate = false;
-    try { pipeline.render(); }
+    try {
+      pipeline.render();
+      if (process.env.NODE_ENV === "development") {
+        canvas.dataset.drawCalls = String(renderer.info.render.calls);
+        canvas.dataset.triangles = String(renderer.info.render.triangles);
+        canvas.dataset.captureMs = (beautyStarted - captureStarted).toFixed(1);
+        canvas.dataset.beautyMs = (performance.now() - beautyStarted).toFixed(1);
+      }
+    }
     finally {
       renderer.shadowMap.autoUpdate = autoUpdate;
       renderer.shadowMap.needsUpdate = needsUpdate;
@@ -290,7 +302,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       if (frameSampleStarted) canvas.dataset.fps = (30000 / (now - frameSampleStarted)).toFixed(1);
       frameSampleStarted = now;
     }
-    render();
+    render(false);
   }
   function resume() {
     cancelAnimationFrame(frame);

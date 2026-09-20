@@ -390,4 +390,80 @@ describe("live atrium water", () => {
     sharedTexture.dispose();
     harness.dispose();
   });
+
+  test("alternates cached reflections while refraction stays current, with full refresh after invalidation", () => {
+    const water = createAtriumWater();
+    const fixture = captureScene(water);
+    const [floor, basin] = water.group.children as Reflector[];
+    const captures: string[] = [];
+    const harness = captureHarness((_scene, camera, target) => {
+      captures.push(camera === fixture.camera ? "refraction" : target === floor.getRenderTarget() ? "floor" : target === basin.getRenderTarget() ? "basin" : "unexpected");
+    });
+    const expectFrame = (expected: string[], force = false) => {
+      captures.length = 0;
+      water.prepareFrame(harness.renderer, fixture.scene, fixture.camera, force);
+      assert.deepEqual(captures, expected);
+      harness.assertRestored();
+    };
+    expectFrame(["refraction", "floor", "basin"]);
+    expectFrame(["refraction", "floor"]);
+    expectFrame(["refraction", "basin"]);
+
+    // Small parallax does not invalidate both mirrors, but both still receive
+    // the current camera's refraction matrices for their water shading.
+    fixture.camera.position.x += 0.01;
+    expectFrame(["refraction", "floor"]);
+    const current = new Matrix4().multiplyMatrices(fixture.camera.projectionMatrix, fixture.camera.matrixWorldInverse);
+    for (const surface of [floor, basin]) assert.deepEqual(material(surface).uniforms.uRefractionMatrix.value, current);
+
+    expectFrame(["refraction", "floor", "basin"], true);
+    expectFrame(["refraction", "floor"]);
+    water.resize(960, 540);
+    expectFrame(["refraction", "floor", "basin"]);
+    expectFrame(["refraction", "floor"]);
+    fixture.camera.fov += 2;
+    fixture.camera.updateProjectionMatrix();
+    expectFrame(["refraction", "floor", "basin"]);
+    expectFrame(["refraction", "floor"]);
+
+    captures.length = 0;
+    water.prepareFrame(harness.renderer, fixture.scene, fixture.camera);
+    assert.deepEqual(captures, ["refraction", "floor", "basin"], "omitted force flag preserves full-capture compatibility");
+    water.dispose(); fixture.dispose(); harness.dispose();
+  });
+
+  test("a failed partial reflection invalidates both cached surfaces before recovery", () => {
+    const water = createAtriumWater();
+    const fixture = captureScene(water);
+    const [floor, basin] = water.group.children as Reflector[];
+    let failTarget: WebGLRenderTarget | null = null;
+    const captures: string[] = [];
+    const harness = captureHarness((_scene, camera, target) => {
+      captures.push(camera === fixture.camera ? "refraction" : target === floor.getRenderTarget() ? "floor" : "basin");
+      if (target === failTarget) throw new Error("partial capture failed");
+    });
+    water.prepareFrame(harness.renderer, fixture.scene, fixture.camera, false);
+    failTarget = floor.getRenderTarget();
+    assert.throws(() => water.prepareFrame(harness.renderer, fixture.scene, fixture.camera, false), /partial capture failed/);
+    harness.assertRestored();
+    failTarget = null;
+    captures.length = 0;
+    water.prepareFrame(harness.renderer, fixture.scene, fixture.camera, false);
+    assert.deepEqual(captures, ["refraction", "floor", "basin"]);
+    captures.length = 0;
+    water.prepareFrame(harness.renderer, fixture.scene, fixture.camera, false);
+    assert.deepEqual(captures, ["refraction", "floor"]);
+    failTarget = basin.getRenderTarget();
+    assert.throws(() => water.prepareFrame(harness.renderer, fixture.scene, fixture.camera, false), /partial capture failed/);
+    harness.assertRestored();
+    failTarget = null;
+    captures.length = 0;
+    water.prepareFrame(harness.renderer, fixture.scene, fixture.camera, false);
+    assert.deepEqual(captures, ["refraction", "floor", "basin"]);
+    water.dispose();
+    captures.length = 0;
+    water.prepareFrame(harness.renderer, fixture.scene, fixture.camera, false);
+    assert.equal(captures.length, 0);
+    fixture.dispose(); harness.dispose();
+  });
 });

@@ -4,7 +4,7 @@ import { createWaterRipples, type WaterRipples } from "./ripples";
 
 export type AtriumWater = {
   group: Group;
-  prepareFrame(renderer: WebGLRenderer, scene: Scene, camera: Camera): void;
+  prepareFrame(renderer: WebGLRenderer, scene: Scene, camera: Camera, forceReflections?: boolean): void;
   update(time: number, delta: number): void;
   splash(worldX: number, worldZ: number, strength?: number): void;
   setPaused(paused: boolean): void;
@@ -259,6 +259,7 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
   refractionTarget.depthTexture = new DepthTexture(maximumSize, maximumSize, UnsignedIntType);
   const refractionMatrix = new Matrix4();
   const inverseRefractionMatrix = new Matrix4();
+  const reflectionProjection = new Matrix4();
   const viewport = new Vector4();
   const captureMaterials = new Map<Material, { replacement: Material; release: () => void }>();
   const captureMaterialArrays = new WeakMap<Material[], Material[]>();
@@ -267,6 +268,8 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
   let preparing = false;
   let paused = false;
   let disposed = false;
+  let reflectionsReady = false;
+  let nextReflection = 0;
 
   function captureMaterial(original: Material): Material {
     if (!hasTransmission(original)) return original;
@@ -354,7 +357,7 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
 
   return {
     group,
-    prepareFrame(renderer, scene, camera) {
+    prepareFrame(renderer, scene, camera, forceReflections = true) {
       if (disposed || preparing) return;
       const target = renderer.getRenderTarget();
       const cubeFace = renderer.getActiveCubeFace();
@@ -365,6 +368,8 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
       const autoClear = renderer.autoClear;
       const scissorTest = renderer.getScissorTest();
       const wasVisible = group.visible;
+      const refreshBoth = forceReflections || !reflectionsReady || !reflectionProjection.equals(camera.projectionMatrix);
+      let completed = false;
       renderer.getCurrentViewport(viewport);
       preparing = true;
       try {
@@ -406,9 +411,13 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
         restoreMaterials();
         renderer.shadowMap.autoUpdate = false;
         renderer.shadowMap.needsUpdate = false;
-        for (const surface of surfaces) {
+        for (let index = 0; index < surfaces.length; index++) {
+          const surface = surfaces[index];
           surface.material.uniforms.uRefractionMatrix.value.copy(refractionMatrix);
           surface.material.uniforms.uInverseRefractionMatrix.value.copy(inverseRefractionMatrix);
+          // Refraction remains current for both surfaces. Their slow reflected
+          // objects can share alternating captures during ordinary motion.
+          if (!refreshBoth && index !== nextReflection) continue;
           const wasSurfaceVisible = surface.reflector.visible;
           try {
             surface.capture.call(surface.reflector, renderer, scene, camera, surface.reflector.geometry, surface.material, undefined as never);
@@ -416,7 +425,12 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
             surface.reflector.visible = wasSurfaceVisible;
           }
         }
+        reflectionProjection.copy(camera.projectionMatrix);
+        reflectionsReady = true;
+        nextReflection = refreshBoth ? 0 : (nextReflection + 1) % surfaces.length;
+        completed = true;
       } finally {
+        if (!completed) reflectionsReady = false;
         restoreMaterials();
         group.visible = wasVisible;
         renderer.xr.enabled = xrEnabled;
@@ -448,6 +462,7 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
     setPaused(value) { paused = value; },
     resize(width, height) {
       if (disposed || !Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return;
+      reflectionsReady = false;
       const scale = Math.min(1, maximumSize / Math.max(width, height));
       const w = Math.max(32, Math.round(width * scale));
       const h = Math.max(32, Math.round(height * scale));
