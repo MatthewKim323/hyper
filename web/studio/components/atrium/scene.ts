@@ -50,6 +50,10 @@ const objectName = (object: Object3D) => String(object.userData.name ?? object.n
 
 export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: AtriumManifest, onBounds: (bounds: StationBounds[]) => void, signal?: AbortSignal, onAgentBounds?: (bounds: AgentBounds) => void): Promise<AtriumRenderer> {
   const renderer = new WebGLRenderer({ canvas, alpha: false, antialias: false, powerPreference: "high-performance" });
+  // three asks the driver for every program's info log after linking, which blocks until the
+  // compile finishes. Measured as a ~54 ms stall when the world is first revealed. Keep it in
+  // development so shader mistakes still surface.
+  renderer.debug.checkShaderErrors = process.env.NODE_ENV === "development" && new URLSearchParams(location.search).has("shaderErrors");
   const restoreTransmission = configureAtriumTransmission(renderer, matchMedia("(pointer: coarse)").matches ? 512 : 1024);
   // Metal timer queries split command buffers and disturb normal frame pacing.
   // Keep profiling explicit, even in development, when measuring a GPU phase.

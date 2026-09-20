@@ -22,6 +22,8 @@ const store: any = storeRaw;
 const DURATION = 3;
 const EASE = "power4.inOut";
 const WORLD_READY_TIMEOUT = 12000;
+// How long the landed frame covers the live world while it spins up.
+const HOLD_LANDED_MS = 450;
 
 const VERT = `attribute vec2 position; varying vec2 vUv;
 void main() { vUv = position * 0.5 + 0.5; gl_Position = vec4(position, 0.0, 1.0); }`;
@@ -248,8 +250,14 @@ async function runEngineTransition(onCovered: () => void): Promise<boolean> {
         store.Audio?.play?.({ key: "audio.new_water_projects", isInteraction: true });
       }, [], 0.6);
     // The engine canvas now shows the same image the world is about to show.
+    // Keep the landed frame on screen while the live world starts. Revealing it wakes its render
+    // loop and mounts its interface in the same frames. The engine canvas underneath already shows
+    // the same image, so the world stays hidden for a beat and that work happens out of sight.
+    const room = document.querySelector<HTMLElement>("[data-warm]");
+    if (room) room.style.visibility = "hidden";
     onCovered();
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    await new Promise<void>((resolve) => setTimeout(resolve, HOLD_LANDED_MS));
+    if (room) room.style.visibility = "";
     return true;
   } finally {
     gl.composerPasses.remove(pass);
