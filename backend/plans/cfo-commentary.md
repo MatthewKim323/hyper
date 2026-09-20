@@ -1,6 +1,6 @@
 # CFO live commentary implementation plan
 
-Status: core implementation is present and undergoing release verification as of September 20, 2026. The committed workflow journal, deterministic commentary, streamed Deepgram PCM playback, and durable concern decision worker are implemented. The real Deepgram smoke test passed; live Jev and decision-worker confirmation is still pending.
+Status: implemented and verified September 20, 2026. The committed workflow journal, deterministic commentary, streamed Deepgram PCM playback, and durable concern decision worker are implemented. Real Jev review, browser speech playback, and a browser-submitted Astra investigation passed. See the release notes for verification evidence and limits.
 
 See [CFO commentary release notes](cfo-commentary-release.md) for implemented scope, setup, test results, and current limits. The remaining sections preserve the reviewed design and release targets, not a claim that every target is implemented or verified. In particular, conversation and commentary do not yet share a cross-device playback fence. The original inspection baseline was `1c52d51`.
 
