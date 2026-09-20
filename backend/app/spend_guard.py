@@ -8,6 +8,7 @@ settles at the cap. Far over the cap, it pauses new exceptions until the rate co
 """
 import argparse
 import json
+import os
 import time
 from pathlib import Path
 
@@ -23,7 +24,9 @@ from .store import Store  # noqa: E402
 PRICES = {'gpt-5.6-luna': (0.20, 0.02, 1.20), 'gpt-5.6-terra': (2, 0.2, 12), 'gpt-5.6-sol': (4, 0.4, 20), 'gpt-6-astra': (10, 1, 50), 'gpt-5-mini': (0.25, 0.025, 2)}
 USAGE = Path(__file__).resolve().parents[1] / 'var' / 'auto-agent-usage.jsonl'
 WINDOW_MS = 600_000
-MIN_INTERVAL, MAX_INTERVAL = 5, 3600
+# The floor is about the machine, not the money: every case ingests half a dozen documents, and a case every
+# five seconds alongside everything else on a laptop pushed its load past three times its cores.
+MIN_INTERVAL, MAX_INTERVAL = int(os.getenv('SPEND_GUARD_MIN_INTERVAL', '20')), 3600
 
 
 def hourly(lines, now_ms, window_ms=WINDOW_MS):

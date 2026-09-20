@@ -21,4 +21,4 @@ def test_the_interval_moves_toward_the_cap_and_stays_in_bounds():
     assert next_interval(80, 34, 5) > 300, 'far over the cap: exceptions get much rarer'
     assert 40 < next_interval(80, 3, 5) < 80, 'under the cap: a little faster, not a lurch'
     assert next_interval(80, 0, 5) == 80, 'no usage yet: leave it alone'
-    assert next_interval(6, 0.01, 5) == 5 and next_interval(3000, 500, 5) == 3600
+    assert next_interval(21, 0.01, 5) == 20 and next_interval(3000, 500, 5) == 3600
