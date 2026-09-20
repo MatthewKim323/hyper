@@ -55,7 +55,8 @@ Same image as the API, one Railway service each, `START_MODULE` set, no health c
 | `app.ingestion_worker` | indexes uploaded sources | `ELASTIC_SKIP_ORGS=hyper-lab,hyper-lab-control,demo-meridian-control` |
 | `app.elastic_worker` | evidence investigations | |
 | `app.counterparty_worker` | delivers simulated replies, grades cases, runs the adversary | `COUNTERPARTY_TIMEOUT_MS=600000` |
-| `app.auto_agent` | the worker that resolves the cases | `OPENAI_API_KEY`, `AUTO_AGENT_MODEL=gpt-5.6-terra`, `DEVIN_CONTROL_PAIRS=hyper-lab:hyper-lab-control` |
+| `app.auto_agent` | the worker that resolves the cases, and brings a held invoice to the owner as a decision | `OPENAI_API_KEY`, `AUTO_AGENT_MODEL=gpt-5.6-terra`, `DEVIN_CONTROL_PAIRS=hyper-lab:hyper-lab-control`, `AUTO_AGENT_CONCERN_ORGS=demo-meridian` |
+| `app.concern_worker` + the evaluator (`node evaluator/server.mjs`) | turn a raised concern into three reviewed options the CFO reads out | `AI_GATEWAY_API_KEY`, `CONCERN_MODEL`, `EVALUATOR_URL`, `EVALUATOR_SECRET` |
 | `app.devin_exceptions` | mirrors each lab case into the memory-off control company | `DEVIN_EXCEPTION_TASKS=false`, `DEVIN_CONTROL_PAIRS=hyper-lab:hyper-lab-control` |
 | `app.spend_guard` | paces the adversary to a dollar cap, from metered usage in the database | `SPEND_CAP=5`, `SPEND_GUARD_ORGS=hyper-lab` (the lab only: left to the guard, the demo company gets sped up to the floor whenever spend is low, and fills with simulated documents) |
 
