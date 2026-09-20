@@ -4,6 +4,7 @@ import { createAtriumAtmosphere } from "./atmosphere";
 import { createAtriumWater } from "./water";
 import { createAtriumSunlight } from "./sunlight";
 import { createAtriumPipeline } from "./rendering";
+import { ATRIUM_FRAME_RATE, atriumResolution } from "./resolution";
 import { createEtherealInteraction } from "./ethereal";
 import { createAtriumSideLight, type AtriumSideLightMetadata } from "./side-light";
 import { createAgentAura, type AgentAura } from "./agent-aura";
@@ -63,6 +64,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   renderer.setPixelRatio(1);
   // Adaptive resolution state, declared before anything that can call resize().
   let quality = 1;
+  let minimumQuality = 1;
   let steadySamples = 0;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFSoftShadowMap;
@@ -334,9 +336,10 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     const parent = canvas.parentElement;
     if (!parent || disposed) return;
     const width = Math.max(1, parent.clientWidth), height = Math.max(1, parent.clientHeight);
-    const pixelCap = matchMedia("(pointer: coarse)").matches ? 1.25 : 1.5;
-    // `quality` is lowered by the frame loop when the measured rate drops, and raised again when there is headroom.
-    renderer.setPixelRatio(Math.max(.6, Math.min(window.devicePixelRatio || 1, pixelCap, Math.sqrt(2600000 / (width * height))) * quality));
+    const resolution = atriumResolution(width, height, window.devicePixelRatio, matchMedia("(pointer: coarse)").matches, quality);
+    minimumQuality = resolution.minimumQuality;
+    renderer.setPixelRatio(resolution.pixelRatio);
+    canvas.dataset.pixelRatio = resolution.pixelRatio.toFixed(2);
     renderer.setSize(width, height, false);
     pipeline.resize(Math.max(1, parent.clientWidth), Math.max(1, parent.clientHeight));
     water.resize(parent.clientWidth, parent.clientHeight);
@@ -347,7 +350,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   function draw(now: number) {
     if (disposed || !ready || paused || document.hidden || overlay) return;
     frame = requestAnimationFrame(draw);
-    if (previous && now - previous < 1000 / 60 - .5) return;
+    if (previous && now - previous < 1000 / ATRIUM_FRAME_RATE - .5) return;
     const delta = previous ? Math.min((now - previous) / 1000, 0.1) : 1 / 30;
     elapsed += delta;
     previous = now;
@@ -369,11 +372,10 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       if (frameSampleStarted) {
         const fps = 30000 / (now - frameSampleStarted);
         canvas.dataset.fps = fps.toFixed(1);
-        // Adaptive resolution: this scene is fill-rate bound (half-float beauty, bloom, captures), so
-        // pixels are the cheapest thing to give up. Step down fast, step up slowly, never oscillate
-        // on a single sample.
-        const next = fps < 42 ? Math.max(.6, quality - .12) : fps > 57 && ++steadySamples >= 4 ? Math.min(1, quality + .06) : quality;
-        if (fps <= 57) steadySamples = 0;
+        // Favor readable stone and geometry over an unsustainable 60fps target.
+        // Lower resolution only inside the clarity floor, with slow recovery.
+        const next = fps < 24 ? Math.max(minimumQuality, quality - .06) : fps > 28 && ++steadySamples >= 4 ? Math.min(1, quality + .03) : quality;
+        if (fps <= 28) steadySamples = 0;
         if (next !== quality) { quality = next; steadySamples = 0; canvas.dataset.quality = quality.toFixed(2); resize(); }
       }
       frameSampleStarted = now;
