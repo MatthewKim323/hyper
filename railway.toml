@@ -1,0 +1,23 @@
+# Deploys the product API. The previous config pointed at eval/Dockerfile, which serves
+# the private grader (eval/scripts/preparation.py), not app.main — and could not build at
+# all, because that image requires a RUN_ROOT build arg this file never passed.
+#
+# Build context is the repo root: backend depends on ./resolve as a path dependency.
+#
+# Workers do not run here. Each is a separate long-running process (see tools/dev-up.sh);
+# deploy them as additional Railway services using this same image with START_MODULE set,
+# e.g. START_MODULE=app.ingestion_worker. Without at least the ingestion worker, uploaded
+# sources stay index_status='pending' forever and evidence search never sees them.
+#
+# To build the grader image instead:
+#   docker build -f eval/Dockerfile --build-arg RUN_ROOT=eval/runs/<run> -t eval-api .
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "backend/Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 120
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
