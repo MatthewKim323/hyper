@@ -26,4 +26,7 @@ const server = createServer(async (req, res) => {
     respond(200, {...decide(result.answers), revision:state.revision, usage:result.usage});
   } catch {respond(503, {error:'Evaluation unavailable'});}
 });
-server.listen(Number(process.env.EVALUATOR_PORT ?? 8001), '127.0.0.1');
+// Loopback by default: this service holds the gateway key and trusts a shared secret, so
+// it must not be reachable by accident. A deployment that puts it on its own host sets
+// EVALUATOR_HOST=0.0.0.0 deliberately, and is responsible for keeping it private.
+server.listen(Number(process.env.PORT ?? process.env.EVALUATOR_PORT ?? 8001), process.env.EVALUATOR_HOST ?? '127.0.0.1');
