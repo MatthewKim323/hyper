@@ -76,3 +76,12 @@
 @media (max-width: 900px) { .ws-grid, .ws-columns { grid-template-columns: 1fr; gap: 0; } .ws-columns { gap: 1rem; } .ws-feed li { grid-template-columns: 1fr; gap: 0.25rem; } }
 @media (max-width: 767px) { .workspace { top: 6rem; } .ws-content { padding: 1.25rem 1.25rem 5rem; } .ws-strip { max-width: calc(100vw - 2rem); overflow-x: auto; } }
 @media (prefers-reduced-motion: reduce) { .ws-options button { transition: none; } }
+
+/* Sign-in entry. Sits above the voice surface, below the page loader. */
+.ws-signin { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 1.5rem; color: #252321; background: rgb(246 242 240 / 72%); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+.ws-signin > div { max-width: 26rem; text-align: center; }
+.ws-signin h2 { margin: 0.7rem 0 0.6rem; font-weight: 400; font-size: clamp(1.6rem, 2.6vw, 2.4rem); line-height: 1.1; letter-spacing: -0.045em; text-wrap: balance; }
+.ws-signin p { margin: 0 auto 1.4rem; font-size: 0.92rem; line-height: 1.5; color: #63574e; }
+.ws-signin button { min-height: 44px; padding: 0.6rem 1.6rem; border: 1px solid #252321; border-radius: 99px; font: inherit; font-size: 0.88rem; color: #fff; background: #252321; cursor: pointer; transition: transform 160ms; }
+.ws-signin button:active { transform: scale(0.97); }
+.ws-account { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 61; padding: 0.35rem 0.8rem; border: 1px solid rgb(37 35 33 / 12%); border-radius: 99px; font: inherit; font-size: 0.72rem; color: #716860; background: rgb(246 242 240 / 80%); cursor: pointer; }

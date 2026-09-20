@@ -16,6 +16,7 @@ import EngineRoot from "@/components/EngineRoot";
 import TimelineWorkspace from "@/components/timeline/TimelineWorkspace";
 import BenchmarksWorkspace from "@/components/benchmarks/BenchmarksWorkspace";
 import WorkspaceSections from "@/components/workspace/WorkspaceSections";
+import SignInGate from "@/components/workspace/SignInGate";
 import { ALWAYS_ONBOARD } from "@/lib/onboarding/interface";
 import OnboardingWorkspace from "@/components/onboarding/OnboardingWorkspace";
 import FingerCursor from "@/components/finger/FingerCursor";
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <TimelineWorkspace />
         <BenchmarksWorkspace />
         <WorkspaceSections />
+        <SignInGate />
         <OnboardingWorkspace />
         <FingerCursor />
         <EngineRoot />

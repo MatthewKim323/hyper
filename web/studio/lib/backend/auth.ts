@@ -32,9 +32,10 @@ export async function getBackendToken(): Promise<string | null> {
 export function startAuth(): Promise<void> {
   if (state.mode !== "clerk" || typeof window === "undefined") return Promise.resolve();
   starting ??= (async () => {
-    const { Clerk } = await import("@clerk/clerk-js");
+    // clerk-js 6 ships without its sign-in components; they come from @clerk/ui and are passed to load().
+    const [{ Clerk }, { ui }] = await Promise.all([import("@clerk/clerk-js"), import("@clerk/ui")]);
     clerk = new Clerk(CLERK_KEY!);
-    await clerk.load();
+    await clerk.load({ ui });
     clerk.addListener(() => publish({ signedIn: !!clerk.session }));
     publish({ ready: true, signedIn: !!clerk.session });
   })().catch(() => { starting = null; publish({ ready: true, signedIn: false }); });
