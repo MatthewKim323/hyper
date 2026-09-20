@@ -291,3 +291,51 @@ async def test_tool_validation_reason_reaches_the_model(client,monkeypatch):
     assert [e for e in events if e.get('type')=='tool.result'][-1]['result']=={'error':'Too many groups; narrow the query rather than charting a truncated result'}
     await bridge.tool({'id':'n','name':'navigate_section','arguments':json.dumps({'section':'payments'})},0)
     assert 'Invalid tool arguments' in [e for e in events if e.get('type')=='tool.result'][-1]['result']['error']
+
+
+def test_open_tools_resolve_before_the_browser_opens_anything(client):
+    """A model can invent an ID. Opening must fail on the server, not draw an empty panel.
+
+    The browser treats an {'opened': True} result as an instruction to display something, so these
+    tools are the one place where an unverified ID would become a visible, confusing lie. They must
+    also stay organization scoped: an ID from another workspace is not found, never rendered.
+    """
+    session = client.post('/world/agent', headers=headers()).json()['session']
+    state = {'organization_id': session['organization_id']}
+
+    for name, args in [('open_source_document', {'source_id': 'src_invented'}),
+                       ('open_payable_case', {'case_id': 'case_invented'})]:
+        with pytest.raises(LookupError):
+            dashboard.execute(main.store, state, name, args)
+
+    source = main.store.engine  # a real source belonging to this organization
+    import time as _time
+    from app.database import sources
+    with source.begin() as db:
+        db.execute(sources.insert().values(id='src_open', organization_id=state['organization_id'],
+            source_key='k', version=1, filename='ledger.csv', content_type='text/csv', object_key='o',
+            sha256='d', import_fingerprint='f', size_bytes=4, dataset=None, currency='USD', schema='{}',
+            record_count=1, created_at=int(_time.time()*1000), active=True, index_status='ready', index_error=None))
+
+    opened = dashboard.execute(main.store, state, 'open_source_document', {'source_id': 'src_open'})
+    assert opened == {'opened': True, 'section': 'evidence', 'source_id': 'src_open',
+                      'filename': 'ledger.csv', 'index_status': 'ready'}
+
+    # Another organization cannot open it, even holding the exact ID.
+    with pytest.raises(LookupError):
+        dashboard.execute(main.store, {'organization_id': 'org_someone_else'},
+                          'open_source_document', {'source_id': 'src_open'})
+
+
+def test_navigate_section_reaches_every_station_the_router_serves():
+    """`identity` is a real station the router routes to.
+
+    It was missing from this tool's enum while the frontend routed it happily, so asking to open
+    Access produced a schema rejection the user experienced as the agent ignoring them.
+    """
+    assert 'identity' in dashboard.SECTIONS
+    enum = next(t for t in dashboard.definitions()
+                if t['name'] == 'navigate_section')['parameters']['properties']['section']['enum']
+    assert set(enum) == set(dashboard.SECTIONS)
+    assert dashboard.execute(None, {}, 'navigate_section', {'section': 'identity'}) == {
+        'section': 'identity', 'opened': True}

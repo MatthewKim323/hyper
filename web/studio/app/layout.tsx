@@ -22,10 +22,32 @@ import FingerCursor from "@/components/finger/FingerCursor";
 import CommandLayer from "@/components/command/CommandLayer";
 import HomeLinks from "@/components/HomeLinks";
 
+const SITE = "https://hyper.stephenhung.me";
+const TITLE = "hyper. — accounts payable that shows its work";
+const DESCRIPTION =
+  "Hyper resolves accounts-payable exceptions from your own documents. Every amount is recomputed by a deterministic engine and every claim cites the source it came from.";
+
 export const metadata: Metadata = {
-  title: "hyper. | HackMIT 2026",
-  description:
-    "An accounts-payable exception-resolution project by Matthew Kim and Stephen Hung for HackMIT 2026.",
+  metadataBase: new URL(SITE),
+  title: { default: TITLE, template: "%s — hyper." },
+  description: DESCRIPTION,
+  applicationName: "hyper.",
+  authors: [{ name: "Matthew Kim" }, { name: "Stephen Hung" }],
+  keywords: [
+    "accounts payable", "AP automation", "three-way match", "invoice exceptions",
+    "financial evidence", "audit trail", "Elasticsearch", "AI agent", "HackMIT 2026",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website", url: SITE, siteName: "hyper.", title: TITLE, description: DESCRIPTION,
+    locale: "en_GB",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "hyper. — accounts payable that shows its work" }],
+  },
+  twitter: {
+    card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/og.png"],
+  },
+  // The /dev pages are scratch surfaces, excluded in robots.ts. Everything public is indexable.
+  robots: { index: true, follow: true },
 };
 
 // Route-specific body classes are applied before first paint;
@@ -39,10 +61,28 @@ document.body.className=c;
 var done=false;if(!${ALWAYS_ONBOARD}){try{done=localStorage.getItem("hyper.onboarding.v1")==="complete";}catch(e){}}
 document.documentElement.dataset.onboarding=done?"complete":"required";})();`;
 
+// Structured data. SoftwareApplication rather than Organization: this is a product page, and the
+// authors are the people who built it, not a company that employs them.
+const JSON_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "hyper.",
+  url: SITE,
+  description: DESCRIPTION,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  author: [
+    { "@type": "Person", name: "Matthew Kim" },
+    { "@type": "Person", name: "Stephen Hung" },
+  ],
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+});
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en-GB" className="asscroll-disabled" data-onboarding="required" suppressHydrationWarning>
       <body className="home page-template-home-contact" suppressHydrationWarning>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON_LD }} />
         <script dangerouslySetInnerHTML={{ __html: BODY_CLASS_SCRIPT }} />
         <Shell />
         <div asscroll-container="" data-router-wrapper="">
