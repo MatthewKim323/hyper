@@ -1,0 +1,12 @@
+# `railway up` uploads the working tree. Without this the tarball is ~4GB of build output —
+# web/studio/.next alone is 1.6GB and node_modules 1.1GB — and the upload times out before any
+# service can deploy. Tracked sources are ~119MB.
+**/node_modules
+**/.next
+**/dist
+**/.venv
+**/__pycache__
+**/*.pyc
+eval/runs
+web/studio/public/mediapipe
+.git
