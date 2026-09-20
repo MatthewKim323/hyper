@@ -11,7 +11,7 @@ def state(monkeypatch):
 
 def test_cfo_uses_reasoning_without_changing_onboarding(state):
     cfg = voice.settings(state)
-    assert cfg['agent']['think']['provider'] == {'type': 'open_ai', 'model': 'gpt-5.6-luna', 'reasoning_mode': 'medium'}
+    assert cfg['agent']['think']['provider'] == {'type': 'open_ai', 'model': 'gpt-5', 'reasoning_mode': 'medium'}
     assert voice.CFO_SPEECH_PROMPT in cfg['agent']['think']['prompt']
     assert cfg['agent']['think']['functions'], 'Reasoning must retain the real tool loop.'
     assert 'endpoint' not in cfg['agent']['think'], 'Managed voice must not leak a separate provider credential.'
@@ -26,7 +26,7 @@ def test_explicit_nonreasoning_provider_does_not_receive_openai_only_setting(sta
     monkeypatch.setenv('DEEPGRAM_THINK_MODEL', 'claude-haiku-4-5')
     assert voice.settings(state)['agent']['think']['provider'] == {'type': 'anthropic', 'model': 'claude-haiku-4-5'}
     monkeypatch.setenv('CFO_THINK_PROVIDER', 'open_ai')
-    monkeypatch.setenv('CFO_THINK_MODEL', 'gpt-5.6-luna')
+    monkeypatch.setenv('CFO_THINK_MODEL', 'gpt-5')
     monkeypatch.setenv('CFO_REASONING_MODE', 'low')
     assert voice.settings(state)['agent']['think']['provider']['reasoning_mode'] == 'low'
 

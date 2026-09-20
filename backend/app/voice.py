@@ -83,7 +83,7 @@ def settings(state, *, introduce_cfo=False):
         think['provider'] = {'type': (os.getenv('DEEPGRAM_THINK_PROVIDER') or 'open_ai'), 'model': os.environ['DEEPGRAM_THINK_MODEL']}
     if is_dashboard:
         # Reason before speaking, inside Deepgram's loop so captions and audio share one answer.
-        model = os.getenv('CFO_THINK_MODEL') or os.getenv('DEEPGRAM_THINK_MODEL') or 'gpt-5.6-luna'
+        model = os.getenv('CFO_THINK_MODEL') or os.getenv('DEEPGRAM_THINK_MODEL') or 'gpt-5'
         provider = os.getenv('CFO_THINK_PROVIDER') or os.getenv('DEEPGRAM_THINK_PROVIDER') or 'open_ai'
         think['provider'] = {'type': provider, 'model': model}
         if provider == 'open_ai' and model.startswith('gpt-5') and 'chat' not in model:
