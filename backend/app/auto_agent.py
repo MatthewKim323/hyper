@@ -68,11 +68,32 @@ def control_orgs():
     return named | {p.split(':', 1)[1] for p in os.getenv('DEVIN_CONTROL_PAIRS', '').split(',') if ':' in p}
 
 
+def build_stamp():
+    """Which code graded this case. Read once: a worker runs the code it started with."""
+    import subprocess
+    root = Path(__file__).resolve().parents[2]
+    try:
+        sha = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], cwd=root, capture_output=True, text=True, timeout=5).stdout.strip()
+        dirty = bool(subprocess.run(['git', 'status', '--porcelain', '--', 'backend/app'], cwd=root, capture_output=True, text=True, timeout=5).stdout.strip())
+        return {'git_sha': sha or None, 'git_dirty': dirty}
+    except Exception: return {'git_sha': None, 'git_dirty': None}
+
+
+BUILD = build_stamp()
+# The case a model call belongs to, so usage can be priced per case. One session at a time per process.
+METER_CONTEXT = {}
+
+
+def remembers(oid):
+    """Whether a session in this organization is actually given lessons. The count of lessons says nothing about that."""
+    return os.getenv('AUTO_AGENT_MEMORY', 'true').lower() == 'true' and oid not in control_orgs()
+
+
 def meter(model, usage):
     """Token usage per model call, appended as JSON lines, so cost is measured rather than estimated."""
     if not usage: return
     cached = (usage.get('input_tokens_details') or usage.get('prompt_tokens_details') or {}).get('cached_tokens', 0)
-    line = {'at': now(), 'model': model, 'input': usage.get('input_tokens', usage.get('prompt_tokens', 0)), 'cached': cached, 'output': usage.get('output_tokens', usage.get('completion_tokens', 0))}
+    line = {**METER_CONTEXT, 'at': now(), 'model': model, 'input': usage.get('input_tokens', usage.get('prompt_tokens', 0)), 'cached': cached, 'output': usage.get('output_tokens', usage.get('completion_tokens', 0))}
     try:
         path = Path(__file__).resolve().parents[1] / 'var' / 'auto-agent-usage.jsonl'
         path.parent.mkdir(exist_ok=True)
@@ -146,7 +167,7 @@ def slim(name, result):
 def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None):
     """One bounded working session on one invoice. Returns the trace of observable actions."""
     svc = Counterparties(data_factory(oid))
-    memory = svc.lessons() if os.getenv('AUTO_AGENT_MEMORY', 'true').lower() == 'true' and oid not in control_orgs() else []
+    memory = svc.lessons() if remembers(oid) else []
     system = SYSTEM + ('\n\nLessons from your earlier graded cases. Apply them where they fit, they never override the engine:\n' + '\n'.join('- ' + m['lesson'] for m in memory) if memory else '')
     convo = [{'role': 'system', 'content': system},
              {'role': 'user', 'content': f'Blocked invoice {scenario["invoice_id"]}: {scenario["title"]}. Approved contacts: supplier portal and procurement.desk. '
@@ -234,6 +255,7 @@ def run_once(store, data_factory=None, llm=None):
         fresh = latest > agent.get('seen', 0)
         if agent.get('sessions', 0) >= MAX_SESSIONS or (agent.get('sessions', 0) > 0 and not fresh and agent.get('status') != 'NEW'): continue
         started_at, succeeded = now(), False
+        METER_CONTEXT.clear(); METER_CONTEXT.update(organization_id=row['organization_id'], invoice_id=row['invoice_id'], scenario_id=row['id'], purpose='session')
         save_activity(store, row['id'], 'running', started_at)
         try:
             status, trace = session(store, row['organization_id'], row, data_factory, model, llm,
@@ -242,6 +264,7 @@ def run_once(store, data_factory=None, llm=None):
                 current = dict(db.execute(select(scenarios.c.state).where(scenarios.c.id == row['id'])).scalar())
                 mine = current.get('agent', {})
                 current['agent'] = {**mine, 'sessions': mine.get('sessions', 0) + 1, 'seen': latest, 'status': status, 'model': model,
+                                    'kind': 'auto_agent', 'memory': remembers(row['organization_id']), **BUILD,
                                     'lessons_at_start': mine.get('lessons_at_start', len(Counterparties(data_factory(row['organization_id'])).lessons(200))),
                                     'trace': (mine.get('trace', []) + trace)[-60:]}
                 db.execute(update(scenarios).where(scenarios.c.id == row['id']).values(state=current))
@@ -251,6 +274,7 @@ def run_once(store, data_factory=None, llm=None):
         work += 1
     for row in unlearned:
         if not row['state'].get('agent', {}).get('trace'): continue
+        METER_CONTEXT.clear(); METER_CONTEXT.update(organization_id=row['organization_id'], invoice_id=row['invoice_id'], scenario_id=row['id'], purpose='lesson')
         try:
             if row['organization_id'] not in control_orgs(): write_lesson(Counterparties(data_factory(row['organization_id'])), row, model, llm or complete)
         finally:
