@@ -1,6 +1,11 @@
 import { AdditiveBlending, BufferGeometry, Float32BufferAttribute, Group, Mesh, Points, ShaderMaterial, Vector2, Vector3 } from "three";
 
-export type EtherealStation = { id: string; position: Vector3; width: number; height: number; baseHeight: number };
+export type EtherealStation = {
+  id: string; position: Vector3; width: number; height: number; baseHeight: number;
+  /** Scaled scene units, with the center measured relative to position. */
+  relicCenter?: Vector3;
+  relicSize?: Vector3;
+};
 export type EtherealInteraction = {
   group: Group;
   setStations(entries: EtherealStation[]): void;
@@ -13,28 +18,30 @@ const sparkleVertex = `
   attribute vec4 aSeed;
   uniform float uTime;
   uniform float uWeight;
-  uniform float uWidth;
-  uniform float uHeight;
-  uniform float uBase;
+  uniform vec3 uRelicCenter;
+  uniform vec3 uRelicSize;
   uniform float uPixels;
   varying float vOpacity;
   varying float vPrism;
   void main() {
-    float progress = fract(aSeed.x + uTime * (0.045 + aSeed.y * 0.02));
-    float body = uHeight - uBase;
-    float radius = min(uWidth * 0.5, body * 0.48);
-    float rise = progress * body;
-    float cap = max(0.0, rise - (body - radius));
-    float edge = sqrt(max(0.0, radius * radius - cap * cap));
-    float side = aSeed.z < 0.5 ? -1.0 : 1.0;
-    vec3 point = vec3(side * (edge + uWidth * 0.005), uBase + rise, (0.115 + aSeed.w * 0.028) * uBase / 0.48);
+    float phase = dot(modelMatrix[3].xz, vec2(0.37, 0.71));
+    float progress = fract(aSeed.x + phase * 0.21 + uTime * (0.045 + aSeed.y * 0.02));
+    float angle = aSeed.z * 6.2831853 + phase + uTime * (0.12 + aSeed.y * 0.08);
+    float clearance = max(0.06, uRelicSize.x * 0.07);
+    vec2 orbit = max(uRelicSize.xz * 0.5, vec2(clearance)) + clearance;
+    float spread = 0.84 + aSeed.w * 0.3;
+    vec3 point = uRelicCenter + vec3(
+      cos(angle) * orbit.x * spread,
+      (progress - 0.5) * (uRelicSize.y + clearance * 2.0),
+      sin(angle) * orbit.y * spread
+    );
     vec4 view = modelViewMatrix * vec4(point, 1.0);
     gl_Position = projectionMatrix * view;
     float perspectiveSize = uPixels * projectionMatrix[1][1] * 0.010 / max(0.1, -view.z);
     gl_PointSize = clamp(perspectiveSize * (0.7 + aSeed.w * 0.65), 1.0, 3.2);
     float life = smoothstep(0.0, 0.14, progress) * (1.0 - smoothstep(0.78, 1.0, progress));
     float shimmer = 0.68 + 0.32 * sin(uTime * 0.7 + aSeed.w * 6.2831853);
-    vOpacity = uWeight * life * shimmer * step(0.45, aSeed.y);
+    vOpacity = (0.22 + uWeight * 0.78) * life * shimmer;
     vPrism = aSeed.w;
   }
 `;
@@ -77,7 +84,7 @@ const arcFragment = `
 `;
 
 function createSparkleGeometry() {
-  const count = 32;
+  const count = 24;
   const geometry = new BufferGeometry();
   const seeds = new Float32Array(count * 4);
   let seed = 190926;
@@ -131,7 +138,7 @@ type Accent = {
 /** Actual depth-tested geometry, with no decorative layer over the canvas. */
 export function createEtherealInteraction(): EtherealInteraction {
   const group = new Group();
-  group.name = "Hyper | restrained crystal hover glints";
+  group.name = "Hyper | floating relic glimmers";
   const sparkleGeometry = createSparkleGeometry();
   const arcGeometry = createArcGeometry();
   const stations = new Map<string, Accent>();
@@ -144,7 +151,7 @@ export function createEtherealInteraction(): EtherealInteraction {
   function makeAccent(): Accent {
     const stationGroup = new Group();
     const sparkMaterial = new ShaderMaterial({
-      uniforms: { uTime: { value: 0 }, uWeight: { value: 0 }, uWidth: { value: 2 }, uHeight: { value: 4 }, uBase: { value: 0.46 }, uPixels: { value: 800 } },
+      uniforms: { uTime: { value: 0 }, uWeight: { value: 0 }, uRelicCenter: { value: new Vector3(0, 2.5, 0) }, uRelicSize: { value: new Vector3(1.2, 1.7, 0.6) }, uPixels: { value: 800 } },
       vertexShader: sparkleVertex, fragmentShader: sparkleFragment,
       transparent: true, depthTest: true, depthWrite: false, blending: AdditiveBlending, toneMapped: false,
     });
@@ -154,7 +161,7 @@ export function createEtherealInteraction(): EtherealInteraction {
       transparent: true, depthTest: true, depthWrite: false, blending: AdditiveBlending, toneMapped: false,
     });
     const sparks = new Points(sparkleGeometry, sparkMaterial);
-    sparks.name = "Fine rising edge glints";
+    sparks.name = "Sparse orbiting relic glimmers";
     sparks.frustumCulled = false;
     sparks.onBeforeRender = renderer => {
       const target = renderer.getRenderTarget();
@@ -163,7 +170,7 @@ export function createEtherealInteraction(): EtherealInteraction {
     const arc = new Mesh(arcGeometry, arcMaterial);
     arc.name = "Inset warm front arc";
     stationGroup.add(sparks, arc);
-    stationGroup.visible = false;
+    arc.visible = false;
     group.add(stationGroup);
     return { group: stationGroup, sparks, arc, sparkMaterial, arcMaterial, weight: 0 };
   }
@@ -172,7 +179,7 @@ export function createEtherealInteraction(): EtherealInteraction {
     if (paused) accent.weight = target;
     else accent.weight += (target - accent.weight) * (1 - Math.exp(-delta * (target > accent.weight ? 11 : 7)));
     if (accent.weight < 0.001 && target === 0) accent.weight = 0;
-    accent.group.visible = accent.weight > 0;
+    accent.arc.visible = accent.weight > 0;
     accent.sparkMaterial.uniforms.uWeight.value = accent.weight;
     accent.arcMaterial.uniforms.uWeight.value = accent.weight;
     accent.sparkMaterial.uniforms.uTime.value = elapsed;
@@ -189,12 +196,16 @@ export function createEtherealInteraction(): EtherealInteraction {
         present.add(entry.id);
         const accent = stations.get(entry.id) ?? makeAccent();
         stations.set(entry.id, accent);
-        accent.group.name = "Hover accents | " + entry.id;
+        accent.group.name = "Relic halo | " + entry.id;
         accent.group.position.copy(entry.position);
-        const base = entry.baseHeight;
-        accent.sparkMaterial.uniforms.uWidth.value = entry.width;
-        accent.sparkMaterial.uniforms.uHeight.value = entry.height;
-        accent.sparkMaterial.uniforms.uBase.value = base;
+        const base = Number.isFinite(entry.baseHeight) ? Math.max(0, entry.baseHeight) : 0;
+        const body = Math.max(0.1, entry.height - base);
+        const center = accent.sparkMaterial.uniforms.uRelicCenter.value as Vector3;
+        const size = accent.sparkMaterial.uniforms.uRelicSize.value as Vector3;
+        center.set(0, base + body * 0.64, 0);
+        size.set(entry.width * 0.62, body * 0.56, entry.width * 0.32);
+        if (entry.relicCenter && [entry.relicCenter.x, entry.relicCenter.y, entry.relicCenter.z].every(Number.isFinite)) center.copy(entry.relicCenter);
+        if (entry.relicSize && [entry.relicSize.x, entry.relicSize.y, entry.relicSize.z].every(value => Number.isFinite(value) && value > 0)) size.copy(entry.relicSize);
         accent.arc.position.y = base + 0.01;
         accent.arc.scale.setScalar(entry.width * 0.57);
         syncAccent(accent, entry.id === hovered ? 1 : 0, 0);

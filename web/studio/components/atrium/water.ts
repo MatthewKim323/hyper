@@ -1,9 +1,10 @@
-import { Color, Group, HalfFloatType, Matrix4, PlaneGeometry, RingGeometry, ShaderMaterial, UniformsLib, Vector2, Vector3, Vector4, type BufferGeometry } from "three";
+import { Color, DepthTexture, Group, HalfFloatType, LinearFilter, Matrix4, Mesh, PlaneGeometry, RingGeometry, ShaderMaterial, UniformsLib, UnsignedIntType, Vector2, Vector3, Vector4, WebGLRenderTarget, type BufferGeometry, type Camera, type Material, type Scene, type WebGLRenderer } from "three";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { createWaterRipples, type WaterRipples } from "./ripples";
 
 export type AtriumWater = {
   group: Group;
+  prepareFrame(renderer: WebGLRenderer, scene: Scene, camera: Camera): void;
   update(time: number, delta: number): void;
   splash(worldX: number, worldZ: number, strength?: number): void;
   setPaused(paused: boolean): void;
@@ -87,6 +88,11 @@ const vertexShader = `
 
 const fragmentShader = `
   uniform sampler2D tDiffuse;
+  uniform sampler2D tRefraction;
+  uniform sampler2D tRefractionDepth;
+  uniform mat4 uRefractionMatrix;
+  uniform mat4 uInverseRefractionMatrix;
+  uniform vec2 uRefractionTexel;
   uniform vec3 color;
   uniform float uTime;
   uniform float uAmplitude;
@@ -102,7 +108,24 @@ const fragmentShader = `
   #include <logdepthbuf_pars_fragment>
   #include <shadowmap_pars_fragment>
 
+  #if NUM_DIR_LIGHTS > 0
+    struct DirectionalLight {
+      vec3 direction;
+      vec3 color;
+    };
+    uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+  #endif
+
   ${waveFunction}
+  vec3 directionalSunRadiance() {
+    #if NUM_DIR_LIGHTS > 0
+      // Three already applies the light's intensity and its lighting-mode
+      // conversion here, matching the physical materials in the same scene.
+      return directionalLights[0].color;
+    #else
+      return vec3(0.0);
+    #endif
+  }
   float directionalSunVisibility() {
     #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 0
       if (receiveShadow) {
@@ -139,6 +162,25 @@ const fragmentShader = `
     p = turn * p * 2.11 + vec2(3.8, 29.2);
     fine += inverseTurn * inverseTurn * noiseGradient(p + drift * 1.83) * 0.0045 * (1.0 - smoothstep(0.3, 1.0, footprint * 4.2833));
     return fine;
+  }
+  vec3 transmittedScene(vec3 view, vec3 normal) {
+    vec4 surfaceClip = uRefractionMatrix * vec4(vWorld, 1.0);
+    vec2 surfaceUv = surfaceClip.xy / surfaceClip.w * 0.5 + 0.5;
+    // Trace through the known shallow layer using Snell's law. Both surfaces
+    // share the camera capture but retain their own physical water depth.
+    vec3 ray = refract(-view, normal, 1.0 / 1.333);
+    vec3 floorPoint = vWorld + ray * (uDepth / max(-ray.y, 0.05));
+    vec4 floorClip = uRefractionMatrix * vec4(floorPoint, 1.0);
+    vec2 sampleUv = floorClip.xy / floorClip.w * 0.5 + 0.5;
+    if (floorClip.w <= 0.0 || any(lessThan(sampleUv, uRefractionTexel)) || any(greaterThan(sampleUv, vec2(1.0) - uRefractionTexel))) {
+      sampleUv = surfaceUv;
+    }
+    float depth = texture2D(tRefractionDepth, sampleUv).r;
+    vec4 sampledWorld = uInverseRefractionMatrix * vec4(sampleUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    // A distorted sample cannot pull a foreground pedestal or arch down into
+    // the water. Reconstructing world height avoids fixed camera clip planes.
+    if (sampledWorld.y / sampledWorld.w > vWorld.y + 0.02) sampleUv = surfaceUv;
+    return texture2D(tRefraction, clamp(sampleUv, uRefractionTexel, vec2(1.0) - uRefractionTexel)).rgb;
   }
   void main() {
     #include <logdepthbuf_fragment>
@@ -178,18 +220,23 @@ const fragmentShader = `
     // light comes from the captured scene and already contains its own shadows.
     float refractedCosine = sqrt(1.0 - (1.0 - facing * facing) / (1.333 * 1.333));
     float absorption = 1.0 - exp(-0.42 * uDepth / refractedCosine);
-    float opacity = fresnel + (1.0 - fresnel) * absorption;
     vec3 shallow = color * mix(0.52, 1.0, shadow);
     vec3 surface = reflected * fresnel + shallow * ((1.0 - fresnel) * absorption);
-    surface += vec3(1.0, 0.82, 0.70) * min(highlight, 3.0) * 0.45 * shadow;
-    // Blend the actual submerged floor through once. Unpremultiplying here
-    // prevents alpha from attenuating the Fresnel reflection a second time.
-    gl_FragColor = vec4(surface / max(opacity, 0.0001), opacity);
+    surface += transmittedScene(view, normal) * ((1.0 - fresnel) * (1.0 - absorption));
+    surface += directionalSunRadiance() * highlight * shadow;
+    // Resolve transmission here so Three's opaque pass includes finished water
+    // when the crystal stations subsequently sample their transmission buffer.
+    gl_FragColor = vec4(surface, 1.0);
     #include <encodings_fragment>
   }
 `;
 
-type Surface = { reflector: Reflector; material: ShaderMaterial; ripples: WaterRipples; bounds: Vector4 };
+type Surface = { reflector: Reflector; material: ShaderMaterial; ripples: WaterRipples; bounds: Vector4; capture: Reflector["onBeforeRender"] };
+
+function hasTransmission(material: Material | Material[]): boolean {
+  if (Array.isArray(material)) return material.some(hasTransmission);
+  return "transmission" in material && typeof material.transmission === "number" && material.transmission > 0;
+}
 
 /** Live geometry and scene reflections. Add group to the scene before rendering. */
 export function createAtriumWater(options: { reflectionSize?: number; sunDirection?: Vector3 } = {}): AtriumWater {
@@ -201,9 +248,51 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
   if (![sunDirection.x, sunDirection.y, sunDirection.z].every(Number.isFinite) || sunDirection.lengthSq() < 1e-8) sunDirection.set(-9, 11, -3);
   sunDirection.normalize();
   const surfaces: Surface[] = [];
-  let reflecting = false;
+  const refractionTarget = new WebGLRenderTarget(maximumSize, maximumSize, {
+    type: HalfFloatType,
+    minFilter: LinearFilter,
+    magFilter: LinearFilter,
+    generateMipmaps: false,
+    depthBuffer: true,
+    stencilBuffer: false,
+  });
+  refractionTarget.depthTexture = new DepthTexture(maximumSize, maximumSize, UnsignedIntType);
+  const refractionMatrix = new Matrix4();
+  const inverseRefractionMatrix = new Matrix4();
+  const viewport = new Vector4();
+  const captureMaterials = new Map<Material, { replacement: Material; release: () => void }>();
+  const captureMaterialArrays = new WeakMap<Material[], Material[]>();
+  const substitutedMeshes: Mesh[] = [];
+  const originalMaterials: (Material | Material[])[] = [];
+  let preparing = false;
   let paused = false;
   let disposed = false;
+
+  function captureMaterial(original: Material): Material {
+    if (!hasTransmission(original)) return original;
+    const cached = captureMaterials.get(original);
+    if (cached) return cached.replacement;
+    // Keep alpha/displacement maps, clipping, and shadow-side settings. The
+    // renderer's separate depth material still casts the original silhouette.
+    const replacement = original.clone();
+    if ("transmission" in replacement) replacement.transmission = 0;
+    replacement.colorWrite = false;
+    replacement.depthWrite = false;
+    const release = () => {
+      original.removeEventListener("dispose", release);
+      captureMaterials.delete(original);
+      replacement.dispose();
+    };
+    captureMaterials.set(original, { replacement, release });
+    original.addEventListener("dispose", release);
+    return replacement;
+  }
+
+  function restoreMaterials() {
+    for (let i = 0; i < substitutedMeshes.length; i++) substitutedMeshes[i].material = originalMaterials[i];
+    substitutedMeshes.length = 0;
+    originalMaterials.length = 0;
+  }
 
   function addSurface(name: string, geometry: BufferGeometry, y: number, z: number, bounds: Vector4, amplitude: number, depth: number) {
     const ripples = createWaterRipples();
@@ -217,6 +306,9 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
         uniforms: {
           ...UniformsLib.lights,
           color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: new Matrix4() },
+          tRefraction: { value: null }, tRefractionDepth: { value: null },
+          uRefractionMatrix: { value: new Matrix4() }, uInverseRefractionMatrix: { value: new Matrix4() },
+          uRefractionTexel: { value: new Vector2(1 / maximumSize, 1 / maximumSize) },
           uTime: { value: 0 }, uAmplitude: { value: amplitude }, uRippleAmplitude: { value: amplitude * 0.07 },
           uDepth: { value: depth },
           uSunDirection: { value: sunDirection },
@@ -238,37 +330,20 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
     reflector.receiveShadow = true;
     reflector.renderOrder = -2;
     const material = reflector.material as ShaderMaterial;
+    // Reflector clones texture uniforms, but both water surfaces must sample
+    // the same live framebuffer attachments rather than independent clones.
+    material.uniforms.tRefraction.value = refractionTarget.texture;
+    material.uniforms.tRefractionDepth.value = refractionTarget.depthTexture;
     material.uniforms.uRipples.value = ripples.texture;
     material.toneMapped = false;
     material.lights = true;
     material.extensions.derivatives = true;
-    material.transparent = true;
-    material.depthWrite = false;
-    const surface = { reflector, material, ripples, bounds };
-    const capture = reflector.onBeforeRender;
-    reflector.onBeforeRender = (renderer, scene, camera, geometry, material, renderGroup) => {
-      // Pausing freezes the wave clock, not reflection correctness. Explicit
-      // renders can still follow a resize, station update, or camera reset.
-      if (disposed || reflecting) return;
-      const wasVisible = group.visible;
-      const reflectorVisible = reflector.visible;
-      const target = renderer.getRenderTarget();
-      const xrEnabled = renderer.xr.enabled;
-      const shadowAutoUpdate = renderer.shadowMap.autoUpdate;
-      reflecting = true;
-      // Hide both surfaces, including during Three's transmission render pass.
-      group.visible = false;
-      try {
-        capture.call(reflector, renderer, scene, camera, geometry, material, renderGroup);
-      } finally {
-        renderer.setRenderTarget(target);
-        renderer.xr.enabled = xrEnabled;
-        renderer.shadowMap.autoUpdate = shadowAutoUpdate;
-        group.visible = wasVisible;
-        reflector.visible = reflectorVisible;
-        reflecting = false;
-      }
-    };
+    material.transparent = false;
+    material.depthWrite = true;
+    const surface = { reflector, material, ripples, bounds, capture: reflector.onBeforeRender };
+    // Captures happen once before the composer. The glass transmission pass
+    // and the beauty pass then reuse them without nested reflection renders.
+    reflector.onBeforeRender = () => {};
     surfaces.push(surface);
     group.add(reflector);
     return surface;
@@ -279,6 +354,82 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
 
   return {
     group,
+    prepareFrame(renderer, scene, camera) {
+      if (disposed || preparing) return;
+      const target = renderer.getRenderTarget();
+      const cubeFace = renderer.getActiveCubeFace();
+      const mipLevel = renderer.getActiveMipmapLevel();
+      const xrEnabled = renderer.xr.enabled;
+      const shadowAutoUpdate = renderer.shadowMap.autoUpdate;
+      const shadowNeedsUpdate = renderer.shadowMap.needsUpdate;
+      const autoClear = renderer.autoClear;
+      const scissorTest = renderer.getScissorTest();
+      const wasVisible = group.visible;
+      renderer.getCurrentViewport(viewport);
+      preparing = true;
+      try {
+        // Explicit paused renders still need valid first-frame captures after
+        // resize, station replacement, or a camera change.
+        scene.updateMatrixWorld(true);
+        camera.updateMatrixWorld();
+        refractionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+        inverseRefractionMatrix.copy(refractionMatrix).invert();
+        renderer.xr.enabled = false;
+        renderer.autoClear = true;
+        group.visible = false;
+        scene.traverseVisible(object => {
+          if (object instanceof Mesh && hasTransmission(object.material)) {
+            const original = object.material;
+            substitutedMeshes.push(object);
+            originalMaterials.push(original);
+            if (Array.isArray(original)) {
+              let replacements = captureMaterialArrays.get(original);
+              if (!replacements) {
+                replacements = [];
+                captureMaterialArrays.set(original, replacements);
+              }
+              replacements.length = original.length;
+              for (let i = 0; i < original.length; i++) replacements[i] = captureMaterial(original[i]);
+              object.material = replacements;
+            } else {
+              object.material = captureMaterial(original);
+            }
+          }
+        });
+        renderer.setRenderTarget(refractionTarget);
+        renderer.setScissorTest(false);
+        renderer.state.buffers.depth.setMask(true);
+        // Ordinary render initializes r143's private render state before its
+        // shadow pass. Calling shadowMap.render directly cannot do that. Keep
+        // the pearl visible to shadows while suppressing its color and depth.
+        renderer.render(scene, camera);
+        restoreMaterials();
+        renderer.shadowMap.autoUpdate = false;
+        renderer.shadowMap.needsUpdate = false;
+        for (const surface of surfaces) {
+          surface.material.uniforms.uRefractionMatrix.value.copy(refractionMatrix);
+          surface.material.uniforms.uInverseRefractionMatrix.value.copy(inverseRefractionMatrix);
+          const wasSurfaceVisible = surface.reflector.visible;
+          try {
+            surface.capture.call(surface.reflector, renderer, scene, camera, surface.reflector.geometry, surface.material, undefined as never);
+          } finally {
+            surface.reflector.visible = wasSurfaceVisible;
+          }
+        }
+      } finally {
+        restoreMaterials();
+        group.visible = wasVisible;
+        renderer.xr.enabled = xrEnabled;
+        renderer.shadowMap.autoUpdate = shadowAutoUpdate;
+        renderer.shadowMap.needsUpdate = shadowNeedsUpdate;
+        renderer.autoClear = autoClear;
+        renderer.setRenderTarget(target, cubeFace, mipLevel);
+        renderer.setScissorTest(scissorTest);
+        renderer.state.setScissorTest(target?.scissorTest ?? scissorTest);
+        renderer.state.viewport(viewport);
+        preparing = false;
+      }
+    },
     update(time, delta) {
       if (disposed || paused) return;
       for (const surface of surfaces) {
@@ -300,14 +451,18 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
       const scale = Math.min(1, maximumSize / Math.max(width, height));
       const w = Math.max(32, Math.round(width * scale));
       const h = Math.max(32, Math.round(height * scale));
+      refractionTarget.setSize(w, h);
       for (const surface of surfaces) {
         surface.reflector.getRenderTarget().setSize(w, h);
         surface.material.uniforms.uReflectionTexel.value.set(1 / w, 1 / h);
+        surface.material.uniforms.uRefractionTexel.value.set(1 / w, 1 / h);
       }
     },
     dispose() {
       if (disposed) return;
       disposed = true;
+      refractionTarget.dispose();
+      for (const { release } of captureMaterials.values()) release();
       for (const surface of surfaces) {
         surface.ripples.dispose();
         surface.reflector.geometry.dispose();

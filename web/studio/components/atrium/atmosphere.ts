@@ -22,16 +22,16 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
         vec3 direction = normalize(vDirection);
         float height = smoothstep(-.04,.42,direction.y);
         vec3 color = mix(vec3(1.02,.68,.64), vec3(.30,.46,.86),height);
-        // Two angular cloud scales keep visible cumulus structure above the
-        // openings and in the pool, rather than a featureless pastel wash.
-        vec3 cloudPoint=direction*vec3(13.,24.,13.)+vec3(uTime*.002,1.8,0.);
+        // Stretch the cloud field along the horizon. The reference has sparse
+        // sunlit wisps, with enough open blue sky to separate the architecture.
+        vec3 cloudPoint=direction*vec3(5.5,38.,5.5)+vec3(uTime*.001,1.8,0.);
         float mass=atriumCloud(cloudPoint);
         float curls=atriumCloud(cloudPoint*3.4+vec3(7.1,2.4,8.));
-        float cloudCover=smoothstep(.47,.65,mass+(curls-.5)*.22);
+        float cloudCover=smoothstep(.55,.76,mass+(curls-.5)*.18);
         cloudCover*=1.-smoothstep(.55,.9,direction.y);
-        float litRim=smoothstep(.47,.58,mass)*(1.-smoothstep(.58,.72,mass));
-        vec3 cloudColor=mix(vec3(.70,.67,.78),vec3(1.7,1.42,1.30),smoothstep(.42,.66,mass));
-        cloudColor+=vec3(.28,.18,.10)*litRim;
+        float litRim=smoothstep(.52,.64,mass)*(1.-smoothstep(.64,.78,mass));
+        vec3 cloudColor=mix(vec3(.92,.81,.90),vec3(1.55,1.36,1.36),smoothstep(.48,.68,mass));
+        cloudColor+=vec3(.18,.12,.08)*litRim;
         color=mix(color,cloudColor,cloudCover*.90);
         float sunlight=pow(max(0.,dot(direction,uSunDirection)),48.);
         color += vec3(1.0,.61,.32)*sunlight;
@@ -145,11 +145,11 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
               #include <color_fragment>
               float mineral = atriumCloud(vStonePosition*1.4);
               float grain = atriumNoise(vStonePosition*95.);
-              diffuseColor.rgb *= .87 + mineral*.24 + (grain-.5)*.025;
+              diffuseColor.rgb *= .94 + mineral*.12 + (grain-.5)*.025;
             `).replace("#include <normal_fragment_maps>", `
               #include <normal_fragment_maps>
               vec3 pores = vec3(atriumNoise(vStonePosition*44.),atriumNoise(vStonePosition*44.+17.),atriumNoise(vStonePosition*44.+33.))-.5;
-              normal=normalize(normal+mat3(viewMatrix)*pores*.06);
+              normal=normalize(normal+mat3(viewMatrix)*pores*.035);
             `).replace("#include <output_fragment>", `
               float waterline = 1.-smoothstep(.18,1.25,vStonePosition.y);
               if(waterline>0.) {

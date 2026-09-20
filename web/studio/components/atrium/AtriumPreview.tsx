@@ -116,7 +116,10 @@ export default function AtriumPreview() {
         instance.setPaused(motionRef.current);
         await instance.setStations(stationsRef.current);
         if (active && !controller.signal.aborted && renderer.current === instance) setFailed(false);
-      } catch { fail(); }
+      } catch (error) {
+        if (process.env.NODE_ENV === "development") console.error("[atrium] Scene initialization failed", error);
+        fail();
+      }
       finally { clearTimeout(timeout); }
     }
     void mount();

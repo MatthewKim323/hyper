@@ -1,4 +1,4 @@
-import { AmbientLight, Box3, Color, DirectionalLight, Fog, Group, HemisphereLight, LinearEncoding, Material, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, NoToneMapping, Object3D, PCFShadowMap, PerspectiveCamera, Plane, PointLight, Raycaster, Scene, ShaderChunk, Texture, Vector2, Vector3, WebGLRenderer } from "three";
+import { AmbientLight, Box3, DirectionalLight, Fog, Group, HemisphereLight, LinearEncoding, Material, Mesh, MeshStandardMaterial, NoToneMapping, Object3D, PCFSoftShadowMap, PerspectiveCamera, Plane, PointLight, Raycaster, Scene, Texture, Vector2, Vector3, WebGLRenderer } from "three";
 import { createAtriumGeometryLoader } from "./geometry-loader";
 import { createAtriumAtmosphere } from "./atmosphere";
 import { createAtriumWater } from "./water";
@@ -38,7 +38,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   renderer.toneMappingExposure = 1;
   renderer.setPixelRatio(1);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = PCFShadowMap;
+  renderer.shadowMap.type = PCFSoftShadowMap;
   const scene = new Scene();
   scene.fog = new Fog(0xe8d8d7, 38, 115);
   const ratio = manifest.width / manifest.height;
@@ -85,6 +85,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   scene.add(stationsGroup);
   const pipeline = createAtriumPipeline(renderer, scene, camera);
   const modelCache = new Map<string, Promise<Object3D>>();
+  const retiredCovers: Object3D[] = [];
   const loader = createAtriumGeometryLoader();
   let room: Object3D | null = null;
   let disposed = false;
@@ -113,55 +114,52 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const orbit = new Group();
   orbit.position.set(0, 3.07, -1.5);
   scene.add(orbit);
-  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; glass: Group; icon: Group; hover: { value: number }; velocity: number; phase: number };
+  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; icon: Group; restPosition: Vector3; hover: { value: number }; velocity: number; phase: number };
   let instances: Instance[] = [];
 
-  function prepareCrystal(model: Object3D, hover: { value: number }) {
-    const glass = new Group(); glass.name = "Crystal optics motion";
-    const icon = new Group(); icon.name = "Crystal icon motion";
-    const opticalParts: Mesh[] = [];
+  function prepareRelic(model: Object3D, hover: { value: number }) {
+    const icon = new Group();
+    icon.name = "Floating ethereal relic";
     const iconParts: Mesh[] = [];
     model.traverse(object => {
       if (!(object instanceof Mesh)) return;
-      const name = objectName(object);
-      if (/solid clear arched|front polished rim/.test(name)) opticalParts.push(object);
-      else if (!/plinth|light seam|title|enter/.test(name)) iconParts.push(object);
+      if (!/plinth|light seam|title|enter/.test(objectName(object))) iconParts.push(object);
     });
-    model.add(glass, icon);
     model.updateMatrixWorld(true);
-    opticalParts.forEach(object => glass.attach(object));
+    const relicBounds = new Box3();
+    for (const part of iconParts) relicBounds.union(new Box3().setFromObject(part));
+    const center = relicBounds.isEmpty() ? new Vector3(0, 2, 0) : model.worldToLocal(relicBounds.getCenter(new Vector3()));
+    icon.position.copy(center);
+    model.add(icon);
+    model.updateMatrixWorld(true);
     iconParts.forEach(object => icon.attach(object));
-    glass.traverse(object => {
+    icon.traverse(object => {
       if (!(object instanceof Mesh)) return;
-      const polish = (original: Material) => {
+      const illuminate = (original: Material) => {
         const material = original.clone();
         instanceMaterials.add(material);
-        material.onBeforeCompile = shader => {
-          shader.uniforms.uCrystalHover = hover;
-          shader.uniforms.uCrystalTime = sceneClock;
-          shader.vertexShader = "varying vec3 vCrystalWorld;\n" + shader.vertexShader.replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvCrystalWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;");
-          shader.fragmentShader = "varying vec3 vCrystalWorld; uniform float uCrystalHover; uniform float uCrystalTime;\n" + shader.fragmentShader.replace("#include <output_fragment>", `
-            float rim = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 2.8);
-            float phase = vCrystalWorld.y * 1.4 + vCrystalWorld.x * 0.28 - uCrystalTime * 0.38;
-            float caustic = pow(0.5 + 0.5 * sin(phase), 18.0);
-            outgoingLight += vec3(1.0, 0.88, 0.78) * rim * (0.32 + uCrystalHover * 0.22 + caustic * 0.05);
-            outgoingLight += vec3(1.0,.79,.66) * exp(-max(0.,vCrystalWorld.y-.48)*2.1) * .20;
-            #include <output_fragment>
-          `);
-          if (/optically clear/.test(material.name)) {
-            shader.fragmentShader = shader.fragmentShader.replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor=mix(.095,.028,smoothstep(.48,1.6,vCrystalWorld.y));");
-            shader.fragmentShader = shader.fragmentShader.replace("#include <transmission_fragment>", ShaderChunk.transmission_fragment.replace("float transmissionFactor = transmission;", "float transmissionFactor = transmission * mix(.85,1.,smoothstep(.48,2.4,vCrystalWorld.y));"));
-          }
-        };
-        material.customProgramCacheKey = () => /optically clear/.test(material.name) ? "hyper-crystal-glass-v3" : "hyper-crystal-edge-v3";
+        if (material instanceof MeshStandardMaterial) {
+          material.onBeforeCompile = shader => {
+            shader.uniforms.uRelicHover = hover;
+            shader.uniforms.uRelicTime = sceneClock;
+            shader.vertexShader = "varying vec3 vRelicWorld;\n" + shader.vertexShader.replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvRelicWorld=(modelMatrix*vec4(transformed,1.)).xyz;");
+            shader.fragmentShader = "varying vec3 vRelicWorld; uniform float uRelicHover; uniform float uRelicTime;\n" + shader.fragmentShader.replace("#include <output_fragment>", `
+              float edge=pow(1.-abs(dot(normalize(normal),normalize(vViewPosition))),2.4);
+              float shimmer=.94+.06*sin(uRelicTime*.7+vRelicWorld.x*.31);
+              outgoingLight+=vec3(2.6,2.15,2.4)*shimmer*(.055+edge*(.8+uRelicHover*.65)+uRelicHover*.14);
+              #include <output_fragment>
+            `);
+          };
+          material.customProgramCacheKey = () => "hyper-floating-relic-v1";
+        }
         return material;
       };
-      object.material = Array.isArray(object.material) ? object.material.map(polish) : polish(object.material);
+      object.material = Array.isArray(object.material) ? object.material.map(illuminate) : illuminate(object.material);
     });
-    return { glass, icon };
+    return { icon, restPosition: center.clone() };
   }
 
-  function animateCrystals(delta: number, still = false) {
+  function animateRelics(delta: number, still = false) {
     for (const instance of instances) {
       const target = instance.station.id === hovered ? 1 : 0;
       if (still) { instance.hover.value = target; instance.velocity = 0; }
@@ -176,13 +174,13 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const hover = Math.max(0, Math.min(1.06, instance.hover.value));
       const movement = still ? 0 : 1;
       const settle = still ? 1 : 1 - Math.exp(-delta * 16);
-      instance.glass.rotation.x += ((target ? -hoverPointer.y * .012 * hover * movement : 0) - instance.glass.rotation.x) * settle;
-      instance.glass.rotation.y += ((target ? hoverPointer.x * .025 * hover * movement : 0) - instance.glass.rotation.y) * settle;
-      if (still) instance.glass.rotation.set(0, 0, 0);
-      const pressScale = pressed === instance.station.id && !still ? .989 : 1;
-      instance.glass.scale.setScalar(instance.glass.scale.x + (pressScale - instance.glass.scale.x) * (still ? 1 : 1 - Math.exp(-delta * 24)));
-      instance.icon.position.y = movement * (Math.sin(elapsed * 0.65 + instance.phase) * 0.035 + hover * 0.065);
-      instance.icon.rotation.y = movement * Math.sin(elapsed * 0.24 + instance.phase) * 0.028;
+      const idleTurn = movement * Math.sin(elapsed * .24 + instance.phase) * .06;
+      instance.icon.rotation.x += ((target ? -hoverPointer.y * .045 * hover * movement : 0) - instance.icon.rotation.x) * settle;
+      instance.icon.rotation.y += (idleTurn + (target ? hoverPointer.x * .085 * hover * movement : 0) - instance.icon.rotation.y) * settle;
+      if (still) instance.icon.rotation.set(0, 0, 0);
+      const pressScale = pressed === instance.station.id && !still ? .97 : 1;
+      instance.icon.scale.setScalar(instance.icon.scale.x + (pressScale - instance.icon.scale.x) * (still ? 1 : 1 - Math.exp(-delta * 24)));
+      instance.icon.position.y = instance.restPosition.y + movement * (Math.sin(elapsed * .65 + instance.phase) * .065 + hover * .11);
 
     }
   }
@@ -220,7 +218,20 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       return { station, depth: model.position.distanceTo(camera.position), left, top, width, height, labelLeft: ((label.x + 1) / 2 - left) / width, labelTop: ((1 - label.y) / 2 - top) / height, arrowTop: ((1 - arrow.y) / 2 - top) / height, fontWidth: Math.abs(letter.y - label.y) / 2 / ratio };
     }));
   }
-  function render() { if (!disposed && ready) pipeline.render(); }
+  function render() {
+    if (disposed || !ready) return;
+    water.prepareFrame(renderer, scene, camera);
+    // Refraction already refreshed complete-scene shadows for this frame.
+    const autoUpdate = renderer.shadowMap.autoUpdate;
+    const needsUpdate = renderer.shadowMap.needsUpdate;
+    renderer.shadowMap.autoUpdate = false;
+    renderer.shadowMap.needsUpdate = false;
+    try { pipeline.render(); }
+    finally {
+      renderer.shadowMap.autoUpdate = autoUpdate;
+      renderer.shadowMap.needsUpdate = needsUpdate;
+    }
+  }
   function resize() {
     const parent = canvas.parentElement;
     if (!parent || disposed) return;
@@ -246,7 +257,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     sunlight.update(elapsed);
     sideLight.update(elapsed);
     ethereal.update(elapsed, delta);
-    animateCrystals(delta);
+    animateRelics(delta);
     animateRoom(delta);
     if (++renderedFrames % 4 === 0) bounds();
     if (renderedFrames % 30 === 0) canvas.dataset.frame = String(renderedFrames);
@@ -283,25 +294,15 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     if (!pending) {
       pending = loader.loadAsync(template.url).then(gltf => {
         if (disposed) { disposeModel(gltf.scene); throw new Error("Atrium unmounted"); }
+        const covers: Object3D[] = [];
         gltf.scene.traverse(object => {
           if (!(object instanceof Mesh)) return;
-          if (/\| (title|enter)/i.test(objectName(object))) object.visible = false;
-          const tune = (material: Material) => {
-            if (material instanceof MeshPhysicalMaterial && (material.transmission > 0.7 || /optically clear/.test(material.name))) {
-              material.transmission = .97;
-              material.roughness = 0.065;
-              material.ior = 1.46;
-              material.thickness = /polished clear edge/.test(material.name) ? .023 : .16;
-              material.attenuationColor = new Color(0xffe5d6);
-              material.attenuationDistance = 2.5;
-              material.clearcoat = 0.16;
-              material.envMapIntensity = 0.7;
-              material.color = new Color(0xfff7f1);
-            } else if (material instanceof MeshStandardMaterial) material.envMapIntensity = 0.8;
-            return material;
-          };
-          object.material = Array.isArray(object.material) ? object.material.map(tune) : tune(object.material);
+          const name = objectName(object);
+          // Compatibility with already-cached assets from before the cover removal.
+          if (/solid clear arched|front polished rim/.test(name)) covers.push(object);
+          if (/\| (title|enter)/i.test(name)) object.visible = false;
         });
+        for (const cover of covers) { cover.removeFromParent(); retiredCovers.push(cover); }
         atmosphere.decorate(gltf.scene);
         return gltf.scene;
       });
@@ -324,13 +325,15 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
         model.scale.multiplyScalar(placement.scale);
         stationsGroup.add(model);
         const hover = { value: 0 };
-        const motion = prepareCrystal(model, hover);
+        const motion = prepareRelic(model, hover);
         const template = manifest.templates.find(template => template.id === placement.station.template);
         return { station: placement.station, model, scale: placement.scale, hover, velocity: 0, phase: index * 1.67, ...motion, labelHeight: template?.labelHeight ?? 1.42, labelSize: template?.labelSize ?? .21, arrowHeight: template?.arrowHeight ?? .86 };
       });
+      scene.updateMatrixWorld(true);
       ethereal.setStations(instances.map(instance => {
         const template = manifest.templates.find(entry => entry.id === instance.station.template);
-        return { id: instance.station.id, position: instance.model.position.clone(), width: (template?.width ?? 2.2) * instance.scale, height: (template?.height ?? 4) * instance.scale, baseHeight: .48 * instance.scale };
+        const relic = new Box3().setFromObject(instance.icon);
+        return { relicCenter: relic.getCenter(new Vector3()).sub(instance.model.position), relicSize: relic.getSize(new Vector3()), id: instance.station.id, position: instance.model.position.clone(), width: (template?.width ?? 2.2) * instance.scale, height: (template?.height ?? 4) * instance.scale, baseHeight: .48 * instance.scale };
       }));
       scene.updateMatrixWorld(true);
       bounds();
@@ -344,7 +347,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       paused = value;
       water.setPaused(value);
       ethereal.update(elapsed, 0, value);
-      if (value) { animateCrystals(0, true); animateRoom(0, true); bounds(); }
+      if (value) { animateRelics(0, true); animateRoom(0, true); bounds(); }
       resume();
     },
     setHover(id, x = 0, y = 0) {
@@ -352,7 +355,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       canvas.dataset.hoverStation = id ?? "";
       ethereal.setHover(id);
       hoverPointer.set(Math.max(-1, Math.min(1, x)), Math.max(-1, Math.min(1, y)));
-      if (paused) { animateCrystals(0, true); render(); }
+      if (paused) { animateRelics(0, true); render(); }
     },
     setPressed(id) { pressed = id; if (paused) render(); },
     setPointer(x, y) {
@@ -362,7 +365,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const basin = raycaster.ray.intersectPlane(basinPlane, basinHit);
       const point = basin && basin.x * basin.x + basin.z * basin.z < 4.36 * 4.36 ? basin : raycaster.ray.intersectPlane(poolPlane, poolHit);
       if (!point || point.x < -25 || point.x > 25 || point.z < -35 || point.z > 28 || point.distanceToSquared(lastSplash) < .0225) return;
-      // Avoid making ripples through the front face of a crystal or the stone rim.
+      // Avoid making ripples through the navigation relic or the stone rim.
       if (hovered || point.x * point.x + point.z * point.z >= 4.36 * 4.36 && point.x * point.x + point.z * point.z <= 4.95 * 4.95) return;
       water.splash(point.x, point.z, .28);
       lastSplash.copy(point);
@@ -380,6 +383,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       canvas.dataset.ready = "false";
       instanceMaterials.forEach(material => material.dispose());
       modelCache.forEach(pending => { void pending.then(disposeModel).catch(() => {}); });
+      retiredCovers.forEach(disposeModel);
       loader.dispose();
       if (room) disposeModel(room);
       orbit.traverse(object => { if (object instanceof Mesh) { object.geometry.dispose(); (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => material.dispose()); } });

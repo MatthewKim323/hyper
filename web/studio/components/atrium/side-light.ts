@@ -38,12 +38,11 @@ export function createAtriumSideLight(metadata?: AtriumSideLightMetadata) {
   light.position.copy(source);
   light.target.position.copy(target);
   light.castShadow = true;
-  light.shadow.mapSize.set(1536, 1536);
+  light.shadow.mapSize.set(1024, 1024);
   light.shadow.camera.near = 1;
   light.shadow.camera.far = 140;
   light.shadow.bias = -.000025;
   light.shadow.normalBias = .025;
-  light.shadow.radius = 10;
   group.add(light, light.target);
 
   const apertures = metadata.apertures.filter(aperture => validPoint(aperture.position) && validPoint(aperture.target) && Number.isFinite(aperture.width) && aperture.width > 0 && Number.isFinite(aperture.height) && aperture.height > 0);
@@ -91,7 +90,7 @@ export function createAtriumSideLight(metadata?: AtriumSideLightMetadata) {
       uCone: { value: new Vector2(Math.cos(angle), Math.cos(angle * (1 - penumbra))) },
       uStrength: { value: power }, uKeyShadowMap: { value: null as Texture | null },
       uKeyShadowMatrix: { value: light.shadow.matrix }, uShadowReady: { value: false },
-      uShadowTexel: { value: new Vector2(1 / 1536, 1 / 1536) }, uShadowBias: { value: light.shadow.bias }, uShadowRadius: { value: light.shadow.radius },
+      uShadowMapSize: { value: light.shadow.mapSize.clone() }, uShadowBias: { value: light.shadow.bias },
     },
     vertexShader: `
       #include <common>
@@ -111,25 +110,43 @@ export function createAtriumSideLight(metadata?: AtriumSideLightMetadata) {
       #include <common>
       #include <packing>
       #include <logdepthbuf_pars_fragment>
-      uniform float uTime, uStrength, uShadowBias, uShadowRadius;
+      uniform float uTime, uStrength, uShadowBias;
       uniform vec3 uColor, uSource, uAxis;
-      uniform vec2 uCone, uShadowTexel;
+      uniform vec2 uCone, uShadowMapSize;
       uniform sampler2D uKeyShadowMap;
       uniform bool uShadowReady;
       varying vec2 vUv; varying vec3 vWorld; varying vec4 vKeyShadow; varying float vWeight;
+      float keyDepthCompare(vec2 uv,float depth) {
+        return step(depth,unpackRGBAToDepth(texture2D(uKeyShadowMap,uv)));
+      }
       // Sample only this key's packed RGBA map. The rear sun may be occluded
       // independently and must never extinguish a side-lit volume.
       float keyVisibility() {
         if(!uShadowReady || vKeyShadow.w<=0.) return 0.;
         vec3 p=vKeyShadow.xyz/vKeyShadow.w;
         if(any(lessThan(p,vec3(0.))) || any(greaterThan(p,vec3(1.)))) return 0.;
-        float visibility=0.;
-        for(int x=-1;x<=1;x++) for(int y=-1;y<=1;y++) {
-          vec2 offset=vec2(float(x),float(y))*uShadowTexel*uShadowRadius*.65;
-          float depth=unpackRGBAToDepth(texture2D(uKeyShadowMap,p.xy+offset));
-          visibility+=step(p.z+uShadowBias,depth);
-        }
-        return visibility/9.;
+        // Match r143's PCFSoftShadowMap kernel: contiguous texels and bilinear
+        // comparison weights avoid separated copies of each aperture edge.
+        vec2 texel=1./uShadowMapSize;
+        float dx=texel.x,dy=texel.y;
+        vec2 uv=p.xy;
+        vec2 f=fract(uv*uShadowMapSize+.5);
+        uv-=f*texel;
+        float depth=p.z+uShadowBias;
+        return (
+          keyDepthCompare(uv,depth)+
+          keyDepthCompare(uv+vec2(dx,0.),depth)+
+          keyDepthCompare(uv+vec2(0.,dy),depth)+
+          keyDepthCompare(uv+texel,depth)+
+          mix(keyDepthCompare(uv+vec2(-dx,0.),depth),keyDepthCompare(uv+vec2(2.*dx,0.),depth),f.x)+
+          mix(keyDepthCompare(uv+vec2(-dx,dy),depth),keyDepthCompare(uv+vec2(2.*dx,dy),depth),f.x)+
+          mix(keyDepthCompare(uv+vec2(0.,-dy),depth),keyDepthCompare(uv+vec2(0.,2.*dy),depth),f.y)+
+          mix(keyDepthCompare(uv+vec2(dx,-dy),depth),keyDepthCompare(uv+vec2(dx,2.*dy),depth),f.y)+
+          mix(
+            mix(keyDepthCompare(uv+vec2(-dx,-dy),depth),keyDepthCompare(uv+vec2(2.*dx,-dy),depth),f.x),
+            mix(keyDepthCompare(uv+vec2(-dx,2.*dy),depth),keyDepthCompare(uv+vec2(2.*dx,2.*dy),depth),f.x),
+            f.y)
+        )/9.;
       }
       float airHash(vec3 p) { p=fract(p*.1031); p+=dot(p,p.yzx+33.33); return fract((p.x+p.y)*p.z); }
       float airNoise(vec3 p) {
@@ -162,7 +179,7 @@ export function createAtriumSideLight(metadata?: AtriumSideLightMetadata) {
     material.uniforms.uKeyShadowMap.value = light.shadow.map?.texture ?? null;
     material.uniforms.uShadowReady.value = Boolean(light.shadow.map);
     material.uniforms.uShadowBias.value = light.shadow.bias;
-    material.uniforms.uShadowTexel.value.set(1 / light.shadow.mapSize.x, 1 / light.shadow.mapSize.y);
+    material.uniforms.uShadowMapSize.value.copy(light.shadow.mapSize);
     material.uniforms.uStrength.value = light.intensity / 4.2;
     material.uniforms.uCone.value.set(Math.cos(light.angle), Math.cos(light.angle * (1 - light.penumbra)));
     light.getWorldPosition(sourceWorld);
