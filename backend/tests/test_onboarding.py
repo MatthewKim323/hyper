@@ -318,31 +318,35 @@ async def test_revoked_access_blocks_context_commit(tmp_path,monkeypatch):
     assert not s.store.workspace('unit-user')['onboarding_complete']
 
 
-def test_prompt_names_the_fields_and_capabilities_it_is_graded_on():
-    """The evaluator gates completion on five brief fields and five rubric dimensions, and
-    the agent can only deliver the workflows the tool registry exposes. The prompt used to
-    say 'learn enough context' and name none of it, so the agent was interviewing against a
-    rubric it could not see and offering capabilities that do not exist."""
-    import json
-    from pathlib import Path
+def test_prompt_collects_the_context_that_survives_to_the_workspace_agent():
+    """Onboarding hands off to the workspace agent; it does not do financial work. Only
+    `company` and `facts` are copied into a later session (store.py), so the interview has to
+    spend itself on those. The prompt used to interview toward scoping a first task, which is
+    the workspace agent's job and does not persist."""
+    import inspect
+    from app import store
     from app.voice import PROMPT
     from app.agent import Brief
+    from app import dashboard
 
     prompt = PROMPT.lower()
-    # Every field evaluate() requires before it will report ready (agent.py).
-    for field in ('company', 'objective', 'scope', 'success_criteria', 'next_action'):
-        assert field.replace('_', ' ') in prompt or field in prompt, field
-    assert set(Brief.model_fields) >= {'company', 'objective', 'scope', 'success_criteria', 'next_action'}
+    # The durable payload, asserted against the code that copies it rather than a literal.
+    carried = inspect.getsource(store.Store)
+    assert "('company','facts')" in carried.replace(' ', ''), 'store no longer carries company+facts'
+    for field in ('company', 'facts'):
+        assert field in prompt, field
+        assert field in Brief.model_fields
 
-    # Every dimension the evaluator scores (evaluator/decision.mjs).
-    rubric = Path(__file__).resolve().parents[1] / 'evaluator' / 'decision.mjs'
-    for dimension in ('goal', 'company', 'evidence', 'ambiguity'):
-        assert dimension in rubric.read_text()
+    # The handoff has to be stated up front, or the agent has no reason to record for a
+    # reader other than itself. Check the opening paragraph, not merely a mention anywhere.
+    opening = prompt.split('what you are collecting')[0]
+    assert 'takes over' in opening and 'workspace' in opening, opening[:200]
+    # It must not interview toward a first task: that is the workspace agent's job, and
+    # objective/scope/success_criteria/next_action are dropped when the session ends.
+    assert 'do not interview toward one' in prompt
+    # And the division of labour must match what the workspace agent believes.
+    assert 'not onboarding' in dashboard.PROMPT.lower()
 
-    # The interview must steer at real workflows, not generic finance talk.
-    for capability in ('payable', 'aging', 'anomal', 'settlement', 'accrual'):
-        assert capability in prompt, capability
-
-    # And must not promise authority the readiness decision explicitly withholds.
+    # Authority is unchanged by any of this.
     assert 'read-only' in prompt
     assert 'never permission to send messages, post entries' in prompt
