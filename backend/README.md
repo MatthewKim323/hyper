@@ -132,7 +132,7 @@ See [ELASTIC.md](ELASTIC.md) for Jina reranking, the persistent investigation AP
 
 ## Deterministic accounting
 
-The shared agent tools now call the existing AP engine for exact invoice matching, credit verification and hash-bound payable proposals. [ACCOUNTING_API.md](ACCOUNTING_API.md) describes evidence attestation, owner-only approval, deterministic checks and supported accounting scope. Agents cannot attest records, approve proposals, or move money.
+The shared agent tools now call the existing AP engine for exact invoice matching, credit verification and hash-bound payable proposals. [ACCOUNTING_API.md](ACCOUNTING_API.md) describes evidence attestation, owner-only approval, deterministic checks and supported accounting scope. Agents cannot attest records, approve proposals, or move money. [HANDOFF_API.md](HANDOFF_API.md) covers what comes after AP: an approved payable packaged for the payment run, the general ledger, month-end close and cash forecasting, plus owner-only recognition. Hyper prepares; it never pays or posts.
 
 Processor settlement reconciliation is available through authenticated API routes and shared dashboard/worker tools. See [SETTLEMENT_API.md](SETTLEMENT_API.md) for normalized report contracts, exact residual checks, owner verification and limitations; [the research plan](plans/settlement-reconciliation.md) compares candidate workflows.
 

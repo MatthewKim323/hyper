@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import { backend, BackendError } from "@/lib/backend/client";
 import type { EngineCase, PayableProposal } from "@/lib/backend/types";
 import { ChecksRing, PayableFunnel, RouteBars, VolumeArea } from "./charts";
+import { PayableHandoff } from "./handoff";
 import { useBackend } from "./useBackend";
 
 const cents = (value: number, currency: string) => {
@@ -75,8 +76,9 @@ export function PayableApprovals({ active, onBusy }: { active: boolean; onBusy?:
   return <section className="ws-section" data-pointable="group:payable-approvals" data-pointable-label="Payables ready for approval">
     <span className="ws-eyebrow">Payables</span>
     <div className="ws-stack">{waiting.map(proposal => <ProposalCard key={proposal.proposal_id} proposal={proposal} onDecided={refresh} onBusy={onBusy} />)}</div>
-    {decided.length > 0 && <ul className="ws-rows ws-rows--tight">{decided.map(proposal => <li key={proposal.proposal_id}>
-      <div><strong>{proposal.payload.invoice_id} · {cents(proposal.payload.net_payable_cents, proposal.payload.currency)}</strong><small>{words(proposal.approval!.status)}{proposal.approval!.decided_at ? ` · ${new Date(proposal.approval!.decided_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : ""}</small></div>
+    {decided.filter(proposal => proposal.approval!.status === "APPROVED").map(proposal => <PayableHandoff key={proposal.proposal_id} proposalId={proposal.proposal_id} active={active} onChanged={refresh} />)}
+    {decided.some(proposal => proposal.approval!.status !== "APPROVED") && <ul className="ws-rows ws-rows--tight">{decided.filter(proposal => proposal.approval!.status !== "APPROVED").map(proposal => <li key={proposal.proposal_id}>
+      <div><strong>{proposal.payload.invoice_id} · {cents(proposal.payload.net_payable_cents, proposal.payload.currency)}</strong><small>{words(proposal.approval!.status)}</small></div>
     </li>)}</ul>}
   </section>;
 }

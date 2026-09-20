@@ -166,6 +166,11 @@ httpx.Client = lambda **kw: _real_client(transport=httpx.MockTransport(evaluator
 
 # --- seed --------------------------------------------------------------------------------------
 
+def hero_vendor(svc, case_id: str) -> str:
+    from app import handoff
+    proposal = next(p for p in svc.list_proposals()["proposals"] if p["case_id"] == case_id)
+    return handoff.packet(svc.store, svc.oid, proposal["proposal_id"])["payment"]["vendor_id"]
+
 def seed_accounting() -> None:
     """The hero invoice, worked through the real engine: records verified, both credits inspected, one
     payable proposal left waiting for an owner. Same steps as backend/tests/test_accounting.py."""
@@ -198,6 +203,8 @@ def seed_accounting() -> None:
         svc.execute("inspect_payable_credit", {"case_id": case_id, "credit_id": credit})
     revision = svc.execute("analyze_payable", {"case_id": case_id})["case"]["revision"]
     svc.execute("prepare_payable_proposal", {"case_id": case_id, "based_on_revision": revision})
+    # Payment terms come from the imported vendor list, so the handoff can date the payment and the cash line.
+    data.ingest("DEV_FIXTURE-vendor-terms.json", json.dumps([{"vendor_id": hero_vendor(svc, case_id), "name": "DEV_FIXTURE vendor", "terms_days": 30}]).encode(), dataset="vendors")
     print("seeded accounting: INV-1042 with a payable proposal awaiting owner approval")
 
 def seed_skills() -> None:
