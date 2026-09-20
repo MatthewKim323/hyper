@@ -21,6 +21,9 @@ import ToContactTransition from "./transitions/to-contact";
 import ToProjectMenuTransition from "./transitions/to-project-menu";
 import { CONTEXTUAL_ROUTES, bodyClassFor, matchContextualRoute, type ContextualRoute, type TransitionName } from "./routes";
 
+// Longest authored out transition is 3 s (the landing wipe); allow headroom, then move on.
+const OUT_TRANSITION_CAP_MS = 5000;
+
 /** Internal links eligible for scene transitions. */
 export const LINK_SELECTOR =
   'a[href]:not([target]):not([href|="#"]):not([data-router-disabled]):not(.sf-dump-toggle)';
@@ -372,7 +375,15 @@ export class Router {
         /* prefetch is best effort */
       }
     }
-    await this.From.hide(args);
+    // Bounded: the out transitions are GSAP timelines, and GSAP's ticker is rAF-driven, so a
+    // tab that is backgrounded mid-navigation never advances them. Without a cap this await
+    // never returns, `running` stays true, and every later navigation is refused for the life
+    // of the page -- the URL is already committed to data-navigating by then, so the router
+    // would sit half-navigated. Proceed once the animation has had its time.
+    await Promise.race([
+      this.From.hide(args),
+      new Promise<void>(resolve => setTimeout(resolve, OUT_TRANSITION_CAP_MS)),
+    ]);
     this.navigateNext(traverse);
     const view = await this.waitForView(oldView, traverse);
     this.properties = this.Helpers.getProperties(view, this.location.pathname);
