@@ -151,7 +151,7 @@ def test_partial_bulk_is_failure(monkeypatch):
 
 def test_agent_tools_are_scoped_and_reference_free():
     defs=tool_definitions()
-    assert {d['name'] for d in defs}=={'resolve_entity','explore_entity_graph','find_entity_path','get_entity_evidence','list_open_exceptions','request_supplier_document','request_internal_confirmation','get_counterparty_thread','list_accounting_records','open_payable_case','analyze_payable','inspect_payable_credit','prepare_payable_proposal','reconcile_settlement','get_settlement_reconciliation','prepare_expense_accrual','get_expense_accrual','track_expense_accrual','search_learned_skills','get_learned_skill','get_skill_resource','save_learned_skill','record_skill_run','save_skill_execution_evidence','compose_financial_artifact','investigate_financial_evidence','get_evidence_investigation','list_datasets','query_financials','search_evidence','get_source','raise_concern','get_concern','list_concerns','claim_concern','resolve_concern','renew_concern_claim','create_financial_artifact','get_financial_artifact'}
+    assert {d['name'] for d in defs}=={'analyze_payable','ap_aging','claim_concern','compose_financial_artifact','create_financial_artifact','draft_skill_from_case','draft_skill_from_task','escalate_anomaly','explore_entity_graph','find_entity_path','get_adapter_import','get_anomaly_finding','get_concern','get_counterparty_thread','get_entity_evidence','get_evidence_investigation','get_expense_accrual','get_financial_artifact','get_journal_entry','get_learned_skill','get_settlement_reconciliation','get_skill_lineage','get_skill_resource','get_source','import_bank_statement','import_processor_report','inspect_payable_credit','investigate_financial_evidence','list_accounting_records','list_anomaly_findings','list_concerns','list_datasets','list_journal_entries','list_open_exceptions','list_payable_cases','list_payable_proposals','open_payable_case','prepare_expense_accrual','prepare_manual_journal','prepare_payable_proposal','propose_anomaly_dismissal','query_financials','raise_concern','reconcile_settlement','record_skill_run','renew_concern_claim','request_internal_confirmation','request_supplier_document','resolve_concern','resolve_entity','run_anomaly_scan','save_learned_skill','save_skill_execution_evidence','search_evidence','search_learned_skills','track_expense_accrual','trial_balance'}
     assert '$ref' not in json.dumps(defs)
     assert all('organization_id' not in d['parameters']['properties'] for d in defs)
 
@@ -201,3 +201,29 @@ def test_query_tools_use_current_organization(services):
     assert result['results'][0]['value']=='1'
     with pytest.raises(LookupError):
         data_tools.execute(store,b.oid,'query_financials',{'dataset':'invoices'})
+
+def test_every_api_router_is_mounted_on_the_app():
+    """Routers are only reachable if main.py includes them. A module can be complete,
+    tested in isolation and still dead, so assert the real app serves every prefix."""
+    import importlib, pkgutil
+    from app.main import app
+    served={getattr(route,'path','') for route in app.routes}
+    served|={path for path in app.openapi()['paths']}
+    orphaned=[]
+    for module in pkgutil.iter_modules(importlib.import_module('app').__path__):
+        if not module.name.endswith('_api'):continue
+        router=getattr(importlib.import_module('app.'+module.name),'router',None)
+        if router is None:continue
+        for route in router.routes:
+            # route.path already carries the router prefix; do not prepend it again.
+            if route.path not in served:
+                orphaned.append(module.name+' -> '+route.path)
+    assert not orphaned, 'routers defined but never include_router()ed in main.py: '+', '.join(orphaned)
+
+def test_agents_never_receive_posting_or_approval_authority():
+    """Agents prepare, humans approve. Ledger posting and approval stay owner-gated,
+    so a new module must not widen the agent bridge by adding such a tool."""
+    from app import data_tools, posting
+    assert not [n for n in data_tools.DESCRIPTIONS if n.startswith(('post_','approve_','reverse_','commit_'))]
+    assert 'post_accrual_journal' in posting.OWNER_ONLY
+    assert 'post_accrual_journal' not in posting.TOOL_MODELS

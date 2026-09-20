@@ -108,6 +108,32 @@ def test_currency_mismatch_and_invoice_total_block_proposal(setup):
     assert any('currency' in str(issue['detail']) for issue in result['issues'])
     assert proposal(svc,cid)['validation']['verdict']=='FAIL'
 
+def test_agent_read_tools_and_aging(setup):
+    from app import data_tools
+    store,a,b,_,_=setup;data=a.data;svc=Accounting(store,a.oid)
+    empty=svc.execute('ap_aging',{'as_of':'2026-10-15'})
+    assert empty['resolved_cases']==0 and all(not bucket['cases'] for bucket in empty['buckets'].values())
+    cid=initial(data)
+    listed=svc.execute('list_payable_cases',{})['cases']
+    assert [c['case_id'] for c in listed]==[cid] and listed[0]['invoice_id']=='INV-1042'
+    aging=svc.execute('ap_aging',{'as_of':'2026-10-15'})
+    # 35 days since the 2026-09-10 invoice; residual is the unreconciled remainder.
+    assert aging['buckets']['31_60']['cases']==1 and aging['buckets']['31_60']['invoice_ids']==['INV-1042']
+    assert aging['buckets']['31_60']['residual_cents']>0 and aging['open_residual_minor']['USD']>0
+    for name in ('list_payable_cases','list_payable_proposals','ap_aging'):
+        json.dumps(data_tools.execute(store,a.oid,name,{'as_of':'2026-10-15'} if name=='ap_aging' else {}))
+    # Tenant isolation: organization b sees empty books, not organization a's cases.
+    assert data_tools.execute(store,b.oid,'list_payable_cases',{})['cases']==[]
+    assert data_tools.execute(store,b.oid,'ap_aging',{})['buckets']['31_60']['cases']==0
+    # Agents prepare and propose; owners approve, post, commit, reverse, dismiss and verify.
+    # propose_/prepare_ tools are explicitly allowed: they only stage work for owner confirmation,
+    # so match on the acting verb rather than on the word appearing anywhere in the name.
+    acting=[name for name in data_tools.DESCRIPTIONS
+            if not name.startswith(('propose_','prepare_'))
+            and any(word in name for word in ('approve','commit','reverse','dismiss','verify_record'))]
+    assert not acting, acting
+    assert not [name for name in data_tools.DESCRIPTIONS if name.startswith('post_')]
+
 def test_case_and_proposal_listings_for_the_workspace(setup,monkeypatch):
     store,a,b,_,_=setup;data=a.data;svc=Accounting(store,a.oid)
     assert svc.list_cases()=={'cases':[]} and svc.list_proposals()=={'proposals':[]}

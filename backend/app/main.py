@@ -14,8 +14,21 @@ from . import voice, auth, dashboard
 
 app = FastAPI(title='Hyper Onboarding')
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in os.getenv('ALLOWED_ORIGINS','http://127.0.0.1:8000,http://localhost:8000').split(',')], allow_methods=['GET','POST'], allow_headers=['Authorization','Content-Type'])
-store = Store()
 active = set()
+
+# Connecting at import made the process die before /health could answer whenever Postgres
+# was not up yet, which reads as an opaque crash-loop in a deployment. The first attribute
+# access builds it instead; tests and modules that do `from .main import store` are
+# unaffected, and assigning main.store (as tests do) still overrides it.
+_store = None
+
+def __getattr__(name):
+    global _store
+    if name != 'store':
+        raise AttributeError(name)
+    if _store is None:
+        _store = Store()
+    return _store
 
 class CreateSession(BaseModel):
     demo: bool = False
@@ -311,6 +324,18 @@ app.include_router(accrual_router)
 
 from .skills_api import router as skills_router
 app.include_router(skills_router)
+
+from .posting_api import router as posting_router
+app.include_router(posting_router)
+
+from .anomaly_api import router as anomaly_router
+app.include_router(anomaly_router)
+
+from .skill_extraction_api import router as skill_extraction_router
+app.include_router(skill_extraction_router)
+
+from .processor_api import router as processor_router
+app.include_router(processor_router)
 
 from .counterparty_api import router as counterparty_router
 app.include_router(counterparty_router)

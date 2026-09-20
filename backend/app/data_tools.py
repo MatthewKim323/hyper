@@ -29,7 +29,7 @@ DESCRIPTIONS={
     'get_source':'Read paginated original extracted source content using a source_id from another tool. Returns row/page citations and an authenticated download URL.',
 }
 
-from . import accounting, settlements, accruals, learned_skills, counterparty, graph
+from . import accounting, settlements, accruals, learned_skills, counterparty, graph, posting, anomalies, skill_extraction, processor_adapters
 TOOL_MODELS.update(graph.TOOL_MODELS)
 DESCRIPTIONS.update(graph.DESCRIPTIONS)
 TOOL_MODELS.update(counterparty.TOOL_MODELS)
@@ -42,6 +42,14 @@ TOOL_MODELS.update(settlements.TOOL_MODELS)
 DESCRIPTIONS.update(settlements.DESCRIPTIONS)
 TOOL_MODELS.update(accounting.TOOL_MODELS)
 DESCRIPTIONS.update(accounting.DESCRIPTIONS)
+TOOL_MODELS.update(posting.TOOL_MODELS)
+DESCRIPTIONS.update(posting.DESCRIPTIONS)
+TOOL_MODELS.update(anomalies.TOOL_MODELS)
+DESCRIPTIONS.update(anomalies.DESCRIPTIONS)
+TOOL_MODELS.update(skill_extraction.TOOL_MODELS)
+DESCRIPTIONS.update(skill_extraction.DESCRIPTIONS)
+TOOL_MODELS.update(processor_adapters.TOOL_MODELS)
+DESCRIPTIONS.update(processor_adapters.DESCRIPTIONS)
 DESCRIPTIONS['list_accounting_records'] = 'List owner-verified structured accounting records and their original IDs/source citations. Unverified raw uploads are not accounting authority.'
 
 def tool_definitions():
@@ -74,7 +82,15 @@ def execute(store, oid, name, args):
         return jsonable_encoder(accounting.Accounting(store,oid).inventory())
     if name in accounting.TOOL_MODELS:
         return jsonable_encoder(accounting.Accounting(store,oid).execute(name,args))
+    if name in posting.TOOL_MODELS:
+        return jsonable_encoder(posting.Posting(store,oid).execute(name,args))
+    if name in anomalies.TOOL_MODELS:
+        return jsonable_encoder(anomalies.Anomalies(store,oid).execute(name,args))
+    if name in skill_extraction.TOOL_MODELS:
+        return jsonable_encoder(skill_extraction.Extractions(store,oid).execute(name,args))
     svc=DataService(store,oid,search=ElasticSearch())
+    if name in processor_adapters.TOOL_MODELS:
+        return jsonable_encoder(processor_adapters.Adapters(svc).execute(name,args))
     if name=='list_datasets':
         if args:raise ValueError('list_datasets takes no arguments')
         return svc.catalog()

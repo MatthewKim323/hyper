@@ -3,6 +3,7 @@ import hashlib
 import json
 import re
 from contextlib import contextmanager
+from datetime import date
 from typing import Literal
 from pydantic import Field
 from sqlalchemy import select, insert
@@ -30,13 +31,20 @@ class Approval(StrictModel):
     proposal_id: str
     proposal_hash: str
     decision: Literal['APPROVED','REJECTED']
+class ListLimit(StrictModel):
+    limit: int = Field(default=50,ge=1,le=100)
+class Aging(StrictModel):
+    as_of: date | None = None
 
-TOOL_MODELS={'open_payable_case':OpenInvoice,'analyze_payable':CaseID,'inspect_payable_credit':InspectCredit,'prepare_payable_proposal':Propose}
+TOOL_MODELS={'open_payable_case':OpenInvoice,'analyze_payable':CaseID,'inspect_payable_credit':InspectCredit,'prepare_payable_proposal':Propose,'list_payable_cases':ListLimit,'list_payable_proposals':ListLimit,'ap_aging':Aging}
 DESCRIPTIONS={
     'open_payable_case':'Open or resume a deterministic AP case for an original invoice_id from owner-verified accounting records. Does not trust model-extracted records.',
     'analyze_payable':'Recompute exact invoice/PO/receipt matching, verified credits, residual, blocking issues and evidence links. Never substitute a narrative for failed checks.',
     'inspect_payable_credit':'Verify an original credit memo ID against an AP case using code-owned checks. Partial correction does not resolve other discrepancies.',
     'prepare_payable_proposal':'Prepare a hash-bound payable proposal from current accounting evidence and revision. Runs deterministic validation; returns blockers or an approval packet. Does not approve, commit entries, or move money.',
+    'list_payable_cases':'List every AP case with its recomputed supported amounts, residual and open blocking issues. Read only; a failed recompute is reported, never guessed.',
+    'list_payable_proposals':'List payable proposals with current validation checks and approval standing. Read only; approval status is reported, never inferred.',
+    'ap_aging':'Bucket unresolved AP residual by days since invoice date (0-30, 31-60, 61-90, 90+) per currency as of a date. Exact recomputation from owner-verified records; cases with unreadable invoices are reported, not dropped silently.',
 }
 
 class Accounting:
@@ -150,8 +158,36 @@ class Accounting:
                             'approval':None if not approval else {'status':approval['status'],'decided_by':approval['decided_by'],
                                 'decided_at':approval['decided_at'].isoformat() if approval['decided_at'] else None}})
             return {'proposals':out}
+    def aging(self,as_of=None):
+        as_of=as_of or date.today()
+        with self.transaction() as db:
+            rows=db.execute(select(ledger.cases).where(ledger.cases.c.company_id==self.oid)).mappings().all()
+            buckets={k:{'cases':0,'residual_cents':0,'invoice_ids':[]} for k in ('0_30','31_60','61_90','over_90')}
+            unreadable=[];resolved=0;by_currency={}
+            for row in rows:
+                try:
+                    record=get_record(db,self.oid,row['invoice_id'])
+                    if not record or 'invoice_date' not in record['data']:raise ValueError('invoice record missing date')
+                    invoice_date=date.fromisoformat(record['data']['invoice_date'])
+                    calc=proposals.calculate_supported_payable(db,row['case_id'])
+                    residual=calc['residual_cents']
+                except Exception as exc:
+                    unreadable.append({'case_id':row['case_id'],'invoice_id':self.display(row['invoice_id']),'reason':str(exc)[:200]})
+                    continue
+                if residual<=0:resolved+=1;continue
+                age=(as_of-invoice_date).days
+                bucket='0_30' if age<=30 else '31_60' if age<=60 else '61_90' if age<=90 else 'over_90'
+                buckets[bucket]['cases']+=1;buckets[bucket]['residual_cents']+=residual
+                buckets[bucket]['invoice_ids'].append(self.display(row['invoice_id']))
+                currency=calc['currency']
+                by_currency.setdefault(currency,0);by_currency[currency]+=residual
+            return {'as_of':as_of.isoformat(),'unit':'minor','buckets':buckets,'open_residual_minor':by_currency,
+                    'resolved_cases':resolved,'unreadable_cases':unreadable}
     def execute(self,name,args):
         parsed=TOOL_MODELS[name].model_validate(args)
+        if name=='list_payable_cases':return self.list_cases(parsed.limit)
+        if name=='list_payable_proposals':return self.list_proposals(parsed.limit)
+        if name=='ap_aging':return self.aging(parsed.as_of)
         with self.transaction() as db:
             self.current_evidence(db)
             if name=='open_payable_case':
