@@ -20,6 +20,7 @@ import { ALWAYS_ONBOARD } from "@/lib/onboarding/interface";
 import OnboardingWorkspace from "@/components/onboarding/OnboardingWorkspace";
 import FingerCursor from "@/components/finger/FingerCursor";
 import CommandLayer from "@/components/command/CommandLayer";
+import HomeLinks from "@/components/HomeLinks";
 
 export const metadata: Metadata = {
   title: "hyper. | HackMIT 2026",
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SignInGate />
         <OnboardingWorkspace />
         <CommandLayer />
+        <HomeLinks />
         <FingerCursor />
         <EngineRoot />
       </body>

@@ -69,14 +69,28 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
   const drag = useRef<{ pointerId: number; x: number; scrollLeft: number } | null>(null);
   const stations = useSyncExternalStore(subscribeAtriumStations, getAtriumStations, getDefaultAtriumStations);
   const stationsRef = useRef(stations);
-  const { activities } = useRelicActivity(!warm && live);
+  // Read while still hidden, so the activity meshes exist (and their shaders are compiled) before the reveal.
+  const { activities } = useRelicActivity(live);
+  // Hidden means paused, except for short priming runs: the live path (animated relics, aura, activity
+  // rings) has to draw a few real frames out of sight, or its programs compile on the first visible ones.
+  const [priming, setPriming] = useState(false);
+  const primeTimer = useRef(0);
+  const prime = useCallback((ms: number) => {
+    setPriming(true);
+    clearTimeout(primeTimer.current);
+    primeTimer.current = window.setTimeout(() => setPriming(false), ms);
+  }, []);
+  useEffect(() => () => clearTimeout(primeTimer.current), []);
   const [preview, setPreview] = useState<Partial<RelicActivityMap> | null>(null);
   const activityStates = preview ?? activities;
   const activityRef = useRef(activityStates);
+  const warmRef = useRef(warm);
+  useEffect(() => { warmRef.current = warm; }, [warm]);
   useEffect(() => {
     activityRef.current = activityStates;
     stations.forEach(station => renderer.current?.setRelicActivity(station.id, activityStates[station.section as RelicActivitySection] ?? { status: "idle", label: "" }));
-  }, [activityStates, stations]);
+    if (warmRef.current && renderer.current && !motionSnapshot()) prime(800);
+  }, [activityStates, stations, prime]);
   useEffect(() => {
     if (process.env.NODE_ENV !== "development" || !document.querySelector("[data-atrium-dev]")) return;
     const showPreview = (event: Event) => setPreview((event as CustomEvent<{ activities: Partial<RelicActivityMap> | null }>).detail.activities);
@@ -208,9 +222,9 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
 
   useEffect(() => {
     // Hidden means paused: the scene still prepares its first frame, then stops drawing.
-    motionRef.current = reducedMotion || warm;
+    motionRef.current = reducedMotion || (warm && !priming);
     renderer.current?.setPaused(motionRef.current);
-  }, [reducedMotion, warm]);
+  }, [reducedMotion, warm, priming]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -269,6 +283,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
           const share = scroller.current && plane.current ? Math.min(1, scroller.current.clientWidth / Math.max(1, plane.current.clientWidth)) : 1;
           instance.setFocus(selected, share);
           setFailed(false);
+          if (warmRef.current && !motionSnapshot()) prime(1500);
           // A paused renderer draws when its pressed state is set, which is exactly one fresh frame.
           // Live or hidden, the still is drawn in this task so the copy never reads a cleared buffer.
           setWarmFrameProvider(() => { instance?.setPaused(true); instance?.setPressed(null); instance?.setPaused(motionRef.current); return element; });
@@ -294,7 +309,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
       element?.removeEventListener("webglcontextlost", fail);
       window.removeEventListener("hyper:section-change", update);
     };
-  }, [publishAgentInteraction, resetAgentInteraction]);
+  }, [publishAgentInteraction, resetAgentInteraction, prime]);
 
   useEffect(() => {
     const element = scroller.current;
