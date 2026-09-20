@@ -221,6 +221,12 @@ class Counterparties:
             state = dict(scenario['state'])
             asked_before = db.execute(select(func.count()).select_from(messages).where(messages.c.scenario_id == scenario['id'], messages.c.direction == 'out',
                                                                                         messages.c.party == party, messages.c.kind == args.request)).scalar()
+            # A party that answered "send us X first" has to answer again once X exists. Coming back with
+            # the document it asked for is following up, not repeating.
+            unmet = dict(state.get('unmet', {}))
+            need = unmet.get(f'{party}:{args.request}')
+            follow_up = bool(asked_before and need and need in state.get('delivered', []))
+            if follow_up: unmet.pop(f'{party}:{args.request}'); state['unmet'] = unmet; asked_before = 0
             state['requests'] = state.get('requests', 0) + 1
             state['repeats'] = state.get('repeats', 0) + (1 if asked_before else 0)
             mid = self._message(db, scenario, 'out', party, args.request, args.message, request_key=args.request_key)
@@ -269,12 +275,14 @@ class Counterparties:
             reply, body, source_ids = (row['payload'] or {}).get('reply'), row['body'], []
             if reply:
                 delivered = set(scenario['state'].get('delivered', []))
+                unmet = dict(scenario['state'].get('unmet', {}))
                 if reply.get('needs') and reply['needs'] not in delivered:
+                    unmet[f"{row['party']}:{row['kind']}"] = reply['needs']
                     body, reply = 'We have no record of any cancellation from you. Send us the approved change order first.', {'records': []}
                 if reply['records']:
                     source_ids = self._deliver(scenario, [tuple(r) for r in reply['records']], row['party'], row['id'])
                     delivered.update(r[0] for r in reply['records'])
-                state = {**scenario['state'], 'delivered': sorted(delivered)}
+                state = {**scenario['state'], 'delivered': sorted(delivered), 'unmet': unmet}
                 with self.engine.begin() as db:
                     db.execute(update(scenarios).where(scenarios.c.id == scenario['id']).values(state=state))
             with self.engine.begin() as db:

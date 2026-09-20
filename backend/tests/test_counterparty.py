@@ -336,3 +336,24 @@ def test_activity_update_executes_on_postgres_without_overwriting_state(initial,
                 transaction.rollback()
     finally:
         engine.dispose()
+
+
+def test_a_supplier_that_asked_for_a_document_answers_once_it_exists(world):
+    """Asking the supplier before the internal desk is the natural order. It must not make the case unsolvable."""
+    store, oid, factory, svc = world
+    scenario = svc.spawn('partial_correction', 'owner', seed=11)
+    inv = scenario['invoice_id']
+    ask = lambda name, kind, key: tool(store, oid, name, invoice_id=inv, request=kind, message='Please send what is needed for this invoice.', request_key=key)
+    ask('request_supplier_document', 'quantity_correction', 'q1'); flush(store, factory)
+    assert 'change order first' in tool(store, oid, 'get_counterparty_thread', invoice_id=inv)['messages'][-1]['body']
+    ask('request_internal_confirmation', 'quantity_status', 'i1'); flush(store, factory)
+    ask('request_supplier_document', 'quantity_correction', 'q2'); flush(store, factory)
+    last = tool(store, oid, 'get_counterparty_thread', invoice_id=inv)['messages'][-1]
+    assert 'accept the cancellation' in last['body'] and last['source_ids'], 'the credit arrives on the follow-up'
+    with store.engine.connect() as db:
+        state = db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == scenario['id'])).scalar()
+    assert state['repeats'] == 0, 'coming back with the requested document is not a repeat'
+    # Asking a third time, with nothing new, still is.
+    ask('request_supplier_document', 'quantity_correction', 'q3'); flush(store, factory)
+    with store.engine.connect() as db:
+        assert db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == scenario['id'])).scalar()['repeats'] == 1
