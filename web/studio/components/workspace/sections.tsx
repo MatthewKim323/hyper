@@ -1,5 +1,7 @@
 "use client";
 
+import ActivityOrb from "@/components/ui/ActivityOrb";
+
 // One screen per workspace section, each reading the backend routes listed in INTEGRATION.md.
 // Nothing is pushed from the server, so every screen polls and keeps its last good data.
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
@@ -131,7 +133,7 @@ function CaseCard({ item, tasks }: { item: AgentCase; tasks: AgentTask[] }) {
       {list("Still unknown", item.state.unknowns, "unknown")}
       {list("Next", item.state.next_actions)}
     </div>
-    {tasks.length > 0 && <ul className="ws-rows ws-rows--tight">{tasks.map((t) => <li key={t.id}><div><strong>{t.objective}</strong><small>{words(t.status)}{t.error ? ` · ${t.error}` : ""}</small></div>{t.result && <p>{t.result.summary}</p>}</li>)}</ul>}
+    {tasks.length > 0 && <ul className="ws-rows ws-rows--tight">{tasks.map((t) => <li key={t.id}><div><strong>{t.objective}</strong><small><ActivityOrb status={t.status} label={`Agent: ${words(t.status)}`} />{t.error ? ` ${t.error}` : ""}</small></div>{t.result && <p>{t.result.summary}</p>}</li>)}</ul>}
     <footer>
       <button type="button" className="ws-link" onClick={() => go("evidence")}>{item.state.source_ids.length} sources</button>
       {item.state.concern_ids.length > 0 && <button type="button" className="ws-link" onClick={() => go("review")}>{item.state.concern_ids.length} decision{item.state.concern_ids.length === 1 ? "" : "s"}</button>}
@@ -308,6 +310,6 @@ export function OverviewStrip({ active }: { active: boolean }) {
   </aside>;
 }
 
-function Heading({ eyebrow, title }: { eyebrow: string; title: React.ReactNode }) {
-  return <header className="ws-heading"><span className="ws-eyebrow">{eyebrow}</span><h2>{title}</h2></header>;
+function Heading({ title }: { eyebrow: string; title: React.ReactNode }) {
+  return <header className="ws-heading"><h2>{title}</h2></header>;
 }

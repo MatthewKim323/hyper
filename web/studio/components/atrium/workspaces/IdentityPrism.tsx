@@ -1,5 +1,6 @@
 "use client";
 
+import ActivityOrb from "@/components/ui/ActivityOrb";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BackendError, backend } from "@/lib/backend/client";
 import type { Connection, ProviderInfo } from "@/lib/backend/types";
@@ -58,7 +59,7 @@ function SourceTile({ source, info, connection, onChanged }: { source: typeof SO
     });
   };
   return <li className={styles.source} data-live={live || undefined}>
-    <div className={styles.row}><h4>{source.name}</h4><span className={styles.badge}>{connection ? STATUS[connection.status] ?? connection.status : unavailable ? "Unavailable" : "Not connected"}</span></div>
+    <div className={styles.row}><h4>{source.name}</h4><ActivityOrb status={busy ? "working" : connection?.status ?? "disconnected"} label={busy ? "Updating source" : connection ? STATUS[connection.status] ?? connection.status : unavailable ? "Unavailable" : "Not connected"} /></div>
     <p>Read only</p>
     {connection?.last_synced_at ? <p className={styles.note}>Last read {when(connection.last_synced_at)}</p> : live && <p className={styles.note}>Starting…</p>}
     {connection?.error && <p className={styles.note} role="status">{connection.error}</p>}
@@ -124,7 +125,6 @@ export default function IdentityPrism({ active, onMotion }: Props) {
     <div className={styles.panel} role="tabpanel" id={`identity-panel-${facet}`} aria-labelledby={`identity-facet-${facet}`} tabIndex={0}>
       {facet === 0 && <>
         <section>
-          <span className={styles.eyebrow}>Give your agent access</span>
           <h3>Connect a source</h3>
           {!usable ? <><p>Sign in to view</p>{auth.ready && auth.mode === "clerk" && <button className={styles.action} type="button" onClick={() => void openSignIn()}>Sign in</button>}</>
             : connections.error ? <p role="status">Sources couldn&rsquo;t be loaded. <button type="button" className={styles.textButton} onClick={connections.refresh}>Try again</button></p>
@@ -142,7 +142,6 @@ export default function IdentityPrism({ active, onMotion }: Props) {
       </>}
       {facet === 2 && <>
         <section className={styles.identity}>
-          <span className={styles.eyebrow}>Your workspace</span>
           <h3>{org?.name ?? (usable ? "Loading workspace…" : "Workspace")}</h3>
           {org ? <><p className={styles.note}>{org.onboarding_complete ? "Onboarding complete." : "Onboarding in progress."}</p><details className={styles.details}><summary>Workspace details</summary><dl><div><dt>Organization ID</dt><dd>{org.id}</dd></div><div><dt>Member ID</dt><dd>{workspace.data?.user_id}</dd></div></dl></details></>
             : <p>{!auth.ready ? "Loading…" : usable ? workspace.error ?? "Loading…" : auth.mode === "unconfigured" ? "Sign-in unavailable" : "Sign in to view"}</p>}
@@ -150,7 +149,7 @@ export default function IdentityPrism({ active, onMotion }: Props) {
           {usable && workspace.error && <button type="button" className={styles.action} onClick={workspace.refresh}>Try again</button>}
         </section>
         <section className={styles.wallet}>
-          <div className={styles.row}><span className={styles.eyebrow}>Browser wallet</span>{wallet.address && <span className={styles.badge}>Address shared</span>}</div>
+          <div className={styles.row}>{wallet.address && <span className={styles.badge}>Address shared</span>}</div>
           {wallet.address ? <><p className={styles.address}>{wallet.address}</p><p>{chainLabel(wallet.chain)}</p><div className={styles.actions}><button type="button" className={styles.action} onClick={() => void copyAddress()}>{copied ? "Copied" : "Copy address"}</button><button type="button" onClick={() => { session.current?.hide(); setWallet(EMPTY_WALLET); setCopied(false); }} className={styles.textButton}>Hide address</button></div></>
             : <><h4>No wallet connected</h4><button type="button" className={styles.action} disabled={wallet.pending} onClick={connect}>{wallet.pending ? "Waiting…" : "Connect wallet"}</button></>}
           {(wallet.error || walletNote) && <p className={styles.note} role="status">{wallet.error || walletNote}</p>}

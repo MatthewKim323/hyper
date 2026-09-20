@@ -1,0 +1,6 @@
+.orb { display: inline-block; flex-shrink: 0; vertical-align: middle; width: 32px; height: 32px; }
+/* The package's composing preset undulates but holds its orientation. A slow
+   turn keeps that resting movement legible at card scale. */
+.orb[data-resting] { animation: orbit-turn 12s linear infinite; }
+@keyframes orbit-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .orb[data-resting] { animation: none; } }

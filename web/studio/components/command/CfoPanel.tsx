@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Dialog } from "@base-ui/react/dialog";
+import ActivityOrb from "@/components/ui/ActivityOrb";
 import { getAtriumStations, getDefaultAtriumStations, subscribeAtriumStations } from "@/components/atrium/configuration";
 import { useAuth } from "@/components/workspace/useBackend";
 import { openSignIn } from "@/lib/backend/auth";
@@ -20,9 +21,9 @@ const sessionLink = (value: string | null) => {
   catch { return null; }
 };
 
-type Props = { open: boolean; instant?: boolean; onOpenChange: (open: boolean) => void; needsIntroduction?: boolean; onIntroduce?: () => void };
+type Props = { open: boolean; instant?: boolean; onOpenChange: (open: boolean) => void; needsIntroduction?: boolean; onIntroduce?: () => void; activity?: string };
 
-export default function CfoPanel({ open, instant = false, onOpenChange, needsIntroduction, onIntroduce }: Props) {
+export default function CfoPanel({ open, instant = false, onOpenChange, needsIntroduction, onIntroduce, activity = "composing" }: Props) {
   const auth = useAuth();
   const feed = useCfoSwarm(open);
   const stations = useSyncExternalStore(subscribeAtriumStations, getAtriumStations, getDefaultAtriumStations);
@@ -58,7 +59,11 @@ export default function CfoPanel({ open, instant = false, onOpenChange, needsInt
       : section ? <span className={styles.unplaced}>{label(section)}</span> : null;
   }
 
-  const connectionLabel = { idle: "Waiting", connecting: "Connecting", connected: "Live", reconnecting: "Reconnecting", paused: "Paused", disconnected: "Disconnected", unauthorized: "Sign in required" }[feed.connection];
+  const connectionLabel = { idle: "Waiting", connecting: "Connecting", connected: "Connected", reconnecting: "Reconnecting", paused: "Paused", disconnected: "Disconnected", unauthorized: "Sign in required" }[feed.connection];
+  const cfoActivity = activity !== "composing" ? activity
+    : feed.connection !== "connected" ? feed.connection
+    : data?.controller.error ? "error"
+    : data?.controller.enabled ? data.controller.status : "idle";
 
   return <Dialog.Root open={open} onOpenChange={onOpenChange} modal={false} disablePointerDismissal>
     <Dialog.Portal>
@@ -82,17 +87,17 @@ export default function CfoPanel({ open, instant = false, onOpenChange, needsInt
 
         <section className={styles.cfo} aria-label="CFO activity">
           <header className={styles.header}>
-            <Dialog.Title className={styles.title}>CFO<span className={styles.live} title={`Activity feed: ${connectionLabel}`} data-connected={feed.connection === "connected"}><i />{connectionLabel}</span></Dialog.Title>
+            <Dialog.Title className={styles.title}>CFO<ActivityOrb status={cfoActivity} label={`CFO: ${words(cfoActivity)}. Activity feed: ${connectionLabel}`} /></Dialog.Title>
             <Dialog.Close className={styles.close} aria-label="Close CFO activity"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></Dialog.Close>
           </header>
-          <Dialog.Description className={styles.srOnly}>Live agent activity and workflow locations.</Dialog.Description>
+          <Dialog.Description className={styles.srOnly}>Agent activity and workflow locations.</Dialog.Description>
           {needsIntroduction && <button className={styles.introduce} type="button" onClick={onIntroduce}>Hear introduction <span aria-hidden="true">↗</span></button>}
 
-          {!auth.ready ? <p className={styles.empty}>Connecting...</p>
+          {!auth.ready ? <p className={styles.empty}><ActivityOrb status="connecting" label="Connecting to your workspace" /></p>
             : !auth.signedIn ? <div className={styles.empty}><button type="button" onClick={() => { void openSignIn(); }}>Sign in to view activity ↗</button></div>
             : <>
               {feed.error && <div className={styles.error} role="status"><span>{feed.error}</span><button type="button" onClick={feed.refresh}>Retry</button></div>}
-              {!data ? !feed.error && <p className={styles.empty}>Loading...</p> : <>
+              {!data ? !feed.error && <p className={styles.empty}><ActivityOrb status="loading" label="Loading agent activity" /></p> : <>
                 {data.controller.error && <p className={styles.controllerError} role="status">{data.controller.error}</p>}
                 <section className={styles.journal} aria-label="Agent activity log">
                   {selectedTask && <div className={styles.objective}>
@@ -130,8 +135,7 @@ function Task({ task, latest, selected, onSelect, location }: { task: SwarmTask;
     if (!(event.target as HTMLElement).closest("button, a")) onSelect();
   }}>
     <button type="button" className={styles.taskSelect} aria-pressed={selected} aria-label={`View ${task.title || task.objective} activity`} onClick={onSelect}>
-      <span className={styles.taskStatus} data-status={task.status}><i />{words(task.status)}</span>
-      <strong>{task.title || task.objective}</strong>
+      <span className={styles.taskHeading}><strong>{task.title || task.objective}</strong><ActivityOrb status={task.status} label={`Agent: ${words(task.status)}`} /></span>
       {preview && <span className={styles.taskPreview}>{preview}</span>}
     </button>
     {location && <div className={styles.taskLocation}>{location}</div>}

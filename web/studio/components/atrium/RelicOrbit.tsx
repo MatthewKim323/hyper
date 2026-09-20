@@ -1,5 +1,7 @@
 "use client";
 
+import ActivityOrb from "@/components/ui/ActivityOrb";
+
 // Orbit cards: analytics that unfold out of the focused relic and hang around it. The scene reports
 // where the relic and its orbit slots land on the frame every frame; each card springs from the relic's
 // center to its slot, staggered, starting once the camera is most of the way in. Positions are written
@@ -56,7 +58,7 @@ function Cards({ data, landed }: { data: RelicAnalytics; landed: boolean[] }) {
         </BarChart>}
       </div>
     </div> : null,
-    <div key="status" className={styles.status} data-tone={data.status.tone}><i aria-hidden="true" /><span>{data.status.text}</span></div>,
+    <div key="status" className={styles.status} data-tone={data.status.tone}><ActivityOrb status={data.status.tone} label={data.status.text} /><span>{data.status.text}</span></div>,
     data.top ? <div key="top" className={styles.top} data-pointable={data.top.pointable} data-pointable-label={data.top.title}>
       <span className={styles.eyebrow}>{data.top.eyebrow}</span>
       <strong>{data.top.title}</strong>

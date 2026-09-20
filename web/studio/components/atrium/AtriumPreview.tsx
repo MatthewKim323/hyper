@@ -1,5 +1,7 @@
 "use client";
 
+import ActivityOrb from "@/components/ui/ActivityOrb";
+
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { getAtriumStations, getDefaultAtriumStations, subscribeAtriumStations, type AtriumStation } from "./configuration";
 import type { AgentBounds, AtriumManifest, AtriumRenderer, FocusFrame, StationBounds } from "./scene";
@@ -510,7 +512,7 @@ function RelicStatus({ activity }: { activity?: RelicActivity }) {
   if (!activity || activity.status === "idle") return null;
   const labels = { working: "Working", waiting: "Waiting", attention: "Needs you", complete: "Complete", error: "Needs attention" };
   return <span className={styles.status} data-status={activity.status}>
-    <i aria-hidden="true" />{activity.label.length <= 22 ? activity.label : labels[activity.status]}
+    <ActivityOrb status={activity.status} label={activity.label} />{activity.label.length <= 22 ? activity.label : labels[activity.status]}
     {activity.count && activity.count > 1 ? ` · ${activity.count}` : ""}
   </span>;
 }

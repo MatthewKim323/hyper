@@ -18,7 +18,7 @@
 .bench-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
 .bench-heading h2 { margin: 0.65rem 0 0; font-weight: 400; font-size: clamp(1.5rem, 2.5vw, 2.6rem); line-height: 1.1; letter-spacing: -0.045em; text-wrap: balance; }
 .bench-heading h2 em { font-family: Saol Display, Georgia, serif; font-weight: 300; }
-.bench-eyebrow { display: block; font-size: 0.72rem; line-height: 1.4; letter-spacing: 0.1em; text-transform: uppercase; }
+.bench-eyebrow { display: block; font-size: 0.72rem; line-height: 1.4; letter-spacing: 0; text-transform: none; }
 .bench button, .bench select { font: inherit; color: inherit; }
 .bench-heading button { flex-shrink: 0; min-height: 40px; padding: 0.55rem 0.95rem; border: 1px solid rgb(37 35 33 / 15%); border-radius: 99px; background: rgb(255 255 255 / 65%); font-size: 0.82rem; transition: background 160ms, transform 160ms; }
 .bench-heading button:hover { background: #eee4df; }
@@ -29,13 +29,13 @@
 .bench-note, .bench-muted, .bench small { color: #716860; font-size: 0.8rem; line-height: 1.5; }
 .bench code { font-size: 0.78rem; overflow-wrap: anywhere; }
 .bench-warning { padding: 0.5rem 0.8rem; border-left: 2px solid #892d2d; color: #892d2d; }
-.bench-sample-banner { position: sticky; top: 0; z-index: 3; max-width: none !important; margin: 1.25rem 0 0; padding: 0.7rem 1rem; border-radius: 0.6rem; color: #fbf8f6; background: #252321; font-size: 0.85rem !important; }
+.bench-sample-banner { position: sticky; top: 0; z-index: 3; max-width: none !important; margin: 1.25rem 0 0; padding: 0.7rem 1rem; border-radius: 0; color: #fbf8f6; background: #252321; font-size: 0.85rem !important; }
 .bench[data-sample] .bench-content { background-image: repeating-linear-gradient(-30deg, transparent 0 220px, rgb(37 35 33 / 5%) 220px 221px); }
 
 .bench-stats { display: grid; grid-template-columns: repeat(4, 1fr); margin: 2rem 0 0; border-top: 1px solid rgb(37 35 33 / 15%); }
 .bench-stats > div { padding: 1.25rem 1.25rem 1.25rem 0; }
 .bench-stats > div + div { padding-left: 1.25rem; border-left: 1px solid rgb(37 35 33 / 15%); }
-.bench-stats dt { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.bench-stats dt { font-size: 0.72rem; letter-spacing: 0; text-transform: none; }
 .bench-stats dd { margin: 0.4rem 0 0.2rem; font-size: 3.4rem; line-height: 1.05; letter-spacing: -0.06em; }
 .bench-stats dd span { font-size: 1.4rem; letter-spacing: -0.02em; color: #716860; }
 .bench-stats small { display: block; }
@@ -60,7 +60,7 @@
 .bench-key b { font-weight: 500; color: #716860; }
 .bench-pill { display: inline-flex; align-items: center; gap: 0.45rem; }
 
-.bench-empty { display: flex; align-items: flex-start; gap: 1rem; margin-top: 1.25rem; padding: 1.5rem; border: 1px dashed #cfc6bf; border-radius: 0.9rem; }
+.bench-empty { display: flex; align-items: flex-start; gap: 1rem; margin-top: 1.25rem; padding: 1.5rem; border: 1px dashed #cfc6bf; border-radius: 0; }
 .bench-empty > span { font-size: 1.6rem; line-height: 1; color: #9a8379; }
 .bench-empty p { margin: 0; color: #63574e; }
 
@@ -75,12 +75,12 @@
 
 .bench-buckets { display: grid; grid-template-columns: repeat(5, 1fr); margin: 1rem 0 0; border-block: 1px solid #ddd5cf; }
 .bench-buckets > div { padding: 0.9rem 0.9rem 0.9rem 0; }
-.bench-buckets dt { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: #716860; }
+.bench-buckets dt { font-size: 0.72rem; letter-spacing: 0; text-transform: none; color: #716860; }
 .bench-buckets dd { margin: 0.2rem 0 0; font-size: 2rem; letter-spacing: -0.04em; }
 .bench-buckets [data-bucket="gained"] dd { color: #0a7a0a; }
 .bench-buckets [data-bucket="regressed"] dd { color: #b02e2e; }
 .bench-taskgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.6rem, 1fr)); gap: 4px; margin: 1rem 0 0; padding: 0; list-style: none; }
-.bench-taskgrid li { display: grid; place-items: center; aspect-ratio: 1; border-radius: 6px; font-size: 0.68rem; color: #252321; background: #e4dbd5; }
+.bench-taskgrid li { display: grid; place-items: center; aspect-ratio: 1; border-radius: 0; font-size: 0.68rem; color: #252321; background: #e4dbd5; }
 .bench-taskgrid [data-bucket="both_pass"] { background: #cfe8cf; }
 .bench-taskgrid [data-bucket="gained"] { color: #fff; background: #0c8a0c; }
 .bench-taskgrid [data-bucket="regressed"] { color: #fff; background: #d03b3b; }
@@ -89,7 +89,7 @@
 
 .bench-layer { padding: 1.75rem 0 1rem; border-top: 1px solid #cfc6bf; }
 .bench-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem; }
-.bench-card { display: flex; flex-direction: column; padding: 1.25rem; border: 1px solid rgb(37 35 33 / 12%); border-radius: 1rem; background: rgb(255 255 255 / 55%); }
+.bench-card { display: flex; flex-direction: column; padding: 1.25rem; border: 1px solid rgb(37 35 33 / 12%); border-radius: 0; background: rgb(255 255 255 / 55%); }
 .bench-card h4 { margin: 0.4rem 0 0; font-size: 1.1rem; font-weight: 400; letter-spacing: -0.02em; }
 .bench-card__none { margin: 1.25rem 0 !important; font-size: 1.5rem !important; letter-spacing: -0.03em; color: #9a8379; }
 .bench-card dl { margin: 0.5rem 0 0; font-size: 0.78rem; }

@@ -1,5 +1,7 @@
 "use client";
 
+import ActivityOrb from "@/components/ui/ActivityOrb";
+
 // The deterministic AP engine, surfaced. Every amount here is computed by code from owner-verified
 // records. The approval button sends the exact hash on screen, so what was read is what gets approved.
 import { useRef, useState } from "react";
@@ -83,7 +85,7 @@ function EngineCaseCard({ item }: { item: EngineCase }) {
   const calc = item.calculation;
   return <article className="ws-card" data-pointable={`payable-case:${item.case_id}`} data-pointable-label={`Payable case ${item.invoice_id}`}
     data-pointable-data={JSON.stringify({ invoice_id: item.invoice_id, ties: calc?.ties ?? null, residual_cents: calc?.residual_cents ?? null, blocking: item.blocking_issues.length })}>
-    <header><span className="ws-chip">{item.invoice_id}</span><time>{words(item.work_status)} · revision {item.revision}</time></header>
+    <header><span className="ws-chip">{item.invoice_id}</span><span><ActivityOrb status={item.work_status} label={`Case: ${words(item.work_status)}`} /> · revision {item.revision}</span></header>
     {calc ? <>
       <h3 data-ties={calc.ties}>{cents(calc.ties ? calc.net_after_credits_cents : Math.abs(calc.residual_cents), calc.currency)}{!calc.ties && <small> unexplained</small>}</h3>
       <RouteBars netCents={calc.net_after_credits_cents} supportedCents={calc.independently_supported_cents} currency={calc.currency} />

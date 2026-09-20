@@ -17,8 +17,8 @@ export default function ArtifactCard({ card, onDismiss }: { card: ArtifactCardMo
     <article className="cmd-card" data-pointable={`artifact:${card.id}`} data-pointable-label={card.title}>
       <header>
         <div>
-          <span className="cmd-eyebrow">{timeAxis ? "Line" : "Bar"} · {card.currency || "count"}{card.elapsedMs !== null ? ` · chosen in ${Math.round(card.elapsedMs)} ms` : ""}</span>
           <h3>{card.title}</h3>
+          <span className="cmd-unit">{card.currency || "Count"}</span>
         </div>
         <button type="button" onClick={onDismiss} aria-label="Dismiss chart" data-cursor="hide">×</button>
       </header>

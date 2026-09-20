@@ -61,6 +61,7 @@ function CommandSession({ allowGreeting }: { allowGreeting: boolean }) {
   const [requesting, setRequesting] = useState(false);
   const [microphoneStream, setMicrophoneStream] = useState<MediaStream | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [activity, setActivity] = useState("composing");
   const [sending, setSending] = useState(false);
   const pendingSend = useRef(false);
   const [status, setStatus] = useState("");
@@ -82,7 +83,7 @@ function CommandSession({ allowGreeting }: { allowGreeting: boolean }) {
     const visual = bindWorldVoice();
     voiceVisual.current = visual;
     const session = new OnboardingVoiceClient({
-      onPresentation: (p) => { setStatus(p.status ?? ""); setProcessing(p.processing ?? false); visual.publish({ presentation: p }); },
+      onPresentation: (p) => { setStatus(p.status ?? ""); setProcessing(p.processing ?? false); setActivity(p.orbState ?? "composing"); visual.publish({ presentation: p }); },
       onConnection: (next) => {
         setConnection(next);
         visual.publish({ connection: next });
@@ -333,7 +334,8 @@ function CommandSession({ allowGreeting }: { allowGreeting: boolean }) {
 
   return (
     <div className="cmd" data-agent-open="true" data-listening={listening} data-connection={connection}>
-      <CfoPanel open={cfoOpen} instant={cfoInstant} onOpenChange={setCfoOpen} needsIntroduction={needsIntroduction} onIntroduce={hearIntroduction} />
+      <CfoPanel open={cfoOpen} instant={cfoInstant} onOpenChange={setCfoOpen} needsIntroduction={needsIntroduction} onIntroduce={hearIntroduction}
+        activity={error || connection === "error" ? "error" : connection === "connecting" ? "connecting" : connection === "connected" ? activity : "composing"} />
       <div className="cmd-cards" aria-live="polite">
         {cards.map((card) => <ArtifactCard key={card.id} card={card} onDismiss={() => setCards((previous) => previous.filter((c) => c.id !== card.id))} />)}
       </div>

@@ -38,7 +38,7 @@ function VersionFigure({ label, columns, selected, run, metric, onChange, allowE
   onChange: (value: string) => void; allowEmpty?: boolean;
 }) {
   return <div className={styles.versionFigure}>
-    <label><span className={styles.eyebrow}>{label}</span><select aria-label={`${label} framework version`} value={selected} onChange={(event) => onChange(event.target.value)}>
+    <label><span className={styles.label}>{label}</span><select aria-label={`${label} framework version`} value={selected} onChange={(event) => onChange(event.target.value)}>
       {allowEmpty && <option value="">Choose a baseline</option>}
       {columns.map((column) => <option value={column.id} key={column.id}>{column.label}</option>)}
     </select></label>
@@ -117,7 +117,7 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
 
   return <section className={styles.landscape} aria-label="Framework performance landscape" aria-busy={loading}>
     <div className={styles.toolbar}>
-      <label className={styles.suiteSelect}><span className={styles.eyebrow}>Evaluation suite</span>
+      <label className={styles.suiteSelect}>
         <select aria-label="Evaluation suite" value={view?.suite?.id ?? ""} disabled={!doc?.suites.length} onChange={(event) => { setSuiteId(event.target.value); setVersionPage(null); setRunId(""); setTrialId(""); setCopied(""); }}>
           {!doc?.suites.length && <option value="">{loading ? "Loading evaluations" : "No suites registered"}</option>}
           {doc?.suites.map((suite) => <option key={suite.id} value={suite.id}>{suite.name}{suite.access !== "available" ? ` · ${suite.access}` : ""}</option>)}
@@ -129,7 +129,7 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
     {error && <p className={styles.notice} role="alert">{error}</p>}
     {loading && !doc && <p className={styles.empty} role="status">Loading…</p>}
     {view && <>
-      {available && <p className={styles.notice}><span className={styles.eyebrow}>{view.suite?.access ?? "Unavailable"}</span>{available}</p>}
+      {available && <p className={styles.notice}><span className={styles.label}>{view.suite?.access ?? "Unavailable"}</span>{available}</p>}
       {view.columns.length ? <>
         <div className={styles.comparison}>
           <VersionFigure label="Baseline" columns={view.columns} selected={view.baseline?.id ?? ""} run={view.baselineRun} metric={metric} allowEmpty onChange={setBaselineId} />
@@ -147,7 +147,7 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
         </nav>}
         {view.page.selectedIndex < 0 && view.candidate && <p className={styles.offPage}><button type="button" onClick={() => setVersionPage(null)}>Show {view.candidate.label}</button></p>}
         <div className={styles.comparability}>
-          <span className={styles.eyebrow}>{view.comparison.comparable ? "Matched evaluation" : "Comparison context"}</span>
+          <span className={styles.label}>{view.comparison.comparable ? "Matched evaluation" : "Comparison context"}</span>
           {view.comparison.comparable ? !!view.comparison.record?.changed.length && <p>Changed: {view.comparison.record.changed.join(", ")}</p>
             : view.comparison.reasons.map((reason) => <p key={reason}>{reason}</p>)}
           {view.comparison.comparable && !!view.comparison.record?.tasks.length && <div className={styles.changeCounts}>{(["gained", "regressed", "both_pass", "both_fail", "unavailable"] as const).map((bucket) => <span key={bucket}><strong>{view.comparison.record!.tasks.filter((task) => task.bucket === bucket).length}</strong>{bucket.replaceAll("_", " ")}</span>)}</div>}
@@ -167,13 +167,13 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
         <summary>Run evidence <span>{view.trials.length} trial{view.trials.length === 1 ? "" : "s"} <span aria-hidden="true">↗</span></span></summary>
         <div className={styles.evidenceBody}>
           <dl className={styles.provenance}><div><dt>Run</dt><dd>{view.selectedRun.id}</dd></div><div><dt>Framework commit</dt><dd>{view.candidate?.system?.git_commit || "Not recorded"}</dd></div><div><dt>Mode</dt><dd>{view.selectedRun.mode.replaceAll("_", " ")}</dd></div><div><dt>Trials per task</dt><dd>{view.selectedRun.trials_per_task}</dd></div></dl>
-          {!!view.selectedRun.incidents?.length && <div className={styles.notice}><span className={styles.eyebrow}>Recorded incidents</span>{view.selectedRun.incidents.map((incident) => <p key={incident}>{incident}</p>)}</div>}
-          <div className={styles.artifact}><span className={styles.eyebrow}>Run artifact</span><Reference reference={view.selectedRun.artifact_ref} /></div>
-          {view.selectedRun.reproduce && <div className={styles.reproduce}><div><span className={styles.eyebrow}>Reproduce this run</span><button type="button" onClick={() => void copyCommand()}>Copy command</button></div><code>{view.selectedRun.reproduce}</code><span role="status">{copied}</span></div>}
+          {!!view.selectedRun.incidents?.length && <div className={styles.notice}>{view.selectedRun.incidents.map((incident) => <p key={incident}>{incident}</p>)}</div>}
+          <div className={styles.artifact}><Reference reference={view.selectedRun.artifact_ref} /></div>
+          {view.selectedRun.reproduce && <div className={styles.reproduce}><div><button type="button" onClick={() => void copyCommand()}>Copy command</button></div><code>{view.selectedRun.reproduce}</code><span role="status">{copied}</span></div>}
           {selectedTrial ? <div className={styles.trialGrid}>
             <div className={styles.trialList} role="group" aria-label="Select trial evidence">{view.trials.map((trial) => <button key={trial.id} type="button" aria-pressed={selectedTrial.id === trial.id} onClick={() => setTrialId(trial.id)}><span>{trial.task_id}</span><small>Trial {trial.trial_index} · {trial.outcome.replaceAll("_", " ")}</small></button>)}</div>
             <section className={styles.trialDetail} aria-label={`Evidence for ${selectedTrial.task_id}`}>
-              <span className={styles.eyebrow}>{selectedTrial.execution}</span><h4>{selectedTrial.task_id}</h4><p className={styles.outcome}>{selectedTrial.outcome.replaceAll("_", " ")}</p>
+              <span className={styles.label}>{selectedTrial.execution}</span><h4>{selectedTrial.task_id}</h4><p className={styles.outcome}>{selectedTrial.outcome.replaceAll("_", " ")}</p>
               <dl><div><dt>Evidence checks</dt><dd>{selectedTrial.evidence_checks_passed != null && selectedTrial.evidence_checks_total != null ? `${selectedTrial.evidence_checks_passed} / ${selectedTrial.evidence_checks_total}` : "Not recorded"}</dd></div><div><dt>Duration</dt><dd>{selectedTrial.wall_ms != null && Number.isFinite(selectedTrial.wall_ms) && selectedTrial.wall_ms >= 0 ? formatLandscapeMetric({ status: "measured", value: selectedTrial.wall_ms, unit: "ms" }) : "Not recorded"}</dd></div></dl>
               {!!selectedTrial.control_failures.length && <p>Control failures: {selectedTrial.control_failures.join(", ")}</p>}
               {!!selectedTrial.assistance.length && <p>Assistance: {selectedTrial.assistance.join(", ")}</p>}

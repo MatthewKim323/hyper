@@ -1,5 +1,6 @@
 "use client";
 
+import ActivityOrb from "@/components/ui/ActivityOrb";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { backend } from "@/lib/backend/client";
 import { getBackendToken, openSignIn } from "@/lib/backend/auth";
@@ -72,7 +73,7 @@ function InvoicePaper({ row, active }: { row: InvoiceRow; active: boolean }) {
   const status = fieldText(record, "status", "state");
   return <article className={styles.paper} aria-label={`Invoice ${number}`} data-pointable={`invoice:${row.source_id}:${row.record_id}`} data-pointable-label={`Invoice ${number}`} data-pointable-data={JSON.stringify({ source_id: row.source_id, row: row.row_number, record_id: row.record_id })}>
     <header className={styles.paperHeader}>
-      <div><span className={styles.eyebrow}>Imported invoice</span><h3>{vendor}</h3><p>{number}</p></div>
+      <div><h3>{vendor}</h3><p>{number}</p></div>
       <div className={styles.amount}><Amount amount={amount} /></div>
     </header>
     <div className={styles.identity}>
@@ -83,7 +84,6 @@ function InvoicePaper({ row, active }: { row: InvoiceRow; active: boolean }) {
     {isSyntheticRecord(record) && <p className={styles.simulated}>Simulated source record</p>}
     {fieldText(record, "description", "memo") && <p className={styles.description}>{fieldText(record, "description", "memo")}</p>}
     <section className={styles.lineItems} aria-label="Extracted line items">
-      <span className={styles.eyebrow}>Extracted line items</span>
       {lines.length ? <div className={styles.tableScroll}><table><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>{lines.map((line, index) => {
         const lineAmount = invoiceAmount(line, row.currency);
         const unitPrice = invoiceAmount(line, row.currency, ["unit_price_cents", "unit_price_minor", "unit_price"]);
@@ -104,14 +104,14 @@ function AgentNotes({ row, cases, tasks, concerns, errors, partial, loading }: {
   const actions = work.cases.flatMap(item => item.state.next_actions.map(text => ({ id: item.id, text })));
   const uniqueErrors = [...new Set(errors.filter(Boolean))];
   return <aside className={styles.agentNotes} aria-label="Agent notes">
-    <span className={styles.eyebrow}>Agent notes</span><h3>What needs attention</h3>
+    <h3>What needs attention</h3>
     {uniqueErrors.map(error => <p className={styles.warning} key={error} role="status">{error}</p>)}
     {loading && <p className={styles.note} role="status">Loading…</p>}
     {partial && <p className={styles.note}>Partial results</p>}
     {waiting.length > 0 && <section className={styles.noteSection}><h4>Waiting on you</h4>{waiting.map(concern => <div key={concern.id}><strong>{concern.request.title}</strong><p>{concern.card?.summary ?? concern.request.description}</p><button type="button" className={styles.textButton} onClick={() => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "review" } }))}>Review decision ↗</button></div>)}</section>}
     {!loading && <section className={styles.noteSection}><h4>Still unknown</h4>{unknowns.length ? <ul>{unknowns.map((item, index) => <li key={`${item.id}:${index}`}>{item.text}</li>)}</ul> : <p className={styles.note}>None recorded</p>}</section>}
     {!loading && <section className={styles.noteSection}><h4>The agent&apos;s next step</h4>{actions.length ? <ul>{actions.map((item, index) => <li key={`${item.id}:${index}`}>{item.text}</li>)}</ul> : <p className={styles.note}>None recorded</p>}</section>}
-    {work.tasks.length > 0 && <section className={styles.noteSection}><h4>Investigation activity</h4>{work.tasks.map(task => <div key={task.id}><strong>{task.objective}</strong><span className={styles.taskStatus} data-live={task.status === "running" || undefined}>{words(task.status)}</span>{(task.result?.summary || task.error) && <p>{task.result?.summary ?? task.error}</p>}</div>)}</section>}
+    {work.tasks.length > 0 && <section className={styles.noteSection}><h4>Investigation activity</h4>{work.tasks.map(task => <div key={task.id}><strong>{task.objective}</strong><span className={styles.taskStatus}><ActivityOrb status={task.status} label={`Investigation: ${words(task.status)}`} /></span>{(task.result?.summary || task.error) && <p>{task.result?.summary ?? task.error}</p>}</div>)}</section>}
   </aside>;
 }
 
@@ -132,14 +132,14 @@ function FolioPages({ dataset, active, onMotion }: Props & { dataset: string }) 
   useEffect(() => { onMotion?.({ busy, selectedIndex }); }, [onMotion, busy, selectedIndex]);
   useEffect(() => () => { onMotion?.({ busy: false, selectedIndex: 0 }); }, [onMotion]);
   const filterId = useId();
-  if (page.error && !data) return <div className={styles.empty}><span className={styles.eyebrow}>Folio unavailable</span><p role="status">{page.error}</p><button type="button" onClick={page.refresh}>Try again</button></div>;
-  if (!data) return <div className={styles.loading} role="status"><div className={styles.loadingPaper} aria-hidden="true" /><span>Loading…</span></div>;
+  if (page.error && !data) return <div className={styles.empty}><p role="status">{page.error}</p><button type="button" onClick={page.refresh}>Try again</button></div>;
+  if (!data) return <div className={styles.loading} role="status"><ActivityOrb status="loading" label="Loading invoices" /><span>Loading…</span></div>;
   if (!data.rows.length) return <div className={styles.empty}><h3>No invoices</h3><button type="button" onClick={page.refresh}>Check again</button></div>;
   return <>
     {page.error && <p className={styles.warning} role="status">{page.error}</p>}
     <div className={styles.folio}>
       <aside className={styles.queue} aria-label="Invoice queue">
-        <header><span className={styles.eyebrow}>Invoice index</span><span className={styles.pageCount}>{data.total_matching.toLocaleString()} records</span></header>
+        <header><span className={styles.pageCount}>{data.total_matching.toLocaleString()} records</span></header>
         <label className={styles.search} htmlFor={filterId}><span className={styles.srOnly}>Filter this page of invoices</span><input id={filterId} value={filter} onChange={event => setFilter(event.target.value)} placeholder="Find…" type="search" /></label>
         <div className={styles.queueItems}>{items.map(item => {
           const number = fieldText(item.payload, "invoice_number", "invoice_id", "id") ?? item.record_id;
@@ -166,9 +166,9 @@ export default function AccountsFolio({ active, onMotion }: Props) {
   if (!auth.ready) return <div className={styles.empty} role="status"><p>Loading…</p></div>;
   if (!auth.signedIn) return <div className={styles.empty}><h3>{auth.mode === "unconfigured" ? "Sign-in unavailable" : "Sign in to view"}</h3>{auth.mode === "clerk" && <button type="button" onClick={() => void openSignIn()}>Sign in</button>}</div>;
   return <div className={styles.root}>
-    <div className={styles.toolbar}><p>Source-linked records</p>{datasets.length > 0 && <label htmlFor={selectId}><span>Collection</span><select id={selectId} value={dataset ?? ""} onChange={event => setChosenDataset(event.target.value)}>{!dataset && <option value="" disabled>Choose</option>}{datasets.map(item => <option key={item.dataset} value={item.dataset}>{words(item.dataset)} ({item.record_count})</option>)}</select></label>}</div>
+    <div className={styles.toolbar}>{datasets.length > 0 && <label htmlFor={selectId}><span>Collection</span><select id={selectId} value={dataset ?? ""} onChange={event => setChosenDataset(event.target.value)}>{!dataset && <option value="" disabled>Choose</option>}{datasets.map(item => <option key={item.dataset} value={item.dataset}>{words(item.dataset)} ({item.record_count})</option>)}</select></label>}</div>
     {catalog.error && <p className={styles.warning} role="status">{catalog.error} <button type="button" className={styles.textButton} onClick={catalog.refresh}>Retry</button></p>}
-    {!catalog.data && !catalog.error && <div className={styles.loading} role="status"><div className={styles.loadingPaper} aria-hidden="true" /><span>Loading…</span></div>}
+    {!catalog.data && !catalog.error && <div className={styles.loading} role="status"><ActivityOrb status="loading" label="Loading invoices" /><span>Loading…</span></div>}
     {catalog.data && !dataset && <div className={styles.empty}><h3>No invoices</h3><button type="button" onClick={catalog.refresh}>Check for imports</button></div>}
     {/* Payables the deterministic engine has worked out from owner-verified records, above the raw folio. */}
     {dataset && <PayablesVolume key={`volume:${dataset}`} active={active} dataset={dataset} />}

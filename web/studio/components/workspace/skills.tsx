@@ -1,5 +1,7 @@
 "use client";
 
+import ActivityOrb from "@/components/ui/ActivityOrb";
+
 // Learned skills: procedures the agent wrote down after doing the work, with their tests and evidence.
 // Agents draft them and report runs. Only an owner puts one into use or takes it out, and the owner's
 // review is a statement they make themselves: the box is never ticked for them.
@@ -77,7 +79,7 @@ function SkillRow({ skill, open, toggle, onChanged }: { skill: SkillSummary; ope
   const status = STATUS[skill.status] ?? STATUS.draft;
   return <article className="ws-card ws-skill" data-tone={status.tone} data-pointable={`skill:${skill.id}`} data-pointable-label={`Learned skill ${skill.name} version ${skill.version}`}
     data-pointable-data={JSON.stringify({ status: skill.status, version: skill.version, evidence_current: skill.evidence_current })}>
-    <header><span className="ws-chip"><i aria-hidden="true" />{status.label}</span><time>version {skill.version} · {stamp(skill.created_at)}</time></header>
+    <header><span className="ws-chip"><ActivityOrb status="composing" label={status.label} />{status.label}</span><time>version {skill.version} · {stamp(skill.created_at)}</time></header>
     <h3>{skill.name.replaceAll("-", " ")}</h3>
     <p>{skill.description}</p>
     <button type="button" className="ws-link" aria-expanded={open} onClick={toggle}>{open ? "Close" : skill.status === "draft" || skill.status === "quarantined" ? "Review" : "Open"}</button>

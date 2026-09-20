@@ -70,7 +70,7 @@ export default function RelicExperience({ station, register, onMotion, onClose, 
     onPointerDown={event => event.stopPropagation()} onWheel={event => event.stopPropagation()}
     onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); } }}>
     <header className={styles.heading}>
-      <div><span>{RELIC_EXPERIENCES[section].eyebrow}</span><h2 ref={heading} tabIndex={-1}>{shown.label}</h2></div>
+      <div><h2 ref={heading} tabIndex={-1}>{shown.label}</h2></div>
       <button type="button" onClick={onClose} aria-label={`Close ${shown.label}`}><span aria-hidden="true">[</span> Close <span aria-hidden="true">]</span></button>
     </header>
     <div className={styles.content}>
