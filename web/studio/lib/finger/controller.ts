@@ -44,8 +44,11 @@ const BOX_CENTER = { x: 0.5, y: 0.56 };
 // Pointing anchor: mostly the index knuckle, which barely moves during a pinch, plus some fingertip.
 const TIP_WEIGHT = 0.3;
 // Filter tuned for coordinates where 1 is a full screen width.
-const MIN_CUTOFF = 0.55;
-const BETA = 0.07;
+// A low minCutoff smooths a still hand hard; a high beta opens the filter back up as soon as
+// it moves, so this is steadier at rest AND quicker on a flick than a milder pair would be.
+// Landmark noise at rest is roughly 0.35% of the frame, which these settle to under ~1px.
+const MIN_CUTOFF = 0.25;
+const BETA = 0.4;
 // Display-rate glide: the drawn cursor eases toward the target, heavily when slow and barely when fast.
 const GLIDE_SLOW_S = 0.14;
 const GLIDE_FAST_S = 0.022;
@@ -288,7 +291,11 @@ export class FingerController {
     if (d < REST_PX && speed < 0.04) return this.px;
     const fast = Math.max(smoothstep(0.05, 0.7, speed), smoothstep(40, 260, d));
     const tau = GLIDE_SLOW_S + (GLIDE_FAST_S - GLIDE_SLOW_S) * fast;
-    const k = 1 - Math.exp(-dt / tau);
+    // Ease across the deadzone edge instead of switching at it: just outside REST_PX the glide
+    // runs slower, reaching its normal rate a few pixels out. Scaling tau (not the step) keeps
+    // the motion convergent -- multiplying the step itself by a distance ramp would stall the
+    // cursor short of its target forever, since the ramp shrinks as fast as the gap does.
+    const k = 1 - Math.exp(-dt / (tau * (1 + 0.6 * (1 - smoothstep(REST_PX, REST_PX * 2.5, d)))));
     return { x: this.px.x + dx * k, y: this.px.y + dy * k };
   }
 
