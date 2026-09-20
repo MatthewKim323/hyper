@@ -186,15 +186,19 @@ def authenticate(store,token):
 MODELS={'list_events':Page,'ack_events':EventAck,'list_cases':Page,'get_case':CaseID,'update_case':PutCase,
         'delegate_task':Delegate,'get_task':TaskID,'list_tasks':Page,'report_task_result':Report,'checkpoint':Checkpoint}
 
+# The tools a worker may call. orchestrator_api's /tool-definitions filters its listing
+# with this same set: two hand-maintained copies drifted apart, leaving 27 tools that
+# executed fine but were never advertised, so no agent could discover them.
+WORKER_TOOLS={'resolve_entity','explore_entity_graph','find_entity_path','get_entity_evidence','list_open_exceptions','request_supplier_document','request_internal_confirmation','get_counterparty_thread','list_datasets','query_financials','search_evidence','get_source','get_case','get_task','report_task_result','raise_concern','create_financial_artifact','get_financial_artifact','list_accounting_records','open_payable_case','analyze_payable','inspect_payable_credit','prepare_payable_proposal','reconcile_settlement','get_settlement_reconciliation','prepare_expense_accrual','get_expense_accrual','track_expense_accrual','search_learned_skills','get_learned_skill','get_skill_resource','save_learned_skill','record_skill_run','save_skill_execution_evidence',
+        'list_payable_cases','list_payable_proposals','ap_aging','prepare_manual_journal','list_journal_entries','get_journal_entry','trial_balance',
+        'run_anomaly_scan','list_anomaly_findings','get_anomaly_finding','escalate_anomaly','propose_anomaly_dismissal',
+        'draft_skill_from_task','draft_skill_from_case','get_skill_lineage','import_processor_report','import_bank_statement','get_adapter_import'}
+
 def _execute(store,identity,name,args):
     from . import data_tools
     oid=identity['organization_id'];svc=AgentService(store,oid)
     if identity['role']=='worker':
-        permitted={'resolve_entity','explore_entity_graph','find_entity_path','get_entity_evidence','list_open_exceptions','request_supplier_document','request_internal_confirmation','get_counterparty_thread','list_datasets','query_financials','search_evidence','get_source','get_case','get_task','report_task_result','raise_concern','create_financial_artifact','get_financial_artifact','list_accounting_records','open_payable_case','analyze_payable','inspect_payable_credit','prepare_payable_proposal','reconcile_settlement','get_settlement_reconciliation','prepare_expense_accrual','get_expense_accrual','track_expense_accrual','search_learned_skills','get_learned_skill','get_skill_resource','save_learned_skill','record_skill_run','save_skill_execution_evidence',
-        'list_payable_cases','list_payable_proposals','ap_aging','post_accrual_journal','prepare_manual_journal','list_journal_entries','get_journal_entry','trial_balance',
-        'run_anomaly_scan','list_anomaly_findings','get_anomaly_finding','escalate_anomaly','propose_anomaly_dismissal',
-        'draft_skill_from_task','draft_skill_from_case','get_skill_lineage','import_processor_report','import_bank_statement','get_adapter_import'}
-        if name not in permitted:raise PermissionError('Tool not permitted for workers')
+        if name not in WORKER_TOOLS:raise PermissionError('Tool not permitted for workers')
         if name in ('get_task','report_task_result') and args.get('task_id')!=identity['task_id']:raise PermissionError('Task scope mismatch')
         if name=='get_case' and args.get('case_id')!=identity['case_id']:raise PermissionError('Case scope mismatch')
     if name in data_tools.DESCRIPTIONS:return data_tools.execute(store,oid,name,args)

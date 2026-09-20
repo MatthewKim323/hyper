@@ -242,3 +242,15 @@ def test_routes_reach_the_store_without_monkeypatching(tmp_path, monkeypatch):
     response = client.get('/me/workspace', headers={'Authorization': 'Bearer any'})
     assert response.status_code == 200, response.text
     assert response.json()['user_id'] == 'lazy-user'
+
+def test_worker_tools_are_listed_executable_and_real():
+    """The listing in /tool-definitions and the guard in _execute were separate hand-kept
+    copies. They drifted: 27 tools executed fine but were never advertised, so an agent
+    discovering its tools from the listing could not know they existed."""
+    from app.orchestrator import WORKER_TOOLS
+    from app.orchestrator_api import MODELS
+    from app.data_tools import tool_definitions
+    real = {d['name'] for d in tool_definitions()} | set(MODELS)
+    assert WORKER_TOOLS <= real, sorted(WORKER_TOOLS - real)
+    # Posting to the ledger is owner authority and must never be reachable by an agent.
+    assert not [name for name in WORKER_TOOLS if name.startswith(('post_', 'approve_', 'commit_', 'reverse_'))]
