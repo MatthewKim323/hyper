@@ -12,6 +12,7 @@ import { configureAtriumTransmission } from "./transmission";
 import { layoutAtriumStations } from "./layout";
 import { createFocusRig } from "./focus";
 import type { AtriumStation } from "./configuration";
+import { createRelicParts } from "./relic-parts";
 
 export type AtriumManifest = {
   width: number; height: number;
@@ -23,7 +24,9 @@ export type AtriumManifest = {
 };
 export type StationBounds = { station: AtriumStation; depth: number; left: number; top: number; width: number; height: number; labelLeft: number; labelTop: number; arrowTop: number; fontWidth: number };
 export type AgentBounds = { left: number; top: number; width: number; height: number };
-export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; /** Fly in on one relic, or home with null. `visibleShare` is how much of the frame width is on screen. */ setFocus(id: string | null, visibleShare?: number): void; dispose(): void };
+/** Where the focused relic and its orbit slots land on the frame, 0 to 1, plus how far the camera has committed. */
+export type FocusFrame = { progress: number; center: { x: number; y: number }; slots: { x: number; y: number }[]; reach: number };
+export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; /** Fly in on one relic, or home with null. `visibleShare` is how much of the frame width is on screen. */ setFocus(id: string | null, visibleShare?: number): void; /** Called every frame while a relic is in focus or the camera is still returning. */ setFocusListener(listener: ((frame: FocusFrame) => void) | null): void; dispose(): void };
 
 export function isAtriumManifest(value: unknown): value is AtriumManifest {
   if (!value || typeof value !== "object") return false;
@@ -33,6 +36,9 @@ export function isAtriumManifest(value: unknown): value is AtriumManifest {
 }
 
 const fromBlender = ([x, y, z]: [number, number, number]) => new Vector3(x, z, -y);
+// Orbit slots around a focused relic, in relic half-heights along camera right and up. The right side
+// of the frame belongs to the panel, so cards gather left, above and below.
+const ORBIT_SLOTS: [number, number][] = [[-1.05, 1.62], [-1.2, -1.58], [1.0, 1.7], [.95, -1.66]];
 const objectName = (object: Object3D) => String(object.userData.name ?? object.name).replaceAll("_", " ");
 
 export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: AtriumManifest, onBounds: (bounds: StationBounds[]) => void, signal?: AbortSignal, onAgentBounds?: (bounds: AgentBounds) => void): Promise<AtriumRenderer> {
@@ -130,10 +136,13 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const orbit = new Group();
   orbit.position.set(0, 3.07, -1.5);
   scene.add(orbit);
-  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; icon: Group; restPosition: Vector3; hover: { value: number }; velocity: number; phase: number };
+  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; icon: Group; restPosition: Vector3; parts: ReturnType<typeof createRelicParts>; hover: { value: number }; velocity: number; phase: number };
   let instances: Instance[] = [];
 
   function prepareRelic(model: Object3D, hover: { value: number }) {
+  let focusedStation: string | null = null;
+  let focusListener: ((frame: FocusFrame) => void) | null = null;
+  let focusSubject: { center: Vector3; reach: number } | null = null;
     const icon = new Group();
     icon.name = "Floating ethereal relic";
     const iconParts: Mesh[] = [];
@@ -172,7 +181,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       };
       object.material = Array.isArray(object.material) ? object.material.map(illuminate) : illuminate(object.material);
     });
-    return { icon, restPosition: center.clone() };
+    return { icon, restPosition: center.clone(), parts: createRelicParts(icon) };
   }
 
   function animateRelics(delta: number, still = false) {
@@ -190,6 +199,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const hover = Math.max(0, Math.min(1.06, instance.hover.value));
       const movement = still ? 0 : 1;
       const settle = still ? 1 : 1 - Math.exp(-delta * 16);
+      // The relic opens as the camera commits to it, and hints at it on hover.
+      instance.parts.update(instance.station.id === focusedStation ? 1 : target * .16, delta, elapsed, still);
       const idleTurn = movement * Math.sin(elapsed * .24 + instance.phase) * .06;
       instance.icon.rotation.x += ((target ? -hoverPointer.y * .045 * hover * movement : 0) - instance.icon.rotation.x) * settle;
       instance.icon.rotation.y += (idleTurn + (target ? hoverPointer.x * .085 * hover * movement : 0) - instance.icon.rotation.y) * settle;
@@ -212,6 +223,20 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     canvas.dataset.focusProgress = focusRig.progress.toFixed(3);
     pearlLight.intensity = .65 + (still ? 0 : Math.sin(elapsed * .8) * .09);
   }
+    if (focusListener && focusSubject && (focusRig.focused || focusRig.progress > .002)) {
+      // Orbit slots sit on the camera-facing plane through the relic, so cards hug it at any angle.
+      const right = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+      const up = new Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+      const project = (point: Vector3) => { point.project(camera); return { x: (point.x + 1) / 2, y: (1 - point.y) / 2 }; };
+      const center = project(focusSubject.center.clone());
+      const edge = project(focusSubject.center.clone().addScaledVector(up, focusSubject.reach));
+      focusListener({
+        progress: focusRig.progress,
+        center,
+        reach: Math.abs(edge.y - center.y),
+        slots: ORBIT_SLOTS.map(([x, y]) => project(focusSubject!.center.clone().addScaledVector(right, x * focusSubject!.reach).addScaledVector(up, y * focusSubject!.reach))),
+      });
+    }
 
   function bounds() {
     if (disposed) return;
@@ -410,7 +435,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const box = new Box3().setFromObject(instance.icon);
       const center = box.getCenter(new Vector3());
       // Frame the relic with room to breathe above its plinth, not just its own tight bounds.
-      focusRig.aim({ center, height: Math.max(box.getSize(new Vector3()).y * 1.55, 1.25 * instance.scale) }, visibleShare);
+      focusSubject = { center: center.clone(), reach: Math.max(box.getSize(new Vector3()).y, box.getSize(new Vector3()).x) * .5 };
+      focusRig.aim({ center, height: Math.max(box.getSize(new Vector3()).y * 2.05, 1.5 * instance.scale) }, visibleShare);
       if (paused) { animateRoom(0, true); render(); }
     },
     setPointer(x, y) {
@@ -419,8 +445,10 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       raycaster.setFromCamera(new Vector2(x, -y), camera);
       const basin = raycaster.ray.intersectPlane(basinPlane, basinHit);
       const point = basin && basin.x * basin.x + basin.z * basin.z < 4.36 * 4.36 ? basin : raycaster.ray.intersectPlane(poolPlane, poolHit);
+    setFocusListener(listener) { focusListener = listener; },
       if (!point || point.x < -25 || point.x > 25 || point.z < -35 || point.z > 28 || point.distanceToSquared(lastSplash) < .0225) return;
       // Avoid making ripples through the navigation relic or the stone rim.
+      focusedStation = instance ? instance.station.id : null;
       if (hovered || point.x * point.x + point.z * point.z >= 4.36 * 4.36 && point.x * point.x + point.z * point.z <= 4.95 * 4.95) return;
       water.splash(point.x, point.z, .28);
       lastSplash.copy(point);
@@ -484,6 +512,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     canvas.dataset.renderer = "live-3d";
     ready = true;
     resize();
+      if (name === "Hyper | floating pearl light at lower pole") object.visible = false;
     sectionChanged();
   } catch (error) { api.dispose(); throw error; }
   return api;

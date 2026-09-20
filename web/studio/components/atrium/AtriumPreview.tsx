@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { getAtriumStations, getDefaultAtriumStations, subscribeAtriumStations, type AtriumStation } from "./configuration";
 import type { AgentBounds, AtriumManifest, AtriumRenderer, StationBounds } from "./scene";
 import { store } from "@/lib/engine/core/store";
+import RelicOrbit, { type OrbitHandle } from "./RelicOrbit";
 import styles from "./AtriumPreview.module.css";
 
 const motionSnapshot = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -35,6 +36,8 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
   const scroller = useRef<HTMLDivElement>(null);
   const plane = useRef<HTMLDivElement>(null);
   const renderer = useRef<AtriumRenderer | null>(null);
+  const orbit = useRef<OrbitHandle | null>(null);
+  const registerOrbit = useCallback((handle: OrbitHandle | null) => { orbit.current = handle; }, []);
   const drag = useRef<{ pointerId: number; x: number; scrollLeft: number } | null>(null);
   const stations = useSyncExternalStore(subscribeAtriumStations, getAtriumStations, getDefaultAtriumStations);
   const stationsRef = useRef(stations);
@@ -128,6 +131,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
         instance = await createAtriumRenderer(element, value, next => { if (active) setBounds(next); }, controller.signal, next => { if (active) setAgentBounds(next); });
         if (!active || controller.signal.aborted) { instance.dispose(); return; }
         renderer.current = instance;
+        instance.setFocusListener(frame => orbit.current?.(frame));
         instance.setPaused(motionRef.current);
         await instance.setStations(stationsRef.current);
         if (active && !controller.signal.aborted && renderer.current === instance) {
@@ -251,6 +255,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
           style={{ left: `${agentBounds.left * 100}%`, top: `${agentBounds.top * 100}%`, width: `${agentBounds.width * 100}%`, height: `${agentBounds.height * 100}%` }}
           onClick={event => { event.stopPropagation(); window.dispatchEvent(new Event("hyper:agent-toggle")); }}
         />}
+        {!covered && !failed && !warm && <RelicOrbit section={focus ? stations.find(station => station.id === focus)?.section ?? null : null} register={registerOrbit} />}
         {focus && !covered && <button type="button" className={styles.leave} data-cursor="hide" aria-label="Back to the atrium" onClick={goHome} />}
         {!covered && !failed && !focus && bounds.map(bound => <button
           type="button"
