@@ -21,6 +21,9 @@ test("live rows come from the recorded timeline and lead the board", () => {
   const doc = JSON.parse(readFileSync(join(import.meta.dir, "../../../../backend/benchmarks/timeline.json"), "utf8")) as LoopTimeline;
   const rows = boardRows(shapeLoopTimeline(doc));
   expect(rows.slice(0, 2).map(row => row.id)).toEqual(["loop", "retrieval"]);
+  // The question count is read from the recorded run, never typed in.
+  const asked = Object.values((doc.series.find(item => item.id === "retrieval")!.points.at(-1) as unknown as { commit: { questions: Record<string, number> } }).commit.questions).reduce((a, b) => a + b, 0);
+  expect(rows.find(row => row.id === "retrieval")!.source).toBe(`Meridian · ${asked} questions`);
   expect(rows.find(row => row.id === "retrieval")!.bars[0].share).toBeGreaterThan(rows.find(row => row.id === "retrieval")!.bars[1].share!);
   expect(boardRows(null).map(row => row.id)).toEqual(["invoices", "benchrec", "dabstep", "apex", "suite", "story"]);
 });

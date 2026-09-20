@@ -31,6 +31,8 @@ export type LoopView = {
   lessons: number | null;
   /** recall@10 per mode as a PERCENTAGE with one decimal (93.7), ready for a 0 to 100 axis. Not a fraction. */
   retrieval: { mode: string; recall: number }[];
+  /** How many questions the latest retrieval run asked, from the recorded point. Null when it did not say. */
+  retrievalQuestions: number | null;
 };
 
 /** Correct out of n, as a rate only once there are enough cases for a rate to mean something. */
@@ -79,5 +81,6 @@ export function shapeLoopTimeline(doc: LoopTimeline): LoopView | null {
     speed, level,
     lessons: state?.points.slice(-1)[0]?.lessons ?? null,
     retrieval,
+    retrievalQuestions: (() => { const asked = (retrievalPoint?.commit as { questions?: Record<string, number> } | undefined)?.questions; return asked ? Object.values(asked).reduce((a, b) => a + b, 0) : null; })(),
   };
 }
