@@ -88,6 +88,9 @@ export class Gl {
     this.globalUniforms.u_delta.value = store.clockDelta > 0.016 ? 0.016 : store.clockDelta;
     this.screenFxPass.uniforms.u_time.value = time;
     store.mouse.smooth.glNormalized.lerp(store.mouse.glNormalized, 0.05);
+    // The atrium world covers this canvas with its own renderer. Drawing the hidden gallery,
+    // its fluid sim and screen effects underneath only takes GPU time away from it.
+    if (document.body.dataset.atriumActive === "true") return;
     this.composer.render();
   };
 

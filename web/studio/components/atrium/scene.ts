@@ -13,6 +13,7 @@ import { createAtriumGpuProfile } from "./gpu-profile";
 import { layoutAtriumStations } from "./layout";
 import { createFocusRig } from "./focus";
 import { createRelicParts } from "./relic-parts";
+import { createRelicInterior } from "./relic-interior";
 import type { AtriumStation } from "./configuration";
 import type { RelicMotionState } from "./RelicExperience";
 
@@ -61,6 +62,9 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   renderer.toneMapping = NoToneMapping;
   renderer.toneMappingExposure = 1;
   renderer.setPixelRatio(1);
+  // Adaptive resolution state, declared before anything that can call resize().
+  let quality = 1;
+  let steadySamples = 0;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFSoftShadowMap;
   const scene = new Scene();
@@ -113,6 +117,9 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const stationsGroup = new Group();
   scene.add(stationsGroup);
   const pipeline = createAtriumPipeline(renderer, scene, camera, gpuProfile);
+  const interior = createRelicInterior(ratio);
+  let interiorAmount = 0;
+  let interiorSection = false;
   const modelCache = new Map<string, Promise<Object3D>>();
   const retiredCovers: Object3D[] = [];
   const loader = createAtriumGeometryLoader();
@@ -238,6 +245,11 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     orbit.rotation.z = still ? 0 : Math.sin(elapsed * .33) * .018;
     focusRig.update(delta, roomPointer, still);
     canvas.dataset.focusProgress = focusRig.progress.toFixed(3);
+    const threshold = Math.max(0, Math.min(1, (focusRig.progress - .35) / .6));
+    interiorAmount = interiorSection ? threshold * threshold * (3 - 2 * threshold) : 0;
+    interior.update(elapsed, interiorAmount, still, roomPointer, focusShare);
+    pipeline.setInterior(interior, interiorAmount, still ? 0 : elapsed);
+    canvas.dataset.interiorProgress = interiorAmount.toFixed(3);
     if (focusListener && focusSubject && (focusRig.focused || focusRig.progress > .002 || lastFocusProgress !== 0)) {
       // Orbit slots sit on the camera-facing plane through the relic, so cards hug it at any angle.
       const right = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
@@ -294,7 +306,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     gpuProfile.beginFrame();
     const captureStarted = process.env.NODE_ENV === "development" ? performance.now() : 0;
     if (process.env.NODE_ENV === "development") renderer.info.reset();
-    gpuProfile.measure("capture", () => water.prepareFrame(renderer, scene, camera, forceReflections));
+    if (interiorAmount < .999) gpuProfile.measure("capture", () => water.prepareFrame(renderer, scene, camera, forceReflections));
     const beautyStarted = process.env.NODE_ENV === "development" ? performance.now() : 0;
     // Refraction already refreshed complete-scene shadows for this frame.
     const autoUpdate = renderer.shadowMap.autoUpdate;
@@ -331,8 +343,9 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     const parent = canvas.parentElement;
     if (!parent || disposed) return;
     const width = Math.max(1, parent.clientWidth), height = Math.max(1, parent.clientHeight);
-    const pixelCap = matchMedia("(pointer: coarse)").matches ? 1.25 : 1.75;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, pixelCap, Math.sqrt(3200000 / (width * height))));
+    const pixelCap = matchMedia("(pointer: coarse)").matches ? 1.25 : 1.5;
+    // `quality` is lowered by the frame loop when the measured rate drops, and raised again when there is headroom.
+    renderer.setPixelRatio(Math.max(.6, Math.min(window.devicePixelRatio || 1, pixelCap, Math.sqrt(2600000 / (width * height))) * quality));
     renderer.setSize(width, height, false);
     pipeline.resize(Math.max(1, parent.clientWidth), Math.max(1, parent.clientHeight));
     water.resize(parent.clientWidth, parent.clientHeight);
@@ -362,7 +375,16 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       canvas.dataset.frame = String(renderedFrames);
       canvas.dataset.agentState = voice.state;
       canvas.dataset.agentLevel = voice.level.toFixed(3);
-      if (frameSampleStarted) canvas.dataset.fps = (30000 / (now - frameSampleStarted)).toFixed(1);
+      if (frameSampleStarted) {
+        const fps = 30000 / (now - frameSampleStarted);
+        canvas.dataset.fps = fps.toFixed(1);
+        // Adaptive resolution: this scene is fill-rate bound (half-float beauty, bloom, captures), so
+        // pixels are the cheapest thing to give up. Step down fast, step up slowly, never oscillate
+        // on a single sample.
+        const next = fps < 42 ? Math.max(.6, quality - .12) : fps > 57 && ++steadySamples >= 4 ? Math.min(1, quality + .06) : quality;
+        if (fps <= 57) steadySamples = 0;
+        if (next !== quality) { quality = next; steadySamples = 0; canvas.dataset.quality = quality.toFixed(2); resize(); }
+      }
       frameSampleStarted = now;
     }
     render(false);
@@ -491,14 +513,12 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       // Frame the relic with room to breathe above its plinth, not just its own tight bounds.
       focusSubject = { center: center.clone(), reach: Math.max(box.getSize(new Vector3()).y, box.getSize(new Vector3()).x) * .5 };
       const size = box.getSize(new Vector3());
-      const compact = window.innerWidth <= 900;
-      const visibleHeight = Math.min(1, window.innerHeight / Math.max(1, canvas.parentElement?.clientHeight ?? window.innerHeight));
       const section = instance.station.section;
-      if (["cases", "identity", "benchmarks"].includes(section ?? "")) {
-        const landscape = section === "benchmarks";
-        focusRig.aim({ center, height: size.y, width: size.x * (landscape ? 2.25 : 1.5), fill: compact ? .14 : landscape ? .18 : .34,
-          x: compact || landscape ? 0 : section === "identity" ? -.52 : -.61,
-          y: (compact ? .74 : landscape ? .56 : .08) * visibleHeight, orbit: landscape ? .12 : section === "identity" ? -.04 : .035 }, visibleShare);
+      interiorSection = ["cases", "identity", "benchmarks"].includes(section ?? "");
+      if (interiorSection) {
+        interior.select(instance.icon, section!);
+        // Approach the center, cross the opening, then continue inside the reading chamber.
+        focusRig.aim({ center, height: size.y, fill: .95, x: 0, y: 0, orbit: section === "identity" ? -.04 : .035 }, visibleShare);
       } else focusRig.aim({ center, height: Math.max(size.y * 2.05, 1.5 * instance.scale) }, visibleShare);
       if (paused) { animateRelics(0, true); animateRoom(0, true); render(); }
     },
@@ -541,6 +561,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       sideLight.dispose();
       ethereal.dispose();
       pipeline.dispose();
+      interior.dispose();
       gpuProfile.dispose();
       restoreTransmission();
       renderer.dispose();
