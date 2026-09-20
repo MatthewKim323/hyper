@@ -10,6 +10,7 @@ from sqlalchemy import select, update, or_, and_
 from .database import sources, chunks, jobs
 from .store import Store
 from .retrieval import ElasticSearch
+from .graph import Graph, index_terms
 
 log=logging.getLogger(__name__)
 
@@ -34,6 +35,9 @@ def run_once(store, search, organization_id=None):
         db.execute(update(sources).where(sources.c.id==source['id']).values(index_status='indexing',index_error=None))
     try:
         search.ensure_index()
+        # Graph first: the index stores which entities each chunk mentions.
+        graph=Graph(store.engine,source['organization_id'])
+        graph.build_source(source)
         offset=0
         semantic_datasets={x.strip() for x in os.getenv('ELASTIC_SEMANTIC_DATASETS','').split(',') if x.strip()}
         semantic = bool(getattr(search,'inference_id','')) and (not source['dataset'] or source['dataset'] in semantic_datasets)
@@ -45,6 +49,8 @@ def run_once(store, search, organization_id=None):
                     chunks.c.organization_id==source['organization_id']).order_by(chunks.c.ordinal)
                     .offset(offset).limit(batch_size)).mappings().all()
             if not rows:break
+            named=graph.chunk_entities([r['id'] for r in rows])
+            rows=[{**r,'entity_ids':index_terms(named[r['id']])} for r in rows]
             search.index_chunks(source,rows)
             offset+=len(rows)
             with store.engine.begin() as db:

@@ -236,7 +236,20 @@ class DataService:
         pending=len(all_sources)-len(ready)
         if not ready:
             return {'mode':self.search.mode,'hits':[],'unindexed_sources':pending,'coverage_complete':pending==0}
-        hits=self.search.search(self.oid,ready,args.query,args.limit)
+        # Entities the question names, widened along the knowledge graph: a question about a vendor
+        # also reaches the documents that only cite that vendor's invoices, orders and receipts.
+        from .graph import Graph, index_terms
+        graph=Graph(self.engine,self.oid)
+        named=[x['id'] for x in graph.scan(args.query)]
+        wanted=args.limit*2
+        if named and getattr(self.search,'graph_aware',False):
+            exact=index_terms(named)
+            related={t:hops for k,hops in graph.related([n for n in named if not n.startswith('identifier:')]).items()
+                for t in index_terms([k]) if t not in exact}
+            hits=self.search.search(self.oid,ready,args.query,wanted,entities=exact,related=related)
+            mode=self.search.mode+'+graph'
+        else:
+            hits=self.search.search(self.oid,ready,args.query,wanted);mode=self.search.mode
         result=[]
         # Re-authorize index results against SQL, including source activation. Never trust ES _source content.
         with self.engine.connect() as db:
@@ -247,7 +260,12 @@ class DataService:
                         sources.c.organization_id==self.oid,sources.c.active.is_(True),
                         sources.c.index_status=='ready')).mappings().first()
                 if row:result.append({**row,'score':hit.get('_score')})
-        return {'mode':self.search.mode,'hits':result,'unindexed_sources':pending,'coverage_complete':pending==0}
+        # Superseded chunks were dropped above; over-fetching keeps the page full.
+        result=result[:args.limit]
+        mentioned=graph.chunk_entities([r['id'] for r in result])
+        result=[{**r,'entities':[e for e in mentioned[r['id']] if not e.startswith('identifier:')][:20]} for r in result]
+        return {'mode':mode,'hits':result,'unindexed_sources':pending,'coverage_complete':pending==0,
+            'query_entities':[{k:n[k] for k in ('id','type','label','recorded')} for n in graph.describe([n for n in named if not n.startswith('identifier:')])]}
 
     def job_status(self, sid):
         self.source(sid)

@@ -41,6 +41,9 @@ def definitions(oid, index, connector, trigger_inputs=True, transport="workflow"
         tool('evidence_search','Find related indexed evidence by keywords. Results may include superseded sources; final conclusions require the supplied current bundle.',
              scope + ' AND MATCH(content, ?query) | KEEP source_id, source_key, source_version, chunk_id, locator, content | LIMIT 30',
              {'query':{'type':'string','description':'Specific vendor, invoice, contract, or approval terms'}}),
+        tool('entity_evidence','Find every indexed chunk that mentions one exact entity, regardless of wording. Prefer this over keywords when you hold an identifier. Results may include superseded sources.',
+             scope + ' AND MATCH(entity_ids, ?entity) | SORT source_version DESC | KEEP source_id, source_key, source_version, chunk_id, locator, dataset, content | LIMIT 40',
+             {'entity':{'type':'string','description':'identifier:<ID> for a bare identifier such as identifier:INV-1042, or a knowledge-graph node ID from evidence metadata such as vendor:VEN-001'}}),
     ]
     instructions=INSTRUCTIONS
     if transport=='a2a':

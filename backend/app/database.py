@@ -180,6 +180,39 @@ jobs = Table('ingestion_jobs', metadata,
     Column('claim_token', Text), Column('error', Text),
     Column('created_at', BigInteger, nullable=False))
 
+# Knowledge graph derived from active sources. Rebuildable: sources and records stay authoritative.
+# Every row names the source that produced it so a superseded import removes exactly its own facts.
+graph_nodes = Table('graph_nodes', metadata,
+    Column('organization_id', Text, primary_key=True), Column('id', Text, primary_key=True),
+    Column('type', Text, nullable=False), Column('key', Text, nullable=False),
+    Column('label', Text, nullable=False), Column('props', json_type, nullable=False),
+    Column('source_id', Text, nullable=False), Column('row_number', Integer, nullable=False))
+Index('graph_node_type', graph_nodes.c.organization_id, graph_nodes.c.type)
+Index('graph_node_source', graph_nodes.c.source_id)
+graph_edges = Table('graph_edges', metadata,
+    Column('sequence', Integer, primary_key=True, autoincrement=True),
+    Column('organization_id', Text, nullable=False), Column('src', Text, nullable=False),
+    Column('dst', Text, nullable=False), Column('type', Text, nullable=False),
+    Column('props', json_type, nullable=False), Column('method', Text, nullable=False),
+    Column('confidence', Integer, nullable=False),
+    Column('source_id', Text, nullable=False), Column('row_number', Integer, nullable=False))
+Index('graph_edge_src', graph_edges.c.organization_id, graph_edges.c.src)
+Index('graph_edge_dst', graph_edges.c.organization_id, graph_edges.c.dst)
+Index('graph_edge_source', graph_edges.c.source_id)
+graph_aliases = Table('graph_aliases', metadata,
+    Column('sequence', Integer, primary_key=True, autoincrement=True),
+    Column('organization_id', Text, nullable=False), Column('alias', Text, nullable=False),
+    Column('kind', Text, nullable=False), Column('node_id', Text, nullable=False),
+    Column('source_id', Text, nullable=False))
+Index('graph_alias_lookup', graph_aliases.c.organization_id, graph_aliases.c.alias)
+Index('graph_alias_source', graph_aliases.c.source_id)
+graph_mentions = Table('graph_mentions', metadata,
+    Column('chunk_id', Text, primary_key=True), Column('node_id', Text, primary_key=True),
+    Column('organization_id', Text, nullable=False), Column('source_id', Text, nullable=False),
+    Column('method', Text, nullable=False), Column('confidence', Integer, nullable=False))
+Index('graph_mention_node', graph_mentions.c.organization_id, graph_mentions.c.node_id)
+Index('graph_mention_source', graph_mentions.c.source_id)
+
 def make_engine(location=None):
     location = location or os.getenv('DATABASE_URL') or os.getenv('DATABASE_PATH','var/onboarding.sqlite')
     if location.startswith('postgres://'):

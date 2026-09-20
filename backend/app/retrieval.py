@@ -4,6 +4,7 @@ import json
 import httpx
 
 class ElasticSearch:
+    graph_aware = True
     def __init__(self):
         self.url = os.getenv('ELASTICSEARCH_URL','http://127.0.0.1:9200').rstrip('/')
         self.index = os.getenv('ELASTICSEARCH_INDEX','hyper-evidence-v1')
@@ -33,7 +34,9 @@ class ElasticSearch:
             'content':{'type':'text'},
             'source_key':{'type':'keyword'}, 'source_version':{'type':'integer'},
             'content_hash':{'type':'keyword'}, 'observed_at':{'type':'date','format':'epoch_millis'},
-            'currency':{'type':'keyword'}, 'document_type':{'type':'keyword'}}}
+            'currency':{'type':'keyword'}, 'document_type':{'type':'keyword'},
+            # Knowledge-graph node IDs and bare identifiers this chunk mentions. Exact, never analyzed.
+            'entity_ids':{'type':'keyword'}}}
         if self.inference_id:
             mapping['properties']['semantic']={'type':'semantic_text','inference_id':self.inference_id}
             if self.search_inference_id:
@@ -64,7 +67,7 @@ class ElasticSearch:
                       'source_version':source.get('version',1),'content_hash':source.get('sha256',''),
                       'observed_at':source.get('created_at',0),'currency':source.get('currency') or '',
                       'document_type':source.get('content_type','application/octet-stream'),
-                      'filename':source['filename'],'locator':row['locator'],
+                      'filename':source['filename'],'locator':row['locator'],'entity_ids':list(row.get('entity_ids') or []),
                       'content':f"Source: {source['filename']} | Dataset: {source['dataset'] or 'document'} | Currency: {source.get('currency') or 'unspecified'} | {row['locator']}\n"+row['content']}
             # Structured ledger rows use exact SQL/BM25. Embed prose documents, not every debit.
             semantic_datasets={x.strip() for x in os.getenv('ELASTIC_SEMANTIC_DATASETS','').split(',') if x.strip()}
@@ -78,14 +81,27 @@ class ElasticSearch:
     def refresh(self):
         self.request('POST',f'{self.index}/_refresh')
 
-    def search(self, oid, source_ids, query, limit):
+    def search(self, oid, source_ids, query, limit, entities=(), related=None):
+        """entities: index terms the query names outright. related: {index term: hops} from the knowledge graph."""
         if not source_ids:return []
         filters=[{'term':{'organization_id':oid}},{'terms':{'source_id':source_ids}}]
         def branch(field):
             return {'standard':{'query':{'bool':{'filter':filters,'must':[{'match':{field:query}}]}}}}
+        retrievers=[branch('content')]
+        if self.inference_id:retrievers.append(branch('semantic'))
+        if entities or related:
+            # Exact identifiers beat graph neighbours, near neighbours beat far ones, documents beat ledger rows.
+            # Text relevance only breaks ties, so it can never outvote an exact match.
+            linked=[{'constant_score':{'filter':{'terms':{'entity_ids':list(entities)}},'boost':8}}] if entities else []
+            for hop in sorted(set((related or {}).values())):
+                linked.append({'constant_score':{'filter':{'terms':{'entity_ids':[k for k,v in related.items() if v==hop]}},'boost':4/hop/hop}})
+            retrievers.append({'standard':{'query':{'bool':{'filter':filters,
+                'must':[{'bool':{'should':linked,'minimum_should_match':1}}],
+                'should':[{'constant_score':{'filter':{'term':{'dataset':''}},'boost':2}},
+                          {'match':{'content':{'query':query,'boost':0.01}}}]}}}})
         body={'size':limit,'_source':['source_id','chunk_id','locator']}
-        if self.inference_id:
-            body['retriever']={'rrf':{'retrievers':[branch('content'),branch('semantic')],'rank_window_size':max(50,limit)}}
+        if len(retrievers)>1:
+            body['retriever']={'rrf':{'retrievers':retrievers,'rank_window_size':max(50,limit)}}
         else:
             body['query']=branch('content')['standard']['query']
         if self.rerank_id:

@@ -25,11 +25,13 @@ DESCRIPTIONS={
 
     'list_datasets':'Discover imported financial datasets, column schemas, source IDs, currencies, and units before querying.',
     'query_financials':'Read financial rows or calculate exact aggregates over all matching active records. Use filters and pagination; never total search snippets. Monetary results remain in imported units and separate currencies. No arbitrary SQL.',
-    'search_evidence':'Find cited evidence using Elasticsearch keyword/semantic search. Results are samples, not complete transaction populations. Check coverage_complete before concluding evidence is absent.',
+    'search_evidence':'Find cited evidence using Elasticsearch keyword/semantic search, widened by the company knowledge graph: identifiers and names in the query also reach documents about directly related records. query_entities shows what was recognized; each hit lists the entities it mentions. Results are samples, not complete transaction populations. Check coverage_complete before concluding evidence is absent.',
     'get_source':'Read paginated original extracted source content using a source_id from another tool. Returns row/page citations and an authenticated download URL.',
 }
 
-from . import accounting, settlements, accruals, learned_skills, counterparty
+from . import accounting, settlements, accruals, learned_skills, counterparty, graph
+TOOL_MODELS.update(graph.TOOL_MODELS)
+DESCRIPTIONS.update(graph.DESCRIPTIONS)
 TOOL_MODELS.update(counterparty.TOOL_MODELS)
 DESCRIPTIONS.update(counterparty.DESCRIPTIONS)
 TOOL_MODELS.update(learned_skills.TOOL_MODELS)
@@ -59,6 +61,8 @@ def tool_definitions():
 def execute(store, oid, name, args):
     if name in counterparty.TOOL_MODELS:
         return jsonable_encoder(counterparty.Counterparties(DataService(store,oid,search=ElasticSearch())).execute(name,args))
+    if name in graph.TOOL_MODELS:
+        return jsonable_encoder(graph.Graph(store.engine,oid).execute(name,args))
     if name in learned_skills.TOOL_MODELS:
         return learned_skills.Skills(store,oid).execute(name,args)
     if name in accruals.TOOL_MODELS:

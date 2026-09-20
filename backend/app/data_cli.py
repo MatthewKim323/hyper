@@ -20,6 +20,11 @@ def main():
     owner.add_argument('--user-id',help='Actual Clerk user ID (never an email)')
     owner.add_argument('--organization-id',default=None,help='Existing organization; defaults to isolated demo-meridian')
     demo.add_argument('--visible-dir',default=str(Path(__file__).resolve().parents[2]/'data/generated/visible'))
+    demo.add_argument('--narratives',default=str(Path(__file__).resolve().parents[2]/'data/generated/narratives/documents.jsonl'),
+        help='Draft correspondence, one source per document; pass an empty string to skip')
+    graph=commands.add_parser('graph',help='Rebuild the knowledge graph from active sources and print its shape')
+    graph.add_argument('--organization-id',default='demo-meridian')
+    graph.add_argument('--stats-only',action='store_true')
     retry=commands.add_parser('reindex')
     retry.add_argument('--user-id',required=True)
     migrate=commands.add_parser('migrate-sqlite')
@@ -62,7 +67,18 @@ def main():
         docs=[visible/'company.json']+sorted((visible/'cases').glob('*.json'))
         for path in docs:
             svc.ingest(path.name,path.read_bytes(),source_key='demo/'+str(path.relative_to(visible)))
+        if args.narratives and Path(args.narratives).exists():
+            # Authoring metadata (source_refs, packet) stays out of the text: it is the benchmark's answer key.
+            for line in Path(args.narratives).read_text().splitlines():
+                doc=json.loads(line)
+                body=f"{doc['kind'].replace('_',' ').title()} | {doc['date']}\nSubject: {doc['subject']}\n\n{doc['body']}\n"
+                svc.ingest(doc['document_id']+'.txt',body.encode(),source_key='demo/narratives/'+doc['document_id'])
         print(json.dumps({'organization_id':oid,'status':'imported; start worker to index evidence'}))
+    elif args.command=='graph':
+        from .graph import Graph
+        graph=Graph(store.engine,args.organization_id)
+        built=None if args.stats_only else graph.rebuild()
+        print(json.dumps({'built':built,**graph.stats()},indent=1))
     elif args.command=='reindex':
         oid=store.workspace(args.user_id)['id']
         with store.engine.begin() as db:
