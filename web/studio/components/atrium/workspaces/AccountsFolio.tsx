@@ -6,6 +6,7 @@ import { getBackendToken, openSignIn } from "@/lib/backend/auth";
 import type { AgentCase, AgentTask, Concern } from "@/lib/backend/types";
 import { useAuth, useBackend } from "@/components/workspace/useBackend";
 import { eligibleInvoiceDatasets, fieldText, invoiceAmount, invoiceLines, isSyntheticRecord, preferredInvoiceDataset, readInvoicePage, sourceWork, valueText, type InvoiceAmount, type InvoiceRow } from "./accounts-data";
+import { EngineCases } from "@/components/workspace/accounting";
 import styles from "./AccountsFolio.module.css";
 
 type MotionState = { busy?: boolean; selectedIndex?: number; values?: readonly (number | null)[] };
@@ -172,6 +173,8 @@ export default function AccountsFolio({ active, onMotion }: Props) {
     {catalog.error && <p className={styles.warning} role="status">{catalog.error} <button type="button" className={styles.textButton} onClick={catalog.refresh}>Retry</button></p>}
     {!catalog.data && !catalog.error && <div className={styles.loading} role="status"><div className={styles.loadingPaper} aria-hidden="true" /><span>Finding your invoice collections…</span></div>}
     {catalog.data && !dataset && <div className={styles.empty}><span className={styles.eyebrow}>A place for your payables</span><h3>No payable invoices yet.</h3><p>{catalog.data.datasets.length > 0 ? "Your workspace has imported records, but no payable invoice or bill collection is available. Connect your billing account or import an AP invoice export to start this folio." : "Connect your billing account or import an AP invoice export. Supported exports are CSV, JSON, and JSONL; use a stable invoice ID so records stay linked to their sources."}</p><button type="button" onClick={catalog.refresh}>Check for imports</button></div>}
+    {/* Payables the deterministic engine has worked out from owner-verified records, above the raw folio. */}
+    <EngineCases active={active} />
     {dataset && <FolioPages key={dataset} dataset={dataset} active={active} onMotion={onMotion} />}
   </div>;
 }

@@ -6,6 +6,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Bar, BarChart, BarYAxis, ChartTooltip, Grid } from "@/components/charts";
 import { BackendError, backend } from "@/lib/backend/client";
 import type { AgentCase, AgentTask, Concern, EvidenceSearch, SimulationEvent, SourceDetail } from "@/lib/backend/types";
+import { EngineCases, PayableApprovals } from "./accounting";
 import { money, useBackend, when } from "./useBackend";
 
 const go = (section: string) => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section } }));
@@ -71,6 +72,7 @@ export function Review({ active }: { active: boolean }) {
   const rest = concerns.filter((c) => !waiting.includes(c) && !failed.includes(c));
   return <>
     <Heading eyebrow="Review" title={<>Decisions that need <em>your</em> authority.</>} note="The agent investigates and prepares. Anything that commits money, changes a vendor or contacts someone outside comes here first." />
+    <PayableApprovals active={active} />
     <Status error={error} empty={data && !concerns.length && "Nothing has been raised yet. Concerns appear here when an agent finds something it may not decide alone."}>
       {waiting.length > 0 && <div className="ws-stack">{waiting.map((c) => <ConcernCard key={c.id} concern={c} onAnswered={refresh} />)}</div>}
       {data && !waiting.length && concerns.length > 0 && <p className="ws-empty">Nothing is waiting on you.</p>}
@@ -113,6 +115,7 @@ export function Cases({ active }: { active: boolean }) {
   return <>
     <Heading eyebrow="Cases" title={<>What the agent is <em>working</em> on.</>} note="Each case is the agent's own record: what it has established, what it still does not know, and what it will do next." />
     {controller.data && <p className="ws-note">Agent {controller.data.enabled ? words(controller.data.status) : "is switched off"}{controller.data.error ? `. ${controller.data.error}` : "."}</p>}
+    <EngineCases active={active} />
     <Status error={cases.error} empty={cases.data && !items.length && "No cases yet. They appear once an agent starts grouping evidence."}>
       <div className="ws-stack">{items.map((item) => <CaseCard key={item.id} item={item} tasks={(tasks.data?.tasks ?? []).filter((t) => t.case_id === item.id)} />)}</div>
       {cases.data?.has_more && <p className="ws-note">Showing the first 50 cases.</p>}

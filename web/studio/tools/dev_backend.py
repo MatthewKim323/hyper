@@ -166,6 +166,40 @@ httpx.Client = lambda **kw: _real_client(transport=httpx.MockTransport(evaluator
 
 # --- seed --------------------------------------------------------------------------------------
 
+def seed_accounting() -> None:
+    """The hero invoice, worked through the real engine: records verified, both credits inspected, one
+    payable proposal left waiting for an owner. Same steps as backend/tests/test_accounting.py."""
+    from sqlalchemy import select
+    from mirror_resolve import store as ledger
+    from mirror_resolve.fixtures import hero
+    from app.accounting import Accounting, PromoteRecord
+
+    store = main.store
+    oid = store.workspace(DEV_USER)["id"]
+    data = data_for(oid)
+    svc = Accounting(store, oid)
+
+    def promote(kind: str, record: dict) -> None:
+        source = data.ingest(f"{kind}-{next(iter(record.values()))}.json", json.dumps([record]).encode(), dataset="ap_" + kind.lower())
+        svc.promote(PromoteRecord(source_id=source["id"], row_number=1, record_type=kind,
+                                  attestation="I verified this structured record against its source"), "human:" + DEV_USER + ":DEV_FIXTURE")
+
+    engine = ledger.make_engine("sqlite:///:memory:")
+    with engine.begin() as db:
+        hero.seed_initial(db)
+        initial = [dict(r) for r in db.execute(select(ledger.records).order_by(ledger.records.c.id)).mappings()]
+    engine.dispose()
+    for row in initial:
+        promote(row["record_type"], row["data"])
+    case_id = svc.execute("open_payable_case", {"invoice_id": "INV-1042"})["case"]["case_id"]
+    for built in (hero.cancellation_record(), hero.supplier_ack(), hero.price_credit(), hero.quantity_credit()):
+        promote(built[0], built[1])
+    for credit in ("CM-201", "CM-202"):
+        svc.execute("inspect_payable_credit", {"case_id": case_id, "credit_id": credit})
+    revision = svc.execute("analyze_payable", {"case_id": case_id})["case"]["revision"]
+    svc.execute("prepare_payable_proposal", {"case_id": case_id, "based_on_revision": revision})
+    print("seeded accounting: INV-1042 with a payable proposal awaiting owner approval")
+
 def seed() -> None:
     from app.ingestion_worker import run_once as index_once
 
@@ -227,5 +261,6 @@ if __name__ == "__main__":
     import uvicorn
 
     seed()
+    seed_accounting()
     print(f"dev backend on http://127.0.0.1:{PORT}  token: {DEV_TOKEN}", flush=True)
     uvicorn.run(main.app, host="127.0.0.1", port=PORT, log_level="warning")

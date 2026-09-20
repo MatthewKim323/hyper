@@ -96,3 +96,17 @@
 .ws-signin button { min-height: 44px; padding: 0.6rem 1.6rem; border: 1px solid #252321; border-radius: 99px; font: inherit; font-size: 0.88rem; color: #fff; background: #252321; cursor: pointer; transition: transform 160ms; }
 .ws-signin button:active { transform: scale(0.97); }
 .ws-account { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 61; padding: 0.35rem 0.8rem; border: 1px solid rgb(37 35 33 / 12%); border-radius: 99px; font: inherit; font-size: 0.72rem; color: #716860; background: rgb(246 242 240 / 80%); cursor: pointer; }
+
+/* Accounting engine: a ledger of how the payable was reached, and the checks code ran on it. */
+.ws-ledger { margin: 0.9rem 0 0.6rem; font-variant-numeric: tabular-nums; }
+.ws-ledger div { display: flex; justify-content: space-between; gap: 1.5rem; padding: 0.4rem 0; border-top: 1px solid #ddd5cf; font-size: 0.88rem; }
+.ws-ledger dt { color: #63574e; } .ws-ledger dt small { margin-left: 0.4rem; }
+.ws-ledger dd { margin: 0; white-space: nowrap; }
+.ws-ledger div[data-total] { border-top: 1px solid #252321; font-weight: 500; } .ws-ledger div[data-total] dt { color: inherit; }
+.ws-ledger[data-ties="false"] div[data-total] { color: #892d2d; border-top-color: #892d2d; }
+.ws-checks { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.6rem 0; padding: 0; list-style: none; }
+.ws-checks li { padding: 0.18rem 0.55rem; border-radius: 1rem; background: #e6efe6; color: #24552f; font-size: 0.7rem; }
+.ws-checks li::before { content: "✓ "; } .ws-checks li[data-ok="false"] { background: #f4e2e0; color: #892d2d; } .ws-checks li[data-ok="false"]::before { content: "✕ "; }
+.ws-actions { display: flex; align-items: center; gap: 1.1rem; margin-top: 0.8rem; }
+.ws-actions > button:first-child { padding: 0.6rem 1.15rem; border: 0; border-radius: 2rem; background: #252321; color: #fff; font-size: 0.85rem; cursor: pointer; transition: transform 0.2s ease, opacity 0.2s ease; }
+.ws-actions > button:first-child:hover:not(:disabled) { transform: translateY(-1px); } .ws-actions > button:disabled { opacity: 0.4; cursor: not-allowed; }

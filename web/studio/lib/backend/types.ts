@@ -80,3 +80,22 @@ export type SimulationEvent = {
   payload: { event_type: string; source: string; occurred_at: string; dataset: string; synthetic: true; record: Record<string, unknown> };
   sources: { id: string; index_status: Source["index_status"] }[];
 };
+
+/* Deterministic AP engine (backend/ACCOUNTING_API.md). Amounts are integer cents computed by code, never by a model. */
+export type PayableCalculation = {
+  currency: string; invoice_face_cents: number; verified_credits_total_cents: number; net_after_credits_cents: number;
+  /** Received quantity at the supported price. Must equal net_after_credits_cents for `ties` to hold. */
+  independently_supported_cents: number; residual_cents: number; ties: boolean;
+};
+export type EngineCase = {
+  case_id: string; invoice_id: string; revision: number; work_status: string; authorization_status: string; payment_status: string; updated_at: string;
+  calculation: PayableCalculation | null; blocking_issues: { type: string; description: string; next_action: string | null }[]; error?: string;
+};
+export type PayableProposal = {
+  proposal_id: string; case_id: string; hash: string; status: "DRAFT" | "INVALIDATED" | "COMMITTED" | "REJECTED"; based_on_revision: number; created_by: string; created_at: string;
+  payload: { invoice_id: string; currency: string; invoice_face_cents: number; net_payable_cents: number; credits: { credit_id: string; scope: string; amount_cents: number }[];
+    recipient?: { vendor_id: string; remit_account_ref: string }; accounting?: { account: string; debit_cents: number; credit_cents: number }[] };
+  checks: { name: string; ok: boolean; detail?: unknown }[];
+  approval: null | { status: "PENDING" | "APPROVED" | "REJECTED" | "INVALIDATED"; decided_by: string | null; decided_at: string | null };
+};
+export type AccountingRecord = { source_id: string; row_number: number; record_type: string; original_record_id: string; doc_id: string; source_sha256: string; verified_by: string };

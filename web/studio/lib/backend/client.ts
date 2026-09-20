@@ -4,6 +4,7 @@
 // Requests go through the existing same-origin rewrite (/api/onboarding/* -> backend root).
 // Nothing here is pushed from the server. Use `poll` for anything that changes.
 import type {
+  AccountingRecord, EngineCase, PayableProposal,
   AgentCase, AgentTask, Artifact, Concern, ConcernStatus, Controller, Dataset, EvidenceSearch, FinancialAggregate,
   FinancialQuery, Simulation, SimulationEvent, Source, SourceDetail, Workspace, Connection,
 } from "./types";
@@ -65,6 +66,13 @@ export const backend = {
   searchEvidence: (text: string, dataset?: string, limit = 8) => post<EvidenceSearch>("/evidence/search", { query: text, dataset, limit }),
   aggregate: (q: FinancialQuery) => post<FinancialAggregate>("/financials/query", q),
   artifact: (id: string) => call<Artifact>(`/artifacts/${encodeURIComponent(id)}`),
+
+  // Accounting engine. Approval is owner only and bound to the exact proposal hash the owner was shown.
+  accountingRecords: () => call<{ records: AccountingRecord[] }>("/accounting/records"),
+  engineCases: () => call<{ cases: EngineCase[] }>("/accounting/cases"),
+  payableProposals: () => call<{ proposals: PayableProposal[] }>("/accounting/proposals"),
+  decideProposal: (proposal_id: string, proposal_hash: string, decision: "APPROVED" | "REJECTED") =>
+    post<{ status: string }>("/accounting/approvals", { proposal_id, proposal_hash, decision }),
 
   // Activity.
   simulations: () => call<{ simulations: Simulation[]; has_more: boolean }>("/simulations"),
