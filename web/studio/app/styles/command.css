@@ -26,17 +26,23 @@
   pointer-events: auto;
 }
 
-.cmd-bar p {
-  margin: 0;
-  overflow: hidden;
+.cmd-bar input {
+  width: min(520px, 46vw);
+  border: 0;
+  outline: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   font-size: 13px;
-  line-height: 1.3;
-  white-space: nowrap;
   text-overflow: ellipsis;
-  opacity: 0.75;
 }
 
-.cmd-bar[data-error="true"] p {
+.cmd-bar input::placeholder {
+  color: inherit;
+  opacity: 0.6;
+}
+
+.cmd-bar[data-error="true"] input::placeholder {
   color: #8a1f1f;
   opacity: 1;
 }

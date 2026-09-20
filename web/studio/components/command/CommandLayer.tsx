@@ -42,6 +42,7 @@ function CommandSession() {
   const pointer = useRef<PointerContext | null>(null);
   const mic = useRef<MediaStream | null>(null);
   const lastSent = useRef("");
+  const [draft, setDraft] = useState("");
 
   useEffect(() => {
     const context = new PointerContext();
@@ -76,34 +77,53 @@ function CommandSession() {
     };
   }, []);
 
+  const sharePointer = useCallback(() => {
+    const now = performance.now();
+    const region = pointer.current?.region(now - LOOKBACK_MS, now);
+    const referents = (region?.referents ?? []).filter((r) => r.label || r.id).slice(0, 12);
+    setTarget(referents[0] ?? null);
+    if (!region) return;
+    const payload = {
+      section: document.body.dataset.workspaceSection ?? null,
+      area: { x: region.x, y: region.y, width: region.width, height: region.height },
+      viewport: { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight },
+      referents: referents.map((r) => ({ label: r.label.slice(0, 200), kind: r.kind, id: r.id, section: r.section, data: r.data, rect: r.rect })),
+    };
+    const signature = JSON.stringify([payload.section, payload.referents.map((r) => [r.kind, r.id, r.label])]);
+    if (signature === lastSent.current) return;
+    lastSent.current = signature;
+    client.current?.sendPointer(payload);
+  }, []);
+
   // While listening, keep the agent informed of what is being pointed at, and show the same thing on screen.
   useEffect(() => {
     if (!listening) return;
-    const tick = () => {
-      const now = performance.now();
-      const region = pointer.current?.region(now - LOOKBACK_MS, now);
-      const referents = (region?.referents ?? []).filter((r) => r.label || r.id).slice(0, 12);
-      setTarget(referents[0] ?? null);
-      if (!region) return;
-      const payload = {
-        section: document.body.dataset.workspaceSection ?? null,
-        area: { x: region.x, y: region.y, width: region.width, height: region.height },
-        viewport: { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight },
-        referents: referents.map((r) => ({ label: r.label.slice(0, 200), kind: r.kind, id: r.id, section: r.section, data: r.data, rect: r.rect })),
-      };
-      const signature = JSON.stringify([payload.section, payload.referents.map((r) => [r.kind, r.id, r.label])]);
-      if (signature === lastSent.current) return;
-      lastSent.current = signature;
-      client.current?.sendPointer(payload);
-    };
-    tick();
-    const timer = window.setInterval(tick, POINTER_EVERY_MS);
+    sharePointer();
+    const timer = window.setInterval(sharePointer, POINTER_EVERY_MS);
     return () => {
       clearInterval(timer);
       setTarget(null);
       lastSent.current = "";
     };
-  }, [listening]);
+  }, [listening, sharePointer]);
+
+  // Typed commands carry the same pointing context as spoken ones.
+  const submit = useCallback(async () => {
+    const text = draft.trim();
+    const session = client.current;
+    if (!text || !session) return;
+    setError("");
+    setDraft("");
+    setHeard(text);
+    try {
+      await session.connect();
+      lastSent.current = "";
+      sharePointer();
+      if (!(await session.sendText(text))) setError("Your message could not be sent. Try again.");
+    } catch {
+      setError("Your agent is unavailable. Try again in a moment.");
+    }
+  }, [draft, sharePointer]);
 
   const toggle = useCallback(async () => {
     const session = client.current;
@@ -160,7 +180,15 @@ function CommandSession() {
             <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
           </svg>
         </button>
-        <p role={error ? "alert" : "status"}>{line}</p>
+        <input
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => { if (event.key === "Enter") void submit(); }}
+          placeholder={line}
+          aria-label="Ask your agent"
+          maxLength={2000}
+        />
+        <p className="sr" role={error ? "alert" : "status"}>{line}</p>
       </div>
     </div>
   );
