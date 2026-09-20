@@ -10,6 +10,7 @@ import { money, useBackend, when } from "./useBackend";
 import Adversary from "./Adversary";
 import { createSubmissionGuard } from "./submission-guard";
 import { EngineCases, PayableApprovals } from "./accounting";
+import { CoverageGauge } from "./charts";
 import OriginalSourceDownload from "@/components/atrium/workspaces/OriginalSourceDownload";
 
 type RelicSectionProps = { active: boolean; embedded?: boolean; onMotion?: (state: { busy?: boolean; selectedIndex?: number }) => void };
@@ -203,6 +204,7 @@ export function Evidence({ active, embedded = false, onMotion }: RelicSectionPro
       </li>)}</ul>
     </section>}
     {sourceId && <SourceReader key={sourceId} sourceId={sourceId} active={active} close={() => setSourceId(null)} />}
+    {page && page.sources.length > 0 && <CoverageGauge percent={(page.sources.filter(source => source.index_status === "ready").length / page.sources.length) * 100} count={page.sources.length} label="sources searchable" />}
     <div className="ws-grid">
       {!embedded && <section className="ws-section" data-pointable="chart:records-by-dataset" data-pointable-label="Records by dataset chart" data-pointable-data={JSON.stringify({ datasets: rows.map((r) => r.dataset) })}>
         <span className="ws-eyebrow">Records by dataset</span>

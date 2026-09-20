@@ -2,7 +2,7 @@
 
 // Workspace charts, built from the bklit components as documented (bklit.com/docs/components): the
 // library's own caps, tokens, glow and entrance animation are left alone. Each chart replaces a paragraph.
-import { Bar, BarChart, BarYAxis, ChartTooltip, FunnelChart, Grid, Ring, RingCenter, RingChart } from "@/components/charts";
+import { Area, AreaChart, Bar, BarChart, BarYAxis, ChartTooltip, FunnelChart, Gauge, Grid, Ring, RingCenter, RingChart, XAxis } from "@/components/charts";
 
 const money = (currency: string) => (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency, notation: "compact", maximumFractionDigits: 1 }).format(value);
 
@@ -55,5 +55,40 @@ export function TradeoffBars({ rows }: { rows: { system: string; precision: numb
       <BarYAxis showAllLabels />
       <ChartTooltip showCrosshair={false} />
     </BarChart>
+  </div>;
+}
+
+/** Payables volume over time. bklit AreaChart on a time axis. */
+export function VolumeArea({ points }: { points: { date: Date; value: number }[] }) {
+  return <div className="chart-scope ws-chart--volume" role="img" aria-label="Payables by month">
+    <AreaChart data={points} xDataKey="date" aspectRatio="auto" className="h-full" margin={{ left: 8, right: 8, top: 12, bottom: 28 }}>
+      <Grid horizontal />
+      <Area dataKey="value" />
+      <XAxis />
+      <ChartTooltip />
+    </AreaChart>
+  </div>;
+}
+
+/** Share of sources that are searchable. bklit arc Gauge with its own center label. */
+export function CoverageGauge({ percent, count, label }: { percent: number; count: number; label: string }) {
+  return <div className="chart-scope ws-gauge" role="img" aria-label={`${Math.round(percent)} percent ${label}`}>
+    <Gauge value={Math.max(0, Math.min(100, percent))} centerValue={count} defaultLabel={label} spacing={25} inactiveFillOpacity={0.4} minWidth={220} />
+  </div>;
+}
+
+/** Reported run outcomes for a skill, one ring each. bklit RingChart. */
+export function OutcomeRings({ passed, failed, needsInput }: { passed: number; failed: number; needsInput: number }) {
+  const total = Math.max(passed + failed + needsInput, 1);
+  const data = [
+    { label: "Passed", value: passed, maxValue: total, color: "var(--chart-3)" },
+    { label: "Failed", value: failed, maxValue: total, color: "var(--chart-2)" },
+    { label: "Needs input", value: needsInput, maxValue: total, color: "var(--chart-4)" },
+  ];
+  return <div className="chart-scope ws-rings" role="img" aria-label={`${passed} passed, ${failed} failed, ${needsInput} need input`}>
+    <RingChart data={data} size={150} strokeWidth={9} ringGap={5} baseInnerRadius={34}>
+      {data.map((item, index) => <Ring key={item.label} index={index} />)}
+      <RingCenter defaultLabel="Runs" />
+    </RingChart>
   </div>;
 }

@@ -6,6 +6,7 @@
 import { useRef, useState } from "react";
 import { backend, BackendError } from "@/lib/backend/client";
 import { SKILL_ATTESTATION, type SkillDetail, type SkillStatus, type SkillSummary } from "@/lib/backend/types";
+import { OutcomeRings } from "./charts";
 import { useBackend } from "./useBackend";
 
 const STATUS: Record<SkillStatus, { label: string; tone: string }> = {
@@ -49,6 +50,7 @@ function SkillReview({ skill, onChanged }: { skill: SkillDetail; onChanged: () =
       {file && <pre className="ws-mono ws-skill-file" aria-label={file.path}>{file.content}</pre>}
     </div>}
     {skill.research_urls.length > 0 && <p className="ws-note">Cited: {skill.research_urls.map((url, index) => <span key={url}>{index > 0 && ", "}<a className="ws-link" href={url} target="_blank" rel="noreferrer">{new URL(url).hostname}</a></span>)}</p>}
+    {Object.values(skill.reported_runs).some(Boolean) && <OutcomeRings passed={skill.reported_runs.passed ?? 0} failed={skill.reported_runs.failed ?? 0} needsInput={skill.reported_runs.needs_input ?? 0} />}
     <section className="ws-skill-run" data-outcome={run?.outcome ?? "none"}>
       <span className="ws-eyebrow">Latest run · agent reported</span>
       {run ? <>

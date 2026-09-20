@@ -6,8 +6,6 @@ import { useState } from "react";
 import { Bar, BarChart, BarXAxis, ChartTooltip, Grid, Line, LineChart, XAxis } from "@/components/charts";
 import { formatValue, periodDate, type ArtifactCardModel } from "@/lib/command/artifact";
 
-// Short reveal: the default 1.1 s animation would eat the whole voice-to-chart budget.
-const REVEAL_MS = 360;
 
 export default function ArtifactCard({ card, onDismiss }: { card: ArtifactCardModel; onDismiss: () => void }) {
   const [table, setTable] = useState(false);
@@ -26,16 +24,16 @@ export default function ArtifactCard({ card, onDismiss }: { card: ArtifactCardMo
       </header>
       <div className="cmd-chart">
         {timeAxis ? (
-          <LineChart data={rows} xDataKey="date" aspectRatio="auto" className="h-full" animationDuration={REVEAL_MS} margin={{ left: 12, right: 16, top: 12, bottom: 28 }}>
+          <LineChart data={rows} xDataKey="date" aspectRatio="auto" className="h-full" margin={{ left: 12, right: 16, top: 12, bottom: 28 }}>
             <Grid horizontal />
-            <Line dataKey="value" stroke="var(--chart-1)" />
+            <Line dataKey="value" />
             <XAxis />
             <ChartTooltip />
           </LineChart>
         ) : (
-          <BarChart data={rows} xDataKey="period" aspectRatio="auto" className="h-full" animationDuration={REVEAL_MS} barGap={0.3} margin={{ left: 12, right: 16, top: 12, bottom: 28 }}>
+          <BarChart data={rows} xDataKey="period" aspectRatio="auto" className="h-full" barGap={0.3} margin={{ left: 12, right: 16, top: 12, bottom: 28 }}>
             <Grid horizontal />
-            <Bar dataKey="value" fill="var(--chart-1)" lineCap={3} />
+            <Bar dataKey="value" />
             <BarXAxis />
             <ChartTooltip showCrosshair={false} />
           </BarChart>

@@ -5,7 +5,7 @@
 import { useRef, useState } from "react";
 import { backend, BackendError } from "@/lib/backend/client";
 import type { EngineCase, PayableProposal } from "@/lib/backend/types";
-import { ChecksRing, PayableFunnel, RouteBars } from "./charts";
+import { ChecksRing, PayableFunnel, RouteBars, VolumeArea } from "./charts";
 import { useBackend } from "./useBackend";
 
 const cents = (value: number, currency: string) => {
@@ -100,5 +100,24 @@ export function EngineCases({ active }: { active: boolean }) {
   return <section className="ws-section" data-pointable="group:payable-cases" data-pointable-label="Payable cases">
     <span className="ws-eyebrow">Payable cases</span>
     <div className="ws-stack">{cases.map(item => <EngineCaseCard key={item.case_id} item={item} />)}</div>
+  </section>;
+}
+
+/** Payables booked per period, read from the imported invoices. */
+export function PayablesVolume({ active, dataset }: { active: boolean; dataset: string }) {
+  const { data } = useBackend(async () => {
+    const query = { dataset, group_by: ["date"], limit: 200 };
+    // Exact sums need Postgres; the count still shows the shape of activity when only SQLite is there.
+    try { return { unit: "sum" as const, result: await backend.aggregate({ ...query, operation: "sum", field: "amount_cents" }) }; }
+    catch { return { unit: "count" as const, result: await backend.aggregate({ ...query, operation: "count" }) }; }
+  }, active, 30000);
+  const points = (data?.result.results ?? [])
+    .map(row => ({ date: new Date(`${String(Object.values(row.group ?? {})[0])}T00:00:00Z`), value: Number(row.value) / (data?.unit === "sum" ? 100 : 1) }))
+    .filter(point => !Number.isNaN(point.date.getTime()) && Number.isFinite(point.value))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  if (points.length < 2) return null;
+  return <section className="ws-hero" data-pointable="chart:payables-volume" data-pointable-label="Payables by month" data-pointable-data={JSON.stringify({ dataset, unit: data?.unit, periods: points.length })}>
+    <span className="ws-eyebrow">{data?.unit === "sum" ? "Payables booked" : "Invoices booked"}</span>
+    <VolumeArea points={points} />
   </section>;
 }

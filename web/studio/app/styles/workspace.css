@@ -160,3 +160,5 @@
 .ws-ring-center { font-size: 0.8rem; font-variant-numeric: tabular-nums; color: #63574e; } .ws-ring-center strong { font-size: 1.05rem; font-weight: 400; color: #252321; }
 .chart-scope { position: relative; width: 100%; } .chart-scope svg { overflow: visible; } .chart-scope svg text { font-family: inherit; }
 .ws-ring.chart-scope { width: 132px; }
+.ws-hero { margin: 0 0 1.4rem; } .ws-chart--volume { height: 170px; margin-top: 0.5rem; }
+.ws-gauge { max-width: 300px; margin: 0.4rem auto 0.8rem; } .ws-rings { width: 150px; height: 150px; margin: 0 auto; }

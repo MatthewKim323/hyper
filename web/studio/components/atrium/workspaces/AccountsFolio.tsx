@@ -6,7 +6,7 @@ import { getBackendToken, openSignIn } from "@/lib/backend/auth";
 import type { AgentCase, AgentTask, Concern } from "@/lib/backend/types";
 import { useAuth, useBackend } from "@/components/workspace/useBackend";
 import { eligibleInvoiceDatasets, fieldText, invoiceAmount, invoiceLines, isSyntheticRecord, preferredInvoiceDataset, readInvoicePage, sourceWork, valueText, type InvoiceAmount, type InvoiceRow } from "./accounts-data";
-import { EngineCases } from "@/components/workspace/accounting";
+import { EngineCases, PayablesVolume } from "@/components/workspace/accounting";
 import styles from "./AccountsFolio.module.css";
 
 type MotionState = { busy?: boolean; selectedIndex?: number; values?: readonly (number | null)[] };
@@ -171,6 +171,7 @@ export default function AccountsFolio({ active, onMotion }: Props) {
     {!catalog.data && !catalog.error && <div className={styles.loading} role="status"><div className={styles.loadingPaper} aria-hidden="true" /><span>Loading…</span></div>}
     {catalog.data && !dataset && <div className={styles.empty}><h3>No invoices</h3><button type="button" onClick={catalog.refresh}>Check for imports</button></div>}
     {/* Payables the deterministic engine has worked out from owner-verified records, above the raw folio. */}
+    {dataset && <PayablesVolume key={`volume:${dataset}`} active={active} dataset={dataset} />}
     <EngineCases active={active} />
     {dataset && <FolioPages key={dataset} dataset={dataset} active={active} onMotion={onMotion} />}
   </div>;
