@@ -1,4 +1,26 @@
 /* Hand cursor: full-screen overlay for the ring and trail, plus the dock with the toggle and camera preview. */
+
+/* Both layers stack above the loading screen on purpose (they must sit over the WebGL
+   canvas once the site is up), so z-index cannot keep them out of it. PageLoader sets
+   data-loader-cleared on <html> when the loading layer has finished fading; until then
+   this chrome stays out of the way. The dock then eases in rather than snapping. */
+html:not([data-loader-cleared]) .finger-dock,
+html:not([data-loader-cleared]) .finger-overlay {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.finger-dock {
+  transition: opacity 0.45s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .finger-dock {
+    transition: none;
+  }
+}
+
 .finger-overlay {
   position: fixed;
   inset: 0;

@@ -115,6 +115,14 @@ export class PageLoader {
     this.fade = animate(colors, { opacity: 0 }, STAGE);
     await this.fade;
     if (this.fade) gsap.set(this.dom.loader, { autoAlpha: 0 });
+    this.markCleared();
+  }
+
+  // Chrome for the surrounding page (the hand-cursor dock, for one) stacks above the
+  // loading layer, so it cannot be hidden by z-index alone. Flag the root instead and let
+  // CSS keep that chrome out of the loading screen.
+  private markCleared() {
+    document.documentElement.dataset.loaderCleared = "true";
     this.clearedResolve();
   }
 
@@ -128,7 +136,7 @@ export class PageLoader {
       // skiploader and the capped/failed paths jump straight to a hidden layer, so there is
       // no fade to wait through and "cleared" is true immediately.
       gsap.set(this.dom.loader, { autoAlpha: 0 });
-      this.clearedResolve();
+      this.markCleared();
     }
     this.hiddenResolve();
     this.hidingPromise = this.hiddenPromise;
