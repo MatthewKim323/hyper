@@ -84,3 +84,13 @@
 @media (prefers-reduced-motion: reduce) {
   .tabs button, .action, .textButton { transition-duration: 0s; }
 }
+
+/* Sources: one tile per connector. */
+.sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 24px 0 12px; padding: 0; list-style: none; }
+.source { padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; background: rgb(255 255 255 / 38%); transition: border-color 200ms var(--ease-out, ease-out), background 200ms var(--ease-out, ease-out); }
+.source[data-live] { border-color: rgb(70 45 35 / 45%); background: rgb(255 255 255 / 62%); }
+.source h4 { margin: 0; font-size: 15px; font-weight: 500; }
+.source p { margin: 6px 0; font-size: 13px; line-height: 1.5; }
+.credentials { display: grid; gap: 8px; margin-top: 10px; }
+.credentials input, .credentials select { min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgb(255 255 255 / 70%); font: inherit; font-size: 13px; color: inherit; }
+@media (prefers-reduced-motion: reduce) { .source { transition: none; } }

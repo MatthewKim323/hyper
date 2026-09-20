@@ -7,7 +7,7 @@ export type AtriumStation = { id: string; label: string; template: string; secti
 export type AtriumStationConfiguration = { stations: readonly AtriumStation[] } | { count: number };
 export const DEFAULT_STATIONS: readonly AtriumStation[] = [
   { id: "accounts-payable", label: "Accounts Payable", template: "accounts-payable", section: "cases" },
-  { id: "wallet-identity", label: "Wallet Identity", template: "wallet-identity", section: "identity" },
+  { id: "wallet-identity", label: "Access", template: "wallet-identity", section: "identity" },
   { id: "audit-evidence", label: "Audit & Evidence", template: "audit-evidence", section: "evidence" },
   { id: "training-arena", label: "Training Arena", template: "training-arena", section: "timeline" },
   { id: "approvals", label: "Approvals", template: "approvals", section: "review" },

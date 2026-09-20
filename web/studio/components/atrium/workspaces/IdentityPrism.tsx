@@ -1,14 +1,82 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { backend } from "@/lib/backend/client";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { BackendError, backend } from "@/lib/backend/client";
+import type { Connection, ProviderInfo } from "@/lib/backend/types";
 import { openSignIn } from "@/lib/backend/auth";
 import { useAuth, useBackend, when } from "@/components/workspace/useBackend";
 import { browserWallet, chainLabel, createWalletSession, EMPTY_WALLET, type WalletState } from "./browser-wallet";
 import styles from "./IdentityPrism.module.css";
 
 type Props = { active: boolean; onMotion?: (state: { busy?: boolean; selectedIndex?: number }) => void };
-const facets = ["Identity", "Access", "Activity"] as const;
+const facets = ["Sources", "Permissions", "Identity"] as const;
+
+// What each source gives the agent. Only providers the backend actually implements are listed.
+const SOURCES: { id: string; name: string; reads: string }[] = [
+  { id: "gmail", name: "Gmail", reads: "Supplier emails and their attachments" },
+  { id: "drive", name: "Google Drive", reads: "Contracts, agreements and spreadsheets" },
+  { id: "ramp", name: "Ramp", reads: "Bills and card transactions" },
+  { id: "plaid", name: "Bank (Plaid)", reads: "Bank transactions" },
+];
+const LIVE = new Set(["connected", "authorizing"]);
+const STATUS: Record<string, string> = { connected: "Connected", authorizing: "Waiting for consent", reauth_required: "Needs sign-in again", error: "Sync failed", authorization_failed: "Consent failed", disconnected: "Disconnected" };
+
+function SourceTile({ source, info, connection, onChanged }: { source: typeof SOURCES[number]; info?: ProviderInfo; connection?: Connection; onChanged: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+  const [form, setForm] = useState(false);
+  const live = !!connection && LIVE.has(connection.status);
+  // Ramp takes its credentials per connection; the others need the server to hold a client first.
+  const unavailable = source.id !== "ramp" && !!info && !info.configured;
+  const run = async (work: () => Promise<unknown>) => {
+    if (busy) return;
+    setBusy(true); setNote("");
+    try { await work(); onChanged(); }
+    catch (reason) {
+      const message = (reason as Error).message;
+      // The server names its missing settings; that is for whoever runs it, not for this screen.
+      setNote(reason instanceof BackendError && (reason.status === 503 || /^Missing server configuration/i.test(message)) ? "This source is not set up on the server yet." : message);
+    }
+    finally { setBusy(false); }
+  };
+  const connect = () => {
+    if (source.id === "ramp") { setForm(true); return; }
+    if (source.id === "plaid") { setNote("Bank linking is not available in this build."); return; }
+    // The window must open inside the click, before any await, or the browser blocks it.
+    const popup = window.open("about:blank", "hyper-connect", "width=520,height=680");
+    void run(async () => {
+      const { authorization_url } = await backend.authorizeGoogle(source.id as "gmail" | "drive");
+      if (popup) popup.location.href = authorization_url; else window.location.href = authorization_url;
+    }).then(() => { if (!popup) return; const watch = setInterval(() => { onChanged(); if (popup.closed) clearInterval(watch); }, 2500); });
+  };
+  const submitRamp = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    void run(async () => {
+      await backend.connectRamp({ client_id: String(data.get("client_id")), client_secret: String(data.get("client_secret")), environment: data.get("environment") === "production" ? "production" : "sandbox" });
+      setForm(false);
+    });
+  };
+  return <li className={styles.source} data-live={live || undefined}>
+    <div className={styles.row}><h4>{source.name}</h4><span className={styles.badge}>{connection ? STATUS[connection.status] ?? connection.status : unavailable ? "Not set up on the server" : "Not connected"}</span></div>
+    <p>{source.reads}. Read only.</p>
+    {connection?.last_synced_at ? <p className={styles.note}>Last read {when(connection.last_synced_at)}</p> : live && <p className={styles.note}>First read is starting…</p>}
+    {connection?.error && <p className={styles.note} role="status">{connection.error}</p>}
+    {form && <form className={styles.credentials} onSubmit={submitRamp}>
+      <input name="client_id" required autoComplete="off" placeholder="Ramp client ID" aria-label="Ramp client ID" />
+      <input name="client_secret" required type="password" autoComplete="off" placeholder="Ramp client secret" aria-label="Ramp client secret" />
+      <select name="environment" aria-label="Ramp environment" defaultValue="sandbox"><option value="sandbox">Sandbox</option><option value="production">Production</option></select>
+      <div className={styles.actions}><button type="submit" className={styles.action} disabled={busy}>{busy ? "Connecting…" : "Connect Ramp"}</button><button type="button" className={styles.textButton} onClick={() => setForm(false)}>Cancel</button></div>
+      <p className={styles.note}>Sent once to your server, stored encrypted, never shown again.</p>
+    </form>}
+    {!form && <div className={styles.actions}>
+      {live ? <><button type="button" className={styles.action} disabled={busy} onClick={() => void run(() => backend.syncConnection(connection!.id))}>{busy ? "Reading…" : "Read now"}</button>
+        <button type="button" className={styles.textButton} disabled={busy} onClick={() => void run(() => backend.disconnect(connection!.id))}>Disconnect</button></>
+        : <button type="button" className={styles.action} disabled={busy || unavailable} onClick={connect}>{busy ? "Opening…" : connection ? "Reconnect" : "Connect"}</button>}
+    </div>}
+    {note && <p className={styles.note} role="status">{note}</p>}
+  </li>;
+}
 
 export default function IdentityPrism({ active, onMotion }: Props) {
   const auth = useAuth();
@@ -16,8 +84,9 @@ export default function IdentityPrism({ active, onMotion }: Props) {
   const enabled = active && usable;
   const workspace = useBackend(backend.workspace, enabled, 15000);
   const controller = useBackend(backend.controller, enabled);
-  const tasks = useBackend(backend.tasks, enabled);
-  const connections = useBackend(backend.connections, enabled, 15000);
+  const connections = useBackend(backend.connections, enabled, 5000);
+  const providers = useBackend(backend.providers, enabled, 60000);
+  const sources = useBackend(() => backend.sources(1), enabled, 8000);
   const [facet, setFacet] = useState(0);
   const [wallet, setWallet] = useState<WalletState>(EMPTY_WALLET);
   const [walletNote, setWalletNote] = useState("");
@@ -42,10 +111,9 @@ export default function IdentityPrism({ active, onMotion }: Props) {
     try { await navigator.clipboard.writeText(wallet.address); setCopied(true); if (copyTimer.current) clearTimeout(copyTimer.current); copyTimer.current = setTimeout(() => setCopied(false), 1600); }
     catch { setWalletNote("Copy isn’t available in this browser. Select the address to copy it."); }
   }
-  const refresh = () => { workspace.refresh(); controller.refresh(); tasks.refresh(); connections.refresh(); };
-  const org = usable ? workspace.data?.organization : null;
+    const org = usable ? workspace.data?.organization : null;
   return <div className={styles.prism}>
-    <div className={styles.tabs} role="tablist" aria-label="Identity facets">
+    <div className={styles.tabs} role="tablist" aria-label="Access facets">
       {facets.map((label, index) => <button key={label} type="button" role="tab" id={`identity-facet-${index}`} aria-controls={`identity-panel-${index}`} aria-selected={facet === index} tabIndex={facet === index ? 0 : -1}
         onClick={() => setFacet(index)} onKeyDown={event => {
           if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
@@ -56,6 +124,26 @@ export default function IdentityPrism({ active, onMotion }: Props) {
     </div>
     <div className={styles.panel} role="tabpanel" id={`identity-panel-${facet}`} aria-labelledby={`identity-facet-${facet}`} tabIndex={0}>
       {facet === 0 && <>
+        <section>
+          <span className={styles.eyebrow}>Give your agent access</span>
+          <h3>Connect a source and it starts reading.</h3>
+          <p>You grant access once. From then on the agent reads new activity on its own, files what it finds as evidence, and opens cases without being asked.</p>
+          {!usable ? <><p>Sign in to connect your organization&rsquo;s sources.</p>{auth.ready && auth.mode === "clerk" && <button className={styles.action} type="button" onClick={() => void openSignIn()}>Sign in</button>}</>
+            : connections.error ? <p role="status">Sources couldn&rsquo;t be loaded. <button type="button" className={styles.textButton} onClick={connections.refresh}>Try again</button></p>
+            : <ul className={styles.sources}>{SOURCES.map(source => <SourceTile key={source.id} source={source}
+                info={providers.data?.providers.find(item => item.id === source.id)}
+                connection={connections.data?.connections.filter(item => item.provider === source.id).sort((x, y) => Number(LIVE.has(y.status)) - Number(LIVE.has(x.status)) || y.created_at - x.created_at)[0]}
+                onChanged={() => { connections.refresh(); sources.refresh(); }} />)}</ul>}
+          {usable && sources.data && <p className={styles.note}>{sources.data.sources.length ? `Latest evidence filed ${when(sources.data.sources[0].created_at)}: ${sources.data.sources[0].filename}.` : "No evidence filed yet."}</p>}
+        </section>
+      </>}
+      {facet === 1 && <>
+        <section><h3>Agent permissions</h3><p>The agent can investigate connected records and request your review.</p>
+          <ul className={styles.permissions}><li><i />Read connected evidence <span>Available</span></li><li><i />Investigate and prepare findings <span>Available</span></li><li><i />Request a human decision <span>Available</span></li><li data-unavailable><i />Move funds or sign transactions <span>Unavailable</span></li><li data-unavailable><i />Change access permissions <span>Unavailable</span></li></ul>
+          <p className={styles.note}>Wallet access is limited to your address and network.</p>
+        </section>
+      </>}
+      {facet === 2 && <>
         <section className={styles.identity}>
           <span className={styles.eyebrow}>Your workspace</span>
           <h3>{org?.name ?? (usable ? "Loading workspace…" : "Workspace")}</h3>
@@ -69,23 +157,6 @@ export default function IdentityPrism({ active, onMotion }: Props) {
           {wallet.address ? <><p className={styles.address}>{wallet.address}</p><p>{chainLabel(wallet.chain)}</p><div className={styles.actions}><button type="button" className={styles.action} onClick={() => void copyAddress()}>{copied ? "Copied" : "Copy address"}</button><button type="button" onClick={() => { session.current?.hide(); setWallet(EMPTY_WALLET); setCopied(false); }} className={styles.textButton}>Hide address</button></div><p className={styles.note}>Address shared with this page. Manage site permissions in your wallet.</p></>
             : <><h4>No wallet connected</h4><p>Optional. Connect to view your address and network.</p><button type="button" className={styles.action} disabled={wallet.pending} onClick={connect}>{wallet.pending ? "Waiting for your wallet…" : "Connect wallet"}</button></>}
           {(wallet.error || walletNote) && <p className={styles.note} role="status">{wallet.error || walletNote}</p>}
-        </section>
-      </>}
-      {facet === 1 && <>
-        <section><h3>Agent permissions</h3><p>The agent can investigate connected records and request your review.</p>
-          <ul className={styles.permissions}><li><i />Read connected evidence <span>Available</span></li><li><i />Investigate and prepare findings <span>Available</span></li><li><i />Request a human decision <span>Available</span></li><li data-unavailable><i />Move funds or sign transactions <span>Unavailable</span></li><li data-unavailable><i />Change access permissions <span>Unavailable</span></li></ul>
-          <p className={styles.note}>Wallet access is limited to your address and network.</p>
-        </section>
-        <section><div className={styles.row}><span className={styles.eyebrow}>Connected sources</span>{usable && <button type="button" className={styles.textButton} onClick={connections.refresh}>Refresh</button>}</div>
-          {!usable ? <p>Sign in to see your organization’s connections.</p> : connections.error ? <p role="status">Connections couldn’t be loaded. Try refreshing.</p> : !connections.data ? <p>Loading connected sources…</p> : connections.data.connections.length ? <ul className={styles.connections}>{connections.data.connections.map(connection => <li key={connection.id}><div><strong>{connection.label}</strong><span>{connection.provider} · {connection.status.replaceAll("_", " ")}</span></div><small>{connection.last_synced_at ? `Synced ${when(connection.last_synced_at)}` : "Not synced yet"}</small></li>)}</ul> : <p>No sources connected yet.</p>}
-          {usable && connections.data?.has_more && <p className={styles.note}>Showing the first 50 connections.</p>}
-        </section>
-      </>}
-      {facet === 2 && <>
-        <section><div className={styles.row}><h3>Agent activity</h3>{usable && <button type="button" className={styles.textButton} onClick={refresh}>Refresh</button>}</div>
-          {!usable ? <p>Sign in to see agent activity in your workspace.</p> : <><p>{controller.error ? "Controller status couldn’t be loaded." : controller.data ? `Controller ${controller.data.enabled ? "enabled" : "paused"}. Status: ${controller.data.status.replaceAll("_", " ")}.` : "Checking controller status…"}</p>
-            {tasks.error ? <p role="status">Agent tasks couldn’t be loaded. Try refreshing.</p> : !tasks.data ? <p>Loading tasks…</p> : !tasks.data.tasks.length ? <p className={styles.empty}>No agent tasks recorded yet.</p> : <ol className={styles.tasks}>{tasks.data.tasks.map(task => <li key={task.id}><span className={styles.badge}>{task.status.replaceAll("_", " ")}</span><strong>{task.objective}</strong>{task.result?.summary && <p>{task.result.summary}</p>}{task.error && <p role="status">{task.error}</p>}</li>)}</ol>}
-            {tasks.data?.has_more && <p className={styles.note}>Showing the first 50 tasks.</p>}</>}
         </section>
       </>}
     </div>
