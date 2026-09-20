@@ -270,7 +270,9 @@ export default function OnboardingWorkspace() {
   // replace(), not push(), so Back from the world returns to the landing page rather than to
   // a completed onboarding that would immediately hand off again.
   useEffect(() => {
-    if (onOnboarding && covered) window.history.replaceState(window.history.state, "", WORLD_PATH);
+    // Passing Next's private history state marks this as an internal update and skips
+    // usePathname synchronization, leaving the CFO unmounted behind a /world URL.
+    if (onOnboarding && covered) window.history.replaceState(null, "", WORLD_PATH);
   }, [onOnboarding, covered]);
 
   // A returning visitor who lands on /onboarding with it already done belongs in the world.
