@@ -10,6 +10,7 @@ import { createAgentAura, type AgentAura } from "./agent-aura";
 import { getWorldVoiceVisual, subscribeWorldVoice } from "@/lib/command/world-voice";
 import { configureAtriumTransmission } from "./transmission";
 import { layoutAtriumStations } from "./layout";
+import { createFocusRig } from "./focus";
 import type { AtriumStation } from "./configuration";
 
 export type AtriumManifest = {
@@ -22,7 +23,7 @@ export type AtriumManifest = {
 };
 export type StationBounds = { station: AtriumStation; depth: number; left: number; top: number; width: number; height: number; labelLeft: number; labelTop: number; arrowTop: number; fontWidth: number };
 export type AgentBounds = { left: number; top: number; width: number; height: number };
-export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; dispose(): void };
+export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; /** Fly in on one relic, or home with null. `visibleShare` is how much of the frame width is on screen. */ setFocus(id: string | null, visibleShare?: number): void; dispose(): void };
 
 export function isAtriumManifest(value: unknown): value is AtriumManifest {
   if (!value || typeof value !== "object") return false;
@@ -60,6 +61,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   camera.position.copy(homePosition);
   camera.lookAt(homeTarget);
   camera.updateMatrixWorld();
+  const focusRig = createFocusRig(camera, homePosition, homeTarget);
   scene.add(new AmbientLight(0xffe9dd, .025), new HemisphereLight(0xf2ecff, 0x9f7769, .14));
   const sun = new DirectionalLight(0xffe6d5, 3.1);
   sun.target.position.set(1, 0, -3);
@@ -206,11 +208,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     }
     orbit.rotation.y = still ? 0 : Math.sin(elapsed * .23) * .14;
     orbit.rotation.z = still ? 0 : Math.sin(elapsed * .33) * .018;
-    const damping = still ? 1 : 1 - Math.exp(-delta * 4);
-    camera.position.x += (homePosition.x + (still ? 0 : roomPointer.x * .28) - camera.position.x) * damping;
-    camera.position.y += (homePosition.y + (still ? 0 : -roomPointer.y * .08) - camera.position.y) * damping;
-    camera.lookAt(homeTarget);
-    camera.updateMatrixWorld();
+    focusRig.update(delta, roomPointer, still);
+    canvas.dataset.focusProgress = focusRig.progress.toFixed(3);
     pearlLight.intensity = .65 + (still ? 0 : Math.sin(elapsed * .8) * .09);
   }
 
@@ -405,6 +404,15 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       if (paused) { animateRelics(0, true); render(); }
     },
     setPressed(id) { pressed = id; if (paused) render(); },
+    setFocus(id, visibleShare = 1) {
+      const instance = id ? instances.find(entry => entry.station.id === id) : null;
+      if (!instance) { focusRig.aim(null); if (paused) { animateRoom(0, true); render(); } return; }
+      const box = new Box3().setFromObject(instance.icon);
+      const center = box.getCenter(new Vector3());
+      // Frame the relic with room to breathe above its plinth, not just its own tight bounds.
+      focusRig.aim({ center, height: Math.max(box.getSize(new Vector3()).y * 1.55, 1.25 * instance.scale) }, visibleShare);
+      if (paused) { animateRoom(0, true); render(); }
+    },
     setPointer(x, y) {
       if (paused || !Number.isFinite(x) || !Number.isFinite(y)) return;
       roomPointer.set(Math.max(-1, Math.min(1, x)), Math.max(-1, Math.min(1, y)));

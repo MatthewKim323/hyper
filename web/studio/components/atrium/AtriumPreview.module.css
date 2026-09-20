@@ -158,3 +158,14 @@
 
 /* Preloaded but not shown yet. Keeps its layout size so the renderer sizes and compiles for real. */
 .atrium[data-warm] { visibility: hidden; pointer-events: none; }
+
+/* While a relic is in focus the whole room is one quiet target: click it to fly back out. */
+.leave {
+  position: absolute;
+  inset: 0;
+  z-index: 900;
+  border: 0;
+  background: none;
+  cursor: zoom-out;
+  pointer-events: auto;
+}

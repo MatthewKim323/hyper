@@ -226,3 +226,15 @@
 @media (prefers-reduced-motion: reduce) {
   .cmd-card, .cmd-mic[aria-pressed="true"] { animation: none; }
 }
+
+/* A focused relic gives the right side to its panel, so charts stack on the left instead. */
+body[data-atrium-focus]:not([data-atrium-focus=""]) .cmd-cards {
+  right: auto;
+  left: 22px;
+  bottom: 78px;
+}
+
+body[data-atrium-focus]:not([data-atrium-focus=""]) .cmd-bar {
+  left: calc(190px + (53vw - 190px) / 2);
+  max-width: calc(53vw - 230px);
+}

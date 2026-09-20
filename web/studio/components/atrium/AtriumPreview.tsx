@@ -16,6 +16,10 @@ const staticSnapshot = () => true;
 const fineHover = (event: ReactPointerEvent) => event.pointerType !== "touch" && matchMedia("(hover: hover) and (pointer: fine)").matches;
 const clampPointer = (value: number) => Math.max(-1, Math.min(1, value));
 
+// Sections that open beside their relic instead of covering the room.
+const FOCUS_SECTIONS = new Set(["cases", "evidence", "activity", "review"]);
+const goHome = () => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "overview" } }));
+
 function openStation(station: AtriumStation) {
   if (station.section) window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: station.section } }));
   window.dispatchEvent(new CustomEvent("hyper:station-select", { detail: { station } }));
@@ -38,6 +42,8 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
   const [bounds, setBounds] = useState<StationBounds[]>([]);
   const [agentBounds, setAgentBounds] = useState<AgentBounds | null>(null);
   const [covered, setCovered] = useState(false);
+  // The station whose workspace is open. The camera flies to it; nothing covers the room.
+  const [focus, setFocus] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const reducedMotion = useSyncExternalStore(subscribeMotion, motionSnapshot, staticSnapshot);
   const motionRef = useRef(reducedMotion);
@@ -91,7 +97,9 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     let active = true;
     let instance: AtriumRenderer | null = null;
     const update = () => {
-      setCovered(["timeline", "benchmarks"].includes(document.body.dataset.workspaceSection ?? "overview"));
+      const section = document.body.dataset.workspaceSection ?? "overview";
+      setCovered(["timeline", "benchmarks"].includes(section));
+      setFocus(FOCUS_SECTIONS.has(section) ? stationsRef.current.find(station => station.section === section)?.id ?? null : null);
       renderer.current?.setHover(null);
       renderer.current?.setPressed(null);
     };
@@ -145,6 +153,24 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
       window.removeEventListener("hyper:section-change", update);
     };
   }, []);
+
+  useEffect(() => {
+    const element = scroller.current;
+    const frame = plane.current;
+    // Only the part of the frame on screen counts when placing the relic left of the panel.
+    const share = element && frame ? Math.min(1, element.clientWidth / Math.max(frame.clientWidth, 1)) : 1;
+    renderer.current?.setFocus(focus, share);
+    document.body.dataset.atriumFocus = focus ?? "";
+    if (!focus) return;
+    element?.scrollTo({ left: (element.scrollWidth - element.clientWidth) / 2, behavior: reducedMotion ? "auto" : "smooth" });
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !(event.target as HTMLElement | null)?.closest("input, textarea")) goHome();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focus, reducedMotion, bounds.length]);
+
+  useEffect(() => () => { delete document.body.dataset.atriumFocus; }, []);
 
   useEffect(() => {
     const element = scroller.current;
@@ -225,7 +251,8 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
           style={{ left: `${agentBounds.left * 100}%`, top: `${agentBounds.top * 100}%`, width: `${agentBounds.width * 100}%`, height: `${agentBounds.height * 100}%` }}
           onClick={event => { event.stopPropagation(); window.dispatchEvent(new Event("hyper:agent-toggle")); }}
         />}
-        {!covered && !failed && bounds.map(bound => <button
+        {focus && !covered && <button type="button" className={styles.leave} data-cursor="hide" aria-label="Back to the atrium" onClick={goHome} />}
+        {!covered && !failed && !focus && bounds.map(bound => <button
           type="button"
           key={bound.station.id}
           className={styles.hotspot}
@@ -253,7 +280,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
           <span className={styles.arrow} aria-hidden="true" style={{ left: `${bound.labelLeft * 100}%`, top: `${bound.arrowTop * 100}%` }}><span className={styles.arrowGlyph}>→</span></span>
         </button>)}
       </div>
-      <span className={styles.keyboardHint}>← → Explore the room</span>
+      {!focus && <span className={styles.keyboardHint}>← → Explore the room</span>}
     </div>
     {failed && !covered && !warm && <nav className={styles.fallback} aria-label="Workspace navigation">
       <span className={styles.fallbackNote} role="status">The 3D view is unavailable. Your workspaces are still here.</span>
