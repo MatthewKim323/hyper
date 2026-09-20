@@ -276,8 +276,13 @@ class VoiceSession:
             raise
         except ServiceError as exc:
             await self.finish_tool(call, {'error':str(exc)})
-        except (ValueError, KeyError, TypeError, LookupError):
-            await self.finish_tool(call, {'error':'Invalid tool arguments or missing dataset/source. Call list_datasets and correct the request.'})
+        except (ValueError, KeyError, TypeError, LookupError) as exc:
+            message = 'Invalid tool arguments or missing dataset/source. Call list_datasets and correct the request.'
+            # Our own validation messages say what to change ("Too many groups; narrow the query"), so the
+            # model can correct itself instead of retrying blind. Schema errors stay generic.
+            if type(exc) is ValueError and 0 < len(str(exc)) <= 300:
+                message = str(exc)
+            await self.finish_tool(call, {'error':message})
         except PermissionError:
             raise
         except Exception:

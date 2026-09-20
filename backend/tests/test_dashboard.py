@@ -214,3 +214,15 @@ async def test_voice_tool_reads_the_held_pointer(client):
     assert result['name']=='get_pointer_context' and result['result']['referents'][0]['label']=='Records by dataset'
     # Pointing is never written to the saved conversation state.
     assert 'pointer' not in main.store.get(state['id'],'alice')
+
+async def test_tool_validation_reason_reaches_the_model(client,monkeypatch):
+    state=main.store.dashboard('alice');events=[]
+    async def emit(event):events.append(event)
+    async def send(event):pass
+    bridge=voice.VoiceSession(state,main.store,emit);bridge.send=send
+    def refuse(*args,**kwargs):raise ValueError('Too many groups; narrow the query rather than charting a truncated result')
+    monkeypatch.setattr(voice.data_tools,'execute',refuse)
+    await bridge.tool({'id':'c','name':'compose_financial_artifact','arguments':'{}'},0)
+    assert [e for e in events if e.get('type')=='tool.result'][-1]['result']=={'error':'Too many groups; narrow the query rather than charting a truncated result'}
+    await bridge.tool({'id':'n','name':'navigate_section','arguments':json.dumps({'section':'payments'})},0)
+    assert 'Invalid tool arguments' in [e for e in events if e.get('type')=='tool.result'][-1]['result']['error']

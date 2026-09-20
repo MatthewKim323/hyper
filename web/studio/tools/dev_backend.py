@@ -135,7 +135,18 @@ CARDS = {
 }
 
 
+_real_client = httpx.Client
+
+# DEV_BACKEND_REAL_EVALUATOR=1 lets chart composition reach the real evaluator service (needs its keys),
+# so the point-and-speak layer can be exercised end to end without Clerk.
+REAL_EVALUATOR = os.environ.get("DEV_BACKEND_REAL_EVALUATOR") == "1"
+
+
 def evaluator(request: httpx.Request) -> httpx.Response:
+    if REAL_EVALUATOR and request.url.path.endswith("/artifact-compose"):
+        with _real_client(timeout=10) as client:
+            upstream = client.post(str(request.url), headers={"Authorization": request.headers.get("Authorization", "")}, content=request.content)
+        return httpx.Response(upstream.status_code, content=upstream.content, headers={"Content-Type": "application/json"})
     if not request.url.path.endswith("/concern-card"):
         return httpx.Response(503, json={"error": "no model behind the keyless dev backend"})
     body = json.loads(request.content)
@@ -150,7 +161,6 @@ def evaluator(request: httpx.Request) -> httpx.Response:
     })
 
 
-_real_client = httpx.Client
 httpx.Client = lambda **kw: _real_client(transport=httpx.MockTransport(evaluator), **{k: v for k, v in kw.items() if k != "transport"})
 
 

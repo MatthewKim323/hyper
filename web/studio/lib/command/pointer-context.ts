@@ -89,16 +89,17 @@ export class PointerContext {
       const one = this.describe(last.x, last.y);
       return { ...(one?.rect ?? { x: last.x, y: last.y, width: 0, height: 0 }), referents: one ? [one] : [] };
     }
-    const seen = new Set<Element>();
+    // Everything the sweep touched counts, not only items whose center fell inside it. The item under
+    // the pointer when the sweep ended goes first: it is the most likely meaning of "this".
     const referents: Referent[] = [];
+    const under = this.describe(last.x, last.y);
+    if (under) referents.push(under);
     for (const el of document.querySelectorAll<HTMLElement>("[data-pointable]")) {
       const r = el.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      if (r.width && cx >= box.x && cx <= box.x + box.width && cy >= box.y && cy <= box.y + box.height && !seen.has(el)) {
-        seen.add(el);
-        referents.push(describeElement(el));
-      }
+      const touches = r.width > 0 && r.left < box.x + box.width && r.right > box.x && r.top < box.y + box.height && r.bottom > box.y;
+      if (!touches) continue;
+      const next = describeElement(el);
+      if (!referents.some((known) => known.kind === next.kind && known.id === next.id && known.label === next.label)) referents.push(next);
     }
     return { ...box, referents };
   }
