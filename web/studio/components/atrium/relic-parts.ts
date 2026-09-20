@@ -2,10 +2,12 @@ import {
   Box3, BufferAttribute, BufferGeometry, DoubleSide, Group, Material, Matrix4,
   Mesh, Object3D, Quaternion, Vector3,
 } from "three";
+import type { RelicActivityStatus } from "./relic-activity";
 
 export type RelicMotionContext = {
   hover?: number;
   busy?: boolean;
+  activity?: RelicActivityStatus;
   selectedIndex?: number;
   /** Measured values normalized to 0..1. Null means no result, never a fabricated score. */
   values?: readonly (number | null)[];
@@ -59,7 +61,7 @@ export function createRelicParts(icon: Group, template = "") {
   const rotations = new Quaternion();
   const targetRotation = new Quaternion();
   let disposed = false;
-  let open = 0, velocity = 0, hover = 0;
+  let open = 0, velocity = 0, hover = 0, work = 0, attention = 0;
   let updatePose: (elapsed: number, still: boolean, context: RelicMotionContext) => void;
 
   function body(group: Group, box: Box3): Body {
@@ -357,6 +359,26 @@ export function createRelicParts(icon: Group, template = "") {
       }
       resetTargets();
       updatePose(elapsed, still, context);
+      work += ((context.busy ? 1 : 0) - work) * (still ? 1 : 1 - Math.exp(-dt * 8));
+      attention += ((context.activity === "attention" ? 1 : 0) - attention) * (still ? 1 : 1 - Math.exp(-dt * 8));
+      // Strong silhouettes at room scale. Focused data stays much steadier for reading.
+      if (!still) bodies.forEach((part, index) => {
+        const amount = work * (1 - open * .75);
+        const wave = elapsed * 2.05 - index * .9;
+        if (template === "accounts-payable" || template === "audit-evidence") {
+          part.position.y += reach * .17 * Math.sin(wave) * amount;
+          part.position.z += reach * .21 * Math.cos(wave) * amount;
+          part.quaternion.multiply(rotations.setFromAxisAngle(Y, Math.sin(wave) * .22 * amount));
+        } else if (template === "training-arena" || template === "crystal-stack") {
+          part.position.addScaledVector(part.center.clone().sub(center), amount * (.46 + Math.sin(wave) * .18));
+          part.position.y += reach * .18 * Math.sin(wave) * amount;
+          part.quaternion.multiply(rotations.setFromAxisAngle(Y, Math.sin(wave) * .45 * amount));
+        } else if (template === "approvals") {
+          const sign = index % 2 ? 1 : -1;
+          part.position.y += sign * reach * (.11 * Math.sin(wave) * amount + .075 * attention * Math.sin(elapsed * 1.2));
+          part.quaternion.multiply(rotations.setFromAxisAngle(Y, sign * (.42 * amount * Math.sin(wave) + .28 * attention * Math.sin(elapsed * 1.2))));
+        }
+      });
       // One damped follow makes page selection and live metric changes interruptible too.
       const follow = still ? 1 : 1 - Math.exp(-dt * 22);
       for (const part of bodies) {

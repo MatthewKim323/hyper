@@ -8,6 +8,8 @@ import RelicOrbit, { type OrbitHandle } from "./RelicOrbit";
 import RelicExperience, { EXPERIENCE_SECTIONS, type ExperienceHandle, type RelicMotionState } from "./RelicExperience";
 import { setWarmFrameProvider } from "./warm-frame";
 import styles from "./AtriumPreview.module.css";
+import { useRelicActivity } from "./useRelicActivity";
+import type { RelicActivity, RelicActivityMap, RelicActivitySection } from "./relic-activity";
 
 const motionSnapshot = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const subscribeMotion = (update: () => void) => {
@@ -33,7 +35,7 @@ function openStation(station: AtriumStation) {
  * without showing it or taking the gallery's renderer, so revealing it later costs nothing.
  * The same instance is kept when `warm` turns off; nothing reloads.
  */
-export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
+export default function AtriumPreview({ warm = false, live = true }: { warm?: boolean; live?: boolean }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const plane = useRef<HTMLDivElement>(null);
@@ -49,6 +51,20 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
   const drag = useRef<{ pointerId: number; x: number; scrollLeft: number } | null>(null);
   const stations = useSyncExternalStore(subscribeAtriumStations, getAtriumStations, getDefaultAtriumStations);
   const stationsRef = useRef(stations);
+  const { activities } = useRelicActivity(!warm && live);
+  const [preview, setPreview] = useState<Partial<RelicActivityMap> | null>(null);
+  const activityStates = preview ?? activities;
+  const activityRef = useRef(activityStates);
+  useEffect(() => {
+    activityRef.current = activityStates;
+    stations.forEach(station => renderer.current?.setRelicActivity(station.id, activityStates[station.section as RelicActivitySection] ?? { status: "idle", label: "" }));
+  }, [activityStates, stations]);
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development" || !document.querySelector("[data-atrium-dev]")) return;
+    const showPreview = (event: Event) => setPreview((event as CustomEvent<{ activities: Partial<RelicActivityMap> | null }>).detail.activities);
+    window.addEventListener("hyper:relic-activity-preview", showPreview);
+    return () => window.removeEventListener("hyper:relic-activity-preview", showPreview);
+  }, []);
   const [manifest, setManifest] = useState<AtriumManifest | null>(null);
   const [bounds, setBounds] = useState<StationBounds[]>([]);
   const [agentBounds, setAgentBounds] = useState<AgentBounds | null>(null);
@@ -180,6 +196,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
         });
         instance.setPaused(motionRef.current);
         await instance.setStations(stationsRef.current);
+        stationsRef.current.forEach(station => instance?.setRelicActivity(station.id, activityRef.current[station.section as RelicActivitySection] ?? { status: "idle", label: "" }));
         if (active && !controller.signal.aborted && renderer.current === instance) {
           const section = document.body.dataset.workspaceSection ?? "overview";
           const selected = FOCUS_SECTIONS.has(section) ? stationsRef.current.find(station => station.section === section)?.id ?? null : null;
@@ -317,7 +334,8 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
           data-station-id={bound.station.id}
           className={styles.hotspot}
           data-cursor="hide"
-          aria-label={`Open ${bound.station.label}`}
+          aria-label={`Open ${bound.station.label}${activityStates[bound.station.section as RelicActivitySection]?.status !== "idle" && activityStates[bound.station.section as RelicActivitySection]?.label ? `, ${activityStates[bound.station.section as RelicActivitySection]?.label}` : ""}`}
+          data-activity={activityStates[bound.station.section as RelicActivitySection]?.status ?? "idle"}
           style={{ zIndex: 1000 - Math.round(bound.depth * 10), left: `${bound.left * 100}%`, top: `${bound.top * 100}%`, width: `${bound.width * 100}%`, height: `${bound.height * 100}%`, "--station-font": `${bound.fontWidth * 100}cqw` } as CSSProperties}
           onPointerEnter={event => hoverStation(event, bound.station.id)}
           onPointerMove={event => hoverStation(event, bound.station.id)}
@@ -336,7 +354,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
           onBlur={() => { renderer.current?.setHover(null); renderer.current?.setPressed(null); }}
           onClick={event => { event.stopPropagation(); openStation(bound.station); }}
         >
-          <span className={styles.label} style={{ left: `${bound.labelLeft * 100}%`, top: `${bound.labelTop * 100}%` }}>{bound.station.label === "Accounts Payable" ? <>Accounts<br />Payable</> : bound.station.label}</span>
+          <span className={styles.label} style={{ left: `${bound.labelLeft * 100}%`, top: `${bound.labelTop * 100}%` }}>{bound.station.label === "Accounts Payable" ? <>Accounts<br />Payable</> : bound.station.label}<RelicStatus activity={activityStates[bound.station.section as RelicActivitySection]} /></span>
           <span className={styles.arrow} aria-hidden="true" style={{ left: `${bound.labelLeft * 100}%`, top: `${bound.arrowTop * 100}%` }}><span className={styles.arrowGlyph}>→</span></span>
         </button>)}
       </div>
@@ -348,4 +366,13 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
       <div>{stations.map(station => <button type="button" key={station.id} data-cursor="hide" onClick={() => openStation(station)}>{station.label} <span aria-hidden="true">↗</span></button>)}</div>
     </nav>}
   </>;
+}
+
+function RelicStatus({ activity }: { activity?: RelicActivity }) {
+  if (!activity || activity.status === "idle") return null;
+  const labels = { working: "Working", waiting: "Waiting", attention: "Needs you", complete: "Complete", error: "Needs attention" };
+  return <span className={styles.status} data-status={activity.status}>
+    <i aria-hidden="true" />{activity.label.length <= 22 ? activity.label : labels[activity.status]}
+    {activity.count && activity.count > 1 ? ` · ${activity.count}` : ""}
+  </span>;
 }

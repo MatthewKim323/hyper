@@ -1,0 +1,29 @@
+.preview {
+  position: fixed;
+  z-index: 12000;
+  left: 18px;
+  top: 18px;
+  width: 352px;
+  max-width: calc(100vw - 36px);
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, .44);
+  border-radius: 16px;
+  background: rgba(28, 30, 34, .88);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .16);
+  color: #fff;
+  font: 12px/1.4 system-ui, sans-serif;
+}
+
+.preview strong { display: block; font-size: 12px; font-weight: 600; }
+.preview p { margin: 5px 0 11px; color: rgba(255, 255, 255, .65); font-size: 11px; }
+.modes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.preview button { border: 1px solid rgba(255, 255, 255, .2); border-radius: 8px; padding: 7px 4px; background: transparent; color: #fff; font: inherit; cursor: pointer; }
+.preview button[aria-pressed="true"] { background: #f4e4ed; color: #251d24; border-color: #f4e4ed; }
+.preview button:focus-visible { outline: 2px solid #f4e4ed; outline-offset: 3px; }
+.sequence { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.sequence button { flex: none; padding-inline: 10px; }
+.sequence output { color: rgba(255, 255, 255, .7); font: 10px/1.4 ui-monospace, monospace; }
+
+@media (max-width: 740px) {
+  .preview { top: 18px; bottom: auto; }
+}
