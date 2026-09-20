@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { getAtriumStations, getDefaultAtriumStations, subscribeAtriumStations, type AtriumStation } from "./configuration";
-import type { AtriumManifest, AtriumRenderer, StationBounds } from "./scene";
+import type { AgentBounds, AtriumManifest, AtriumRenderer, StationBounds } from "./scene";
 import { store } from "@/lib/engine/core/store";
 import styles from "./AtriumPreview.module.css";
 
@@ -36,6 +36,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
   const stationsRef = useRef(stations);
   const [manifest, setManifest] = useState<AtriumManifest | null>(null);
   const [bounds, setBounds] = useState<StationBounds[]>([]);
+  const [agentBounds, setAgentBounds] = useState<AgentBounds | null>(null);
   const [covered, setCovered] = useState(false);
   const [failed, setFailed] = useState(false);
   const reducedMotion = useSyncExternalStore(subscribeMotion, motionSnapshot, staticSnapshot);
@@ -116,7 +117,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
         if (!active) return;
         if (!isAtriumManifest(value)) throw new Error("Atrium manifest invalid");
         setManifest(value);
-        instance = await createAtriumRenderer(element, value, next => { if (active) setBounds(next); }, controller.signal);
+        instance = await createAtriumRenderer(element, value, next => { if (active) setBounds(next); }, controller.signal, next => { if (active) setAgentBounds(next); });
         if (!active || controller.signal.aborted) { instance.dispose(); return; }
         renderer.current = instance;
         instance.setPaused(motionRef.current);
@@ -219,6 +220,11 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     >
       <div ref={plane} className={styles.plane} style={planeStyle}>
         <canvas ref={canvas} className={styles.water} aria-hidden="true" />
+        {!covered && !failed && agentBounds && <button
+          type="button" className={styles.agent} data-cursor="hide" aria-label="Talk to Hyper" title="Talk to Hyper (V)"
+          style={{ left: `${agentBounds.left * 100}%`, top: `${agentBounds.top * 100}%`, width: `${agentBounds.width * 100}%`, height: `${agentBounds.height * 100}%` }}
+          onClick={event => { event.stopPropagation(); window.dispatchEvent(new Event("hyper:agent-toggle")); }}
+        />}
         {!covered && !failed && bounds.map(bound => <button
           type="button"
           key={bound.station.id}

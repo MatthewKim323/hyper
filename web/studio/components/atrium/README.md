@@ -16,6 +16,8 @@ The environment retains the full 500,000-triangle botanical garden and uses Drac
 
 Relics have a few slow orbiting glints at rest. Hover strengthens these glints and reveals a thin warm base arc. These are depth-tested geometry in `ethereal.ts`, sized from each relic's actual bounds, and freeze under reduced motion.
 
+The central pearl is the world voice agent. `agent-aura.ts` adds continuous liquid surface displacement, matching shadow normals, and two thin circulating water currents. `world-voice.ts` reads RMS from the existing voice client's actual playback stream, with attack/release smoothing, and supplies idle, listening, thinking, connecting, speaking, and error states. Network speech events without audible playback do not invent talking motion. Clicking the pearl or pressing V toggles the same world-agent microphone. Audio analysis never connects microphone sound to speakers and never opens its own microphone. The development route includes explicitly labeled, muted synthetic audio controls for verifying motion without microphone permission or a backend conversation.
+
 Onboarding owns configuration. No conversation analysis or backend-generated station decisions are simulated. Call the typed entry point before completing onboarding:
 
 ```ts

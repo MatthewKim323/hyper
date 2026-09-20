@@ -37,6 +37,19 @@
 .water { opacity: 0; }
 .water[data-ready="true"] { opacity: 1; }
 
+.agent {
+  position: absolute;
+  z-index: 650;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.agent:focus { outline: none; }
+.agent:focus-visible { outline: 1px solid #715954; outline-offset: 8px; }
+
 .hotspot {
   position: absolute;
   pointer-events: auto;

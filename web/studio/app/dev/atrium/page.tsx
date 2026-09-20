@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import AtriumPreview from "@/components/atrium/AtriumPreview";
+import VoiceMotionPreview from "./VoiceMotionPreview";
 
 // Visual development only. This renders public scene assets and no workspace data.
 export default function AtriumDevelopmentPage() {
@@ -10,5 +11,6 @@ export default function AtriumDevelopmentPage() {
       body:has([data-atrium-dev]), body:has([data-atrium-dev]) * { cursor: auto; }
     `}</style>
     <AtriumPreview />
+    <VoiceMotionPreview />
   </main>;
 }

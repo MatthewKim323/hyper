@@ -6,6 +6,9 @@ import { createAtriumSunlight } from "./sunlight";
 import { createAtriumPipeline } from "./rendering";
 import { createEtherealInteraction } from "./ethereal";
 import { createAtriumSideLight, type AtriumSideLightMetadata } from "./side-light";
+import { createAgentAura, type AgentAura } from "./agent-aura";
+import { getWorldVoiceVisual, subscribeWorldVoice } from "@/lib/command/world-voice";
+import { configureAtriumTransmission } from "./transmission";
 import { layoutAtriumStations } from "./layout";
 import type { AtriumStation } from "./configuration";
 
@@ -18,6 +21,7 @@ export type AtriumManifest = {
   templates: { id: string; url: string; width?: number; height?: number; labelHeight?: number; labelSize?: number; arrowHeight?: number }[];
 };
 export type StationBounds = { station: AtriumStation; depth: number; left: number; top: number; width: number; height: number; labelLeft: number; labelTop: number; arrowTop: number; fontWidth: number };
+export type AgentBounds = { left: number; top: number; width: number; height: number };
 export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; dispose(): void };
 
 export function isAtriumManifest(value: unknown): value is AtriumManifest {
@@ -30,8 +34,14 @@ export function isAtriumManifest(value: unknown): value is AtriumManifest {
 const fromBlender = ([x, y, z]: [number, number, number]) => new Vector3(x, z, -y);
 const objectName = (object: Object3D) => String(object.userData.name ?? object.name).replaceAll("_", " ");
 
-export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: AtriumManifest, onBounds: (bounds: StationBounds[]) => void, signal?: AbortSignal): Promise<AtriumRenderer> {
+export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: AtriumManifest, onBounds: (bounds: StationBounds[]) => void, signal?: AbortSignal, onAgentBounds?: (bounds: AgentBounds) => void): Promise<AtriumRenderer> {
   const renderer = new WebGLRenderer({ canvas, alpha: false, antialias: false, powerPreference: "high-performance" });
+  const restoreTransmission = configureAtriumTransmission(renderer, matchMedia("(pointer: coarse)").matches ? 512 : 1024);
+  if (process.env.NODE_ENV === "development") {
+    const gl = renderer.getContext();
+    const debug = gl.getExtension("WEBGL_debug_renderer_info");
+    canvas.dataset.gpu = String(gl.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+  }
   // Keep scene and reflection passes linear; the composer owns the display transform.
   renderer.outputEncoding = LinearEncoding;
   renderer.toneMapping = NoToneMapping;
@@ -88,6 +98,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const retiredCovers: Object3D[] = [];
   const loader = createAtriumGeometryLoader();
   let room: Object3D | null = null;
+  let agentPearl: Mesh | null = null;
+  let agentAura: AgentAura | null = null;
   let disposed = false;
   let ready = false;
   let paused = false;
@@ -96,6 +108,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   let previous = 0;
   let elapsed = 0;
   let renderedFrames = 0;
+  let frameSampleStarted = 0;
   let generation = 0;
   const instanceMaterials = new Set<Material>();
   const sceneClock = { value: 0 };
@@ -202,6 +215,14 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
 
   function bounds() {
     if (disposed) return;
+    if (agentPearl && onAgentBounds) {
+      const box = new Box3().setFromObject(agentPearl);
+      const points: Vector3[] = [];
+      for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) points.push(new Vector3(x, y, z).project(camera));
+      const left = Math.min(...points.map(point => (point.x + 1) / 2));
+      const top = Math.min(...points.map(point => (1 - point.y) / 2));
+      onAgentBounds({ left, top, width: Math.max(...points.map(point => (point.x + 1) / 2)) - left, height: Math.max(...points.map(point => (1 - point.y) / 2)) - top });
+    }
     onBounds(instances.map(({ station, model, scale, labelHeight, labelSize, arrowHeight }) => {
       const box = new Box3().setFromObject(model);
       const points = [];
@@ -247,7 +268,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   function draw(now: number) {
     if (disposed || !ready || paused || document.hidden || overlay) return;
     frame = requestAnimationFrame(draw);
-    if (previous && now - previous < 1000 / 45) return;
+    if (previous && now - previous < 1000 / 60 - .5) return;
     const delta = previous ? Math.min((now - previous) / 1000, 0.1) : 1 / 30;
     elapsed += delta;
     previous = now;
@@ -259,13 +280,22 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     ethereal.update(elapsed, delta);
     animateRelics(delta);
     animateRoom(delta);
+    const voice = getWorldVoiceVisual();
+    agentAura?.update(elapsed, delta, voice);
     if (++renderedFrames % 4 === 0) bounds();
-    if (renderedFrames % 30 === 0) canvas.dataset.frame = String(renderedFrames);
+    if (renderedFrames % 30 === 0) {
+      canvas.dataset.frame = String(renderedFrames);
+      canvas.dataset.agentState = voice.state;
+      canvas.dataset.agentLevel = voice.level.toFixed(3);
+      if (frameSampleStarted) canvas.dataset.fps = (30000 / (now - frameSampleStarted)).toFixed(1);
+      frameSampleStarted = now;
+    }
     render();
   }
   function resume() {
     cancelAnimationFrame(frame);
     previous = 0;
+    frameSampleStarted = 0;
     if (!disposed && ready && !paused && !document.hidden && !overlay) frame = requestAnimationFrame(draw);
     else render();
   }
@@ -277,6 +307,11 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   if (canvas.parentElement) observer.observe(canvas.parentElement);
   document.addEventListener("visibilitychange", resume);
   window.addEventListener("hyper:section-change", sectionChanged);
+  const unsubscribeVoice = subscribeWorldVoice(() => {
+    if (disposed || !paused || !ready || document.hidden || overlay) return;
+    agentAura?.update(elapsed, 0, getWorldVoiceVisual(), true);
+    render();
+  });
 
   function disposeModel(model: Object3D) {
     model.traverse(object => {
@@ -339,7 +374,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       bounds();
       render();
       const pearl = floating.find(item => /floating pearl marble sphere/.test(objectName(item.object)))?.object;
-      atmosphere.captureRoomReflections(scene, pearl?.getWorldPosition(new Vector3()) ?? new Vector3(0, 3.16, -1.5), [water.group]);
+      atmosphere.captureRoomReflections(scene, pearl?.getWorldPosition(new Vector3()) ?? new Vector3(0, 3.16, -1.5), [water.group, ...(agentAura ? [agentAura.group] : [])]);
       render();
       canvas.dataset.ready = "true";
     },
@@ -347,7 +382,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       paused = value;
       water.setPaused(value);
       ethereal.update(elapsed, 0, value);
-      if (value) { animateRelics(0, true); animateRoom(0, true); bounds(); }
+      if (value) { animateRelics(0, true); animateRoom(0, true); agentAura?.update(elapsed, 0, getWorldVoiceVisual(), true); bounds(); }
       resume();
     },
     setHover(id, x = 0, y = 0) {
@@ -378,6 +413,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       observer.disconnect();
       document.removeEventListener("visibilitychange", resume);
       window.removeEventListener("hyper:section-change", sectionChanged);
+      unsubscribeVoice();
       canvas.removeEventListener("webglcontextlost", api.dispose);
       signal?.removeEventListener("abort", api.dispose);
       canvas.dataset.ready = "false";
@@ -385,6 +421,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       modelCache.forEach(pending => { void pending.then(disposeModel).catch(() => {}); });
       retiredCovers.forEach(disposeModel);
       loader.dispose();
+      agentAura?.dispose();
       if (room) disposeModel(room);
       orbit.traverse(object => { if (object instanceof Mesh) { object.geometry.dispose(); (Array.isArray(object.material) ? object.material : [object.material]).forEach(material => material.dispose()); } });
       sun.shadow.map?.dispose();
@@ -394,6 +431,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       sideLight.dispose();
       ethereal.dispose();
       pipeline.dispose();
+      restoreTransmission();
       renderer.dispose();
     },
   };
@@ -409,6 +447,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     const orbitParts: Object3D[] = [];
     room.traverse(object => {
       const name = objectName(object);
+      if (/delicate orbital ring/.test(name)) object.visible = false;
+      if (object instanceof Mesh && /floating pearl marble sphere/.test(name)) agentPearl = object;
       if (/delicate orbital ring|suspended satellite/.test(name)) orbitParts.push(object);
       if (/floating pearl marble sphere|floating mineral|floating pearl light/.test(name)) {
         floating.push({ object, position: object.position.clone(), rotation: new Vector3(object.rotation.x, object.rotation.y, object.rotation.z), phase: /marble sphere|lower pole/.test(name) ? 0 : floating.length * 1.73, amplitude: /marble sphere|lower pole/.test(name) ? .1 : .12 });
@@ -416,6 +456,11 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     });
     scene.updateMatrixWorld(true);
     orbitParts.forEach(object => orbit.attach(object));
+    if (agentPearl) {
+      agentAura = createAgentAura(agentPearl);
+      scene.add(agentAura.group);
+      agentAura.update(0, 0, getWorldVoiceVisual());
+    }
     canvas.dataset.renderer = "live-3d";
     ready = true;
     resize();
