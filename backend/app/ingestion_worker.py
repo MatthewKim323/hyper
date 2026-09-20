@@ -84,7 +84,13 @@ def main():
     logging.basicConfig(level=logging.INFO)
     store=Store();search=ElasticSearch()
     while True:
-        worked=run_once(store,search)
+        # A database blip must not kill the loop: the job-claim block inside run_once sits
+        # outside its own handler, so a transient OperationalError would end the process
+        # and leave queued work leased to nobody. Same guard as elastic_worker.
+        try: worked=run_once(store,search)
+        except Exception as exc:
+            logging.warning('%s unavailable (%s)', 'ingestion_worker', type(exc).__name__)
+            worked=False
         if args.once:break
         if not worked:time.sleep(2)
 

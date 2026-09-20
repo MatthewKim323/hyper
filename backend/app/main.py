@@ -139,7 +139,9 @@ async def dashboard_stream(ws: WebSocket):
 
 @app.websocket('/sessions/{sid}/stream')
 async def stream(ws: WebSocket, sid: str):
-    origins = os.getenv('ALLOWED_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000').split(',')
+    # Strip, like the CORS middleware above: a hand-edited "a, b" list would otherwise break
+    # every websocket with a bare 1008 while HTTP kept working, which is near-undiagnosable.
+    origins = [x.strip() for x in os.getenv('ALLOWED_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000').split(',')]
     if ws.headers.get('origin') and ws.headers['origin'] not in origins:
         await ws.close(code=1008)
         return

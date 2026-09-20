@@ -2,6 +2,7 @@
 
     uv run --directory backend python -m app.counterparty_worker [--once]
 """
+import logging
 import sys
 import time
 from pathlib import Path
@@ -31,6 +32,12 @@ def run_once(store, data_factory=None):
 if __name__ == '__main__':
     store = Store()
     while True:
-        busy = run_once(store)
+        # A database blip must not kill the loop: the job-claim block inside run_once sits
+        # outside its own handler, so a transient OperationalError would end the process
+        # and leave queued work leased to nobody. Same guard as elastic_worker.
+        try: busy = run_once(store)
+        except Exception as exc:
+            logging.warning('%s unavailable (%s)', 'counterparty_worker', type(exc).__name__)
+            busy=False
         if '--once' in sys.argv: break
         time.sleep(.5 if busy else 1.5)
