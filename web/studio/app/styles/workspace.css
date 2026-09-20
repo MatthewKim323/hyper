@@ -179,3 +179,11 @@
 .ws-forecast { display: grid; gap: 1rem; } .ws-forecast-gauge { max-width: 360px; }
 .ws-actions .ws-mono { font-size: 0.72rem; color: #716860; }
 @media (prefers-reduced-motion: reduce) { .ws-slice { animation: none; } }
+
+/* A queue of payables or cases: one line each, one open at a time. */
+.ws-queue { margin: 0.9rem 0 0.4rem; padding: 0; list-style: none; }
+.ws-queue button { display: grid; grid-template-columns: 0.55rem 1fr auto; align-items: center; gap: 0.8rem; width: 100%; padding: 0.6rem 0.2rem; border: 0; border-top: 1px solid #ddd5cf; background: none; font-size: 0.88rem; text-align: left; cursor: pointer; transition: background 0.2s ease, padding 0.2s ease; }
+.ws-queue button:hover { background: rgb(37 35 33 / 4%); padding-left: 0.5rem; }
+.ws-queue strong { font-weight: 400; font-variant-numeric: tabular-nums; }
+.ws-queue i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #a89f97; }
+.ws-queue i[data-state="ready"] { background: #5f8a70; } .ws-queue i[data-state="approved"] { background: #6f5a8c; } .ws-queue i[data-state="blocked"] { background: #a0524f; }

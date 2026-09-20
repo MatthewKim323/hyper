@@ -67,17 +67,41 @@ function ProposalCard({ proposal, onDecided, onBusy }: { proposal: PayablePropos
 }
 
 /** Payables prepared for an owner's decision. Approval does not execute a payment. */
+// One payable open at a time. A real queue is dozens long: a chart for every one of them is noise and a
+// lot of drawing, so the rest stay as one line each until chosen.
+const POLL_MS = 30000;
+const VISIBLE_ROWS = 12;
+
 export function PayableApprovals({ active, onBusy }: { active: boolean; onBusy?: (id: string, busy: boolean) => void }) {
-  const { data, refresh } = useBackend(backend.payableProposals, active, 6000);
+  const { data, refresh } = useBackend(backend.payableProposals, active, POLL_MS);
+  const [chosen, setChosen] = useState<string | null>(null);
+  const [all, setAll] = useState(false);
   const proposals = data?.proposals ?? [];
   const waiting = proposals.filter(proposal => proposal.approval?.status === "PENDING" && proposal.status === "DRAFT");
-  const decided = proposals.filter(proposal => !waiting.includes(proposal) && proposal.approval && proposal.approval.status !== "PENDING");
+  const approved = proposals.filter(proposal => proposal.approval?.status === "APPROVED");
+  const closed = proposals.filter(proposal => proposal.approval && !["PENDING", "APPROVED"].includes(proposal.approval.status));
   if (!proposals.length) return null;
-  return <section className="ws-section" data-pointable="group:payable-approvals" data-pointable-label="Payables ready for approval">
-    <span className="ws-eyebrow">Payables</span>
-    <div className="ws-stack">{waiting.map(proposal => <ProposalCard key={proposal.proposal_id} proposal={proposal} onDecided={refresh} onBusy={onBusy} />)}</div>
-    {decided.filter(proposal => proposal.approval!.status === "APPROVED").map(proposal => <PayableHandoff key={proposal.proposal_id} proposalId={proposal.proposal_id} active={active} onChanged={refresh} />)}
-    {decided.some(proposal => proposal.approval!.status !== "APPROVED") && <ul className="ws-rows ws-rows--tight">{decided.filter(proposal => proposal.approval!.status !== "APPROVED").map(proposal => <li key={proposal.proposal_id}>
+  const queue = [...approved, ...waiting];
+  const open = queue.find(proposal => proposal.proposal_id === chosen) ?? approved[0] ?? waiting[0];
+  const rows = queue.filter(proposal => proposal !== open);
+  const total = waiting.reduce((sum, proposal) => sum + proposal.payload.net_payable_cents, 0);
+  const currency = (waiting[0] ?? queue[0])?.payload.currency ?? "USD";
+  return <section className="ws-section" data-pointable="group:payable-approvals" data-pointable-label="Payables ready for approval"
+    data-pointable-data={JSON.stringify({ waiting: waiting.length, approved: approved.length, waiting_total_cents: total, currency })}>
+    <span className="ws-eyebrow">Payables · {waiting.length} waiting{waiting.length ? ` · ${cents(total, currency)}` : ""}</span>
+    {open && (open.approval?.status === "APPROVED"
+      ? <PayableHandoff key={open.proposal_id} proposalId={open.proposal_id} active={active} onChanged={refresh} />
+      : <ProposalCard key={open.proposal_id} proposal={open} onDecided={refresh} onBusy={onBusy} />)}
+    {rows.length > 0 && <ul className="ws-queue">{(all ? rows : rows.slice(0, VISIBLE_ROWS)).map(proposal => <li key={proposal.proposal_id}>
+      <button type="button" onClick={() => setChosen(proposal.proposal_id)} data-cursor="hide" data-pointable={`proposal:${proposal.proposal_id}`} data-pointable-label={`Payable ${proposal.payload.invoice_id}`}
+        data-pointable-data={JSON.stringify({ net_payable_cents: proposal.payload.net_payable_cents, billed_cents: proposal.payload.invoice_face_cents, approval: proposal.approval?.status ?? null })}>
+        <i data-state={proposal.approval?.status === "APPROVED" ? "approved" : proposal.checks.every(check => check.ok) ? "ready" : "blocked"} aria-hidden="true" />
+        <span>{proposal.payload.invoice_id}</span>
+        <strong>{cents(proposal.payload.net_payable_cents, proposal.payload.currency)}</strong>
+      </button>
+    </li>)}</ul>}
+    {rows.length > VISIBLE_ROWS && <button type="button" className="ws-link" onClick={() => setAll(value => !value)}>{all ? "Fewer" : `All ${rows.length}`}</button>}
+    {closed.length > 0 && <ul className="ws-rows ws-rows--tight">{closed.map(proposal => <li key={proposal.proposal_id}>
       <div><strong>{proposal.payload.invoice_id} · {cents(proposal.payload.net_payable_cents, proposal.payload.currency)}</strong><small>{words(proposal.approval!.status)}</small></div>
     </li>)}</ul>}
   </section>;
@@ -98,12 +122,26 @@ function EngineCaseCard({ item }: { item: EngineCase }) {
 
 /** Engine cases: two independent routes to the payable that must agree before anything is proposed. */
 export function EngineCases({ active }: { active: boolean }) {
-  const { data } = useBackend(backend.engineCases, active, 6000);
-  const cases = data?.cases ?? [];
+  const { data } = useBackend(backend.engineCases, active, POLL_MS);
+  const [chosen, setChosen] = useState<string | null>(null);
+  const [all, setAll] = useState(false);
+  // Blocked cases are the ones that need someone, so they lead.
+  const cases = [...(data?.cases ?? [])].sort((x, y) => Number(y.blocking_issues.length > 0) - Number(x.blocking_issues.length > 0));
   if (!cases.length) return null;
-  return <section className="ws-section" data-pointable="group:payable-cases" data-pointable-label="Payable cases">
-    <span className="ws-eyebrow">Payable cases</span>
-    <div className="ws-stack">{cases.map(item => <EngineCaseCard key={item.case_id} item={item} />)}</div>
+  const blocked = cases.filter(item => item.blocking_issues.length > 0).length;
+  const open = cases.find(item => item.case_id === chosen) ?? cases[0];
+  const rows = cases.filter(item => item !== open);
+  return <section className="ws-section" data-pointable="group:payable-cases" data-pointable-label="Payable cases" data-pointable-data={JSON.stringify({ cases: cases.length, blocked })}>
+    <span className="ws-eyebrow">Payable cases · {cases.length}{blocked ? ` · ${blocked} blocked` : ""}</span>
+    <EngineCaseCard key={open.case_id} item={open} />
+    {rows.length > 0 && <ul className="ws-queue">{(all ? rows : rows.slice(0, VISIBLE_ROWS)).map(item => <li key={item.case_id}>
+      <button type="button" onClick={() => setChosen(item.case_id)} data-cursor="hide" data-pointable={`payable-case:${item.case_id}`} data-pointable-label={`Payable case ${item.invoice_id}`}>
+        <i data-state={item.blocking_issues.length ? "blocked" : item.calculation?.ties ? "ready" : "open"} aria-hidden="true" />
+        <span>{item.invoice_id}</span>
+        <strong>{item.calculation ? cents(item.calculation.net_after_credits_cents, item.calculation.currency) : "–"}</strong>
+      </button>
+    </li>)}</ul>}
+    {rows.length > VISIBLE_ROWS && <button type="button" className="ws-link" onClick={() => setAll(value => !value)}>{all ? "Fewer" : `All ${rows.length}`}</button>}
   </section>;
 }
 
