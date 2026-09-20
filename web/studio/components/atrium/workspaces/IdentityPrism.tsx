@@ -58,24 +58,23 @@ export default function IdentityPrism({ active, onMotion }: Props) {
       {facet === 0 && <>
         <section className={styles.identity}>
           <span className={styles.eyebrow}>Your workspace</span>
-          <h3>{org?.name ?? (usable ? "Opening your identity…" : "A home for your identity.")}</h3>
-          {org ? <dl><div><dt>Organization</dt><dd>{org.id}</dd></div><div><dt>Member</dt><dd>{workspace.data?.user_id}</dd></div><div><dt>Onboarding</dt><dd>{org.onboarding_complete ? "Complete" : "In progress"}</dd></div></dl>
-            : <p>{usable ? workspace.error ?? "Retrieving your organization and membership." : "Sign in to see the organization and agents connected to you."}</p>}
+          <h3>{org?.name ?? (usable ? "Loading workspace…" : "Workspace")}</h3>
+          {org ? <><p className={styles.note}>{org.onboarding_complete ? "Onboarding complete." : "Onboarding in progress."}</p><details className={styles.details}><summary>Workspace details</summary><dl><div><dt>Organization ID</dt><dd>{org.id}</dd></div><div><dt>Member ID</dt><dd>{workspace.data?.user_id}</dd></div></dl></details></>
+            : <p>{!auth.ready ? "Checking your sign-in…" : usable ? workspace.error ?? "Retrieving your organization." : auth.mode === "unconfigured" ? "Workspace sign-in is not available yet." : "Sign in to see your workspace."}</p>}
           {!usable && auth.ready && auth.mode === "clerk" && <button className={styles.action} type="button" onClick={() => void openSignIn()}>Sign in</button>}
-          {!usable && auth.ready && auth.mode === "unconfigured" && <span className={styles.note}>Workspace sign-in is not available yet.</span>}
           {usable && workspace.error && <button type="button" className={styles.action} onClick={workspace.refresh}>Try again</button>}
         </section>
         <section className={styles.wallet}>
-          <div className={styles.row}><span className={styles.eyebrow}>Browser wallet</span><span className={styles.badge}>{wallet.address ? "Address shared" : "Not connected"}</span></div>
-          {wallet.address ? <><p className={styles.address}>{wallet.address}</p><p>{chainLabel(wallet.chain)}</p><div className={styles.actions}><button type="button" className={styles.action} onClick={() => void copyAddress()}>{copied ? "Copied" : "Copy address"}</button><button type="button" onClick={() => { session.current?.hide(); setWallet(EMPTY_WALLET); setCopied(false); }} className={styles.textButton}>Hide address</button></div><p className={styles.note}>Shared with this page. Organization membership and ownership verification are separate. Manage site permissions in your wallet.</p></>
-            : <><h4>Bring your address into view.</h4><p>Choose an account in your wallet to display its address and network.</p><button type="button" className={styles.action} disabled={wallet.pending} onClick={connect}>{wallet.pending ? "Waiting for your wallet…" : "Connect wallet"} <span aria-hidden="true">↗</span></button></>}
+          <div className={styles.row}><span className={styles.eyebrow}>Browser wallet</span>{wallet.address && <span className={styles.badge}>Address shared</span>}</div>
+          {wallet.address ? <><p className={styles.address}>{wallet.address}</p><p>{chainLabel(wallet.chain)}</p><div className={styles.actions}><button type="button" className={styles.action} onClick={() => void copyAddress()}>{copied ? "Copied" : "Copy address"}</button><button type="button" onClick={() => { session.current?.hide(); setWallet(EMPTY_WALLET); setCopied(false); }} className={styles.textButton}>Hide address</button></div><p className={styles.note}>Address shared with this page. Manage site permissions in your wallet.</p></>
+            : <><h4>No wallet connected</h4><p>Optional. Connect to view your address and network.</p><button type="button" className={styles.action} disabled={wallet.pending} onClick={connect}>{wallet.pending ? "Waiting for your wallet…" : "Connect wallet"}</button></>}
           {(wallet.error || walletNote) && <p className={styles.note} role="status">{wallet.error || walletNote}</p>}
         </section>
       </>}
       {facet === 1 && <>
-        <section><span className={styles.eyebrow}>Agent authority</span><h3>Evidence in. Decisions with you.</h3><p>The current agent can investigate connected records, assemble evidence, and ask you to resolve exceptions.</p>
+        <section><h3>Agent permissions</h3><p>The agent can investigate connected records and request your review.</p>
           <ul className={styles.permissions}><li><i />Read connected evidence <span>Available</span></li><li><i />Investigate and prepare findings <span>Available</span></li><li><i />Request a human decision <span>Available</span></li><li data-unavailable><i />Move funds or sign transactions <span>Unavailable</span></li><li data-unavailable><i />Change access permissions <span>Unavailable</span></li></ul>
-          <p className={styles.note}>Connecting a browser wallet grants this page address visibility. Hyper has no signing or payment capability.</p>
+          <p className={styles.note}>Wallet access is limited to your address and network.</p>
         </section>
         <section><div className={styles.row}><span className={styles.eyebrow}>Connected sources</span>{usable && <button type="button" className={styles.textButton} onClick={connections.refresh}>Refresh</button>}</div>
           {!usable ? <p>Sign in to see your organization’s connections.</p> : connections.error ? <p role="status">Connections couldn’t be loaded. Try refreshing.</p> : !connections.data ? <p>Loading connected sources…</p> : connections.data.connections.length ? <ul className={styles.connections}>{connections.data.connections.map(connection => <li key={connection.id}><div><strong>{connection.label}</strong><span>{connection.provider} · {connection.status.replaceAll("_", " ")}</span></div><small>{connection.last_synced_at ? `Synced ${when(connection.last_synced_at)}` : "Not synced yet"}</small></li>)}</ul> : <p>No sources connected yet.</p>}
@@ -83,9 +82,9 @@ export default function IdentityPrism({ active, onMotion }: Props) {
         </section>
       </>}
       {facet === 2 && <>
-        <section><div className={styles.row}><span className={styles.eyebrow}>Agent activity</span>{usable && <button type="button" className={styles.textButton} onClick={refresh}>Refresh</button>}</div><h3>{usable && controller.data ? controller.data.enabled ? "Your controller is enabled." : "Your controller is paused." : "Work leaves a trail."}</h3>
-          {!usable ? <p>Sign in to see agent activity in your workspace.</p> : <><p>{controller.error ? "Controller status couldn’t be loaded." : controller.data ? `Status: ${controller.data.status.replaceAll("_", " ")}` : "Checking controller status…"}</p>
-            {tasks.error ? <p role="status">Agent tasks couldn’t be loaded. Try refreshing.</p> : !tasks.data ? <p>Loading tasks…</p> : !tasks.data.tasks.length ? <p className={styles.empty}>No agent tasks recorded yet. Their objectives, outcomes, and blockers will appear here.</p> : <ol className={styles.tasks}>{tasks.data.tasks.map(task => <li key={task.id}><span className={styles.badge}>{task.status.replaceAll("_", " ")}</span><strong>{task.objective}</strong>{task.result?.summary && <p>{task.result.summary}</p>}{task.error && <p role="status">{task.error}</p>}<small>{task.id}</small></li>)}</ol>}
+        <section><div className={styles.row}><h3>Agent activity</h3>{usable && <button type="button" className={styles.textButton} onClick={refresh}>Refresh</button>}</div>
+          {!usable ? <p>Sign in to see agent activity in your workspace.</p> : <><p>{controller.error ? "Controller status couldn’t be loaded." : controller.data ? `Controller ${controller.data.enabled ? "enabled" : "paused"}. Status: ${controller.data.status.replaceAll("_", " ")}.` : "Checking controller status…"}</p>
+            {tasks.error ? <p role="status">Agent tasks couldn’t be loaded. Try refreshing.</p> : !tasks.data ? <p>Loading tasks…</p> : !tasks.data.tasks.length ? <p className={styles.empty}>No agent tasks recorded yet.</p> : <ol className={styles.tasks}>{tasks.data.tasks.map(task => <li key={task.id}><span className={styles.badge}>{task.status.replaceAll("_", " ")}</span><strong>{task.objective}</strong>{task.result?.summary && <p>{task.result.summary}</p>}{task.error && <p role="status">{task.error}</p>}</li>)}</ol>}
             {tasks.data?.has_more && <p className={styles.note}>Showing the first 50 tasks.</p>}</>}
         </section>
       </>}

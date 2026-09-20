@@ -154,7 +154,6 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
           {view.comparison.comparable && !!view.comparison.record?.tasks.length && <div className={styles.changeCounts}>{(["gained", "regressed", "both_pass", "both_fail", "unavailable"] as const).map((bucket) => <span key={bucket}><strong>{view.comparison.record!.tasks.filter((task) => task.bucket === bucket).length}</strong>{bucket.replaceAll("_", " ")}</span>)}</div>}
         </div>
       </> : <div className={styles.empty}>
-        <div className={styles.emptyGlyph} aria-hidden="true"><i /><i /><i /></div>
         <h3>Your first measured version starts here.</h3>
         <p>No subject framework versions have been exported yet. Completed evaluations will form the columns above, with the measurements and evidence behind each one.</p>
         {!!view.omitted && <small>{view.omitted} grader self-check or development run{view.omitted === 1 ? " is" : "s are"} excluded.</small>}

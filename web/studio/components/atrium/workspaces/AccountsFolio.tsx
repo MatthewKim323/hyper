@@ -5,7 +5,7 @@ import { backend } from "@/lib/backend/client";
 import { getBackendToken, openSignIn } from "@/lib/backend/auth";
 import type { AgentCase, AgentTask, Concern } from "@/lib/backend/types";
 import { useAuth, useBackend } from "@/components/workspace/useBackend";
-import { fieldText, invoiceAmount, invoiceLines, isSyntheticRecord, preferredInvoiceDataset, readInvoicePage, sourceWork, valueText, type InvoiceAmount, type InvoiceRow } from "./accounts-data";
+import { eligibleInvoiceDatasets, fieldText, invoiceAmount, invoiceLines, isSyntheticRecord, preferredInvoiceDataset, readInvoicePage, sourceWork, valueText, type InvoiceAmount, type InvoiceRow } from "./accounts-data";
 import styles from "./AccountsFolio.module.css";
 
 type MotionState = { busy?: boolean; selectedIndex?: number; values?: readonly (number | null)[] };
@@ -91,7 +91,7 @@ function InvoicePaper({ row, active }: { row: InvoiceRow; active: boolean }) {
       })}</tbody></table></div> : <p className={styles.note}>This record does not include itemized lines. Read the source evidence below for the original text.</p>}
     </section>
     <div className={styles.paperTotal}><span>Gross invoice amount</span><div><Amount amount={amount} /></div></div>
-    <p className={styles.finePrint}>Imported amounts are shown as recorded. Payments, credits, and allocations have not been deducted here.</p>
+    <p className={styles.finePrint}>Amounts as imported. Payments, credits, and allocations are not deducted.</p>
     <details className={styles.fields}><summary>All recorded fields</summary><dl>{Object.entries(record).map(([key, value]) => <div key={key}><dt>{words(key)}</dt><dd>{value === null ? "Not supplied" : typeof value === "object" ? JSON.stringify(value) : String(value)}</dd></div>)}</dl></details>
     <SourcePages key={row.source_id} sourceId={row.source_id} active={active} />
     <footer className={styles.paperFooter}><span>Source {row.source_id}</span><span>Row {row.row_number}</span></footer>
@@ -105,8 +105,8 @@ function AgentNotes({ row, cases, tasks, concerns, errors, partial, loading }: {
   const actions = work.cases.flatMap(item => item.state.next_actions.map(text => ({ id: item.id, text })));
   const uniqueErrors = [...new Set(errors.filter(Boolean))];
   return <aside className={styles.agentNotes} aria-label="Agent notes">
-    <span className={styles.eyebrow}>In the margin</span><h3>What needs attention</h3>
-    <p className={styles.note}>These investigations cite this source. A source can contain several invoices, so their findings may cover other records too.</p>
+    <span className={styles.eyebrow}>Agent notes</span><h3>What needs attention</h3>
+    <p className={styles.note}>Linked to this source; may cover other invoices in the same file.</p>
     {uniqueErrors.map(error => <p className={styles.warning} key={error} role="status">{error}</p>)}
     {loading && <p className={styles.note} role="status">Opening the agent&apos;s case notes…</p>}
     {partial && <p className={styles.note}>Showing the first available cases, tasks, and decisions. Additional work may exist.</p>}
@@ -141,7 +141,7 @@ function FolioPages({ dataset, active, onMotion }: Props & { dataset: string }) 
     {page.error && <p className={styles.warning} role="status">{page.error} Showing the last loaded records.</p>}
     <div className={styles.folio}>
       <aside className={styles.queue} aria-label="Invoice queue">
-        <header><span className={styles.eyebrow}>In your folio</span><span className={styles.pageCount}>{data.total_matching.toLocaleString()} records</span></header>
+        <header><span className={styles.eyebrow}>Invoice index</span><span className={styles.pageCount}>{data.total_matching.toLocaleString()} records</span></header>
         <label className={styles.search} htmlFor={filterId}><span className={styles.srOnly}>Filter this page of invoices</span><input id={filterId} value={filter} onChange={event => setFilter(event.target.value)} placeholder="Find on this page…" type="search" /></label>
         <div className={styles.queueItems}>{items.map(item => {
           const number = fieldText(item.payload, "invoice_number", "invoice_id", "id") ?? item.record_id;
@@ -162,16 +162,16 @@ export default function AccountsFolio({ active, onMotion }: Props) {
   const auth = useAuth();
   const catalog = useBackend(backend.datasets, active && auth.ready && auth.signedIn, 15000);
   const [chosenDataset, setChosenDataset] = useState<string | null>(null);
-  const datasets = catalog.data?.datasets ?? [];
+  const datasets = eligibleInvoiceDatasets(catalog.data?.datasets ?? []);
   const dataset = datasets.some(item => item.dataset === chosenDataset) ? chosenDataset : preferredInvoiceDataset(datasets);
   const selectId = useId();
   if (!auth.ready) return <div className={styles.empty} role="status"><p>Opening your workspace…</p></div>;
   if (!auth.signedIn) return <div className={styles.empty}><span className={styles.eyebrow}>Your private folio</span><h3>Your invoices belong here.</h3><p>{auth.mode === "unconfigured" ? "Sign-in is not available in this environment yet. Your invoice folio will open once workspace access is configured." : "Sign in to open the invoice records and investigations saved to your organization."}</p>{auth.mode === "clerk" && <button type="button" onClick={() => void openSignIn()}>Sign in</button>}</div>;
   return <div className={styles.root}>
-    <div className={styles.toolbar}><p>Every sheet keeps its source.</p>{datasets.length > 0 && <label htmlFor={selectId}><span>Collection</span><select id={selectId} value={dataset ?? ""} onChange={event => setChosenDataset(event.target.value)}>{!dataset && <option value="" disabled>Choose an invoice dataset</option>}{datasets.map(item => <option key={item.dataset} value={item.dataset}>{words(item.dataset)} ({item.record_count})</option>)}</select></label>}</div>
+    <div className={styles.toolbar}><p>Source-linked records</p>{datasets.length > 0 && <label htmlFor={selectId}><span>Collection</span><select id={selectId} value={dataset ?? ""} onChange={event => setChosenDataset(event.target.value)}>{!dataset && <option value="" disabled>Choose an invoice dataset</option>}{datasets.map(item => <option key={item.dataset} value={item.dataset}>{words(item.dataset)} ({item.record_count})</option>)}</select></label>}</div>
     {catalog.error && <p className={styles.warning} role="status">{catalog.error} <button type="button" className={styles.textButton} onClick={catalog.refresh}>Retry</button></p>}
     {!catalog.data && !catalog.error && <div className={styles.loading} role="status"><div className={styles.loadingPaper} aria-hidden="true" /><span>Finding your invoice collections…</span></div>}
-    {catalog.data && !dataset && <div className={styles.empty}><span className={styles.eyebrow}>A place for your payables</span><h3>The first sheet starts with your data.</h3><p>{datasets.length ? "Choose the dataset containing your invoices above. The folio reads its original records without inventing missing values." : "Connect your billing account or import an AP export as a financial dataset. Supported exports are CSV, JSON, and JSONL; use a stable invoice ID so records stay linked to their sources."}</p><button type="button" onClick={catalog.refresh}>Check for imports</button></div>}
+    {catalog.data && !dataset && <div className={styles.empty}><span className={styles.eyebrow}>A place for your payables</span><h3>No payable invoices yet.</h3><p>{catalog.data.datasets.length > 0 ? "Your workspace has imported records, but no payable invoice or bill collection is available. Connect your billing account or import an AP invoice export to start this folio." : "Connect your billing account or import an AP invoice export. Supported exports are CSV, JSON, and JSONL; use a stable invoice ID so records stay linked to their sources."}</p><button type="button" onClick={catalog.refresh}>Check for imports</button></div>}
     {dataset && <FolioPages key={dataset} dataset={dataset} active={active} onMotion={onMotion} />}
   </div>;
 }

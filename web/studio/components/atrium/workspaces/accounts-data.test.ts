@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { AgentCase, AgentTask, Concern, Dataset } from "@/lib/backend/types";
-import { decimalText, invoiceAmount, invoiceLines, isSyntheticRecord, preferredInvoiceDataset, readInvoicePage, sourceWork } from "./accounts-data";
+import { decimalText, eligibleInvoiceDatasets, invoiceAmount, invoiceLines, isSyntheticRecord, preferredInvoiceDataset, readInvoicePage, sourceWork } from "./accounts-data";
 
 describe("AP imported records", () => {
   it("preserves exact cents, large integers, negatives, and sub-cent values", () => {
@@ -41,6 +41,24 @@ describe("AP imported records", () => {
     expect(preferredInvoiceDataset(datasets(["ar_invoices", "ramp_bills"]))).toBe("ramp_bills");
     expect(preferredInvoiceDataset(datasets(["sim_bill", "ap_invoices"]))).toBe("ap_invoices");
     expect(preferredInvoiceDataset(datasets(["ar_invoices", "customer_invoices", "sales_invoice"]))).toBeNull();
+  });
+  it("offers invoice and bill collections without relabeling AP side tables", () => {
+    const names = ["ap_invoices", "ramp_bills", "sim_bill", "vendor_invoices", "ap", "ap_vendors", "ap_credits", "ap_purchase_orders", "po_invoices", "ar_invoices", "customer_invoices", "sales_invoice", "invoice_credits", "invoice_payments", "invoice_approvals", "invoice_statements", "vendors", "sim_purchase_order"];
+    const datasets = names.map(dataset => ({ dataset, record_count: 1, sources: [] }) satisfies Dataset);
+    expect(eligibleInvoiceDatasets(datasets).map(item => item.dataset)).toEqual(["ap_invoices", "ramp_bills", "sim_bill", "vendor_invoices"]);
+    expect(preferredInvoiceDataset(datasets.filter(item => !["ap_invoices", "ramp_bills", "sim_bill", "vendor_invoices"].includes(item.dataset)))).toBeNull();
+  });
+  it("accepts a neutral collection only when every source has a supplier invoice header", () => {
+    const schema = { invoice_number: "text", vendor_id: "text", amount_cents: "numeric", due_date: "date" };
+    const source = { id: "s1", dataset: "september_import", currency: "USD", record_count: 1, schema };
+    const valid: Dataset = { dataset: "september_import", record_count: 1, sources: [source] };
+    expect(eligibleInvoiceDatasets([valid])).toEqual([valid]);
+    const foreignReference = { ...valid, sources: [{ ...source, schema: { invoice_id: "text", vendor_id: "text", amount_cents: "numeric", due_date: "date" } }] };
+    const receivable = { ...valid, sources: [{ ...source, schema: { ...schema, customer_id: "text" } }] };
+    const payment = { ...valid, sources: [{ ...source, schema: { ...schema, payment_id: "text" } }] };
+    const partial = { ...valid, sources: [source, { id: "s2", dataset: "september_import", currency: "USD", record_count: 1 }] };
+    const vendors = { ...valid, dataset: "vendors" };
+    expect(eligibleInvoiceDatasets([foreignReference, receivable, payment, partial, vendors])).toEqual([]);
   });
 });
 

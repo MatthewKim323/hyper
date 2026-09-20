@@ -36,12 +36,36 @@ export function readInvoicePage(value: unknown): InvoicePage {
   return { dataset: value.dataset, rows, total_matching: value.total_matching, has_more: value.has_more, next_offset: value.next_offset };
 }
 
+/** Match invoice collections, not every AP-related table or a foreign invoice reference. */
+export function eligibleInvoiceDatasets(datasets: Dataset[]): Dataset[] {
+  return datasets.filter(dataset => {
+    const name = dataset.dataset.toLowerCase();
+    const invoiceName = /(^|_)(bills?|invoices?)(_|$)/.test(name);
+    if (/(^|_)(ar|receivables?|customers?|sales|revenue|credits?|memos?|po|purchase|orders?|payments?|refunds?|receipts?|remittances?|allocations?|approvals?|statements?)(_|$)/.test(name)) return false;
+    if (invoiceName) return true;
+    if (/(^|_)(vendors?|suppliers?|contracts?|accounts?|transactions?)(_|$)/.test(name)) return false;
+    // The catalog includes schemas at runtime. Require every source to describe an
+    // invoice header before admitting a collection with an otherwise neutral name.
+    return dataset.sources.length > 0 && dataset.sources.every(source => {
+      const metadata: unknown = source;
+      if (!object(metadata) || !object(metadata.schema)) return false;
+      const fields = metadata.schema;
+      const has = (...keys: string[]) => keys.some(key => Object.hasOwn(fields, key));
+      return !has("customer_id", "customer_name", "credit_note_id", "credit_memo_id", "payment_id", "payment_reference")
+        && has("invoice_number", "bill_number")
+        && has("vendor_id", "vendor_name", "vendor_display_name", "supplier_id", "supplier_name")
+        && has("amount_cents", "total_cents", "amount_minor", "total_amount", "amount", "total")
+        && has("invoice_date", "bill_date", "due_date", "issue_date");
+    });
+  });
+}
+
 export function preferredInvoiceDataset(datasets: Dataset[]): string | null {
+  const eligible = eligibleInvoiceDatasets(datasets);
   for (const name of ["ap_invoices", "ramp_bills", "sim_bill"]) {
-    if (datasets.some(dataset => dataset.dataset === name)) return name;
+    if (eligible.some(dataset => dataset.dataset === name)) return name;
   }
-  return datasets.find(dataset => /(^|_)(ap|bills?|invoices?)(_|$)/i.test(dataset.dataset)
-    && !/(^|_)(ar|customer|sales)(_|$)/i.test(dataset.dataset))?.dataset ?? null;
+  return eligible[0]?.dataset ?? null;
 }
 
 /** Keep the API's exact decimal strings, including sub-cent precision and large amounts. */
