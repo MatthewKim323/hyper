@@ -147,36 +147,38 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
             const stoneNoise = shader.fragmentShader.includes("float atriumHash(") ? "" : noise;
             shader.fragmentShader = `varying vec3 vStonePosition; uniform float uStoneTime; uniform vec3 uStoneSunDirection; ${stoneNoise}\n` + shader.fragmentShader.replace("#include <color_fragment>", `
               #include <color_fragment>
-              // Mineral seams follow a warped diagonal through the stone.
-              // Sparse masking and secondary wisps avoid closed contour loops.
-              vec3 marblePoint=vStonePosition*.62;
+              // Match the source's meter-scale geological folds. Convert to
+              // Blender coordinates so horizontal and vertical cuts agree.
+              vec3 marblePosition=vec3(vStonePosition.x,-vStonePosition.z,vStonePosition.y);
+              vec3 marblePoint=marblePosition*.58;
               vec3 marbleWarp=vec3(
                 atriumNoise(marblePoint*.65+vec3(4.1,1.7,9.2)),
                 atriumNoise(marblePoint*.65+vec3(11.3,5.2,2.8)),
                 atriumNoise(marblePoint*.65+vec3(2.6,13.4,6.7))
               )-.5;
-              vec3 marbleFlow=marblePoint+marbleWarp*.8;
-              float marbleBase=atriumNoise(marbleFlow*vec3(.85,1.3,.72));
-              float marbleMineral=atriumNoise(marbleFlow*2.7+vec3(7.8,3.1,4.6));
-              float marbleField=dot(marbleFlow,vec3(.9,.32,.48))*3.1+(marbleMineral-.5)*2.;
+              vec3 marbleFlow=marblePoint+marbleWarp*1.1;
+              float marbleBase=atriumNoise(marblePosition*.48);
+              float marbleMineral=atriumNoise(marblePosition*1.15);
+              float marbleSplinter=atriumNoise(marbleFlow*3.8);
+              float marbleField=dot(marblePosition,vec3(.68,.31,.94))+marbleBase*3.2+marbleSplinter*.18;
               float marbleDistance=abs(sin(marbleField));
               float marbleAA=max(.001,fwidth(marbleField)*.65);
-              float marbleMask=smoothstep(.28,.61,marbleBase);
-              float marbleMain=(1.-smoothstep(.012,.055+marbleAA,marbleDistance))*marbleMask;
-              float marbleBranchField=marbleField+.24+(atriumNoise(marbleFlow*4.6+vec3(3.4,8.2,1.6))-.5)*.6;
+              float marbleMask=mix(.10,.34,smoothstep(.30,.65,marbleWarp.x+.5));
+              float marbleMain=(1.-smoothstep(.009-marbleAA,.031+marbleAA,marbleDistance))*marbleMask;
+              float marbleBranchField=marbleField*1.035+marbleSplinter*.64;
               float marbleBranchAA=max(.001,fwidth(marbleBranchField)*.65);
-              float marbleBranch=(1.-smoothstep(.006,.027+marbleBranchAA,abs(sin(marbleBranchField))))
-                *marbleMask*(1.-smoothstep(.18,.56,marbleDistance));
-              float marbleVein=max(marbleMain,marbleBranch*.42);
-              float marbleShoulder=(1.-smoothstep(.045,.27,marbleDistance))*marbleMask;
+              float marbleBranch=(1.-smoothstep(.004-marbleBranchAA,.014+marbleBranchAA,abs(sin(marbleBranchField))))
+                *.10*(1.-smoothstep(.1,.45,marbleDistance));
+              float marbleVein=max(marbleMain,marbleBranch);
+              float marbleShoulder=(1.-smoothstep(.020,.08+marbleAA,marbleDistance))*.07;
 
               // Fine mineral detail fades below a pixel instead of sparkling in motion.
               float marbleFootprint=max(length(dFdx(vStonePosition)),length(dFdy(vStonePosition)));
               float marbleGrainWeight=1.-smoothstep(.5,1.8,marbleFootprint*72.);
               float marbleGrain=mix(.5,atriumNoise(vStonePosition*72.),marbleGrainWeight);
-              diffuseColor.rgb*=1.+(marbleMineral-.5)*.09+(marbleBase-.5)*.065+(marbleGrain-.5)*.022;
-              diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.80,.77,.80),marbleShoulder*.20);
-              diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.48,.43,.50),marbleVein*.36);
+              diffuseColor.rgb*=mix(.96,1.04,smoothstep(.12,.88,marbleMineral))+(marbleGrain-.5)*.022;
+              diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.80,.77,.80),marbleShoulder);
+              diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.48,.43,.50),marbleVein);
               float marbleHeight=(marbleGrain-.5)*.0007-marbleVein*.0004;
             `).replace("#include <roughnessmap_fragment>", `
               #include <roughnessmap_fragment>
@@ -201,7 +203,7 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
               #include <output_fragment>
             `);
           };
-          material.customProgramCacheKey = () => previousKey + "|hyper-live-rose-marble-v4";
+          material.customProgramCacheKey = () => previousKey + "|hyper-live-rose-marble-v5";
         } else if (/graduated rose quartz|luminous ivory pearl/.test(material.name)) {
           material.color.setRGB(.933, .787, .721);
           material.roughness = .23;
@@ -237,8 +239,12 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
         } else if (/warm ivory seam light/.test(material.name)) {
           material.emissiveIntensity = 1.25;
         } else if (/Garden/.test(material.name)) {
-          material.roughness = .9;
+          material.roughness = /petals/.test(material.name) ? .77 : /canopies/.test(material.name) ? .85 : .94;
           material.envMapIntensity = .42;
+          // Petals scatter light through a thin surface. Screen-space glass
+          // refraction makes them sample the whole room at every overlap.
+          // The diffuse backlighting below supplies their translucency.
+          if (material instanceof MeshPhysicalMaterial) material.transmission = 0;
           material.onBeforeCompile = shader => {
             shader.uniforms.uGardenSunDirection = { value: sunDirection };
             shader.vertexShader = "varying vec3 vGardenPosition;\n" + shader.vertexShader.replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvGardenPosition=(modelMatrix*vec4(transformed,1.)).xyz;");

@@ -29,7 +29,6 @@ export function createAtriumSideLight(metadata?: AtriumSideLightMetadata) {
   const target = fromBlender(metadata.target);
   const color = new Color().setRGB(...metadata.color);
   // r143's legacy lighting has no inverse-square attenuation with distance=0.
-  // Calibrate the source's 240 kW key against the existing 3.1-intensity rear sun.
   // Calibrate the live key to the source's corrected 720 kW clerestory.
   const power = Number.isFinite(metadata.power) ? Math.max(0, metadata.power) / 720000 : 1;
   const angle = Number.isFinite(metadata.coneAngle) ? Math.min(Math.PI * .95, Math.max(.05, metadata.coneAngle)) / 2 : 28 * Math.PI / 180;
@@ -162,7 +161,7 @@ export function createAtriumSideLight(metadata?: AtriumSideLightMetadata) {
         vec3 incoming=normalize(vWorld-uSource);
         float cone=smoothstep(uCone.x,max(uCone.x+.00001,uCone.y),dot(incoming,uAxis));
         float cosine=dot(incoming,normalize(cameraPosition-vWorld));
-        float phase=min(1.4,.912/pow(max(.08,1.2704-1.04*cosine),1.5));
+        float phase=min(1.15,.6354/pow(max(.08,1.0225-.30*cosine),1.5));
         float density=.87+.13*airNoise(vWorld*.43+vec3(uTime*.008,-uTime*.004,0.));
         float alpha=edge*lengthFade*vWeight*phase*density*cone*keyVisibility();
         gl_FragColor=vec4(uColor,alpha*.13*uStrength);

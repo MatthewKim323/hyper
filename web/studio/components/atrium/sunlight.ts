@@ -71,9 +71,10 @@ export function createAtriumSunlight(sunDirection: Vector3, apertures?: Aperture
         vec3 drift=vec3(uTime*.009,-uTime*.004,uTime*.003);
         float density=.84+.16*airNoise(vWorld*.38+drift);
         float cosine=dot(-uSunDirection,normalize(cameraPosition-vWorld));
-        // Forward scattering shares the source volume's anisotropy of .52.
-        float phase=.7296/pow(max(.08,1.2704-1.04*cosine),1.5);
-        phase=clamp(phase*.36,.28,1.35);
+        // Match the source's broader-angle haze (anisotropy .15), so side-lit
+        // rays remain visible without looking straight into the light.
+        float phase=.9775/pow(max(.08,1.0225-.30*cosine),1.5);
+        phase=clamp(phase*.45,.28,.85);
         float scattering=edge*lengthFade*density*vWeight*phase*rearSunVisibility();
         gl_FragColor=vec4(vec3(1.,.77,.58),scattering*.085);
         #include <tonemapping_fragment>

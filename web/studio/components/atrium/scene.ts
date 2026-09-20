@@ -1,4 +1,4 @@
-import { AmbientLight, Box3, DirectionalLight, Fog, Group, HemisphereLight, LinearEncoding, Material, Mesh, MeshStandardMaterial, NoToneMapping, Object3D, PCFSoftShadowMap, PerspectiveCamera, Plane, PointLight, Raycaster, Scene, Texture, Vector2, Vector3, WebGLRenderer } from "three";
+import { AmbientLight, Box3, Color, DirectionalLight, Fog, Group, HemisphereLight, LinearEncoding, Material, Mesh, MeshStandardMaterial, NoToneMapping, Object3D, PCFSoftShadowMap, PerspectiveCamera, Plane, PointLight, Raycaster, Scene, Texture, Vector2, Vector3, WebGLRenderer } from "three";
 import { createAtriumGeometryLoader } from "./geometry-loader";
 import { createAtriumAtmosphere } from "./atmosphere";
 import { createAtriumWater } from "./water";
@@ -9,10 +9,11 @@ import { createAtriumSideLight, type AtriumSideLightMetadata } from "./side-ligh
 import { createAgentAura, type AgentAura } from "./agent-aura";
 import { getWorldVoiceVisual, subscribeWorldVoice } from "@/lib/command/world-voice";
 import { configureAtriumTransmission } from "./transmission";
+import { createAtriumGpuProfile } from "./gpu-profile";
 import { layoutAtriumStations } from "./layout";
 import { createFocusRig } from "./focus";
-import type { AtriumStation } from "./configuration";
 import { createRelicParts } from "./relic-parts";
+import type { AtriumStation } from "./configuration";
 
 export type AtriumManifest = {
   width: number; height: number;
@@ -20,12 +21,13 @@ export type AtriumManifest = {
   sunDirection?: [number, number, number];
   windows?: { position: [number, number, number]; width: number }[];
   sideLight?: AtriumSideLightMetadata;
+  pearlLight?: { position: [number, number, number]; colorLinear: [number, number, number]; blenderEnergy: number; radius: number };
   templates: { id: string; url: string; width?: number; height?: number; labelHeight?: number; labelSize?: number; arrowHeight?: number }[];
 };
 export type StationBounds = { station: AtriumStation; depth: number; left: number; top: number; width: number; height: number; labelLeft: number; labelTop: number; arrowTop: number; fontWidth: number };
-export type AgentBounds = { left: number; top: number; width: number; height: number };
 /** Where the focused relic and its orbit slots land on the frame, 0 to 1, plus how far the camera has committed. */
 export type FocusFrame = { progress: number; center: { x: number; y: number }; slots: { x: number; y: number }[]; reach: number };
+export type AgentBounds = { left: number; top: number; width: number; height: number };
 export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; /** Fly in on one relic, or home with null. `visibleShare` is how much of the frame width is on screen. */ setFocus(id: string | null, visibleShare?: number): void; /** Called every frame while a relic is in focus or the camera is still returning. */ setFocusListener(listener: ((frame: FocusFrame) => void) | null): void; dispose(): void };
 
 export function isAtriumManifest(value: unknown): value is AtriumManifest {
@@ -35,15 +37,18 @@ export function isAtriumManifest(value: unknown): value is AtriumManifest {
   return Number.isFinite(candidate.width) && candidate.width > 0 && Number.isFinite(candidate.height) && candidate.height > 0 && !!candidate.camera && triple(candidate.camera.position) && triple(candidate.camera.target) && candidate.camera.lens > 0 && candidate.camera.sensorWidth > 0 && Array.isArray(candidate.templates) && candidate.templates.length > 0 && candidate.templates.every(template => typeof template.id === "string" && typeof template.url === "string" && template.url.startsWith("/assets/hyper-atrium/") && template.url.endsWith(".glb"));
 }
 
-const fromBlender = ([x, y, z]: [number, number, number]) => new Vector3(x, z, -y);
 // Orbit slots around a focused relic, in relic half-heights along camera right and up. The right side
 // of the frame belongs to the panel, so cards gather left, above and below.
 const ORBIT_SLOTS: [number, number][] = [[-1.05, 1.62], [-1.2, -1.58], [1.0, 1.7], [.95, -1.66]];
+const fromBlender = ([x, y, z]: [number, number, number]) => new Vector3(x, z, -y);
 const objectName = (object: Object3D) => String(object.userData.name ?? object.name).replaceAll("_", " ");
 
 export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: AtriumManifest, onBounds: (bounds: StationBounds[]) => void, signal?: AbortSignal, onAgentBounds?: (bounds: AgentBounds) => void): Promise<AtriumRenderer> {
   const renderer = new WebGLRenderer({ canvas, alpha: false, antialias: false, powerPreference: "high-performance" });
   const restoreTransmission = configureAtriumTransmission(renderer, matchMedia("(pointer: coarse)").matches ? 512 : 1024);
+  // Metal timer queries split command buffers and disturb normal frame pacing.
+  // Keep profiling explicit, even in development, when measuring a GPU phase.
+  const gpuProfile = createAtriumGpuProfile(renderer, process.env.NODE_ENV === "development" && new URLSearchParams(window.location.search).get("gpuProfile") === "1");
   if (process.env.NODE_ENV === "development") {
     renderer.info.autoReset = false;
     const gl = renderer.getContext();
@@ -89,8 +94,12 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const rim = new DirectionalLight(0xffdccc, .4);
   rim.position.set(5, 9, -10);
   scene.add(rim);
-  const pearlLight = new PointLight(0xffe9d1, .65, 6, 2);
-  pearlLight.position.set(0, 1.7, -1.5);
+  // Match the authored soft inner source. Three's legacy point intensity uses
+  // a separate calibration from Cycles watts and cannot model source radius.
+  const pearlGlow = .65 * (manifest.pearlLight?.blenderEnergy ?? 6) / 24;
+  const pearlColor = manifest.pearlLight ? new Color().setRGB(...manifest.pearlLight.colorLinear) : new Color(0xffe9d1);
+  const pearlLight = new PointLight(pearlColor, pearlGlow, 6, 2);
+  pearlLight.position.copy(manifest.pearlLight ? fromBlender(manifest.pearlLight.position) : new Vector3(0, 2.3311, -1.5));
   scene.add(pearlLight);
   const water = createAtriumWater({ reflectionSize: matchMedia("(pointer: coarse)").matches ? 512 : 1024, sunDirection });
   scene.add(water.group);
@@ -102,7 +111,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   scene.add(ethereal.group);
   const stationsGroup = new Group();
   scene.add(stationsGroup);
-  const pipeline = createAtriumPipeline(renderer, scene, camera);
+  const pipeline = createAtriumPipeline(renderer, scene, camera, gpuProfile);
   const modelCache = new Map<string, Promise<Object3D>>();
   const retiredCovers: Object3D[] = [];
   const loader = createAtriumGeometryLoader();
@@ -138,11 +147,11 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   scene.add(orbit);
   type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; icon: Group; restPosition: Vector3; parts: ReturnType<typeof createRelicParts>; hover: { value: number }; velocity: number; phase: number };
   let instances: Instance[] = [];
-
-  function prepareRelic(model: Object3D, hover: { value: number }) {
   let focusedStation: string | null = null;
   let focusListener: ((frame: FocusFrame) => void) | null = null;
   let focusSubject: { center: Vector3; reach: number } | null = null;
+
+  function prepareRelic(model: Object3D, hover: { value: number }) {
     const icon = new Group();
     icon.name = "Floating ethereal relic";
     const iconParts: Mesh[] = [];
@@ -197,10 +206,10 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
         }
       }
       const hover = Math.max(0, Math.min(1.06, instance.hover.value));
-      const movement = still ? 0 : 1;
-      const settle = still ? 1 : 1 - Math.exp(-delta * 16);
       // The relic opens as the camera commits to it, and hints at it on hover.
       instance.parts.update(instance.station.id === focusedStation ? 1 : target * .16, delta, elapsed, still);
+      const movement = still ? 0 : 1;
+      const settle = still ? 1 : 1 - Math.exp(-delta * 16);
       const idleTurn = movement * Math.sin(elapsed * .24 + instance.phase) * .06;
       instance.icon.rotation.x += ((target ? -hoverPointer.y * .045 * hover * movement : 0) - instance.icon.rotation.x) * settle;
       instance.icon.rotation.y += (idleTurn + (target ? hoverPointer.x * .085 * hover * movement : 0) - instance.icon.rotation.y) * settle;
@@ -221,8 +230,6 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     orbit.rotation.z = still ? 0 : Math.sin(elapsed * .33) * .018;
     focusRig.update(delta, roomPointer, still);
     canvas.dataset.focusProgress = focusRig.progress.toFixed(3);
-    pearlLight.intensity = .65 + (still ? 0 : Math.sin(elapsed * .8) * .09);
-  }
     if (focusListener && focusSubject && (focusRig.focused || focusRig.progress > .002)) {
       // Orbit slots sit on the camera-facing plane through the relic, so cards hug it at any angle.
       const right = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
@@ -237,6 +244,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
         slots: ORBIT_SLOTS.map(([x, y]) => project(focusSubject!.center.clone().addScaledVector(right, x * focusSubject!.reach).addScaledVector(up, y * focusSubject!.reach))),
       });
     }
+    pearlLight.intensity = pearlGlow * (1 + (still ? 0 : Math.sin(elapsed * .8) * .12));
+  }
 
   function bounds() {
     if (disposed) return;
@@ -266,9 +275,10 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   }
   function render(forceReflections = true) {
     if (disposed || !ready) return;
+    gpuProfile.beginFrame();
     const captureStarted = process.env.NODE_ENV === "development" ? performance.now() : 0;
     if (process.env.NODE_ENV === "development") renderer.info.reset();
-    water.prepareFrame(renderer, scene, camera, forceReflections);
+    gpuProfile.measure("capture", () => water.prepareFrame(renderer, scene, camera, forceReflections));
     const beautyStarted = process.env.NODE_ENV === "development" ? performance.now() : 0;
     // Refraction already refreshed complete-scene shadows for this frame.
     const autoUpdate = renderer.shadowMap.autoUpdate;
@@ -277,7 +287,19 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     renderer.shadowMap.needsUpdate = false;
     try {
       pipeline.render();
+      gpuProfile.measure("calibration", () => {});
       if (process.env.NODE_ENV === "development") {
+        const gpuTiming = gpuProfile.poll();
+        canvas.dataset.gpuTimer = String(gpuProfile.supported);
+        canvas.dataset.captureGpuMs = gpuTiming.captureMs?.toFixed(1) ?? "";
+        canvas.dataset.beautyGpuMs = gpuTiming.beautyMs?.toFixed(1) ?? "";
+        canvas.dataset.bloomGpuMs = gpuTiming.bloomMs?.toFixed(1) ?? "";
+        canvas.dataset.toneGpuMs = gpuTiming.toneMs?.toFixed(1) ?? "";
+        canvas.dataset.displayGpuMs = gpuTiming.displayMs?.toFixed(1) ?? "";
+        canvas.dataset.calibrationGpuMs = gpuTiming.calibrationMs?.toFixed(1) ?? "";
+        canvas.dataset.gpuSamples = String(gpuTiming.calibrationSamples);
+        canvas.dataset.gpuPending = String(gpuTiming.pending);
+        canvas.dataset.gpuSkipped = String(gpuTiming.skipped);
         canvas.dataset.drawCalls = String(renderer.info.render.calls);
         canvas.dataset.triangles = String(renderer.info.render.triangles);
         canvas.dataset.captureMs = (beautyStarted - captureStarted).toFixed(1);
@@ -429,8 +451,10 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       if (paused) { animateRelics(0, true); render(); }
     },
     setPressed(id) { pressed = id; if (paused) render(); },
+    setFocusListener(listener) { focusListener = listener; },
     setFocus(id, visibleShare = 1) {
       const instance = id ? instances.find(entry => entry.station.id === id) : null;
+      focusedStation = instance ? instance.station.id : null;
       if (!instance) { focusRig.aim(null); if (paused) { animateRoom(0, true); render(); } return; }
       const box = new Box3().setFromObject(instance.icon);
       const center = box.getCenter(new Vector3());
@@ -445,10 +469,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       raycaster.setFromCamera(new Vector2(x, -y), camera);
       const basin = raycaster.ray.intersectPlane(basinPlane, basinHit);
       const point = basin && basin.x * basin.x + basin.z * basin.z < 4.36 * 4.36 ? basin : raycaster.ray.intersectPlane(poolPlane, poolHit);
-    setFocusListener(listener) { focusListener = listener; },
       if (!point || point.x < -25 || point.x > 25 || point.z < -35 || point.z > 28 || point.distanceToSquared(lastSplash) < .0225) return;
       // Avoid making ripples through the navigation relic or the stone rim.
-      focusedStation = instance ? instance.station.id : null;
       if (hovered || point.x * point.x + point.z * point.z >= 4.36 * 4.36 && point.x * point.x + point.z * point.z <= 4.95 * 4.95) return;
       water.splash(point.x, point.z, .28);
       lastSplash.copy(point);
@@ -479,6 +501,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       sideLight.dispose();
       ethereal.dispose();
       pipeline.dispose();
+      gpuProfile.dispose();
       restoreTransmission();
       renderer.dispose();
     },
@@ -496,6 +519,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     room.traverse(object => {
       const name = objectName(object);
       if (/delicate orbital ring/.test(name)) object.visible = false;
+      if (name === "Hyper | floating pearl light at lower pole") object.visible = false;
       if (object instanceof Mesh && /floating pearl marble sphere/.test(name)) agentPearl = object;
       if (/delicate orbital ring|suspended satellite/.test(name)) orbitParts.push(object);
       if (/floating pearl marble sphere|floating mineral|floating pearl light/.test(name)) {
@@ -512,7 +536,6 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     canvas.dataset.renderer = "live-3d";
     ready = true;
     resize();
-      if (name === "Hyper | floating pearl light at lower pole") object.visible = false;
     sectionChanged();
   } catch (error) { api.dispose(); throw error; }
   return api;
