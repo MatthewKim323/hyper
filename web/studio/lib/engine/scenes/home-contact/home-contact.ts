@@ -765,6 +765,9 @@ export class HomeContact {
 
   showHome(e = false) {
     this.showUI();
+    // showUI only clears visibility:hidden; without this the button would paint at full
+    // opacity for a frame before the fromTo below takes hold.
+    if (this.dom.viewProjectsBtn) gsap.set(this.dom.viewProjectsBtn, { autoAlpha: 0 });
     return gsap
       .timeline()
       .to(

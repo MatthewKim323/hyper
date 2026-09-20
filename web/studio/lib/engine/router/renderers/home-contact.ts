@@ -11,8 +11,11 @@ export class HomeContactRenderer extends BaseRenderer {
     super.onFirstLoad();
     (store.AssetLoader!.loaded as Promise<void>).then(() => {
       store.PageLoader.hiddenPromise.then(() => {
+        // Let the reveal actually play on first load. progress(1) jumped the timeline to
+        // its end, so the enter button popped in fully formed while the loader was still
+        // clearing; showHome's own GSAP tween now eases it in after the wipe.
         store.HomeContact.isHome
-          ? store.HomeContact.showHome().pause().progress(1)
+          ? store.HomeContact.showHome()
           : store.HomeContact.showContact().pause().progress(1);
         gsap.fromTo(
           store.HomeContact.options,
