@@ -21,7 +21,9 @@ export function eligible(event: WorkflowEvent, mode: CommentaryMode, now: number
 /** Autoplay and config waits retain the utterance until output can actually start. */
 export function takeNarration(queue: WorkflowEvent[], decisions: WorkflowEvent[], state: { audioEnabled: boolean | null; playbackEnabled: boolean; decisionActive: boolean }) {
   if (state.audioEnabled === null) return null;
-  const index = queue.findIndex(event => !state.decisionActive || event.narration.priority >= 3 || event.kind === "cfo.greeting");
+  // An outstanding decision prioritizes its cues, but must not mute unrelated live work.
+  const urgent = queue.findIndex(event => event.narration.priority >= 3 || event.kind === "cfo.greeting");
+  const index = urgent >= 0 ? urgent : 0;
   const event = decisions[0] ?? queue[index];
   if (!event) return null;
   const delivery = !state.audioEnabled ? "caption-only" : !state.playbackEnabled ? "needs-audio" : "play";

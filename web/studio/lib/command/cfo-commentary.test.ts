@@ -46,13 +46,21 @@ test("an autoplay lock preserves all three choices until the orb gesture enables
   assert.equal(ready.event.id, "2"); assert.equal(ready.delivery, "play");
   assert.deepEqual(ready.decisions.map(item => item.id), ["3", "4"]);
 });
-test("a pending decision does not silence the introduction but still holds routine chatter", () => {
+test("a pending decision prioritizes the introduction without silencing ongoing work", () => {
   const greeting = { ...event(1, 2), kind: "cfo.greeting" };
   const state = { audioEnabled: true, playbackEnabled: true, decisionActive: true };
   const ready = takeNarration([event(2), greeting], [], state)!;
   assert.equal(ready.event, greeting); assert.equal(ready.delivery, "play");
-  assert.equal(takeNarration(ready.queue, ready.decisions, state), null);
-  assert.equal(takeNarration(ready.queue, ready.decisions, { ...state, decisionActive: false })?.event.id, "2");
+  assert.equal(takeNarration(ready.queue, ready.decisions, state)?.event.id, "2");
+});
+test("decision cues come first, then routine commentary resumes while the decision waits", () => {
+  const queue = [event(1)], decisions = [event(2, 3)];
+  const state = { audioEnabled: true, playbackEnabled: true, decisionActive: true };
+  const first = takeNarration(queue, decisions, state)!;
+  assert.equal(first.event.id, "2");
+  const next = takeNarration(first.queue, first.decisions, state)!;
+  assert.equal(next.event.id, "1");
+  assert.equal(takeNarration(next.queue, next.decisions, state), null);
 });
 test("a late orb gesture can replay the expired greeting even with a pending decision", () => {
   const greeting = { ...event(1, 2), kind: "cfo.greeting" };
