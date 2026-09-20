@@ -232,10 +232,18 @@ def measure_tests(engine):
     head = git()['sha']; previous = last(engine, 'tests', 'backend')
     if previous and previous['context'].get('sha') == head and not git()['dirty']: return 'unchanged'
     started = time.time()
-    done = subprocess.run([sys.executable, '-m', 'pytest', '-q', '-p', 'no:cacheprovider'], cwd=BACKEND, capture_output=True, text=True, timeout=1800)
+    # `uv run` so the suite sees the project environment. Plain sys.executable is whatever
+    # interpreter the recorder happens to run under, and outside the venv every test errors on
+    # import: the paper then reports a passing suite as "0 passed, 27 failed".
+    done = subprocess.run(['uv', 'run', '--directory', str(BACKEND), 'python', '-m', 'pytest', '-q', '-p', 'no:cacheprovider'],
+                          cwd=BACKEND, capture_output=True, text=True, timeout=1800)
     tail = done.stdout.strip().splitlines()[-1] if done.stdout.strip() else ''
     counts = {k: int(v) for v, k in re.findall(r'(\d+) (passed|failed|skipped|errors?)', tail)}
     if not counts: return 'unreadable: ' + tail[-200:]
+    # Collection errors mean the suite never ran. Recording them as failures publishes a number
+    # about the environment, not the code, so refuse rather than print a wrong one.
+    if not counts.get('passed') and 'error' in tail:
+        return 'not run: ' + tail[-200:]
     record(engine, 'tests', 'backend', {'passed': counts.get('passed', 0), 'failed': counts.get('failed', 0) + counts.get('error', 0) + counts.get('errors', 0),
         'skipped': counts.get('skipped', 0), 'seconds': round(time.time() - started, 1)})
     return tail
