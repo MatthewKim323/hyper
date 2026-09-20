@@ -32,5 +32,7 @@ AGENT_PUBLIC_BASE_URL="$URL" DEVIN_MAX_SESSIONS_PER_ORG="${DEVIN_MAX_SESSIONS_PE
 # into the second, whose tasks get no lessons and no skills. Set DEVIN_CONTROL_PAIRS="" to run without it.
 pkill -f "app.devin_exceptions" 2>/dev/null || true
 DEVIN_CONTROL_PAIRS="${DEVIN_CONTROL_PAIRS-demo-meridian:demo-meridian-control}" nohup uv run python -m app.devin_exceptions > var/devin-exceptions.log 2>&1 &
+# Sessions already in flight were given the previous address.
+uv run python -m app.devin_exceptions_ctl moved "$URL" || true
 echo "devin worker, exception bridge and counterparty worker started (logs in backend/var/)"
 echo "turn the loop on:  uv run --directory backend python -m app.devin_exceptions_ctl on demo-meridian"

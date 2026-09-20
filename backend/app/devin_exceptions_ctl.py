@@ -3,6 +3,7 @@
     uv run --directory backend python -m app.devin_exceptions_ctl on|off|status ORG [--every SECONDS] [--open N]
     uv run --directory backend python -m app.devin_exceptions_ctl compare ORG CONTROL_ORG
     uv run --directory backend python -m app.devin_exceptions_ctl skills ORG
+    uv run --directory backend python -m app.devin_exceptions_ctl moved NEW_BASE_URL
 
 `on` enables both halves: the adversary that sends new exceptions and the Devin dispatcher that
 works them. `off` stops new exceptions and new sessions; sessions already running finish.
@@ -53,9 +54,25 @@ def skills(store, oid):
             print(f"  {skill['status']:<11} {skill['name']} v{skill['version']}   runs {len(runs)}" + (f"   READY FOR REVIEW  skill_id={skill['id']} run_id={runs[0].id} hash={skill['package_hash']}" if ready else ''))
 
 
+def moved(store, base):
+    """The tunnel address changes on every restart. Sessions in flight still hold the old one, so tell them."""
+    from .database import agent_tasks
+    from .devin_worker import Devin
+    if not base.startswith('https://'): raise SystemExit('the new address must be https')
+    provider = Devin()
+    with store.engine.connect() as db:
+        rows = db.execute(select(agent_tasks.c.session_id).where(agent_tasks.c.status == 'running', agent_tasks.c.session_id.isnot(None))).scalars().all()
+    for sid in rows:
+        try:
+            provider.message(sid, f'The application API moved. Use {base} as the base URL for every request from now on, with the same APP_AGENT_TOKEN. '
+                                  'The old address no longer answers. Reread saved state first (get_case, get_counterparty_thread), then continue your task; do not repeat requests you already made.')
+            print('  told', sid)
+        except Exception as exc: print('  could not reach', sid, type(exc).__name__)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['on', 'off', 'status', 'compare', 'skills'])
+    parser.add_argument('action', choices=['on', 'off', 'status', 'compare', 'skills', 'moved'])
     parser.add_argument('organization')
     parser.add_argument('control', nargs='?')
     # Devin takes minutes per case, so the default pace is slow: a faster adversary only produces timeouts.
@@ -65,6 +82,7 @@ if __name__ == '__main__':
     store = Store()
     if args.action == 'compare': compare(store, args.organization, args.control or args.organization + '-control'); raise SystemExit
     if args.action == 'skills': skills(store, args.organization); raise SystemExit
+    if args.action == 'moved': moved(store, args.organization); raise SystemExit
     adversary, agents = Counterparties(DataService(store, args.organization)), AgentService(store, args.organization)
     if args.action != 'status':
         on = args.action == 'on'
