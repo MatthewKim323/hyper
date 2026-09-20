@@ -107,3 +107,27 @@ def test_currency_mismatch_and_invoice_total_block_proposal(setup):
     result=svc.execute('analyze_payable',{'case_id':cid})
     assert any('currency' in str(issue['detail']) for issue in result['issues'])
     assert proposal(svc,cid)['validation']['verdict']=='FAIL'
+
+def test_case_and_proposal_listings_for_the_workspace(setup,monkeypatch):
+    store,a,b,_,_=setup;data=a.data;svc=Accounting(store,a.oid)
+    assert svc.list_cases()=={'cases':[]} and svc.list_proposals()=={'proposals':[]}
+    cid=initial(data)
+    listed=svc.list_cases()['cases']
+    assert [c['case_id'] for c in listed]==[cid]
+    # People see the original invoice ID, never the tenant-namespaced one.
+    assert listed[0]['invoice_id']=='INV-1042' and listed[0]['calculation']['invoice_face_cents']==12_000_000
+    assert listed[0]['calculation']['ties'] is False and listed[0]['blocking_issues']
+    deliver(data,hero.cancellation_record());deliver(data,hero.supplier_ack())
+    deliver(data,hero.price_credit());deliver(data,hero.quantity_credit())
+    svc.execute('inspect_payable_credit',{'case_id':cid,'credit_id':'CM-201'})
+    svc.execute('inspect_payable_credit',{'case_id':cid,'credit_id':'CM-202'})
+    full=proposal(svc,cid)['proposal']
+    ready=svc.list_proposals()['proposals'][0]
+    assert ready['proposal_id']==full['proposal_id'] and ready['hash']==full['hash']
+    assert ready['payload']['net_payable_cents']==8_000_000 and ready['payload']['invoice_id']=='INV-1042'
+    assert ready['approval']['status']=='PENDING' and all(c['ok'] for c in ready['checks'])
+    assert svc.list_cases()['cases'][0]['calculation']['ties'] is True
+    svc.approve(Approval(proposal_id=full['proposal_id'],proposal_hash=full['hash'],decision='APPROVED'),'alice')
+    assert svc.list_proposals()['proposals'][0]['approval']['status']=='APPROVED'
+    # Another organization sees none of it.
+    assert Accounting(store,b.oid).list_cases()=={'cases':[]} and Accounting(store,b.oid).list_proposals()=={'proposals':[]}

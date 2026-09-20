@@ -106,6 +106,47 @@ class Accounting:
         return {'case':casework.get_case(db,cid),'calculation':calculation,'issues':casework.list_issues(db,cid),
                 'evidence':[dict(r) for r in db.execute(select(accounting_evidence).where(accounting_evidence.c.organization_id==self.oid,accounting_evidence.c.doc_id.in_(doc_ids))).mappings()],
                 'authority':'analysis_only','policy':'explicit_ap_rules_not_inferred_practice'}
+    def display(self,value):
+        """Strip the tenant namespace from IDs for people. Internal IDs never leave as lookup keys."""
+        prefix=self.internal_id('')
+        if isinstance(value,list):return [self.display(v) for v in value]
+        if isinstance(value,dict):return {k:self.display(v) for k,v in value.items()}
+        return value[len(prefix):] if isinstance(value,str) and value.startswith(prefix) else value
+    def list_cases(self,limit=50):
+        """Every engine case for this organization with its recomputed position. Read only."""
+        with self.transaction() as db:
+            rows=db.execute(select(ledger.cases).where(ledger.cases.c.company_id==self.oid).order_by(ledger.cases.c.updated_at.desc()).limit(limit)).mappings().all()
+            out=[]
+            for row in rows:
+                entry={'case_id':row['case_id'],'invoice_id':self.display(row['invoice_id']),'revision':row['revision'],
+                       'work_status':row['work_status'],'authorization_status':row['authorization_status'],'payment_status':row['payment_status'],
+                       'updated_at':row['updated_at'].isoformat()}
+                try:
+                    calc=proposals.calculate_supported_payable(db,row['case_id'])
+                    issues=casework.list_issues(db,row['case_id'])
+                    entry.update(calculation=self.display({k:calc[k] for k in ('currency','invoice_face_cents','verified_credits_total_cents','net_after_credits_cents','independently_supported_cents','residual_cents','ties')}),
+                                 blocking_issues=[self.display({'type':i['type'],'description':i['description'],'next_action':i.get('next_action')}) for i in issues if i['blocking'] and i['status']=='OPEN'])
+                except Exception as exc:
+                    # One unreadable case must not blank the list; say why instead of guessing a number.
+                    entry.update(calculation=None,blocking_issues=[],error=str(exc)[:300])
+                out.append(entry)
+            return {'cases':out}
+    def list_proposals(self,limit=50):
+        """Payable proposals with the checks they pass now and where approval stands. Read only."""
+        with self.transaction() as db:
+            rows=db.execute(select(ledger.proposals).join(ledger.cases,ledger.cases.c.case_id==ledger.proposals.c.case_id)
+                .where(ledger.cases.c.company_id==self.oid).order_by(ledger.proposals.c.created_at.desc()).limit(limit)).mappings().all()
+            out=[]
+            for row in rows:
+                approval=db.execute(select(ledger.approvals).where(ledger.approvals.c.proposal_id==row['proposal_id']).order_by(ledger.approvals.c.requested_at.desc())).mappings().first()
+                try:checks=[{'name':c.get('name') or c.get('check'),'ok':bool(c['ok']),'detail':c.get('detail')} for c in proposals.validate_proposal(db,row['proposal_id'])]
+                except Exception as exc:checks=[{'name':'validation','ok':False,'detail':str(exc)[:300]}]
+                out.append({'proposal_id':row['proposal_id'],'case_id':row['case_id'],'hash':row['hash'],'status':row['status'],
+                            'based_on_revision':row['based_on_revision'],'created_by':row['created_by'],'created_at':row['created_at'].isoformat(),
+                            'payload':self.display(row['payload']),'checks':checks,
+                            'approval':None if not approval else {'status':approval['status'],'decided_by':approval['decided_by'],
+                                'decided_at':approval['decided_at'].isoformat() if approval['decided_at'] else None}})
+            return {'proposals':out}
     def execute(self,name,args):
         parsed=TOOL_MODELS[name].model_validate(args)
         with self.transaction() as db:

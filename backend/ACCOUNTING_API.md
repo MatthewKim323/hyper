@@ -37,6 +37,15 @@ Analysis reports both invoice-minus-verified-credits and received-quantity-at-su
 
 Preparation returns `proposal`, deterministic `validation`, nullable `approval`, and `committed:false`. Failed checks remain visible. The review actor `engine:deterministic_validator` means a code validator, not a second human or independent model opinion. A passing proposal creates a PENDING approval packet; it never approves itself.
 
+## Workspace listings
+
+Read-only, organization scoped, for the dashboard. Neither is an agent tool.
+
+- `GET /accounting/cases` returns `{cases:[{case_id, invoice_id, revision, work_status, authorization_status, payment_status, updated_at, calculation, blocking_issues}]}`. `calculation` is recomputed on every read (`invoice_face_cents`, `verified_credits_total_cents`, `net_after_credits_cents`, `independently_supported_cents`, `residual_cents`, `ties`). A case that cannot be evaluated returns `calculation: null` with `error` instead of a guessed number.
+- `GET /accounting/proposals` returns `{proposals:[{proposal_id, case_id, hash, status, based_on_revision, created_by, created_at, payload, checks, approval}]}`. `checks` are re-run now, so a proposal whose evidence changed shows its failing check. `approval` is the latest request (`PENDING`, `APPROVED`, `REJECTED`, `INVALIDATED`) or null.
+
+IDs in these two responses are the original record IDs with the tenant namespace removed. Use `case_id`, `proposal_id` and `hash` exactly as returned for follow-up calls.
+
 ## Human approval
 
 Only an organization owner may call:

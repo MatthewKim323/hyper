@@ -25,6 +25,10 @@ def records(data=Depends(service)):return Accounting(data.store,data.oid).invent
 def verify(body:PromoteRecord,access=Depends(owner)):
     data,identity=access
     return invoke(Accounting(data.store,data.oid).promote,body,'human:'+identity.user_id)
+@router.get('/cases')
+def list_cases(data=Depends(service)):return invoke(Accounting(data.store,data.oid).list_cases)
+@router.get('/proposals')
+def list_proposals(data=Depends(service)):return invoke(Accounting(data.store,data.oid).list_proposals)
 @router.post('/cases')
 def open_case(body:OpenInvoice,data=Depends(service)):
     return invoke(Accounting(data.store,data.oid).execute,'open_payable_case',body.model_dump())
