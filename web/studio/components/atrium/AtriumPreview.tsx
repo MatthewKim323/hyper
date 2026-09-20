@@ -81,6 +81,13 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
     primeTimer.current = window.setTimeout(() => setPriming(false), ms);
   }, []);
   useEffect(() => () => clearTimeout(primeTimer.current), []);
+  // The onboarding handoff runs the hidden world for real, so the wipe uncovers a moving room.
+  const [handoffLive, setHandoffLive] = useState(false);
+  useEffect(() => {
+    const onLive = (event: Event) => setHandoffLive(Boolean((event as CustomEvent<{ live: boolean }>).detail?.live));
+    window.addEventListener("hyper:world-live", onLive);
+    return () => window.removeEventListener("hyper:world-live", onLive);
+  }, []);
   const [preview, setPreview] = useState<Partial<RelicActivityMap> | null>(null);
   const activityStates = preview ?? activities;
   const activityRef = useRef(activityStates);
@@ -222,9 +229,11 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
 
   useEffect(() => {
     // Hidden means paused: the scene still prepares its first frame, then stops drawing.
-    motionRef.current = reducedMotion || (warm && !priming);
-    renderer.current?.setPaused(motionRef.current);
-  }, [reducedMotion, warm, priming]);
+    const next = reducedMotion || (warm && !priming && !handoffLive);
+    if (next === motionRef.current) return;
+    motionRef.current = next;
+    renderer.current?.setPaused(next);
+  }, [reducedMotion, warm, priming, handoffLive]);
 
   useEffect(() => {
     const controller = new AbortController();

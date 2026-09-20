@@ -22,8 +22,6 @@ const store: any = storeRaw;
 const DURATION = 3;
 const EASE = "power4.inOut";
 const WORLD_READY_TIMEOUT = 12000;
-// How long the landed frame covers the live world while it spins up.
-const HOLD_LANDED_MS = 450;
 
 const VERT = `attribute vec2 position; varying vec2 vUv;
 void main() { vUv = position * 0.5 + 0.5; gl_Position = vec4(position, 0.0, 1.0); }`;
@@ -243,21 +241,42 @@ async function runEngineTransition(onCovered: () => void): Promise<boolean> {
     menu.allowControl = false;
     menu.savePass.enabled = true;
     gl.composerPasses.add(pass, 30); // the slot the landing transition uses
-    await gsap.timeline({ defaults: { duration: DURATION, ease: EASE } })
-      .fromTo(pass.uniforms.u_progress, { value: 0 }, { value: 1 }, 0)
+    // The still only carries the ripple edge. Just behind that edge the real, running world is
+    // uncovered through a mask, so what the wipe reveals is already alive, and the handoff ends
+    // the moment the world covers the screen instead of holding on a photograph of it.
+    const room = document.querySelector<HTMLElement>("[data-warm]");
+    const world = room?.querySelector<HTMLCanvasElement>("canvas") ?? null;
+    const rect = world?.getBoundingClientRect();
+    let live = false;
+    const uncover = () => {
+      if (!world || !rect || !rect.height) return;
+      // Where the shader's edge sits (fraction of the viewport, from the bottom), minus its noise band.
+      const edge = (2 * (pass.uniforms.u_progress.value - 0.05) - 0.5 - 0.08) * window.innerHeight;
+      if (!live && edge > -0.2 * window.innerHeight) {
+        live = true;
+        window.dispatchEvent(new CustomEvent("hyper:world-live", { detail: { live: true } }));
+        world.style.visibility = "visible";
+      }
+      const local = Math.max(0, rect.bottom - window.innerHeight + edge);
+      const mask = `linear-gradient(to top, #000 ${local - 0.08 * window.innerHeight}px, transparent ${local}px)`;
+      world.style.maskImage = mask;
+      world.style.setProperty("-webkit-mask-image", mask);
+    };
+    uncover();
+    const timeline = gsap.timeline({ defaults: { duration: DURATION, ease: EASE } })
+      .fromTo(pass.uniforms.u_progress, { value: 0 }, { value: 1, onUpdate: uncover }, 0)
       .fromTo(menu.tweenParams, { cameraYOffset: 0 }, { cameraYOffset: -store.window.h / 2 }, "<")
       .call(() => {
         store.Audio?.play?.({ key: "audio.new_water_projects", isInteraction: true });
       }, [], 0.6);
-    // The engine canvas now shows the same image the world is about to show.
-    // Keep the landed frame on screen while the live world starts. Revealing it wakes its render
-    // loop and mounts its interface in the same frames. The engine canvas underneath already shows
-    // the same image, so the world stays hidden for a beat and that work happens out of sight.
-    const room = document.querySelector<HTMLElement>("[data-warm]");
-    if (room) room.style.visibility = "hidden";
+    await new Promise<void>((resolve) => {
+      const covered = () => { if (!world || !rect || pass.uniforms.u_progress.value >= 0.9) { gsap.ticker.remove(covered); resolve(); } };
+      gsap.ticker.add(covered);
+      timeline.then(() => { gsap.ticker.remove(covered); resolve(); });
+    });
+    timeline.kill();
     onCovered();
-    await new Promise<void>((resolve) => setTimeout(resolve, HOLD_LANDED_MS));
-    if (room) room.style.visibility = "";
+    if (world) { world.style.maskImage = ""; world.style.removeProperty("-webkit-mask-image"); }
     return true;
   } finally {
     gl.composerPasses.remove(pass);
@@ -266,6 +285,12 @@ async function runEngineTransition(onCovered: () => void): Promise<boolean> {
     menu.allowControl = control;
     pass.material.dispose();
     incoming.dispose();
+    // Let the revealed world take over first, so nothing pauses or hides for a frame in between.
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("hyper:world-live", { detail: { live: false } }));
+      const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-ready="true"]');
+      if (canvas) canvas.style.visibility = "";
+    }, 1000);
     delete document.documentElement.dataset.handoff;
   }
 }
