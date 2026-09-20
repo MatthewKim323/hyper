@@ -30,7 +30,9 @@ From `web/studio`, using Blender 4.5:
 
 The preview writes an ignored `review.png` at 1280×720 and 32 samples. The final render writes `hyper-atrium.png` at 2560×1441 and 96 samples. Rendering does not save temporary resolution, sample count, or output-path changes into the source. All five main stations render together; the template library stays hidden.
 
-Add `--cpu` after `--` if the local macOS Metal shader compiler fails. This selects the same Cycles scene on the CPU, with a longer render time. Use `--python-exit-code 1` for automated commands so Python failures return a nonzero process status.
+On macOS, the renderer sets `CYCLES_METAL_DISABLE_BINARY_ARCHIVES=1` for its own process before GPU initialization, avoiding the Blender 4.5 Metal archive-path crash. Existing environment overrides are preserved; no user preferences or system settings change. First-use shader compilation can take a few minutes.
+
+Add `--cpu` after `--` if the local macOS Metal shader compiler fails. This selects the same Cycles scene on the CPU, with a longer render time. Add `--threads 4` to set Blender's render thread count to four; omitting it retains the saved scene's thread setting. These render overrides are not saved. Use `--python-exit-code 1` for automated commands so Python failures return a nonzero process status.
 
 ## Rebuild and export
 

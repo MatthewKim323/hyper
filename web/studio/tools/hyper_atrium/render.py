@@ -1,7 +1,12 @@
 """Render the unified authored scene without changing the saved composition."""
 import argparse
+import os
 from pathlib import Path
 import sys
+
+# Avoid Blender 4.5's Metal binary-archive URL crash before kernels initialize.
+if sys.platform == "darwin":
+    os.environ.setdefault("CYCLES_METAL_DISABLE_BINARY_ARCHIVES", "1")
 
 import bpy
 
@@ -13,8 +18,11 @@ OUT = ROOT / "assets/blender/hyper-atrium"
 parser = argparse.ArgumentParser()
 parser.add_argument("--preview", action="store_true")
 parser.add_argument("--cpu", action="store_true", help="Render on CPU if the local Metal shader compiler is unavailable")
+parser.add_argument("--threads", type=int, help="Use a positive CPU thread count; otherwise retain the source setting")
 parser.add_argument("--save-composition", action="store_true", help="Save station visibility and remove obsolete mask outputs before temporary render settings")
 args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
+if args.threads is not None and args.threads < 1:
+    parser.error("--threads must be a positive integer")
 bpy.ops.wm.open_mainfile(filepath=str(OUT / "hyper-atrium.blend"))
 scene = bpy.context.scene
 
@@ -40,6 +48,9 @@ if scene.use_nodes:
 scene.view_layers[0].use_pass_object_index = False
 if args.save_composition:
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT / "hyper-atrium.blend"), compress=True)
+if args.threads is not None:
+    scene.render.threads_mode = "FIXED"
+    scene.render.threads = args.threads
 scene.render.resolution_x = 1280 if args.preview else 2560
 scene.render.resolution_y = 720 if args.preview else 1441
 scene.render.resolution_percentage = 100
@@ -52,8 +63,7 @@ scene.render.filepath = str(OUT / ("review.png" if args.preview else "hyper-atri
 try:
     preferences = bpy.context.preferences.addons["cycles"].preferences
     preferences.compute_device_type = "METAL"
-    # Generic kernels avoid a macOS Metal pipeline-cache crash during repeated
-    # background previews after changing the scene's shader feature set.
+    # Generic kernels avoid background scene-specialization compilation.
     preferences.kernel_optimization_level = "OFF"
     preferences.get_devices()
     for device in preferences.devices:
