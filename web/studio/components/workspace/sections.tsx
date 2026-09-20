@@ -7,6 +7,7 @@ import { Bar, BarChart, BarYAxis, ChartTooltip, Grid } from "@/components/charts
 import { BackendError, backend } from "@/lib/backend/client";
 import type { AgentCase, AgentTask, Concern, EvidenceSearch, SimulationEvent } from "@/lib/backend/types";
 import { money, useBackend, when } from "./useBackend";
+import Adversary from "./Adversary";
 import { createSubmissionGuard } from "./submission-guard";
 import { EngineCases, PayableApprovals } from "./accounting";
 import OriginalSourceDownload from "@/components/atrium/workspaces/OriginalSourceDownload";
@@ -277,6 +278,7 @@ export function Activity({ active }: { active: boolean }) {
   ].sort((a, b) => b.at - a.at), [events.data, concerns.data, tasks.data]);
   return <>
     <Heading eyebrow="Activity" title={<>What happened, in <em>order</em>.</>} note="Company activity, decisions and investigations on one line. Simulated records are marked as simulated." />
+    <Adversary active={active} />
     {run && run.status === "failed" && <p className="ws-warning">The activity simulation stopped: {run.error}. The feed will not move past the failed step until it is restarted.</p>}
     <Status error={concerns.error ?? events.error} empty={concerns.data && !feed.length && "No activity yet."}>
       <ol className="ws-feed">{feed.map((item) => <li key={item.id}>

@@ -8,7 +8,7 @@ import type {
   SkillDetail, SkillSummary,
   AccountingRecord, EngineCase, PayableProposal,
   AgentCase, AgentTask, Artifact, Concern, ConcernStatus, Controller, Dataset, EvidenceSearch, FinancialAggregate,
-  FinancialQuery, Simulation, SimulationEvent, Source, SourceDetail, Workspace, Connection, ConnectionItem, ProviderInfo,
+  AdversaryState, ExceptionFamily, FinancialQuery, Scenario, Simulation, SimulationEvent, Source, SourceDetail, Workspace, Connection, ConnectionItem, ProviderInfo,
 } from "./types";
 
 const BASE = "/api/onboarding";
@@ -47,6 +47,11 @@ const query = (params: Record<string, string | number | undefined>) => {
 export const backend = {
   workspace: () => call<Workspace>("/me/workspace"),
   connections: () => call<{ connections: Connection[]; has_more: boolean }>("/connections"),
+  // Sandbox adversary: simulated suppliers and an internal desk that answer from private facts.
+  scenarios: () => call<{ scenarios: Scenario[] }>("/counterparty/scenarios"),
+  adversary: () => call<AdversaryState>("/counterparty/adversary"),
+  setAdversary: (enabled: boolean, interval_seconds = 30, max_open = 4) => post<AdversaryState["control"]>("/counterparty/adversary", { enabled, interval_seconds, max_open }),
+  spawnScenario: (family: ExceptionFamily) => post<Scenario>("/counterparty/scenarios", { family }),
   // Access. Connectors are read-only. Provider secrets are never returned by any of these.
   providers: () => call<{ providers: ProviderInfo[]; read_only: boolean; sync_method: string }>("/connections/providers"),
   /** Returns a Google consent URL. The provider redirects to the backend, so poll `connections` for the result. */

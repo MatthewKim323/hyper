@@ -111,3 +111,19 @@ export type SkillSummary = { id: string; name: string; version: number; descript
 export type SkillRun = { run_id: string; outcome: "passed" | "failed" | "needs_input"; summary: string | null; checks: string[]; duration_ms: number | null; created_at: number | string; evidence_current: boolean; verification: "self_reported" };
 export type SkillDetail = SkillSummary & { reported_runs: Partial<Record<SkillRun["outcome"], number>>; latest_run: SkillRun | null; skill_md: string; resources: string[]; research_urls: string[] };
 export const SKILL_ATTESTATION = "I independently reviewed the tests, accounting assumptions, and evidence for this skill version";
+
+// Sandbox counterparties and the adversary (backend/app/counterparty.py). The private fact sheet never appears here.
+export type ExceptionFamily = "clean" | "price_only" | "partial_correction" | "valid_amendment" | "backorder" | "disputed_cancellation"
+  | "claim_without_memo" | "silent_supplier" | "duplicate_credit" | "bank_change_attack";
+export type AgentStep = { at: number; tool?: string; args?: string; result?: string; say?: string };
+export type Scenario = {
+  id: string; title: string; invoice_id: string; status: "open" | "scored"; outcome: "pass" | "fail" | "correct_hold" | "timeout" | null;
+  difficulty: number; created_by: string; created_at: number; scored_at: number | null; requests: number; repeated_requests: number; family?: ExceptionFamily;
+  agent: { sessions: number; status: "WAITING" | "PROPOSED" | "HOLD" | null; model: string | null; lessons_at_start: number | null; trace: AgentStep[] };
+};
+export type AdversaryState = {
+  control: { enabled: boolean; interval_seconds: number; max_open: number; spawned: number };
+  scoreboard: { scored: number; correct: number; wrong_releases: number; repeated_requests: number; lessons_learned: number; level: number;
+    families: { family: ExceptionFamily; attempts: number; correct: number }[]; history: { at: number; family: ExceptionFamily; outcome: string; difficulty: number }[] };
+  lessons: { lesson: string; created_at: number }[];
+};

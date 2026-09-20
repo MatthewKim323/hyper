@@ -123,3 +123,29 @@
 .ws-skill-run[data-outcome="failed"] { border-color: #b3362f; }
 .ws-skill-activate label { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.85rem; line-height: 1.4; cursor: pointer; }
 .ws-skill-activate input { margin-top: 0.2rem; accent-color: #252321; }
+
+/* Adversary panel in Activity. */
+.ws-adversary { border-top: 0; padding-top: 0; }
+.ws-adversary__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; }
+.ws-adversary h3 { margin: 0.4rem 0 0.3rem; font-size: 1.35rem; font-weight: 400; letter-spacing: -0.025em; }
+.ws-switch { flex-shrink: 0; min-height: 42px; padding: 0.55rem 1.3rem; border: 1px solid #252321; border-radius: 99px; font-size: 0.82rem; cursor: pointer; background: transparent; transition: transform 160ms, background 160ms; }
+.ws-switch[aria-pressed="false"] { color: #fff; background: #252321; }
+.ws-switch:active { transform: scale(0.97); }
+.ws-score { display: grid; grid-template-columns: repeat(5, 1fr); margin: 1.25rem 0; border-block: 1px solid #ddd5cf; }
+.ws-score > div { padding: 0.9rem 0.9rem 0.9rem 0; }
+.ws-score dt { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #716860; }
+.ws-score dd { margin: 0.25rem 0 0; font-size: 1.5rem; letter-spacing: -0.03em; }
+.ws-score dd[data-bad] { color: #b02e2e; }
+.ws-inline--spawn { margin-bottom: 1.5rem; max-width: 34rem; }
+.ws-inline--spawn select { flex: 1; min-height: 42px; padding: 0.5rem 0.7rem; border: 1px solid #d6cec8; border-radius: 0.7rem; background: rgb(255 255 255 / 70%); font: inherit; font-size: 0.86rem; color: inherit; }
+.ws-rows--live li { padding: 1rem 0; }
+.ws-steps { display: flex; flex-wrap: wrap; gap: 0.35rem 0.5rem; margin: 0.5rem 0 0; padding: 0; list-style: none; font-size: 0.76rem; color: #63574e; }
+.ws-steps li { padding: 0.2rem 0.6rem !important; border: 1px solid #ddd5cf !important; border-radius: 99px; }
+.ws-steps li + li::before { content: none; }
+.ws-said { margin-top: 0.5rem !important; font-size: 0.84rem !important; color: #4b443e; }
+.ws-dot { display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.4rem; border-radius: 50%; }
+.ws-lessons { margin-top: 1.25rem; font-size: 0.86rem; }
+.ws-lessons summary { padding: 0.5rem 0; cursor: pointer; }
+.ws-lessons ul { margin: 0.25rem 0 0.75rem; padding-left: 1.1rem; line-height: 1.55; }
+.ws-lessons li { margin: 0.4rem 0; }
+@media (max-width: 900px) { .ws-score { grid-template-columns: repeat(2, 1fr); } .ws-adversary__head { flex-direction: column; gap: 0.75rem; } }
