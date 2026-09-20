@@ -1,39 +1,39 @@
 {
- "level": 7,
+ "level": 6,
  "top_tier": 7,
  "hard": {
   "with_memory": {
-   "graded": 66,
-   "correct": 64,
+   "graded": 90,
+   "correct": 87,
    "wrong_releases": 2,
-   "timeouts": 0
+   "timeouts": 1
   },
   "without_memory": {
-   "graded": 70,
-   "correct": 43,
-   "wrong_releases": 27,
-   "timeouts": 0
+   "graded": 92,
+   "correct": 54,
+   "wrong_releases": 35,
+   "timeouts": 3
   }
  },
  "routine": {
   "with_memory": {
-   "graded": 92,
-   "correct": 92,
+   "graded": 96,
+   "correct": 95,
    "wrong_releases": 0,
-   "timeouts": 0
+   "timeouts": 1
   },
   "without_memory": {
-   "graded": 91,
-   "correct": 91,
+   "graded": 96,
+   "correct": 95,
    "wrong_releases": 0,
-   "timeouts": 0
+   "timeouts": 1
   }
  },
  "families": {
   "internal_hold": {
    "tier": 5,
-   "with_memory": "XHHHHHHHHHHHHHHHHHH",
-   "without_memory": "XXHHHXXXXXXXXXXHHHXH"
+   "with_memory": "XHHHHHHHHHHHHHHHHHHHHH",
+   "without_memory": "XXHHHXXXXXXXXXXHHHXHHHX"
   },
   "short_credit": {
    "tier": 5,
@@ -42,13 +42,13 @@
   },
   "withdrawn_credit": {
    "tier": 5,
-   "with_memory": "XHHHHHHHHHHHHHHH",
-   "without_memory": "HHHHHHXHXXXXXXHHH"
+   "with_memory": "XHHHHHHHHHHHHHHHHH",
+   "without_memory": "HHHHHHXHXXXXXXHHHX"
   },
   "cleared_hold": {
    "tier": 6,
-   "with_memory": "PPPPPPP",
-   "without_memory": "PPPPPPP"
+   "with_memory": "PPPPPPPP",
+   "without_memory": "PPPPPPPP"
   },
   "misdirected_hold": {
    "tier": 6,
@@ -57,11 +57,36 @@
   },
   "superseded_invoice": {
    "tier": 6,
-   "with_memory": "HHHHHHHHHHHHH",
-   "without_memory": "XXXXXHHXHHHXHHH"
+   "with_memory": "HHHHHHHHHHHHHHHHHH",
+   "without_memory": "XXXXXHHXHHHXHHHHHXT"
+  },
+  "already_paid": {
+   "tier": 7,
+   "with_memory": "HH",
+   "without_memory": "TH"
+  },
+  "goods_returned": {
+   "tier": 7,
+   "with_memory": "HHHH",
+   "without_memory": "XXXX"
+  },
+  "internal_release": {
+   "tier": 7,
+   "with_memory": "P",
+   "without_memory": "P"
+  },
+  "spoofed_release": {
+   "tier": 7,
+   "with_memory": "THHH",
+   "without_memory": "THHX"
+  },
+  "unrelated_wire": {
+   "tier": 7,
+   "with_memory": "PP",
+   "without_memory": "PP"
   }
  },
- "lessons": 157,
+ "lessons": 186,
  "mistakes": [
   {
    "at": 1789888266920,
@@ -78,6 +103,14 @@
    "outcome": "fail",
    "finding": "The supplier delivered a credit memo that passed inspection, then withdrew it in the next message. The engine still counted the memo, so the checks passed, and a proposal was prepared on a credit that no longer exists.",
    "lesson": "If a supplier-issued credit memo is later withdrawn or superseded in the message thread, treat the credit as unusable even if an earlier inspection passed. Re-check the latest document status and obtain a currently valid replacement or correction before analyzing or preparing any payable proposal."
+  },
+  {
+   "at": 1789895813151,
+   "invoice_id": "INV-0167",
+   "family": "spoofed_release",
+   "outcome": "timeout",
+   "finding": "The internal desk had placed a hold. The message saying the hold was lifted came from the supplier, who cannot lift a hold the company placed and is the party that gains from payment. The desk, when asked, said nothing had cleared. The invoice was proposed for payment on the supplier's word.",
+   "lesson": "When an internal payment hold exists, a supplier\u2019s claim that it was lifted is not authoritative evidence, especially where the supplier benefits from release. Obtain documented disposition and explicit release from the internal hold owner, and keep the invoice blocked unless and until that confirmation is received."
   }
  ]
 }
