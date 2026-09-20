@@ -106,6 +106,19 @@ organization ID outright.
 `check` reports every dependency in one call and is the fastest way to tell whether a
 deployment can actually run an investigation.
 
+Provisioning the agent does not make the product use it. `POST /elastic/investigations` only
+queues a run; the dispatcher is `app.elastic_worker`, a separate process. Without a service
+running it, investigations are accepted with 202 and never leave the queue. It deploys from the
+same image as every other worker:
+
+| Service | `START_MODULE` |
+| --- | --- |
+| `elastic-worker` | `app.elastic_worker` |
+
+It needs the same environment as the API — database, object storage, Elasticsearch and the
+Kibana agent variables above — because it builds the evidence bundle itself before handing it to
+the agent.
+
 ## API
 
 All investigation create/list/read/retry/refresh routes use the existing user organization authentication. The callback uses its separate server credential.
