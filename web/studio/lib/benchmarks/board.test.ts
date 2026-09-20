@@ -24,3 +24,13 @@ test("live rows come from the recorded timeline and lead the board", () => {
   expect(rows.find(row => row.id === "retrieval")!.bars[0].share).toBeGreaterThan(rows.find(row => row.id === "retrieval")!.bars[1].share!);
   expect(boardRows(null).map(row => row.id)).toEqual(["invoices", "benchrec", "dabstep", "apex", "suite", "story"]);
 });
+
+test("every bar is a share of one and every percentage is a real percentage", () => {
+  const view = shapeLoopTimeline(JSON.parse(readFileSync(join(import.meta.dir, "../../../../backend/benchmarks/timeline.json"), "utf8")) as LoopTimeline);
+  expect(boardRows(view).some(row => row.id === "retrieval")).toBe(true);
+  for (const row of boardRows(view)) for (const bar of row.bars) {
+    if (bar.share !== null) { expect(bar.share).toBeGreaterThanOrEqual(0); expect(bar.share).toBeLessThanOrEqual(1); }
+    const shown = bar.text.match(/^(\d+(?:\.\d+)?)%$/);
+    if (shown) expect(Number(shown[1])).toBeLessThanOrEqual(100);
+  }
+});

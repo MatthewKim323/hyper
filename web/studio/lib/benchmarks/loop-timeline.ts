@@ -29,6 +29,7 @@ export type LoopView = {
   speed: { date: Date; with: number; without: number }[];
   level: { date: Date; level: number }[];
   lessons: number | null;
+  /** recall@10 per mode as a PERCENTAGE with one decimal (93.7), ready for a 0 to 100 axis. Not a fraction. */
   retrieval: { mode: string; recall: number }[];
 };
 

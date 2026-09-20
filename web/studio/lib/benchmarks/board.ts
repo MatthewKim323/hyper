@@ -41,7 +41,8 @@ export function boardRows(view: LoopView | null): BoardRow[] {
     const best = view.retrieval.reduce((a, b) => (b.recall > a.recall ? b : a));
     const plain = view.retrieval.find(row => row.mode === "hybrid") ?? view.retrieval.find(row => row.mode === "keyword");
     rows.push({ id: "retrieval", title: "Finds the right evidence", source: "Meridian · 172 questions", live: true, detail: "retrieval",
-      bars: [{ label: "With graph", text: percent(best.recall), share: best.recall }, ...(plain && plain !== best ? [{ label: "Search only", text: percent(plain.recall), share: plain.recall }] : [])] });
+      // view.retrieval[].recall is already a percentage (93.7), not a fraction: never run it through percent().
+      bars: [{ label: "With graph", text: `${best.recall}%`, share: best.recall / 100 }, ...(plain && plain !== best ? [{ label: "Search only", text: `${plain.recall}%`, share: plain.recall / 100 }] : [])] });
   }
   return [...rows, ...PUBLIC_ROWS,
     { id: "suite", title: "Framework versions", source: "AP workflow suite", detail: "suite", bars: [] },
