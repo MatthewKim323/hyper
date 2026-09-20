@@ -4,8 +4,8 @@
 // cursor) supplies what "this" means, Deepgram hears the request, the agent's tools answer it, and
 // composed charts land here as bklit cards.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import { WORLD_PATH } from "@/lib/engine/router/routes";
-import { useOwnsScreen } from "@/lib/engine/router/navigation";
 import { getAudioContext } from "voice-glow";
 import ArtifactCard from "./ArtifactCard";
 import WorldVoiceBox from "./WorldVoiceBox";
@@ -35,8 +35,7 @@ const onboardingDone = () => document.documentElement.dataset.onboarding === "co
   && !["covering", "revealing"].includes(document.documentElement.dataset.handoff ?? "");
 
 export default function CommandLayer() {
-  // The settled route, so a scene is not torn down while its own exit transition runs.
-  const onWorld = useOwnsScreen(WORLD_PATH);
+  const pathname = usePathname();
   const auth = useAuth();
   const ready = useSyncExternalStore(subscribeOnboarding, onboardingDone, () => false);
   useEffect(() => {
@@ -48,7 +47,7 @@ export default function CommandLayer() {
     document.addEventListener("click", prime, true);
     return () => document.removeEventListener("click", prime, true);
   }, []);
-  return onWorld && ready ? <CommandSession key={auth.scope || "signed-out"} allowGreeting={auth.ready && auth.signedIn} /> : null;
+  return pathname === WORLD_PATH && ready ? <CommandSession key={auth.scope || "signed-out"} allowGreeting={auth.ready && auth.signedIn} /> : null;
 }
 
 function CommandSession({ allowGreeting }: { allowGreeting: boolean }) {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { usePathname } from "next/navigation";
 import { WORLD_PATH } from "@/lib/engine/router/routes";
-import { useOwnsScreen } from "@/lib/engine/router/navigation";
 import VersionCarousel from "./VersionCarousel";
 import { initialTimeline, importTimelineJson, exportTimelineJson, mergeTimeline, TIMELINE_LIMITS } from "@/lib/timeline/registry";
 import { compareVersions, latestCaseRun } from "@/lib/timeline/compare";
@@ -39,8 +39,7 @@ function RunDetail({ version, run }: { version: VersionSnapshot; run: VersionRun
 }
 
 export default function TimelineWorkspace() {
-  // The settled route, so a scene is not torn down while its own exit transition runs.
-  const onWorld = useOwnsScreen(WORLD_PATH);
+  const pathname = usePathname();
   const [active, setActive] = useState(false);
   const [document, setDocument] = useState<TimelineDocument>(initialTimeline);
   const documentRef = useRef<TimelineDocument>(initialTimeline);
@@ -54,7 +53,7 @@ export default function TimelineWorkspace() {
   const [refreshing, setRefreshing] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const visible = active && onWorld;
+  const visible = active && pathname === WORLD_PATH;
   const versions = document.versions;
   const selected = versions.find(version => version.id === selectedId) ?? versions[0];
   const baseline = versions.find(version => version.id === baselineId) ?? versions[0];

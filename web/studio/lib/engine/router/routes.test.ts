@@ -115,11 +115,8 @@ describe("route table", () => {
     assert.ok(component.includes('data-shown='), "RouteBack must publish data-shown");
     assert.ok(!component.includes("autoAlpha"),
       "autoAlpha writes visibility, which would put reachability back under the tween");
-    // It used to listen for navigate-out itself to know a transition had started, because
-    // usePathname() commits too early. useNavigation owns that reconciliation now.
-    assert.ok(component.includes("useNavigation"),
-      "RouteBack must read the settled route, not usePathname, which updates too early");
-    assert.ok(!component.includes("usePathname"), "RouteBack should no longer read usePathname");
+    assert.ok(component.includes("hyper:navigate-out"),
+      "RouteBack must fade on navigate-out, not on pathname, which updates too early");
 
     // A CSS opacity transition would still fight the tween.
     const block = css.slice(css.indexOf(".route-back {"), css.indexOf("}", css.indexOf(".route-back {")));
