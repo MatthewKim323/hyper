@@ -99,6 +99,8 @@ export function createRelicParts(icon: Group, template = "") {
   const cardIndices = children.map((object, index) => ({ object, index })).filter(({ object }) => /glass card/.test(nameOf(object)));
   const cubeIndices = children.map((object, index) => ({ object, index })).filter(({ object }) => /crystal block/.test(nameOf(object)));
   const walletIndices = children.map((object, index) => ({ object, index })).filter(({ object }) => /ethereum.*crystal/.test(nameOf(object)));
+  const sheetIndices = children.map((object, index) => ({ object, index })).filter(({ object }) => /audit.*translucent sheet/.test(nameOf(object)));
+  const ringIndices = children.map((object, index) => ({ object, index })).filter(({ object }) => /approvals.*interlocking ring/.test(nameOf(object)));
 
   if (template === "accounts-payable" && cardIndices.length) {
     // Front-to-back, independent of Blender's export order. Printed lines stay on their own sheet.
@@ -140,6 +142,51 @@ export function createRelicParts(icon: Group, template = "") {
         page.scale.multiplyScalar(expansion);
       });
     };
+  } else if (template === "audit-evidence" && sheetIndices.length) {
+    sheetIndices.sort((a, b) => boxes[b.index].getCenter(new Vector3()).z - boxes[a.index].getCenter(new Vector3()).z);
+    const sheets = sheetIndices.map(({ object, index }, order) => {
+      const riders = children.filter((candidate, candidateIndex) => {
+        if (sheetIndices.some(entry => entry.object === candidate)) return false;
+        const z = boxes[candidateIndex].getCenter(new Vector3()).z;
+        const nearest = sheetIndices.reduce((best, sheet, i) => Math.abs(boxes[sheet.index].getCenter(new Vector3()).z - z) < Math.abs(boxes[sheetIndices[best].index].getCenter(new Vector3()).z - z) ? i : best, 0);
+        return nearest === order;
+      });
+      return bundle([object, ...riders], boxes[index]);
+    });
+    updatePose = (elapsed, still, context) => {
+      const selected = Math.max(0, Math.trunc(finite(context.selectedIndex))) % sheets.length;
+      sheets.forEach((sheet, index) => {
+        const rank = (index - selected + sheets.length) % sheets.length;
+        const selectedSheet = rank === 0;
+        const side = rank === 0 ? 0 : rank % 2 ? -1 : 1;
+        const amount = phase(open, index * .045, .88 + index * .045);
+        const idle = still ? 0 : Math.sin(elapsed * .56 + index * .85) * .004;
+        const processing = !still && context.busy && selectedSheet ? Math.sin(elapsed * 1.9) * .008 : 0;
+        sheet.position.y += reach * idle * (1 - amount);
+        sheet.position.x += (sheet.center.x - center.x) * hover * .14 * (1 - amount);
+        sheet.position.z += reach * hover * (sheets.length - index) * .022 * (1 - amount);
+        const target = new Vector3(center.x + side * reach * .29, center.y + (selectedSheet ? .025 : .05) * reach, center.z + reach * (selectedSheet ? .23 : -.055));
+        sheet.position.lerp(target, amount);
+        sheet.position.y += reach * processing * amount;
+        // A dossier opens around its selected evidence, while neighboring sheets remain identifiable.
+        rotate(sheet, -.025 * amount, side * -.16 * amount - hover * .035 * (1 - amount), side * -.055 * amount + idle * .2);
+        sheet.scale.multiplyScalar(1 + (selectedSheet ? .055 : -.025) * amount);
+      });
+    };
+  } else if (template === "approvals" && ringIndices.length) {
+    ringIndices.sort((a, b) => boxes[a.index].getCenter(new Vector3()).x - boxes[b.index].getCenter(new Vector3()).x);
+    const rings = ringIndices.map(({ object, index }) => bundle([object], boxes[index]));
+    updatePose = (elapsed, still, context) => rings.forEach((ring, index) => {
+      const side = index % 2 ? 1 : -1;
+      const amount = phase(open, index * .04, .93 + index * .04);
+      const idle = still ? 0 : Math.sin(elapsed * .5) * .008;
+      const processing = !still && context.busy ? Math.sin(elapsed * 1.8) * .027 : 0;
+      const target = new Vector3(center.x + side * reach * .38, center.y + side * reach * .035, center.z + side * reach * .035);
+      ring.position.lerp(target, amount);
+      ring.position.x += side * reach * hover * .027 * (1 - amount);
+      ring.position.y += side * reach * idle * .4;
+      rotate(ring, side * .04 * amount, side * (.24 * amount + hover * .055 * (1 - amount) + idle + processing), side * .085 * amount);
+    });
   } else if (["crystal-stack", "training-arena", "benchmarks"].includes(template) && cubeIndices.length) {
     cubeIndices.sort((a, b) => {
       const aa = boxes[a.index].getCenter(new Vector3()), bb = boxes[b.index].getCenter(new Vector3());
@@ -148,11 +195,29 @@ export function createRelicParts(icon: Group, template = "") {
     const cubes = cubeIndices.map(({ object, index }) => bundle([object], boxes[index]));
     const edge = Math.max(...cubes.map(cube => Math.min(cube.size.x, cube.size.y, cube.size.z)));
     updatePose = (elapsed, still, context) => {
+      const unmeasuredTraining = template === "training-arena" && !context.values?.some(value => typeof value === "number" && Number.isFinite(value));
       cubes.forEach((cube, index) => {
         const amount = phase(open, index * .018, .84 + index * .018);
         const supplied = context.values?.[index];
         const known = typeof supplied === "number" && Number.isFinite(supplied);
         const measured = known ? clamp(supplied) : 0;
+        if (unmeasuredTraining) {
+          // Snapshot positions indicate order only. Equal cube dimensions make no performance claim.
+          const offset = index - (cubes.length - 1) / 2;
+          const angle = offset * .22;
+          const idle = still ? 0 : Math.sin(elapsed * .64 - index * .6) * reach * .005;
+          const working = !still && context.busy ? Math.sin(elapsed * 2 - index * .65) * edge * .035 : 0;
+          cube.position.y += idle * (1 - amount);
+          cube.position.x += (cube.center.x - center.x) * hover * .07 * (1 - amount);
+          const target = new Vector3(center.x + offset * edge * 1.04, center.y + Math.cos(angle) * edge * .06 + working, center.z + (1 - Math.cos(angle)) * edge * 1.6);
+          cube.position.lerp(target, amount);
+          rotate(cube, 0, (-.43 + angle * .32) * amount + hover * .035 * (1 - amount), 0);
+          if (context.selectedIndex === index) {
+            cube.position.z += amount * edge * .38;
+            cube.position.y += amount * edge * .075;
+          }
+          return;
+        }
         // Unknown versions stay as equal neutral cubes. Only actual supplied results produce height.
         const height = edge * (1 + measured * 2.3);
         const lift = !still && context.busy ? Math.sin(elapsed * 2.2 - index * .8) * edge * .045 : 0;

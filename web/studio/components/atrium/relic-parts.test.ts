@@ -70,6 +70,88 @@ describe("bespoke relic motion on the shipped Blender geometry", () => {
     motion.dispose();
   });
 
+  test("Audit opens its actual three sheets around the selected evidence and carries printed ruling", async () => {
+    const { icon, originals } = await fixture("audit-evidence");
+    const sheets = originals.filter(object => /translucent.sheet/.test(object.name));
+    const ruling = originals.find(object => /document.ruling.0/.test(object.name))!;
+    const printedSheet = sheets.find(object => /sheet.3/.test(object.name))!;
+    assert.equal(sheets.length, 3);
+    assert.ok(ruling && printedSheet);
+    const before = originals.map(pose);
+    const motion = createRelicParts(icon, "audit-evidence");
+    assert.equal(ruling.parent, printedSheet.parent);
+    const rulingLocal = ruling.position.toArray();
+    motion.update(1, 0, 0, true, { selectedIndex: 0 });
+    assert.ok(sheets.filter(sheet => sheet !== printedSheet).every(sheet => point(sheet).z < point(printedSheet).z - .2));
+    const selectedNext = sheets.find(object => /sheet.2/.test(object.name))!;
+    motion.update(1, 0, 0, true, { selectedIndex: 1 });
+    assert.ok(sheets.filter(sheet => sheet !== selectedNext).every(sheet => point(sheet).z < point(selectedNext).z - .2));
+    assert.deepEqual(ruling.position.toArray(), rulingLocal);
+    assert.equal(ruling.parent, printedSheet.parent, "selecting other evidence cannot detach original printing");
+    motion.dispose();
+    assert.deepEqual(icon.children, originals);
+    originals.forEach((object, index) => assert.deepEqual(pose(object), before[index]));
+  });
+
+  test("Approvals separates the actual pair of rings with opposite rotations and closes to their original link", async () => {
+    const { icon, originals } = await fixture("approvals");
+    assert.equal(originals.length, 2);
+    const initialGap = Math.abs(point(originals[1]).x - point(originals[0]).x);
+    const before = originals.map(pose);
+    const motion = createRelicParts(icon, "approvals");
+    motion.update(1, 0, 0, true);
+    const rings = icon.children.filter(object => object.name.startsWith("Relic motion"));
+    assert.equal(rings.length, 2);
+    assert.ok(rings[0].quaternion.y * rings[1].quaternion.y < 0, "the rings turn in opposite directions");
+    assert.ok(Math.abs(point(originals[1]).x - point(originals[0]).x) > initialGap * 1.3);
+    motion.update(0, 0, 0, true);
+    close(Math.abs(point(originals[1]).x - point(originals[0]).x), initialGap);
+    motion.dispose();
+    originals.forEach((object, index) => assert.deepEqual(pose(object), before[index]));
+  });
+
+  test("Training's actual seven cubes form a neutral ordered snapshot arc without fabricated heights", async () => {
+    const { icon } = await fixture("training-arena");
+    const motion = createRelicParts(icon, "training-arena");
+    motion.update(1, 0, 0, true, { values: [], selectedIndex: 3 });
+    const cubes = icon.children.filter(object => object.name.startsWith("Relic motion"));
+    assert.equal(cubes.length, 7);
+    cubes.forEach(cube => assert.deepEqual(cube.scale.toArray(), [1, 1, 1]));
+    assert.ok(cubes.every((cube, index) => index === 0 || cube.position.x > cubes[index - 1].position.x), "snapshot order is stable");
+    assert.ok(cubes[3].position.z > cubes[0].position.z, "the selected snapshot moves toward the viewer");
+    motion.update(1, 0, 0, true, { values: [null, null], selectedIndex: -1 });
+    assert.ok(cubes[0].position.z > cubes[3].position.z, "the unselected arc curves away at both ends");
+    cubes.forEach(cube => close(cube.scale.y, 1));
+    motion.update(1, 0, 0, true, { values: [0, .5, 1] });
+    close(cubes[0].scale.y, 1); close(cubes[1].scale.y, 2.15); close(cubes[2].scale.y, 3.3);
+    motion.dispose();
+  });
+
+  test("right-side openings reverse safely and never dispose borrowed geometry or materials", async () => {
+    for (const template of ["audit-evidence", "training-arena", "approvals"]) {
+      const { icon, originals } = await fixture(template);
+      const before = originals.map(pose);
+      let borrowedDisposals = 0;
+      originals.forEach(object => {
+        const mesh = object as Mesh;
+        mesh.geometry.addEventListener("dispose", () => borrowedDisposals++);
+        (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).forEach(material => material.addEventListener("dispose", () => borrowedDisposals++));
+      });
+      const motion = createRelicParts(icon, template);
+      for (let frame = 0; frame < 25; frame++) motion.update(1, 1 / 60, frame / 60, false, { hover: 1, busy: true, selectedIndex: 1 });
+      const interrupted = icon.children.map(pose);
+      motion.update(0, 0, .5, false);
+      assert.deepEqual(icon.children.map(pose), interrupted);
+      for (let frame = 0; frame < 240; frame++) motion.update(0, 1 / 60, frame / 60, false);
+      close(motion.open, 0);
+      assert.ok(icon.children.flatMap(pose).every(Number.isFinite));
+      motion.dispose(); motion.dispose();
+      assert.equal(borrowedDisposals, 0);
+      assert.deepEqual(icon.children, originals);
+      originals.forEach((object, index) => assert.deepEqual(pose(object), before[index]));
+    }
+  });
+
   test("wallet articulates original crystal facets and restores shared assets on disposal", async () => {
     const { icon, originals } = await fixture("wallet-identity");
     const meshes = originals as Mesh[];
@@ -127,7 +209,7 @@ describe("bespoke relic motion on the shipped Blender geometry", () => {
   });
 
   test("reduced motion has identical static poses regardless of elapsed time or busy state", async () => {
-    for (const template of ["accounts-payable", "crystal-stack", "training-arena", "wallet-identity"]) {
+    for (const template of ["accounts-payable", "crystal-stack", "training-arena", "wallet-identity", "audit-evidence", "approvals"]) {
       const { icon } = await fixture(template);
       const motion = createRelicParts(icon, template);
       motion.update(1, 1, 1, true, { hover: .5, busy: true });
