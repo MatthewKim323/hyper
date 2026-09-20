@@ -34,7 +34,8 @@ HARD = min(t for t in TIERS if t >= 5)
 WORDS = {'pass': 'paid the right amount', 'correct_hold': 'rightly held', 'fail': 'WRONG RELEASE', 'timeout': 'ran out of time'}
 CAVEATS = ('Development results. The cases, the worker prompt and the grader were written by the same people, nothing is held out, '
            'and every supplier and internal desk is simulated. After a miss the worker is given an audit finding, the way a controller '
-           'would explain one, and writes its own lesson from it. Cases where the sandbox never showed the worker a warning are excluded.')
+           'would explain one, and writes its own lesson from it. Excluded: cases where the sandbox never showed the worker a warning, and '
+           'timeouts on cases no worker ever opened (the machine was asleep or offline).')
 
 
 def stamp(ms): return time.strftime('%Y-%m-%d %H:%M', time.localtime(ms / 1000))
