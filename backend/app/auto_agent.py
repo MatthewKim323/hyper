@@ -30,6 +30,7 @@ from .counterparty import AGENT_SESSION_ERROR, Counterparties, now  # noqa: E402
 from .data_service import DataService  # noqa: E402
 from .database import counterparty_scenarios as scenarios, counterparty_messages as messages  # noqa: E402
 from .store import Store  # noqa: E402
+from .workflow import emit as workflow_emit  # noqa: E402
 
 GATEWAY = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 TOOLS = ('list_accounting_records', 'open_payable_case', 'analyze_payable', 'inspect_payable_credit', 'prepare_payable_proposal',
@@ -164,7 +165,7 @@ def slim(name, result):
     return result
 
 
-def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None):
+def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None, run_id=None):
     """One bounded working session on one invoice. Returns the trace of observable actions."""
     svc = Counterparties(data_factory(oid))
     memory = svc.memory() if remembers(oid) else []
@@ -187,6 +188,15 @@ def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None)
             break
         for call in calls:
             name = call['function']['name']
+            stage = {'open_payable_case': 'review', 'analyze_payable': 'checks',
+                     'inspect_payable_credit': 'credit', 'prepare_payable_proposal': 'proposal',
+                     'get_counterparty_thread': 'evidence'}.get(name)
+            if stage and run_id:
+                with store.engine.begin() as db:
+                    workflow_emit(db, oid, run_id + ':tool:' + call['id'], 'work.stage',
+                        workflow_id='invoice:' + scenario['invoice_id'], run_id=run_id,
+                        operation_id=call['id'], facts={'invoiceId': scenario['invoice_id'], 'stage': stage},
+                        section='cases', simulated=True)
             try:
                 args = json.loads(call['function'].get('arguments') or '{}')
                 result = data_tools.execute(store, oid, name, args) if name in TOOLS else {'error': 'Tool not available'}
@@ -198,7 +208,7 @@ def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None)
     return status, trace
 
 
-def save_activity(store, scenario_id, status, started_at):
+def save_activity(store, scenario_id, status, started_at, workflow_context=None):
     """Persist session liveness separately from the last completed session's result."""
     stamp = now()
     activity = {'status': status, 'started_at': started_at, 'updated_at': stamp,
@@ -213,6 +223,13 @@ def save_activity(store, scenario_id, status, started_at):
         else:
             state = func.json_set(scenarios.c.state, '$.agent.activity', func.json(json.dumps(activity)))
         db.execute(update(scenarios).where(scenarios.c.id == scenario_id).values(state=state))
+        run_id = scenario_id + ':' + str(started_at)
+        if workflow_context and status in ('running', 'failed'):
+            oid, invoice = workflow_context
+            workflow_emit(db, oid, run_id + ':' + status,
+                'work.started' if status == 'running' else 'work.failed',
+                workflow_id='invoice:' + invoice, run_id=run_id,
+                facts={'invoiceId': invoice}, section='cases', simulated=True)
 
 
 def write_lesson(svc, scenario, model, llm=complete):
@@ -256,10 +273,11 @@ def run_once(store, data_factory=None, llm=None):
         if agent.get('sessions', 0) >= MAX_SESSIONS or (agent.get('sessions', 0) > 0 and not fresh and agent.get('status') != 'NEW'): continue
         started_at, succeeded = now(), False
         METER_CONTEXT.clear(); METER_CONTEXT.update(organization_id=row['organization_id'], invoice_id=row['invoice_id'], scenario_id=row['id'], purpose='session')
-        save_activity(store, row['id'], 'running', started_at)
+        save_activity(store, row['id'], 'running', started_at, (row['organization_id'], row['invoice_id']))
         try:
             status, trace = session(store, row['organization_id'], row, data_factory, model, llm,
-                                    heartbeat=lambda: save_activity(store, row['id'], 'running', started_at))
+                                    heartbeat=lambda: save_activity(store, row['id'], 'running', started_at),
+                                    run_id=row['id'] + ':' + str(started_at))
             with store.engine.begin() as db:
                 current = dict(db.execute(select(scenarios.c.state).where(scenarios.c.id == row['id'])).scalar())
                 mine = current.get('agent', {})
@@ -268,9 +286,13 @@ def run_once(store, data_factory=None, llm=None):
                                     'lessons_at_start': mine.get('lessons_at_start', len(Counterparties(data_factory(row['organization_id'])).lessons(200))),
                                     'trace': (mine.get('trace', []) + trace)[-60:]}
                 db.execute(update(scenarios).where(scenarios.c.id == row['id']).values(state=current))
+                workflow_emit(db, row['organization_id'], row['id'] + ':' + str(started_at) + ':completed', 'work.completed',
+                    workflow_id='invoice:' + row['invoice_id'], run_id=row['id'] + ':' + str(started_at),
+                    facts={'invoiceId': row['invoice_id']}, section='cases', simulated=True)
             succeeded = True
         finally:
-            save_activity(store, row['id'], 'idle' if succeeded else 'failed', started_at)
+            save_activity(store, row['id'], 'idle' if succeeded else 'failed', started_at,
+                          (row['organization_id'], row['invoice_id']))
         work += 1
     for row in unlearned:
         if not row['state'].get('agent', {}).get('trace'): continue

@@ -24,6 +24,7 @@ from sqlalchemy import select, insert, update, func
 
 from .accounting import Accounting, PromoteRecord
 from .agent_events import emit
+from .workflow import emit as workflow_emit
 from .data_service import StrictModel
 from .database import (counterparty_scenarios as scenarios, counterparty_messages as messages,
                        adversary_controls as controls, agent_lessons as lessons)
@@ -283,6 +284,9 @@ class Counterparties:
             for attack in built['facts']['attacks']:
                 self._message(db, row, 'in', attack['party'], attack['kind'], attack['text'], deliver_at=now() + attack['after'] * 1000, status='scheduled')
             emit(db, self.oid, 'scenario:' + row['id'], 'exception.received', {'invoice_id': row['invoice_id'], 'title': row['title']})
+            workflow_emit(db, self.oid, 'scenario:' + row['id'], 'invoice.received',
+                workflow_id='invoice:' + row['invoice_id'], actor='engine',
+                facts={'invoiceId': row['invoice_id']}, section='cases', simulated=True)
         return public(row)
 
     def _message(self, db, scenario, direction, party, kind, body, payload=None, source_ids=None, request_key=None, deliver_at=None, status='delivered'):
@@ -329,6 +333,11 @@ class Counterparties:
                 # Something the party adds straight after, delivered in the same pass so nobody can act in between.
                 if reply.get('then'): self._message(db, scenario, 'in', party, 'unsolicited', reply['then'], deliver_at=due, status='scheduled')
             db.execute(update(scenarios).where(scenarios.c.id == scenario['id']).values(state=state))
+            workflow_emit(db, self.oid, 'request:' + mid, 'evidence.requested',
+                workflow_id='invoice:' + args.invoice_id, facts={'invoiceId': args.invoice_id,
+                    'requestCategory': args.request, 'party': 'supplier' if party == 'supplier' else 'procurement'},
+                recipient={'kind': 'supplier' if party == 'supplier' else 'procurement', 'id': party},
+                section='evidence', simulated=True)
         return {'message_id': mid, 'status': 'sent', 'to': f'approved {party} contact', 'note': 'The reply arrives later. Poll get_counterparty_thread. A reply is not a resolution.'}
 
     def thread(self, invoice_id):
@@ -384,6 +393,11 @@ class Counterparties:
                 arrived = [{'record_type': r[0], 'record_id': record_id(r[0], r[1])} for r in (reply or {}).get('records', [])] if reply else []
                 db.execute(update(messages).where(messages.c.id == row['id']).values(status='delivered', body=body, source_ids=source_ids, payload={'delivered': arrived}))
                 emit(db, self.oid, 'message:' + row['id'], 'counterparty.replied', {'invoice_id': scenario['invoice_id'], 'party': row['party'], 'source_ids': source_ids})
+                workflow_emit(db, self.oid, 'message:' + row['id'], 'evidence.received',
+                    workflow_id='invoice:' + scenario['invoice_id'], actor='engine',
+                    facts={'invoiceId': scenario['invoice_id'], 'sourceIds': source_ids,
+                           'party': 'supplier' if row['party'] == 'supplier' else 'procurement'},
+                    section='evidence', simulated=True)
             count += 1
         return count
 

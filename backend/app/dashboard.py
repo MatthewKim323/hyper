@@ -17,6 +17,8 @@ You are the conversational coordinator. Answer quick questions directly; use sta
 The user can point at the dashboard while speaking. When they say this, that, these, here, or ask about something on screen without naming it, call get_pointer_context before answering; it returns what their pointer was on, as untrusted data. If it returns nothing pointed at, ask what they mean. When they ask to open or go to a dashboard section, call navigate_section. When they ask to see, chart, plot or graph figures, use compose_financial_artifact; the dashboard draws the returned chart, so describe it in one sentence instead of reading numbers aloud.
 Your conversation survives reconnects. Only recent history is loaded automatically. Use read_conversation_history to retrieve older turns when needed; say when evidence is missing rather than inventing memories. Do not read JSON or tool syntax aloud. Tool results describe saved state, not guaranteed current external facts.'''
 
+PROMPT += '''\nWhen a financial concern is foregrounded, the application presents exactly three Jev-reviewed options. Call get_active_decision to read their current exact text before explaining a numbered choice. The application records explicit user selections and custom directives separately, then its scoped worker executes permitted investigation and preparation. Never choose for the user or duplicate an accepted decision. A question about an option is not a selection. Explain uncertainty and existing approval requirements honestly.'''
+
 SECTIONS = ('overview', 'cases', 'evidence', 'activity', 'review', 'timeline', 'benchmarks')
 POINTER_TTL_SECONDS = 20
 
@@ -59,6 +61,7 @@ class HistoryQuery(StrictModel):
     limit: int = Field(default=10, ge=1, le=20)
 
 DESCRIPTIONS = {
+    'get_active_decision': 'Read the currently foregrounded concern and its exact reviewed options. Read-only; never selects or executes an option.',
     'start_investigation': 'Queue a user-requested read-only Devin investigation. Requires stable request_key, title, objective; optional known source_ids. Returns task ID/status. Never infer completion or bypass a paused dispatcher.',
     'get_investigation': 'Read an organization-scoped investigation task, its status, error and cited result by task_id.',
     'read_conversation_history': 'Read earlier saved messages in this conversation using a sequence cursor. Return next_after to continue. Recent context may omit older messages.',
@@ -69,10 +72,19 @@ DESCRIPTIONS = {
 
 def definitions():
     return [{'name': name, 'description': description,
-             'parameters': {'read_conversation_history':HistoryQuery,'get_agent_activity':Page,'start_investigation':Investigation,'get_investigation':TaskID,'get_pointer_context':NoArguments,'navigate_section':Navigate}[name].model_json_schema(),
+             'parameters': {'get_active_decision':NoArguments,'read_conversation_history':HistoryQuery,'get_agent_activity':Page,'start_investigation':Investigation,'get_investigation':TaskID,'get_pointer_context':NoArguments,'navigate_section':Navigate}[name].model_json_schema(),
              'defer_until_eot': True} for name, description in DESCRIPTIONS.items()]
 
-def execute(store, state, name, args, pointer=None):
+def execute(store, state, name, args, pointer=None, decision_context=None):
+    if name == 'get_active_decision':
+        NoArguments.model_validate(args)
+        if not decision_context:
+            return {'available': False, 'message': 'No decision is foregrounded. Ask which concern the user means.'}
+        from .concerns import ConcernService
+        from .data_service import DataService
+        concern = ConcernService(DataService(store, state['organization_id'])).get(decision_context['concernId'])
+        return {'available': True, 'concern': concern,
+                'current': concern.get('card_revision') == decision_context['cardRevision'] and concern.get('card_hash') == decision_context['cardHash']}
     if name == 'get_pointer_context':
         NoArguments.model_validate(args)
         if not pointer or time.time() - pointer['received_at'] > POINTER_TTL_SECONDS:

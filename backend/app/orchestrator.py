@@ -5,6 +5,7 @@ import os
 import secrets
 import time
 import uuid
+from .workflow import emit as workflow_emit
 from typing import Literal
 from pydantic import Field, model_validator
 from sqlalchemy import select,update,func
@@ -143,6 +144,9 @@ class AgentService:
                 request_key=args.request_key,objective=args.objective,status='queued',created_at=now(),credential_expires=0,lease_until=0,next_poll_at=0))
             row=db.execute(select(tasks).where(tasks.c.organization_id==self.oid,tasks.c.request_key==args.request_key)).mappings().one()
             if row['objective']!=args.objective or row['case_id']!=args.case_id:raise ServiceError('Task request key reused')
+            workflow_emit(db, self.oid, 'task:' + row['id'] + ':queued', 'handoff.queued',
+                workflow_id='task:' + row['id'], actor='cfo', task_id=row['id'], case_id=args.case_id,
+                recipient='devin', section='cases')
         return public(row)
     def get_task(self,tid):
         with self.engine.connect() as db:
@@ -164,6 +168,10 @@ class AgentService:
             if not db.execute(update(tasks).where(tasks.c.id==args.task_id,tasks.c.status=='running').values(status=args.outcome,result=result,credential_hash=None)).rowcount:
                 raise ServiceError('Task no longer running')
             emit(db,self.oid,'task:'+args.task_id,'task.finished',{'task_id':args.task_id,'case_id':row['case_id'],'result':result})
+            workflow_emit(db, self.oid, 'task:' + args.task_id + ':result',
+                {'complete': 'execution.completed', 'failed': 'execution.failed', 'needs_input': 'execution.needs_input'}[args.outcome],
+                workflow_id='task:' + args.task_id, actor='devin', task_id=args.task_id, case_id=row['case_id'],
+                facts={'sourceIds': args.source_ids} if args.outcome == 'complete' else {}, section='cases')
         return self.get_task(args.task_id)
     def checkpoint(self,args):
         with self.engine.begin() as db:

@@ -283,6 +283,8 @@ def make_engine(location=None):
     return engine
 
 def initialize(engine):
+    # Register the separately owned audio-delivery schema before create_all.
+    from . import cfo_audio_tables  # noqa: F401
     # Additive upgrade from the earlier SQLite session store. Legacy rows remain unowned.
     existing = inspect(engine)
     if 'sessions' in existing.get_table_names():
@@ -291,6 +293,14 @@ def initialize(engine):
             for name, sqltype in [('organization_id','TEXT'),('created_by','TEXT'),('created_at','BIGINT NOT NULL DEFAULT 0')]:
                 if name not in names:
                     db.exec_driver_sql(f'ALTER TABLE sessions ADD COLUMN {name} {sqltype}')
+    if 'concerns' in existing.get_table_names():
+        names = {c['name'] for c in existing.get_columns('concerns')}
+        with engine.begin() as db:
+            for name, sqltype in [('card_revision', 'INTEGER NOT NULL DEFAULT 0'),
+                    ('decision_revision', 'INTEGER NOT NULL DEFAULT 0'), ('card_hash', 'TEXT'),
+                    ('evidence_snapshot', "JSON NOT NULL DEFAULT '[]'"), ('latest_job_id', 'TEXT')]:
+                if name not in names:
+                    db.exec_driver_sql(f'ALTER TABLE concerns ADD COLUMN {name} {sqltype}')
     metadata.create_all(engine)
     if engine.dialect.name=='sqlite':
         with engine.begin() as db:
@@ -306,10 +316,53 @@ concerns = Table('concerns', metadata,
     Column('request_key', Text, nullable=False), Column('request', json_type, nullable=False),
     Column('status', Text, nullable=False), Column('card', json_type),
     Column('decision', json_type), Column('resolution', json_type),
+    Column('card_revision', Integer, nullable=False, server_default='0'),
+    Column('decision_revision', Integer, nullable=False, server_default='0'),
+    Column('card_hash', Text), Column('evidence_snapshot', json_type, nullable=False, server_default='[]'),
+    Column('latest_job_id', Text),
     Column('claim_token', Text), Column('lease_until', BigInteger, nullable=False, default=0),
     Column('created_at', BigInteger, nullable=False), Column('updated_at', BigInteger, nullable=False),
     UniqueConstraint('organization_id', 'request_key'))
 Index('concern_queue', concerns.c.organization_id, concerns.c.status)
+
+concern_decisions = Table('concern_decisions', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('concern_id', Text, ForeignKey('concerns.id'), nullable=False),
+    Column('command_id', Text, nullable=False), Column('request', json_type, nullable=False),
+    Column('card_revision', Integer, nullable=False), Column('decision_revision', Integer, nullable=False),
+    Column('input', Text, nullable=False), Column('instruction', Text, nullable=False),
+    Column('created_by', Text, nullable=False), Column('created_at', BigInteger, nullable=False),
+    UniqueConstraint('organization_id', 'command_id'), UniqueConstraint('concern_id', 'decision_revision'))
+concern_jobs = Table('concern_jobs', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('concern_id', Text, ForeignKey('concerns.id'), nullable=False),
+    Column('decision_id', Text, ForeignKey('concern_decisions.id'), nullable=False, unique=True),
+    Column('status', Text, nullable=False), Column('objective', Text, nullable=False),
+    Column('created_by', Text, nullable=False), Column('result', json_type),
+    Column('operations', json_type, nullable=False, default=list), Column('error', Text),
+    Column('claim_token', Text), Column('lease_until', BigInteger, nullable=False, default=0),
+    Column('next_attempt_at', BigInteger, nullable=False, default=0), Column('attempts', Integer, nullable=False, default=0),
+    Column('created_at', BigInteger, nullable=False), Column('updated_at', BigInteger, nullable=False))
+Index('concern_job_queue', concern_jobs.c.status, concern_jobs.c.next_attempt_at, concern_jobs.c.lease_until)
+
+# The counter lock is held until the domain transaction commits. A sequence cannot
+# become visible before an earlier sequence in the same workspace.
+workflow_stream_heads = Table('workflow_stream_heads', metadata,
+    # No parent FK lock here: accounting already holds an organization FOR UPDATE
+    # lock, so lazy counter creation must not invert domain -> stream lock order.
+    Column('organization_id', Text, primary_key=True),
+    Column('sequence', BigInteger, nullable=False, default=0))
+workflow_events = Table('workflow_events', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('sequence', BigInteger, nullable=False), Column('event_key', Text, nullable=False),
+    Column('workflow_id', Text, nullable=False), Column('kind', Text, nullable=False),
+    Column('event', json_type, nullable=False), Column('recorded_at', BigInteger, nullable=False),
+    UniqueConstraint('organization_id', 'sequence'), UniqueConstraint('organization_id', 'event_key'))
+Index('workflow_by_workflow', workflow_events.c.organization_id, workflow_events.c.workflow_id, workflow_events.c.sequence)
+cfo_narrations = Table('cfo_narrations', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('event_id', Text, ForeignKey('workflow_events.id'), nullable=False, unique=True),
+    Column('narration', json_type, nullable=False))
 
 artifacts = Table('financial_artifacts', metadata,
     Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),

@@ -5,7 +5,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import update
 from app.concerns import ConcernService, RaiseConcern, Respond, Finish, Conflict
-from app.database import concerns
+from app.database import concerns, concern_jobs
+from app import concern_worker
 from app import main, auth, data_api
 from test_simulator import setup
 
@@ -49,17 +50,19 @@ def test_card_decision_claim_and_resolution(flow):
         svc.respond(row['id'], Respond(option_id='option_1'), 'alice')
     with ThreadPoolExecutor(2) as pool:
         def claim(_):
-            try:return svc.claim(row['id'])
+            try:return concern_worker.claim(store)
             except Conflict:return None
         results = list(pool.map(claim, range(2)))
     winner = next(r for r in results if r)
     assert sum(r is not None for r in results) == 1
     assert 'claim_token' not in svc.get(row['id'])
-    with pytest.raises(Conflict):
+    with pytest.raises(PermissionError):
         svc.finish(Finish(concern_id=row['id'], claim_token='wrong', outcome='resolved', summary='Done', source_ids=args.source_ids))
-    finished = svc.finish(Finish(concern_id=row['id'], claim_token=winner['claim_token'], outcome='needs_input',
-                                summary='Need receiving confirmation.', source_ids=args.source_ids))
-    assert finished['status'] == 'needs_input'
+    concern_worker.complete(store, winner, concern_worker.Report(outcome='needs_input',
+                            summary='Need receiving confirmation.', source_ids=args.source_ids), svc)
+    finished = svc.get(row['id'])
+    assert finished['status'] == 'awaiting_response'
+    assert finished['card_revision'] == 2
     assert svc.respond(row['id'], Respond(option_id='option_2'), 'alice')['status'] == 'queued'
 
 
@@ -83,12 +86,12 @@ def test_expired_lease_cannot_complete(flow):
     store, svc, _, args, _, _ = flow
     row = svc.raise_concern(args)
     svc.respond(row['id'], Respond(option_id='option_1'), 'alice')
-    claim = svc.claim(row['id'])
+    claimed = concern_worker.claim(store)
     with store.engine.begin() as db:
-        db.execute(update(concerns).where(concerns.c.id == row['id']).values(lease_until=0))
+        db.execute(update(concern_jobs).where(concern_jobs.c.id == claimed['id']).values(lease_until=0))
     with pytest.raises(Conflict):
-        svc.finish(Finish(concern_id=row['id'],claim_token=claim['claim_token'],outcome='resolved',summary='Done',source_ids=args.source_ids))
-    assert svc.claim(row['id'])['claim_token'] != claim['claim_token']
+        concern_worker.complete(store, claimed, concern_worker.Report(outcome='completed', summary='Done', source_ids=args.source_ids), svc)
+    assert concern_worker.claim(store)['claim_token'] != claimed['claim_token']
 
 
 def test_routes_scope_and_response(flow, monkeypatch):

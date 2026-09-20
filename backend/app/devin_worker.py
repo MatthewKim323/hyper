@@ -12,6 +12,7 @@ from sqlalchemy import select,update,func
 from .database import agent_controllers as controllers,agent_tasks as tasks,agent_events as events,agent_attempts as attempts,organizations
 from .orchestrator import AgentService,Page,now,uid,digest
 from .store import Store
+from .workflow import emit as workflow_emit
 
 
 class Devin:
@@ -84,10 +85,16 @@ def launch(store,provider,svc,table,row,target,fence):
         if not existing:
             with store.engine.begin() as db:
                 db.execute(update(table).where(idcol==target).values(status='launch_uncertain',error='Launch outcome unknown; reconciliation will retry without creating another session'))
+                if table is tasks:
+                    workflow_emit(db, svc.oid, 'task:' + target + ':unknown', 'dispatch.unknown',
+                        workflow_id='task:' + target, actor='cfo', task_id=target, recipient='devin', section='cases')
             return None
         with store.engine.begin() as db:
             if not db.execute(update(controllers).where(fence).values(lease_until=now()+300000)).rowcount:return None
             db.execute(update(table).where(idcol==target).values(session_id=existing['session_id'],status='running',error=None))
+            if table is tasks:
+                workflow_emit(db, svc.oid, 'task:' + target + ':accepted', 'handoff.accepted',
+                    workflow_id='task:' + target, actor='cfo', task_id=target, recipient='devin', section='cases')
         return existing['session_id']
     max_launches=int(os.getenv('DEVIN_MAX_SESSIONS_PER_ORG','10'))
     task=row if table is tasks else None
@@ -101,12 +108,24 @@ def launch(store,provider,svc,table,row,target,fence):
             credential_expires=now()+7*86400000,status='launching'))
         record_attempt(db,svc.oid,target,'create','started',{'launch_key':key})
     # On exception keep launch key + credential hash for exact-session reconciliation.
-    result=provider.create(prompt,key,token)
+    try:
+        result=provider.create(prompt,key,token)
+    except Exception:
+        if table is tasks:
+            with store.engine.begin() as db:
+                if db.execute(update(table).where(idcol == target, table.c.launch_key == key).values(
+                        status='launch_uncertain', error='Launch outcome unknown; reconciliation is required')).rowcount:
+                    workflow_emit(db, svc.oid, 'task:' + target + ':unknown', 'dispatch.unknown',
+                        workflow_id='task:' + target, actor='cfo', task_id=target, recipient='devin', section='cases')
+        raise
     sid=result['session_id']
     with store.engine.begin() as db:
         if not db.execute(update(controllers).where(fence).values(lease_until=now()+300000)).rowcount:return None
         db.execute(update(table).where(idcol==target,table.c.launch_key==key).values(session_id=sid,status='running',error=None))
         record_attempt(db,svc.oid,target,'create','succeeded',{'session_id':sid,'launch_key':key})
+        if table is tasks:
+            workflow_emit(db, svc.oid, 'task:' + target + ':accepted', 'handoff.accepted',
+                workflow_id='task:' + target, actor='cfo', task_id=target, recipient='devin', section='cases')
     return sid
 
 
@@ -142,6 +161,9 @@ def run_once(store,provider=None):
                     with store.engine.begin() as db:
                         if db.execute(update(tasks).where(tasks.c.id==task['id'],tasks.c.status=='running').values(status='needs_input',credential_hash=None,error='Session stopped or needs attention; no verified task result')).rowcount:
                             emit(db,oid,'task-blocked:'+task['id'],'task.blocked',{'task_id':task['id'],'case_id':task['case_id'],'provider_status':status,'detail':detail})
+                            workflow_emit(db, oid, 'task:' + task['id'] + ':blocked', 'execution.needs_input',
+                                workflow_id='task:' + task['id'], actor='devin', task_id=task['id'], case_id=task['case_id'],
+                                facts={'blockerCode': 'provider_session_needs_attention'}, section='cases')
                     active-=1
                 elif status=='suspended' and detail=='inactivity':
                     # No automatic replay: wake to read existing task state, not repeat external actions.
