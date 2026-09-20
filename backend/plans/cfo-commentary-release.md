@@ -30,6 +30,36 @@ uv run --directory backend python -m app.concern_worker
 
 The worker processes accepted decisions and survives browser closure. Its local launcher log is `backend/var/concern-worker.log`; evaluator output is in `backend/var/evaluator.log`. Inspect `GET /concerns/{id}` and `/concerns/{id}/jobs/{job_id}` for durable decision, operation, and result state. A missing model credential leaves an explicit worker error; it does not imply completed work.
 
+Production deployment checklist:
+
+1. Obtain access to the existing Railway `hyper` project and the Vercel project serving `hyper.stephenhung.me`. The local Railway CLI is unauthenticated, and the current Vercel account cannot access that production project. Production project/service IDs and deploy triggers remain unverified. A main-branch merge alone does not establish that production updated. Confirm each service's GitHub source, selected branch, enabled autodeploy, and deployed commit. See [Railway autodeploys](https://docs.railway.com/guides/github-autodeploys) and [Vercel Git deployments](https://vercel.com/docs/deployments/git).
+2. On `evaluator`, set `CONCERN_MODEL=openai/gpt-5-mini`. Preserve its `AI_GATEWAY_API_KEY`, matching `EVALUATOR_SECRET`, private network access, and `EVALUATOR_HOST=0.0.0.0`. Deploy the updated evaluator before exercising new concern cards.
+3. On `api`, preserve the production database, Clerk/origin settings, evaluator URL/secret, and server-side provider credentials described in [deployment docs](../../docs/deployment.mdx). Set `CFO_COMMENTARY_AUDIO_ENABLED=true` and `CFO_TTS_CHARACTERS_PER_MINUTE=6000`; speech requires `DEEPGRAM_API_KEY`. Deploy the API and verify `/health`. Startup applies the additive database schema changes before the worker begins claiming decisions.
+4. Add `concern-worker` as a separate Railway service with repository-root build context, `backend/Dockerfile`, `START_MODULE=app.concern_worker`, `APP_ENV=production`, and `CONCERN_RESOLUTION_ENABLED=true`. Reference the same production `DATABASE_URL`, `EVALUATOR_URL`, and `EVALUATOR_SECRET` as the API. Supply the configured investigation credential (`OPENAI_API_KEY`, or `AI_GATEWAY_API_KEY` fallback), preserving any intended `AUTO_AGENT_PROVIDER` and `AUTO_AGENT_MODEL` overrides. It needs no public domain.
+5. Give the worker its own Railway config before deploying or connecting its GitHub source. The repository's root `railway.toml` sets `healthcheckPath="/health"`; this worker does not serve HTTP. Configuration in code overrides dashboard settings. Create a dedicated file such as `/backend/railway.concern-worker.json`, select that exact repository path in the worker's service settings, and use the following deployment configuration. Confirm the deployed settings have no HTTP healthcheck. See [custom Railway config paths](https://docs.railway.com/config-as-code#using-a-custom-config-as-code-file) and [config precedence](https://docs.railway.com/reference/config-as-code).
+
+```json
+{
+  "build": {"builder": "DOCKERFILE", "dockerfilePath": "backend/Dockerfile"},
+  "deploy": {
+    "healthcheckPath": null,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  }
+}
+```
+
+6. Deploy the frontend in the existing Vercel project with root directory `web/studio` and its production API/WebSocket URLs. In an authorized workspace, verify a fresh concern card, a submitted decision reaching durable job state, a completed investigation with receipts, and one commentary playback receipt. Worker process uptime alone does not prove it can claim or finish work. Confirm the deployed commits for API, evaluator, worker, and frontend match the release.
+
+Once authenticated and linked to the existing project, the verified Railway CLI syntax for the new non-secret settings is below. These commands change production state and were not executed during the read-only audit. Configure the worker's build and health settings before connecting its source; add secret values through existing service references or the platform's protected variable UI.
+
+```sh
+railway add --service concern-worker --json
+railway variable set --service evaluator --environment production --skip-deploys CONCERN_MODEL=openai/gpt-5-mini
+railway variable set --service concern-worker --environment production --skip-deploys START_MODULE=app.concern_worker APP_ENV=production CONCERN_RESOLUTION_ENABLED=true
+railway service source connect --service concern-worker --environment production --repo MatthewKim323/hyper --branch main --json
+```
+
 Verification recorded so far:
 
 | Check | Result |
