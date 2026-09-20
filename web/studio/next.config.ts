@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   // A second dev server (for example one pointed at tools/dev_backend.py) needs its own build folder.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   devIndicators: false,
+  // Browser previews/proxies reach the dev server via 127.0.0.1, which is not covered by the localhost default.
+  allowedDevOrigins: ["127.0.0.1"],
   turbopack: { root: __dirname },
   outputFileTracingRoot: __dirname,
   rewrites() {
