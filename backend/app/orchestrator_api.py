@@ -18,7 +18,12 @@ def machine(request:Request):
 def invoke(fn,*args):
     try:return fn(*args)
     except PermissionError as exc:raise HTTPException(403,str(exc)) from None
-    except LookupError:raise HTTPException(404,'Agent resource not found') from None
+# Exactly LookupError, never its KeyError/IndexError subclasses: services raise the base
+# class for a genuine miss, so catching subclasses turned an ordinary bug (a missing dict
+# key, an off-by-one index) into a 404 that reads as normal operation and is never retried.
+    except LookupError as exc:
+        if type(exc) is not LookupError: raise
+        raise HTTPException(404,'Agent resource not found') from None
     except ServiceError as exc:raise HTTPException(409,str(exc)) from None
     except ValueError as exc:raise HTTPException(422,str(exc)) from None
 

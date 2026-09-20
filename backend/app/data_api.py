@@ -23,7 +23,11 @@ def service(identity=Depends(auth.current_user)):
 def invoke(fn,*args,**kwargs):
     try:
         return fn(*args,**kwargs)
-    except LookupError:
+# Exactly LookupError, never its KeyError/IndexError subclasses: services raise the base
+# class for a genuine miss, so catching subclasses turned an ordinary bug (a missing dict
+# key, an off-by-one index) into a 404 that reads as normal operation and is never retried.
+    except LookupError as exc:
+        if type(exc) is not LookupError: raise
         raise HTTPException(404,'Source or dataset not found') from None
     except (ValueError,UnicodeError) as e:
         raise HTTPException(422,str(e)) from None
