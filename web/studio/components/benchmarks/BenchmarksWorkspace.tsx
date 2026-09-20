@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 import { WORLD_PATH } from "@/lib/engine/router/routes";
+import { useOwnsScreen } from "@/lib/engine/router/navigation";
 import { REAL_URL, SAMPLE_URL, fetchBenchmarks, formatMetric, latestCompleted, subjectRuns, systemOf } from "@/lib/benchmarks/load";
 import type { BenchmarksDocument, Layer } from "@/lib/benchmarks/types";
 import {
@@ -18,7 +18,8 @@ const LAYERS: { key: Layer; label: string }[] = [
 ];
 
 export default function BenchmarksWorkspace() {
-  const pathname = usePathname();
+  // The settled route, so a scene is not torn down while its own exit transition runs.
+  const onWorld = useOwnsScreen(WORLD_PATH);
   const [active, setActive] = useState(false);
   const [sample, setSample] = useState(false);
   const [doc, setDoc] = useState<BenchmarksDocument | null>(null);
@@ -27,7 +28,7 @@ export default function BenchmarksWorkspace() {
   // The layout sample is a development aid. It is only reachable outside production or with ?benchSample=1.
   const [sampleAllowed] = useState(() => process.env.NODE_ENV !== "production"
     || (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("benchSample")));
-  const visible = active && pathname === WORLD_PATH;
+  const visible = active && onWorld;
 
   useEffect(() => {
     const onSection = (event: Event) => setActive((event as CustomEvent<{ section: string }>).detail?.section === "benchmarks");

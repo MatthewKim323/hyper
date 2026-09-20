@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { WORLD_PATH } from "@/lib/engine/router/routes";
+import { useOwnsScreen } from "@/lib/engine/router/navigation";
 import { openSignIn } from "@/lib/backend/auth";
 import { Activity } from "./sections";
 import { useAuth } from "./useBackend";
@@ -12,7 +12,8 @@ const SCREENS = { activity: Activity } as const;
 type Screen = keyof typeof SCREENS;
 
 export default function WorkspaceSections() {
-  const pathname = usePathname();
+  // The settled route, so a scene is not torn down while its own exit transition runs.
+  const onWorld = useOwnsScreen(WORLD_PATH);
   const auth = useAuth();
   const [unlocked, setUnlocked] = useState(false);
   // The panel outlives its section by one exit animation, so closing is a motion, not a cut.
@@ -36,7 +37,7 @@ export default function WorkspaceSections() {
     return () => { clearTimeout(exit); observer.disconnect(); window.removeEventListener("hyper:section-change", onSection); };
   }, []);
 
-  if (pathname !== WORLD_PATH || !unlocked) return null;
+  if (!onWorld || !unlocked) return null;
   const usable = auth.ready && auth.signedIn;
   if (!shown) return null;
   const Body = SCREENS[shown.section as Screen];

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { ONBOARDING_PATH, WORLD_PATH } from "@/lib/engine/router/routes";
+import { useNavigation } from "@/lib/engine/router/navigation";
 
 // Where each route's back control goes. Plain hrefs, so the engine router picks them up
 // through LINK_SELECTOR and runs the normal contextual transition; history.back() would
@@ -28,38 +28,16 @@ const RISE = 6;
  * its own "Back to the atrium").
  */
 export default function RouteBack() {
-  const pathname = usePathname();
+  const navigation = useNavigation();
   const element = useRef<HTMLAnchorElement>(null);
-  // The engine's pathname lags: it only updates once the out transition has finished, so the
-  // fade follows hyper:navigate-out instead and `target` keeps the last real destination so
-  // the label does not change mid-fade.
-  const [leaving, setLeaving] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [loaderCleared, setLoaderCleared] = useState(false);
-  const target = BACK[pathname];
-  // Keep the last real destination so the label and href do not change mid fade-out.
-  // Committed in an effect, not during render: a render React discards would otherwise
-  // leave this holding a value that was never shown.
-  const last = useRef(target);
+  // The settled route, so the link belongs to the scene actually on screen. While a
+  // transition runs, `target` says where it is going: fade out only if the destination has
+  // no back link of its own, so /onboarding -> /world does not blink.
+  const target = BACK[navigation.route];
+  const leaving = navigation.phase === "leaving" && !BACK[navigation.target];
   const shown = !!target && !leaving && !panelOpen && loaderCleared;
-
-  useEffect(() => {
-    if (target) last.current = target;
-  }, [target]);
-
-  useEffect(() => {
-    const onOut = (event: Event) => {
-      const to = (event as CustomEvent<{ to?: string }>).detail?.to;
-      setLeaving(!(to && BACK[to.replace(/\/+$/, "") || "/"]));
-    };
-    const onEnd = () => setLeaving(false);
-    window.addEventListener("hyper:navigate-out", onOut);
-    window.addEventListener("hyper:navigate-end", onEnd);
-    return () => {
-      window.removeEventListener("hyper:navigate-out", onOut);
-      window.removeEventListener("hyper:navigate-end", onEnd);
-    };
-  }, []);
 
   // The loading layer covers the page until it has finished fading, so hold the first fade-in
   // until then rather than easing the link in behind it.
@@ -103,8 +81,8 @@ export default function RouteBack() {
     return () => { animation.kill(); };
   }, [shown]);
 
-  const label = (target ?? last.current)?.label ?? "Back";
-  const href = (target ?? last.current)?.href ?? "/";
+  const label = target?.label ?? "Back";
+  const href = target?.href ?? "/";
   return (
     <a
       ref={element}

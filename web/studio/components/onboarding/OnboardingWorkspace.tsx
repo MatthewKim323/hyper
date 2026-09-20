@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { usePathname } from "next/navigation";
 import { useMicrophone } from "voice-glow";
 import { store } from "@/lib/engine/core/store";
 import { ONBOARDING_PATH, WORLD_PATH } from "@/lib/engine/router/routes";
+import { useNavigation } from "@/lib/engine/router/navigation";
 import { isOnboardingComplete, isOnboardingPresentation, ONBOARDING_EVENTS, setOnboardingComplete, subscribeOnboardingCompletion, type OnboardingPresentation } from "@/lib/onboarding/interface";
 import { OnboardingVoiceClient, type VoiceConnection } from "@/lib/onboarding/voice-client";
 import { runOnboardingWipeHandoff } from "@/lib/onboarding/handoff-wipe";
@@ -208,30 +208,37 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
 }
 
 export default function OnboardingWorkspace() {
-  const pathname = usePathname();
+  // One clock. `route` is the settled route, so a scene is never torn down while its own exit
+  // transition is still on screen -- the thing usePathname() cannot express, and the reason
+  // this component used to carry a hand-rolled `leavingWorld` flag.
+  const navigation = useNavigation();
   const hydrated = useSyncExternalStore(subscribeHydration, clientSnapshot, serverSnapshot);
   const savedComplete = useSyncExternalStore(subscribeOnboardingCompletion, isOnboardingComplete, serverSnapshot);
-  const [skipped, setSkipped] = useState(false);
-  const complete = savedComplete || skipped;
   const sceneReady = useSyncExternalStore(subscribeScene, sceneSnapshot, serverSnapshot);
-  const onOnboarding = pathname === ONBOARDING_PATH;
-  // Next updates pathname the moment a navigation starts, but the engine's out transition runs
-  // after that and blends from a still of the live world. Re-warming on the new pathname would
-  // clear body[data-atriumActive] first, so to-home would find no world and cut instead of
-  // animating. Hold the world open from navigate-out until navigate-end.
-  const [leavingWorld, setLeavingWorld] = useState(false);
-  const onWorld = pathname === WORLD_PATH || leavingWorld;
-  const visible = hydrated && onOnboarding && sceneReady;
-  // Finishing a live session hands off through the wipe; a returning user skips it.
+  const [skipped, setSkipped] = useState(false);
   const [sessionShown, setSessionShown] = useState(false);
+  const [covered, setCovered] = useState(false);
   // Whether onboarding was already done when this mounted, as opposed to completing here.
   const arrivedComplete = useRef(savedComplete);
-  const [covered, setCovered] = useState(false);
-  // On /world the world is simply shown: there is no session to hand off from. The second
-  // branch is the onboarding handoff and only applies there -- unscoped it also matched the
-  // landing page, where a returning (complete) visitor has no session shown, so the world
-  // stayed un-warmed on / and came back over the landing scene after navigating home.
-  const showDashboard = onWorld || (onOnboarding && complete && (!sessionShown || covered));
+
+  const onOnboarding = navigation.route === ONBOARDING_PATH;
+  const onWorld = navigation.route === WORLD_PATH;
+  const complete = savedComplete || skipped;
+  const visible = hydrated && onOnboarding && sceneReady;
+
+  // What owns the screen, as one value rather than a boolean with nine inputs.
+  //   "session"  the voice onboarding surface
+  //   "handoff"  the wipe from the session into the world
+  //   "world"    the atrium
+  //   "away"     neither; the world stays warm and hidden
+  const stage: "session" | "handoff" | "world" | "away" =
+    onWorld ? "world"
+    : !onOnboarding ? "away"
+    : !complete ? "session"
+    : covered ? "world"
+    : sessionShown ? "handoff"
+    : "world";
+  const showDashboard = stage === "world" || stage === "handoff";
 
   // Latched in an effect, not during render: a render-phase setState here runs before the
   // external-store subscriptions settle, and `visible` depends on sceneReady, which
@@ -239,28 +246,6 @@ export default function OnboardingWorkspace() {
   useEffect(() => {
     if (visible && !complete && !sessionShown) setSessionShown(true);
   }, [visible, complete, sessionShown]);
-
-  useEffect(() => {
-    let timer = 0;
-    const onOut = (event: Event) => {
-      const { from, to } = (event as CustomEvent<{ from?: string; to?: string }>).detail ?? {};
-      const leaving = (from ?? "").replace(/\/+$/, "") || "/";
-      const arriving = (to ?? "").replace(/\/+$/, "") || "/";
-      if (leaving === WORLD_PATH && arriving !== WORLD_PATH) { setLeavingWorld(true); timer = failsafe(); }
-    };
-    const onEnd = () => setLeavingWorld(false);
-    // navigate-end is the normal release, but it only fires if the out transition finished.
-    // A stalled one (its GSAP timeline never advances in a hidden tab) would otherwise hold
-    // the world open over the landing scene for good, so release on a cap as well.
-    const failsafe = () => window.setTimeout(() => setLeavingWorld(false), 4000);
-    window.addEventListener("hyper:navigate-out", onOut);
-    window.addEventListener("hyper:navigate-end", onEnd);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("hyper:navigate-out", onOut);
-      window.removeEventListener("hyper:navigate-end", onEnd);
-    };
-  }, []);
 
   useEffect(() => {
     if (onOnboarding && complete && sessionShown && !covered) void runOnboardingWipeHandoff(() => setCovered(true));
@@ -292,7 +277,7 @@ export default function OnboardingWorkspace() {
   // The world mounts once, hidden, as soon as the page hydrates (so during the first loader, on
   // any route) and is only revealed here. Remounting it at the handoff is what used to freeze,
   // which is also why it stays mounted across the /onboarding -> /world move.
-  if (!hydrated || pathname.startsWith("/dev/")) return null;
+  if (!hydrated || navigation.route.startsWith("/dev/")) return null;
   return <>
     <AtriumPreview warm={!showDashboard} />
     {visible && !showDashboard && <OnboardingSession onSkip={() => setSkipped(true)} />}
