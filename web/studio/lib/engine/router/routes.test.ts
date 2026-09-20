@@ -100,21 +100,28 @@ describe("route table", () => {
   });
 
 
-  test("the back link's opacity is GSAP's alone", () => {
-    // A CSS transition or a rule that snaps opacity/visibility would fight the tween in
-    // components/RouteBack.tsx and the link would cut rather than fade.
+  test("the back link is reachable without waiting for an animation", () => {
+    // It used to be hidden with autoAlpha, so visibility and pointer-events only became
+    // correct once the tween ran. GSAP's ticker is rAF-driven, so a background tab (or any
+    // interrupted tween) left the link permanently invisible and unclickable while React
+    // believed it was shown. CSS now owns reachability via data-shown; GSAP only fades.
     const css = readFileSync(join(import.meta.dirname, "../../../app/styles/workspace.css"), "utf8");
-    const block = css.slice(css.indexOf(".route-back {"), css.indexOf("}", css.indexOf(".route-back {")));
-    const transition = /transition:([^;]*)/.exec(block)?.[1] ?? "";
-    assert.ok(!transition.includes("opacity"), "CSS still transitions .route-back opacity");
-    // Any later rule that sets opacity on .route-back would override the tween.
-    const after = css.slice(css.indexOf(".route-back:hover"));
-    for (const rule of after.split("}"))
-      if (rule.includes(".route-back") && /\bopacity\s*:/.test(rule))
-        assert.fail(`a later rule overrides the tween's opacity: ${rule.trim().slice(0, 80)}`);
+    assert.match(css, /\.route-back\[data-shown="true"\]\s*{[^}]*visibility:\s*visible/,
+      "data-shown must make the link visible in CSS, not via the tween");
+    assert.match(css, /\.route-back\[data-shown="true"\]\s*{[^}]*pointer-events:\s*auto/,
+      "data-shown must make the link clickable in CSS, not via the tween");
+
     const component = readFileSync(join(import.meta.dirname, "../../../components/RouteBack.tsx"), "utf8");
-    assert.ok(component.includes("autoAlpha"), "RouteBack no longer tweens autoAlpha");
-    assert.ok(component.includes("hyper:navigate-out"), "RouteBack must fade on navigate-out, not on pathname");
+    assert.ok(component.includes('data-shown='), "RouteBack must publish data-shown");
+    assert.ok(!component.includes("autoAlpha"),
+      "autoAlpha writes visibility, which would put reachability back under the tween");
+    assert.ok(component.includes("hyper:navigate-out"),
+      "RouteBack must fade on navigate-out, not on pathname, which updates too early");
+
+    // A CSS opacity transition would still fight the tween.
+    const block = css.slice(css.indexOf(".route-back {"), css.indexOf("}", css.indexOf(".route-back {")));
+    assert.ok(!(/transition:([^;]*)/.exec(block)?.[1] ?? "").includes("opacity"),
+      "CSS still transitions .route-back opacity");
   });
 
   test("normalizePath adds exactly one trailing slash", () => {

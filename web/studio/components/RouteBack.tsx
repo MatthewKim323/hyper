@@ -87,12 +87,14 @@ export default function RouteBack() {
   useEffect(() => {
     const node = element.current;
     if (!node) return;
+    // Opacity only: visibility and pointer-events belong to the data-shown CSS rule
+    // above, so the link is reachable even if this tween never runs.
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set(node, { autoAlpha: shown ? 1 : 0, y: 0 });
+      gsap.set(node, { opacity: shown ? 1 : 0, y: 0 });
       return;
     }
     const animation = gsap.to(node, {
-      autoAlpha: shown ? 1 : 0,
+      opacity: shown ? 1 : 0,
       y: shown ? 0 : -RISE,
       duration: shown ? FADE_IN : FADE_OUT,
       ease: shown ? "power2.out" : "power2.in",
@@ -110,6 +112,7 @@ export default function RouteBack() {
       className="route-back"
       data-cursor="hide"
       aria-label={label}
+      data-shown={shown ? "true" : "false"}
       aria-hidden={!shown}
       tabIndex={shown ? undefined : -1}
     >
