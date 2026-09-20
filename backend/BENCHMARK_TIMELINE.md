@@ -19,5 +19,5 @@ Each point per bucket (10 minutes) carries the bucket itself, the last 20 cases 
 - Accuracy is `null` under 20 cases. Counts are always there.
 - Cases created before `VALID_SINCE` ran against a sandbox with two bugs. They are drawn `valid: false` and never enter rolling, cumulative or paired numbers.
 - `EVENTS` marks what changed the meaning of a point: a model switch, a sandbox fix, a new tier. Append to it whenever that happens.
-- Tiers 1 to 4 name their own diagnosis and are saturated. Tier 5 is the only place a wrong release can happen, so `memory_effect_hard_tier` is the accuracy series to read. The other series that can move are adversary level, seconds, requests, sessions and dollars per case.
+- A case's tier is its family's (`counterparty.TIERS`). `difficulty` on the row is the adversary's level when the case spawned, reported as `adversary_level_at_spawn`. Tiers 1 to 4 name their own diagnosis and are saturated. Tier 5 is the only place a wrong release can happen, so `memory_effect_hard_tier` is the accuracy series to read. The other series that can move are adversary level, seconds, requests, sessions and dollars per case.
 - Nothing is held out from the worker prompt. Every series is a development series.
