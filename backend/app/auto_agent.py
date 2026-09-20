@@ -22,8 +22,8 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / '.env')
 
-from sqlalchemy import cast, func, select, update  # noqa: E402
-from sqlalchemy.dialects.postgresql import JSONB  # noqa: E402
+from sqlalchemy import Text, cast, func, select, update  # noqa: E402
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB  # noqa: E402
 
 from . import data_tools  # noqa: E402
 from .counterparty import AGENT_SESSION_ERROR, Counterparties, now  # noqa: E402
@@ -167,7 +167,8 @@ def save_activity(store, scenario_id, status, started_at):
         # Patch the current database value atomically so a heartbeat cannot erase a concurrent reply.
         if db.dialect.name == 'postgresql':
             agent = func.coalesce(scenarios.c.state['agent'], cast({}, JSONB))
-            state = func.jsonb_set(scenarios.c.state, '{agent}', agent.op('||')(cast({'activity': activity}, JSONB)), True)
+            path = cast(['agent'], ARRAY(Text))
+            state = func.jsonb_set(scenarios.c.state, path, agent.op('||')(cast({'activity': activity}, JSONB)), True)
         else:
             state = func.json_set(scenarios.c.state, '$.agent.activity', func.json(json.dumps(activity)))
         db.execute(update(scenarios).where(scenarios.c.id == scenario_id).values(state=state))

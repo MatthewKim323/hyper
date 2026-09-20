@@ -1,5 +1,6 @@
 """The counterparties answer from private facts, and the engine, not the conversation, decides release."""
 import json
+import os
 import random
 import time
 from contextlib import nullcontext
@@ -288,7 +289,7 @@ def test_activity_update_preserves_reply_written_just_before_heartbeat(world):
 def test_activity_update_compiles_to_atomic_postgres_jsonb_patch():
     from app import auto_agent
     statements = []
-    db = SimpleNamespace(dialect=postgresql.dialect(), execute=statements.append)
+    db = SimpleNamespace(dialect=postgresql.psycopg.dialect(), execute=statements.append)
     store = SimpleNamespace(engine=SimpleNamespace(begin=lambda: nullcontext(db)))
     auto_agent.save_activity(store, 'scenario-123', 'running', 1_000)
     assert len(statements) == 1
@@ -297,6 +298,41 @@ def test_activity_update_compiles_to_atomic_postgres_jsonb_patch():
     assert sql.startswith('UPDATE counterparty_scenarios SET state=jsonb_set(counterparty_scenarios.state,')
     assert 'coalesce((counterparty_scenarios.state -> ' in sql and ' || CAST(' in sql
     assert 'SELECT' not in sql and params['id_1'] == 'scenario-123'
-    assert params['jsonb_set_1'] == '{agent}' and params['state_1'] == 'agent'
-    assert params['param_1'] == {} and set(params['param_2']) == {'activity'}
-    assert params['param_2']['activity']['status'] == 'running'
+    assert 'AS TEXT[]' in sql and ['agent'] in params.values() and params['state_1'] == 'agent'
+    assert {} in params.values()
+    patch = next(value for value in params.values() if isinstance(value, dict) and 'activity' in value)
+    assert set(patch) == {'activity'} and patch['activity']['status'] == 'running'
+
+
+@pytest.mark.parametrize('initial', [
+    {'requests': 3, 'delivered': ['CREDIT_MEMO']},
+    {'requests': 4, 'agent': {'sessions': 2, 'status': 'WAITING', 'trace': [{'at': 10, 'say': 'Prior session'}]}},
+])
+def test_activity_update_executes_on_postgres_without_overwriting_state(initial, monkeypatch):
+    """Opt-in runtime check; a transaction-local table prevents changes to any real scenario."""
+    from app import auto_agent
+    from app.database import make_engine
+    dsn = os.getenv('TEST_POSTGRES_URL')
+    if not dsn: pytest.skip('Set TEST_POSTGRES_URL to run the PostgreSQL activity regression')
+    engine = make_engine(dsn)
+    assert engine.dialect.name == 'postgresql'
+    monkeypatch.setattr(auto_agent, 'now', lambda: 2_000)
+    try:
+        with engine.connect() as db:
+            transaction = db.begin()
+            try:
+                # The temporary table shadows the real table only on this connection.
+                db.exec_driver_sql('CREATE TEMPORARY TABLE counterparty_scenarios (id text PRIMARY KEY, state jsonb NOT NULL) ON COMMIT DROP')
+                db.execute(counterparty_scenarios.insert().values(id='activity-regression', state=initial))
+                store = SimpleNamespace(engine=SimpleNamespace(begin=lambda: nullcontext(db)))
+                for status in ('running', 'idle', 'failed'):
+                    auto_agent.save_activity(store, 'activity-regression', status, 1_000)
+                    observed = db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == 'activity-regression')).scalar_one()
+                    activity = {'status': status, 'started_at': 1_000, 'updated_at': 2_000,
+                                'expires_at': 2_000 + auto_agent.ACTIVITY_TTL_MS if status == 'running' else None,
+                                'error': cp.AGENT_SESSION_ERROR if status == 'failed' else None}
+                    assert observed == {**initial, 'agent': {**initial.get('agent', {}), 'activity': activity}}
+            finally:
+                transaction.rollback()
+    finally:
+        engine.dispose()
