@@ -1,6 +1,7 @@
 """Elasticsearch is a rebuildable evidence index; Postgres remains authoritative."""
 import os
 import json
+import time
 import httpx
 
 class ElasticSearch:
@@ -24,7 +25,15 @@ class ElasticSearch:
         if getattr(self,'_client',None) is None:
             self._client=httpx.Client(timeout=120,headers=self.headers,auth=self.auth,
                 verify=os.getenv('ELASTICSEARCH_CA_CERT') or True)
-        r=self._client.request(method,self.url+'/'+path.lstrip('/'),**kwargs)
+        # A hosted cluster is a network away: one DNS or connection blip should not fail an import or a search.
+        # Only the connection is retried. A response, even a bad one, is never sent twice.
+        for attempt in range(3):
+            try:
+                r=self._client.request(method,self.url+'/'+path.lstrip('/'),**kwargs)
+                break
+            except (httpx.ConnectError,httpx.ConnectTimeout):
+                if attempt==2:raise
+                time.sleep(1+attempt*2)
         r.raise_for_status()
         return r.json()
 
