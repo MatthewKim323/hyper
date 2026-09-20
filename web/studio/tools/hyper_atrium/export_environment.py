@@ -46,7 +46,10 @@ if args.clean_source_text:
     # Preserve all original topology, materials, stations, and template library.
     bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE), compress=True)
 
-excluded_surfaces = {'Water | flooded atrium', 'Water | central reflecting basin', 'Atmosphere | atrium air'}
+excluded_surfaces = {
+    'Water | flooded atrium', 'Water | central reflecting basin', 'Atmosphere | atrium air',
+    'Hyper | floating pearl light at lower pole',
+}
 objects = [obj for obj in scene.objects if obj.type in {'MESH', 'CURVE'} and not station_object(obj) and obj.name not in excluded_surfaces and obj.type != 'FONT']
 
 # Keep a representative third of the existing disconnected outcrop islands.
@@ -120,7 +123,7 @@ for obj in scene.objects:
     if obj.type != 'LIGHT':
         continue
     direction = obj.rotation_euler.to_quaternion() @ Vector((0, 0, -1))
-    lighting.append({'name': obj.name, 'type': obj.data.type.lower(), 'position': list(obj.location), 'direction': list(direction), 'colorLinear': list(obj.data.color), 'blenderEnergy': obj.data.energy, 'size': getattr(obj.data, 'size', None)})
+    lighting.append({'name': obj.name, 'type': obj.data.type.lower(), 'position': list(obj.location), 'direction': list(direction), 'colorLinear': list(obj.data.color), 'blenderEnergy': obj.data.energy, 'size': getattr(obj.data, 'size', None), 'radius': getattr(obj.data, 'shadow_soft_size', None)})
 
 bpy.ops.object.select_all(action='DESELECT')
 for obj in objects:

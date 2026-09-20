@@ -66,5 +66,7 @@ library.hide_viewport=True
 (OUT/'crystals.json').write_text(json.dumps({'templates':manifest},indent=2)+'\n')
 sun=next((obj for obj in scene.objects if obj.type=='LIGHT' and obj.data.type=='SUN'),None)
 sun_direction=list(sun.rotation_euler.to_quaternion() @ Vector((0,0,1))) if sun else [7,9,13]
-(OUT/'scene.json').write_text(json.dumps({'width':2560,'height':1441,'camera':{'position':list(scene.camera.location),'target':list(scene.get('camera_target',[0,2,2.4])),'lens':scene.camera.data.lens,'sensorWidth':scene.camera.data.sensor_width},'sunDirection':sun_direction,'windows':json.loads(scene.get('atrium_window_apertures','[]')),'sideLight':json.loads(scene.get('atrium_side_light','null')),'templates':manifest},indent=2)+'\n')
+pearl_point=scene.objects.get('Fidelity | pearl inner illumination')
+pearl_light={'name':pearl_point.name,'type':'point','position':list(pearl_point.matrix_world.translation),'colorLinear':list(pearl_point.data.color),'blenderEnergy':pearl_point.data.energy,'radius':pearl_point.data.shadow_soft_size} if pearl_point else None
+(OUT/'scene.json').write_text(json.dumps({'width':2560,'height':1441,'camera':{'position':list(scene.camera.location),'target':list(scene.get('camera_target',[0,2,2.4])),'lens':scene.camera.data.lens,'sensorWidth':scene.camera.data.sensor_width},'sunDirection':sun_direction,'windows':json.loads(scene.get('atrium_window_apertures','[]')),'sideLight':json.loads(scene.get('atrium_side_light','null')),'pearlLight':pearl_light,'templates':manifest},indent=2)+'\n')
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'assets/blender/hyper-atrium/hyper-atrium.blend'),compress=True)

@@ -5,7 +5,7 @@ An editable Blender reconstruction of the supplied concept image, with the archi
 ## Files
 
 - `hyper-atrium.blend`: authored camera, carved stone architecture, floating pearl and orbit, five main relic stations, warm window lighting, rose gardens, and animated water. The hidden **Crystal library | reusable onboarding stations** collection holds ten standalone station variants. Glass covers and their polished rims remain hidden only as composition guides and are excluded from station exports.
-- `hyper-atrium.png`: 2560×1441 Cycles render of the unified scene.
+- `hyper-atrium.png`: earlier 2560×1441 Cycles render. The current `.blend` and live GLBs are newer and include the clustered garden, narrow station light inlays, and softer pearl light. Regenerate this PNG to show those revisions.
 - `hotspots.json`: normalized camera projections for the original five-station composition.
 - `verification.json`: saved-scene and reusable-asset checks.
 - `composition-verification.json`: measured reference aperture bounds and the evaluated Blender geometry's projected bounds. This verifies placement, not photographic fidelity.
@@ -13,7 +13,7 @@ An editable Blender reconstruction of the supplied concept image, with the archi
 
 The Blender water uses eight small gravity-wave components with finite-depth dispersion, `omega² = g k tanh(k depth)`, and fine capillary normals. Cycles calculates reflection and transmission with an IOR of 1.333. This is an animated analytical surface, not a fluid-solver cache.
 
-The rose garden uses three merged meshes: rolling ridges, stems and leaves, and 215,000 cupped petals across 43,000 floral sprigs. The garden totals 500,000 triangles. Linear vertex colors preserve rose, pink, and lilac variation in both Blender and glTF. Cycles petals transmit sunlight through thin surfaces; the browser shader approximates that backlighting. Draco compresses the environment's complete topology with 20-bit positions and 12-bit colors/normals. Decoder files and licenses are served locally under `public/assets/draco/`.
+The rose garden uses three merged meshes: unchanged rolling ridges, 2,500 irregular flowering crowns, and 84,500 petals across 16,900 blossoms. Angled leaf sprays form lilac interiors beneath pale cream and blush flower tips. The garden totals 221,300 triangles, reduced from 500,000 while retaining layered silhouettes. Linear vertex colors preserve rose, pink, and lilac variation in both Blender and glTF. Cycles petals transmit sunlight through thin surfaces; the browser shader approximates that backlighting. Draco compresses the environment's complete topology with 20-bit positions and 12-bit colors/normals. Decoder files and licenses are served locally under `public/assets/draco/`.
 
 The camera's height and pitch match the reference basin ellipse. Rear stations sit at their measured depth, and the carved wall sits behind every station. The five hidden aperture guides preserve the original composition measurements. The browser's sixth station is Benchmarks, added opposite Training Arena.
 
@@ -44,6 +44,8 @@ Add `--cpu` after `--` if the local macOS Metal shader compiler fails. This sele
 Rebuilding replaces the authored source, so export the station library afterward to repopulate all ten templates. `props.hide_station_covers(scene)` persistently hides the two aperture guides per station; both rendering and station export enforce this. Relic icons, plinths, and labels remain intact. `update_landscape.py` replaces only the garden and updates directional lighting in the existing saved scene, preserving all stations and templates. Run the environment exporter after changes to room geometry. No command generates backplates or water masks.
 
 Every reusable template includes a floating relic. The generic `crystal-tall`, `crystal-wide`, and `crystal-clear` variants use a faceted quartz shard, a three-shard cluster, and an opal octahedron. Their names and navigation destinations still come from onboarding. Verification rejects templates or exported GLBs that contain only a plinth.
+
+Station illumination comes from narrow 20 mm annular inlays seated into the stone crowns, with only 5 mm exposed. The earlier full emissive plates are replaced in all five scene stations and ten reusable templates. The old emissive disk at the pearl's lower pole remains hidden as a lighting guide and is excluded from the environment export. `props.refine_station_light_seams(scene)` applies this geometry update without saving or changing other lights and materials.
 
 `refine_reference.py` reapplies measured composition, botanical geometry, and physical materials to an existing source. It writes fresh aperture measurements. `refine_fidelity_materials.apply(scene)` is also callable in memory; it never saves or renders on its own. Source volumetric haze, actual relic uplights, honed marble, and cloudy pearl transmission are editable node graphs.
 

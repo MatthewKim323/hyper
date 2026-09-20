@@ -69,6 +69,43 @@ for name,point in {'pearl center':(0,1.5,3.16),'pearl left':(-1.2,1.5,3.16),'pea
 result={'blender':bpy.app.version_string,'station_templates':variants,'water_vertices':len(surface.data.vertices),'water_animation_verified':True,'camera':list(scene.camera.location),'resolution':[scene.render.resolution_x,scene.render.resolution_y],'packed_fonts':sum(1 for font in bpy.data.fonts if font.packed_file),'glb_assets_verified':10}
 result['aperture_sunlight_verified']=illumination
 result['uncovered_relics_verified']={'hidden_aperture_guides':len(covers),'cover_free_station_assets':10,'relic_meshes_by_template':exported_relics}
+garden=[obj for obj in scene.objects if obj.name.startswith('Landscape | ') and obj.type=='MESH']
+garden_triangles=0
+for obj in garden:
+    obj.data.calc_loop_triangles()
+    garden_triangles+=len(obj.data.loop_triangles)
+crowns=scene.objects['Landscape | layered lilac flowering canopies']
+flowers=scene.objects['Landscape | blush five petal blossoms']
+assert len(garden)==3 and crowns.get('botanical_crowns')==2500
+assert 0<garden_triangles<=250000, 'The floral garden exceeds its geometry budget'
+for obj in garden:
+    assert obj.data.color_attributes.get('PetalColor') is not None, obj.name
+result['garden_verified']={'meshes':len(garden),'crowns':crowns['botanical_crowns'],
+    'blossoms':flowers['blossoms'],'petals':flowers['petals'],'triangles':garden_triangles}
+inlays=[obj for obj in scene.objects if obj.name.endswith(' | concealed warm light seam')]
+assert len(inlays)==15, 'All five scene stations and ten templates need narrow light inlays'
+for obj in inlays:
+    assert obj.get('station_light_geometry')=='annular-inlay-v1', obj.name
+    vertices=[vertex.co for vertex in obj.data.vertices]
+    center=sum(vertices,Vector())/len(vertices)
+    radii=[(point-center).xy.length for point in vertices]
+    assert min(radii)>0.5 and 0.0199<max(radii)-min(radii)<0.0201, obj.name
+    assert max(point.z for point in vertices)-min(point.z for point in vertices)<0.016, obj.name
+pole=scene.objects['Hyper | floating pearl light at lower pole']
+assert pole.hide_render and pole.hide_viewport and not pole.visible_glossy
+environment=json.loads((PUBLIC/'environment.json').read_text())
+assert pole.name not in environment['glbObjectNames'], 'The obsolete pearl disk was exported'
+result['station_light_inlays_verified']={'count':len(inlays),'width_m':0.020,'depth_m':0.015,
+    'pearl_disc_hidden':True,'pearl_disc_excluded_from_environment':True}
+pearl=scene.objects['Hyper | floating pearl marble sphere']
+inner=scene.objects['Fidelity | pearl inner illumination']
+bounds=[pearl.matrix_world @ Vector(corner) for corner in pearl.bound_box]
+low=min(point.z for point in bounds);high=max(point.z for point in bounds)
+height_fraction=(inner.matrix_world.translation.z-low)/(high-low)
+assert abs(inner.data.energy-6)<1e-6 and abs(inner.data.shadow_soft_size-.5)<1e-6
+assert abs(height_fraction-.23)<1e-6
+result['pearl_inner_light_verified']={'watts':inner.data.energy,'radius_m':inner.data.shadow_soft_size,
+    'height_fraction':height_fraction,'position':list(inner.matrix_world.translation)}
 marble=bpy.data.materials.get('Hyper | blush ivory honed limestone')
 if marble and marble.get('marble_world_scale'):
     shader=next(node for node in marble.node_tree.nodes if node.type=='BSDF_PRINCIPLED')

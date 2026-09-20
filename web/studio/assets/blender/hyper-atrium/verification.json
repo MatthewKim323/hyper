@@ -48,6 +48,30 @@
       "crystal-clear": 1
     }
   },
+  "garden_verified": {
+    "meshes": 3,
+    "crowns": 2500,
+    "blossoms": 16900,
+    "petals": 84500,
+    "triangles": 221300
+  },
+  "station_light_inlays_verified": {
+    "count": 15,
+    "width_m": 0.02,
+    "depth_m": 0.015,
+    "pearl_disc_hidden": true,
+    "pearl_disc_excluded_from_environment": true
+  },
+  "pearl_inner_light_verified": {
+    "watts": 6.0,
+    "radius_m": 0.5,
+    "height_fraction": 0.22999998291463047,
+    "position": [
+      4.76837158203125e-07,
+      1.4999995231628418,
+      2.3310999870300293
+    ]
+  },
   "marble_verified": {
     "world_scale": 0.58,
     "nodes": 44,

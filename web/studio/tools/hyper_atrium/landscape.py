@@ -102,11 +102,11 @@ def mesh(name, vertices, faces, colors, surface):
 def _patch_tint(x, y, rng, leaf=False):
     """Low-frequency color families avoid random candy-colored confetti."""
     mix = 0.5 + 0.5 * noise.noise(Vector((x * 0.12, y * 0.10, 3.7)))
-    rose = (0.97, 0.67, 0.76) if not leaf else (0.62, 0.42, 0.50)
-    lilac = (0.84, 0.64, 0.82) if not leaf else (0.57, 0.43, 0.59)
+    rose = (0.97, 0.67, 0.76) if not leaf else (0.83, 0.62, 0.69)
+    lilac = (0.84, 0.64, 0.82) if not leaf else (0.76, 0.60, 0.77)
     tint = tuple(a * (1 - mix) + b * mix for a, b in zip(rose, lilac))
     depth = min(0.62, max(0.0, (y - 23.0) / 75.0))
-    horizon = (0.92, 0.74, 0.82) if not leaf else (0.76, 0.60, 0.70)
+    horizon = (0.92, 0.74, 0.82) if not leaf else (0.88, 0.76, 0.83)
     tint = tuple(a * (1 - depth) + b * depth for a, b in zip(tint, horizon))
     variation = rng.uniform(0.94, 1.055)
     return tuple(min(1.0, channel * variation) for channel in tint)
@@ -145,11 +145,11 @@ def _plant_positions(count, near, far, rng, wall_y, camera_y, opening_scale, sur
 
 
 def build_landscape(seed=20260919, wall_y=8.0, camera_y=-21.0, opening_scale=1.0, height_scale=1.0):
-    """Build 43,000 botanical sprigs as three merged, vertex-colored meshes.
+    """Build small, irregular flowering crowns as three merged meshes.
 
-    Near silhouettes contain cupped petals, crossed stems, and pointed leaves.
-    Far silhouettes simplify those same floral parts. No spheres or rock-like
-    canopy islands are used. The landscape totals 500,000 triangles.
+    Layered branch sprays create shaded interiors and separate pale flower tips.
+    Near silhouettes retain cupped petals; distant branches use fewer faces.
+    The original ridge mesh and camera-window sight lines remain unchanged.
     """
     rng = random.Random(seed)
     depth_offset = wall_y - 8.0
@@ -173,9 +173,9 @@ def build_landscape(seed=20260919, wall_y=8.0, camera_y=-21.0, opening_scale=1.0
             vertices.append((x, y, surface_height(x, y)))
             wash = 0.5 + 0.5 * noise.noise(Vector((x * 0.32, y * 0.27, 4.1)))
             # A muted understory rather than bare pink soil between flower heads.
-            tint = (0.68 + wash * 0.10, 0.54 + wash * 0.12, 0.62 + wash * 0.11)
+            tint = (0.78 + wash * 0.04, 0.64 + wash * 0.04, 0.70 + wash * 0.04)
             depth = min(0.50, max(0.0, (y - 25) / 90))
-            colors.append(color(tuple(c * (1 - depth) + h * depth for c, h in zip(tint, (0.80, 0.72, 0.81)))))
+            colors.append(color(tuple(c * (1 - depth) + h * depth for c, h in zip(tint, (0.87, 0.76, 0.83)))))
     for j in range(ny):
         for i in range(nx):
             index = j * (nx + 1) + i
@@ -201,77 +201,121 @@ def build_landscape(seed=20260919, wall_y=8.0, camera_y=-21.0, opening_scale=1.0
 
     stems = (plant_v, plant_f, plant_c)
     petals = (petal_v, petal_f, petal_c)
+    # Scale with the openings for the original shallow-room authoring API, but
+    # keep individual crowns under 1.65 m across in the calibrated deep room.
+    plant_scale = opening_scale / (48.0 / 29.0)
     tiers = (
-        # count, depth bounds, head radius, stem height, silhouette detail
-        (21000, 13.0, 31.0, (0.055, 0.095), (0.12, 0.27), "near"),
-        (12000, 31.0, 49.0, (0.070, 0.115), (0.16, 0.30), "middle"),
-        (10000, 49.0, 73.5, (0.085, 0.14), (0.08, 0.15), "far"),
+        # crowns, depth bounds, radius, crown height, sprays, leaf pairs, detail
+        (800, 13.0, 31.0, (0.34, 0.60), (0.40, 0.80), 8, 3, "near"),
+        (1000, 31.0, 49.0, (0.40, 0.67), (0.42, 0.84), 7, 2, "middle"),
+        (700, 49.0, 73.5, (0.56, 0.82), (0.44, 0.88), 5, 1, "far"),
     )
-    for count, near, far, radii, heights, detail in tiers:
-        for base in _plant_positions(count, near + depth_offset, far + depth_offset, rng, wall_y, camera_y, opening_scale, surface_height):
-            x, y, z = base
+    golden_angle = math.pi * (3.0 - math.sqrt(5.0))
+    crown_count = blossom_count = leaf_count = stem_count = 0
+    for count, near, far, radii, heights, spray_count, leaf_pairs, detail in tiers:
+        positions = _plant_positions(count, near + depth_offset, far + depth_offset,
+                                     rng, wall_y, camera_y, opening_scale, surface_height)
+        for base in positions:
+            x, y, _ = base
+            crown_count += 1
             phase = rng.uniform(0, math.tau)
-            radius = rng.uniform(*radii) * opening_scale
-            height = rng.uniform(*heights) * opening_scale
-            # Small lateral bends and layered heights keep the field organic.
-            lean = Vector((math.cos(phase), math.sin(phase), 0))
-            head = base + lean * height * rng.uniform(0.12, 0.32) + Vector((0, 0, height))
-            normal = Vector((rng.uniform(-0.35, 0.35), rng.uniform(-0.85, -0.25), rng.uniform(0.75, 1.15))).normalized()
-            u = normal.cross(Vector((0, 1, 0))).normalized()
-            v = normal.cross(u).normalized()
+            radius = rng.uniform(*radii) * plant_scale
+            height = rng.uniform(*heights) * plant_scale
+            lean = Vector((math.cos(phase), math.sin(phase), 0)) * radius * rng.uniform(0.12, 0.28)
+            center = base + lean + Vector((0, 0, height * 0.34))
             tint = _patch_tint(x, y, rng)
-            foliage_tint = _patch_tint(x, y, rng, leaf=True)
+            foliage = _patch_tint(x, y, rng, leaf=True)
+            # These two open leaf fans shade the interior. They are not a
+            # closed ellipsoid: light and sky remain visible between branches.
+            for angle in (phase, phase + 1.7):
+                axis = Vector((math.cos(angle), math.sin(angle), rng.uniform(0.04, 0.22))).normalized()
+                across = Vector((-axis.y, axis.x, 0))
+                quad(stems, (
+                    center - axis * radius * 0.88,
+                    center + across * radius * 0.30 - Vector((0, 0, height * 0.12)),
+                    center + axis * radius * 0.92 + Vector((0, 0, height * 0.12)),
+                    center - across * radius * 0.28,
+                ), foliage, (0.84, 0.90, 1.0, 0.94))
+                leaf_count += 1
 
-            for petal_index in range(5):
-                angle = phase + petal_index * math.tau / 5
-                radial = u * math.cos(angle) + v * math.sin(angle)
-                across = -u * math.sin(angle) + v * math.cos(angle)
-                petal_length = radius * rng.uniform(0.91, 1.07)
-                cup = radius * rng.uniform(0.12, 0.24)
-                if detail == "near":
-                    quad(petals, (
-                        head - normal * radius * 0.04,
-                        head + radial * petal_length * 0.60 - across * radius * 0.47 + normal * cup * 0.25,
-                        head + radial * petal_length + normal * cup,
-                        head + radial * petal_length * 0.60 + across * radius * 0.47 + normal * cup * 0.25,
-                    ), tint)
-                else:
-                    triangle(petals, (
-                        head - normal * radius * 0.04,
-                        head + radial * petal_length * 0.83 - across * radius * 0.47 + normal * cup,
-                        head + radial * petal_length + across * radius * 0.30 + normal * cup * 0.75,
-                    ), tint)
+            for spray_index in range(spray_count):
+                angle = phase + spray_index * golden_angle + rng.uniform(-0.22, 0.22)
+                spread = math.sqrt((spray_index + 0.5) / spray_count)
+                outward = Vector((math.cos(angle), math.sin(angle), 0))
+                # Unequal three-lobed branching breaks both dome shapes and
+                # repeated circular silhouettes at the skyline.
+                lobe = 1.0 + 0.17 * math.sin(angle * 3.0 + phase)
+                top = height * (0.44 + 0.56 * (1.0 - spread ** 2))
+                top *= rng.uniform(0.82, 1.22)
+                head = base + lean + outward * radius * spread * lobe + Vector((0, 0, top))
+                branch_base = base + Vector((0, 0, height * rng.uniform(0.10, 0.22)))
+                branch = head - branch_base
+                sideways = Vector((-outward.y, outward.x, 0))
+                if detail != "far":
+                    half_width = 0.006 * plant_scale
+                    triangle(stems, (branch_base - sideways * half_width,
+                                     branch_base + sideways * half_width, head), foliage)
+                    stem_count += 1
 
-            if detail == "near":
-                # Two crossed tapered strips keep even thin stems visible from
-                # the camera and its water reflection without alpha textures.
-                for axis in (Vector((1, 0, 0)), Vector((0, 1, 0))):
-                    thickness = rng.uniform(0.0025, 0.0040)
-                    quad(stems, (base - axis * thickness, base + axis * thickness, head + axis * thickness * 0.35, head - axis * thickness * 0.35), foliage_tint, (0.76, 0.78, 0.95, 0.94))
-                leaf_base = base + (head - base) * 0.42
-                leaf_axis = lean * radius * 1.45 + Vector((0, 0, radius * 0.30))
-                side = Vector((-lean.y, lean.x, 0)) * radius * 0.23
-                quad(stems, (leaf_base, leaf_base + leaf_axis * 0.5 - side, leaf_base + leaf_axis, leaf_base + leaf_axis * 0.5 + side), foliage_tint)
-            elif detail == "middle":
-                triangle(stems, (base - u * 0.003, base + u * 0.003, head), foliage_tint)
-                leaf_base = base + (head - base) * 0.40
-                tip = leaf_base + lean * radius * 1.20 + Vector((0, 0, radius * 0.2))
-                side = Vector((-lean.y, lean.x, 0)) * radius * 0.22
-                quad(stems, (leaf_base, (leaf_base + tip) * 0.5 - side, tip, (leaf_base + tip) * 0.5 + side), foliage_tint)
-            else:
-                # A tiny ivory core separates overlapping distant florets.
-                triangle(petals, (head + u * radius * 0.15, head - u * radius * 0.10 + v * radius * 0.12, head - u * radius * 0.10 - v * radius * 0.12), (0.92, 0.84, 0.83))
+                for leaf_index in range(leaf_pairs):
+                    fraction = 0.30 + (leaf_index + 0.35) / (leaf_pairs + 0.8) * 0.53
+                    leaf_base = branch_base + branch * fraction
+                    side = -1.0 if leaf_index % 2 else 1.0
+                    leaf_direction = (outward * 0.50 + sideways * side * 0.68
+                                      + Vector((0, 0, rng.uniform(0.12, 0.32)))).normalized()
+                    length = radius * rng.uniform(0.38, 0.58)
+                    leaf_tip = leaf_base + leaf_direction * length
+                    leaf_mid = (leaf_base + leaf_tip) * 0.5 + Vector((0, 0, length * 0.09))
+                    leaf_width = sideways * length * rng.uniform(0.19, 0.28)
+                    quad(stems, (leaf_base, leaf_mid - leaf_width, leaf_tip, leaf_mid + leaf_width),
+                         foliage, (0.87, 0.96, 1.06, 0.99))
+                    leaf_count += 1
+
+                normal = (outward * rng.uniform(0.38, 0.85)
+                          + Vector((rng.uniform(-0.12, 0.12), rng.uniform(-0.12, 0.12), rng.uniform(0.62, 1.0)))).normalized()
+                u = normal.cross(Vector((0, 1, 0))).normalized()
+                v = normal.cross(u).normalized()
+                flower_radius = rng.uniform(0.13, 0.20) * plant_scale
+                if detail == "far":
+                    flower_radius *= 1.18
+                # Bright cream/blush tips sit above the subdued lilac interior.
+                # Geometry normals, transmission and real lights do the shading.
+                cream = (0.985, 0.875, 0.83)
+                cream_mix = rng.uniform(0.28, 0.58) + 0.10 * top / height
+                flower_tint = tuple(a * (1.0 - cream_mix) + b * cream_mix for a, b in zip(tint, cream))
+                blossom_count += 1
+                for petal_index in range(5):
+                    petal_angle = angle + petal_index * math.tau / 5
+                    radial = u * math.cos(petal_angle) + v * math.sin(petal_angle)
+                    across = -u * math.sin(petal_angle) + v * math.cos(petal_angle)
+                    petal_length = flower_radius * rng.uniform(0.90, 1.10)
+                    cup = flower_radius * rng.uniform(0.15, 0.30)
+                    if detail == "near":
+                        quad(petals, (
+                            head - normal * flower_radius * 0.04,
+                            head + radial * petal_length * 0.60 - across * flower_radius * 0.47 + normal * cup * 0.25,
+                            head + radial * petal_length + normal * cup,
+                            head + radial * petal_length * 0.60 + across * flower_radius * 0.47 + normal * cup * 0.25,
+                        ), flower_tint, (0.94, 1.0, 1.035, 0.99))
+                    else:
+                        triangle(petals, (
+                            head - normal * flower_radius * 0.04,
+                            head + radial * petal_length * 0.83 - across * flower_radius * 0.47 + normal * cup,
+                            head + radial * petal_length + across * flower_radius * 0.30 + normal * cup * 0.75,
+                        ), flower_tint, (0.96, 1.025, 1.0))
 
     shrubs = mesh("Landscape | layered lilac flowering canopies", plant_v, plant_f, plant_c, canopy)
     flowers = mesh("Landscape | blush five petal blossoms", petal_v, petal_f, petal_c, petal)
     ground["ridge_height_m"] = 3.0 * height_scale
     ground["wall_y"] = wall_y
     ground["opening_scale"] = opening_scale
-    shrubs["botanical_stems"] = 33000
-    shrubs["botanical_leaves"] = 33000
-    flowers["blossoms"] = 43000
-    flowers["petals"] = 215000
-    flowers["depth_bands"] = "21000 near, 12000 middle, 10000 far"
+    ground["height_scale"] = height_scale
+    shrubs["botanical_crowns"] = crown_count
+    shrubs["botanical_stems"] = stem_count
+    shrubs["botanical_leaves"] = leaf_count
+    flowers["blossoms"] = blossom_count
+    flowers["petals"] = blossom_count * 5
+    flowers["depth_bands"] = "800 near crowns, 1000 middle crowns, 700 far crowns"
     return {"ground": ground, "canopies": shrubs, "blossoms": flowers}
 
 

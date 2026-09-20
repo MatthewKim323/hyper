@@ -153,6 +153,22 @@
       ]
     }
   },
+  "pearlLight": {
+    "name": "Fidelity | pearl inner illumination",
+    "type": "point",
+    "position": [
+      4.76837158203125e-07,
+      1.4999995231628418,
+      2.3310999870300293
+    ],
+    "colorLinear": [
+      1.0,
+      0.8700000047683716,
+      0.800000011920929
+    ],
+    "blenderEnergy": 6.0,
+    "radius": 0.5
+  },
   "templates": [
     {
       "id": "accounts-payable",

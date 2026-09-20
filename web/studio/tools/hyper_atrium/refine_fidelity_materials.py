@@ -340,10 +340,10 @@ def apply(scene):
     if pearl:
         low, high = _bounds(pearl)
         center = (low + high) * 0.5
-        inner_light = (center.x, center.y, low.z + (high.z - low.z) * 0.105)
+        inner_light = (center.x, center.y, low.z + (high.z - low.z) * 0.23)
     else:
-        inner_light = (0, 1.5, 1.98)
-    _light(scene, "Fidelity | pearl inner illumination", "POINT", inner_light, 24, (1, 0.87, 0.80), size=0.26)
+        inner_light = (0, 1.5, 2.317)
+    _light(scene, "Fidelity | pearl inner illumination", "POINT", inner_light, 6, (1, 0.87, 0.80), size=0.5)
     for obj in tuple(scene.objects):
         if obj.type != "MESH" or (obj.hide_render and not obj.get("station_cover_reference")) or "solid clear arched crystal" not in obj.name:
             continue

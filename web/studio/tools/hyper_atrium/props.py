@@ -251,6 +251,70 @@ def _annulus(name, center, outer, inner, height, material, bevel=0.025):
     return obj
 
 
+def refine_station_light_seams(scene):
+    """Replace exposed light plates with narrow crown inlays, without saving."""
+    changed = []
+    for obj in tuple(scene.objects):
+        if obj.type != "MESH" or not obj.name.endswith(" | concealed warm light seam"):
+            continue
+        if obj.get("station_light_geometry") == "annular-inlay-v1":
+            continue
+        crown = scene.objects.get(obj.name.replace(" | concealed warm light seam", " | upper porcelain plinth"))
+        if crown is None or not obj.data.materials:
+            continue
+        radius = max(math.hypot(vertex.co.x, vertex.co.y) for vertex in crown.data.vertices)
+        outer = radius * 0.97
+        ring = _annulus(obj.name + " replacement", (0, 0, 0), outer, outer - 0.020,
+                        0.015, obj.data.materials[0], bevel=0.002)
+        original = obj.data
+        obj.data = ring.data
+        bpy.data.objects.remove(ring, do_unlink=True)
+        if original.users == 0:
+            bpy.data.meshes.remove(original)
+        for modifier in tuple(obj.modifiers):
+            if modifier.type == "BEVEL":
+                obj.modifiers.remove(modifier)
+        _bevel(obj, 0.002, 3)
+        # The diffuser is seated into the crown; only its upper 5 mm are exposed.
+        obj.location.z = crown.location.z + max(vertex.co.z for vertex in crown.data.vertices) - 0.0025
+        obj["station_light_geometry"] = "annular-inlay-v1"
+        obj["station_light_width_m"] = 0.020
+        changed.append(obj.name)
+    pole = scene.objects.get("Hyper | floating pearl light at lower pole")
+    if pole:
+        pole.hide_render = True
+        pole.hide_viewport = True
+        pole.visible_glossy = False
+        pole["lighting_reference_only"] = True
+    return {"station_inlays": changed, "pearl_disc_hidden": pole is not None}
+
+
+def soften_pearl_inner_light(scene):
+    """Keep a broad, quiet inner glow without a bright source at the lower pole."""
+    pearl = scene.objects.get("Hyper | floating pearl marble sphere")
+    light = scene.objects.get("Fidelity | pearl inner illumination")
+    if pearl is None or light is None or light.type != "LIGHT" or light.data.type != "POINT":
+        return {"changed": False, "reason": "Pearl or existing inner point light is missing"}
+    bpy.context.view_layer.update()
+    corners = [pearl.matrix_world @ Vector(corner) for corner in pearl.bound_box]
+    low = Vector(tuple(min(point[axis] for point in corners) for axis in range(3)))
+    high = Vector(tuple(max(point[axis] for point in corners) for axis in range(3)))
+    position = (low + high) * 0.5
+    position.z = low.z + (high.z - low.z) * 0.23
+    previous = {"watts": light.data.energy, "radius": light.data.shadow_soft_size,
+                "position": list(light.matrix_world.translation)}
+    changed = (abs(light.data.energy - 6.0) > 1e-6 or
+               abs(light.data.shadow_soft_size - 0.5) > 1e-6 or
+               (light.matrix_world.translation - position).length > 1e-6)
+    matrix = light.matrix_world.copy()
+    matrix.translation = position
+    light.matrix_world = matrix
+    light.data.energy = 6.0
+    light.data.shadow_soft_size = 0.5
+    return {"changed": changed, "previous": previous,
+            "watts": 6.0, "radius": 0.5, "position": list(position), "height_fraction": 0.23}
+
+
 def _arrow(name, x, y, z, material, radius=0.14):
     points = [(x + radius * math.cos(i * math.tau / 64), y, z + radius * math.sin(i * math.tau / 64)) for i in range(64)]
     _curve(name + " circle", points, material, 0.005, True)
@@ -345,7 +409,10 @@ def _portal(name, x, y, width, height, label, icon, materials):
     radius = width * 0.59
     _cylinder(name + " | lower travertine plinth", (x, y, 0.20), radius + 0.20, 0.26, materials["stone"], 0.035)
     _cylinder(name + " | upper porcelain plinth", (x, y, 0.38), radius, 0.13, materials["stone"], 0.022)
-    _cylinder(name + " | concealed warm light seam", (x, y, 0.465), radius * 0.97, 0.025, materials["glow"], 0.009)
+    seam = _annulus(name + " | concealed warm light seam", (x, y, 0.4425),
+                    radius * 0.97, radius * 0.97 - 0.020, 0.015, materials["glow"], 0.002)
+    seam["station_light_geometry"] = "annular-inlay-v1"
+    seam["station_light_width_m"] = 0.020
     base = 0.48
     cover = _arch(name + " | solid clear arched crystal", x, y, base, width, height, 0.16, materials["portal_glass"])
     rim = _arch_edge(name + " | front polished rim", x, y - 0.073, base + 0.025, width - 0.025, height - 0.018, materials["edge"])
@@ -451,8 +518,12 @@ def _hero(materials):
     _text("Hyper | hero wordmark", "hyper.", (0, -0.005, 3.16), 0.455, materials["text"], spacing=0.90)
     points = [(2.45 * math.cos(t), 1.5 + 0.57 * math.sin(t), 3.07 + 0.39 * math.sin(t) - 0.10 * math.cos(t)) for t in (i * math.tau / 320 for i in range(320))]
     _curve("Hyper | delicate orbital ring", points, materials["metal"], 0.012, True)
-    # A low luminous disc gently lights the water underneath the suspended sphere.
-    _cylinder("Hyper | floating pearl light at lower pole", (0, 1.5, 1.67), 0.25, 0.025, materials["glow"], 0.01)
+    # Retain the old lighting guide, but let the inner point and pearl volume glow.
+    pole = _cylinder("Hyper | floating pearl light at lower pole", (0, 1.5, 1.67), 0.25, 0.025, materials["glow"], 0.01)
+    pole.hide_render = True
+    pole.hide_viewport = True
+    pole.visible_glossy = False
+    pole["lighting_reference_only"] = True
     rng = random.Random(323)
     for index in range(42):
         angle = rng.uniform(0, math.tau)
