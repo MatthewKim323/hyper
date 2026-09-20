@@ -113,7 +113,11 @@ export class PageLoader {
     this.introDone = true;
     this.finish();
     this.fade = animate(colors, { opacity: 0 }, STAGE);
-    await this.fade;
+    // The fade is rAF-driven, so a background tab suspends it and this await would never
+    // return: the loader stays opaque and everything gated on data-loader-cleared (the back
+    // link, the hand-cursor dock) never appears, even after the visitor comes back. Cap the
+    // wait at a little over the animation's own duration and finish regardless.
+    await Promise.race([this.fade, wait(STAGE.duration * 1000 + 400)]);
     if (this.fade) gsap.set(this.dom.loader, { autoAlpha: 0 });
     this.markCleared();
   }

@@ -3,6 +3,7 @@
 import gsap from "gsap";
 import { store } from "../core/store";
 import { E } from "../core/event-bus";
+import { WORLD_PATH } from "../router/routes";
 
 // The ring replaces the system cursor on pointer devices once the site is entered (the gate keeps the native one).
 function nativeCursor(show: boolean) {
@@ -141,7 +142,10 @@ export class Cursor {
     if (!this.enabled) return;
     this.isMouseDown = true;
     gsap.timeline().to(this.dom.inner, { scale: 0.8, duration: 0.2 });
-    if (store.Highway?.properties?.slug !== "projects") return;
+    // Six pages now share the "projects" view slug (both product routes and the /dev
+    // previews), so the slug no longer identifies the gallery. Click-and-hold selects a
+    // grid item, which only exists in the world, so key on the route instead.
+    if ((location.pathname.replace(/\/+$/, "") || "/") !== WORLD_PATH) return;
     const e = this.clickHoldTl,
       t = this.isMouseDown;
     this.timeout = setTimeout(function () {
