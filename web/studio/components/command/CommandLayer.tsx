@@ -17,6 +17,8 @@ import { bindWorldVoice, type WorldVoiceBinding } from "@/lib/command/world-voic
 import { createDialogue, reduceDialogueEvent } from "@/lib/onboarding/dialogue";
 import { useCfoCommentary } from "./useCfoCommentary";
 import { useCfoDecision } from "./useCfoDecision";
+import CfoDecisionCard from "./CfoDecisionCard";
+import { hasReviewedOptions } from "@/lib/command/cfo-decisions";
 import { parseDecisionChoice } from "@/lib/command/cfo-decisions";
 
 // Mirrors dashboard.SECTIONS on the backend. "identity" is a real station the router already
@@ -369,6 +371,12 @@ function CommandSession({ scope }: { scope: string }) {
       <div className="cmd-cards" aria-live="polite">
         {cards.map((card) => <ArtifactCard key={card.id} card={card} onDismiss={() => setCards((previous) => previous.filter((c) => c.id !== card.id))} />)}
       </div>
+      {decision.concern && hasReviewedOptions(decision.concern) && <CfoDecisionCard
+        key={`${decision.concern.id}:${decision.concern.card_revision}`}
+        concern={decision.concern} job={decision.job} busy={decision.busy}
+        onChoose={(optionId) => { interruptCommentary(); void submitDecision({ optionId }, "click"); }}
+        onDismiss={decision.dismiss}
+      />}
       <WorldVoiceBox
         stream={microphoneStream}
         listening={listening}
