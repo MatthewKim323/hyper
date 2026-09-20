@@ -111,13 +111,23 @@ def meter(model, usage):
     except OSError: pass
 
 
+def post(client, url, **kwargs):
+    """One model call, tried again when the connection itself fails. Conference wifi resets a connection and times
+    out a TLS handshake now and then; that is not a reason to mark a whole working session failed."""
+    for attempt in range(3):
+        try: return client.post(url, **kwargs)
+        except (httpx.TransportError, httpx.TimeoutException):
+            if attempt == 2: raise
+            time.sleep(1.5 * (attempt + 1))
+
+
 def complete(payload):
     """Chat-completions shaped call. Used for the gateway, and for one-shot prompts on either provider."""
     url, key, model, direct = provider()
     if not key: raise RuntimeError('OPENAI_API_KEY or AI_GATEWAY_API_KEY is required for the autonomous worker')
     if direct: return Responses()(payload)
     with httpx.Client(timeout=120) as client:
-        res = client.post(url, headers={'Authorization': 'Bearer ' + key}, json={**payload, 'model': model})
+        res = post(client, url, headers={'Authorization': 'Bearer ' + key}, json={**payload, 'model': model})
         if res.status_code >= 400: raise RuntimeError(f'model provider {res.status_code}: {res.text[:300]}')
         meter(model, res.json().get('usage'))
         return res.json()
@@ -142,7 +152,7 @@ class Responses:
                 'tools': [{'type': 'function', **t['function']} for t in payload.get('tools', [])]}
         if self.previous: body['previous_response_id'] = self.previous
         with httpx.Client(timeout=180) as client:
-            res = client.post('https://api.openai.com/v1/responses', headers={'Authorization': 'Bearer ' + key}, json=body)
+            res = post(client, 'https://api.openai.com/v1/responses', headers={'Authorization': 'Bearer ' + key}, json=body)
             if res.status_code >= 400: raise RuntimeError(f'model provider {res.status_code}: {res.text[:300]}')
             data = res.json()
         meter(model, data.get('usage'))

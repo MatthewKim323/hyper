@@ -48,7 +48,8 @@ function caseActivity(data: RelicActivitySnapshot, previous: RelicActivitySnapsh
   const tasks = data.tasks ?? [];
   const engine = data.engineCases ?? [];
   const scenarios = data.scenarios ?? [];
-  const sessionFailures = scenarios.filter(item => item.agent.activity?.status === "failed");
+  // Only a case still open: a dropped connection on a case that went on to be graded needs nobody.
+  const sessionFailures = scenarios.filter(item => item.status === "open" && item.agent.activity?.status === "failed");
   if (sessionFailures.length) return state("error", `${quantity(sessionFailures.length, "agent session")} failed`, ids(sessionFailures));
   const failed = tasks.filter(task => task.status === "failed");
   const errors = engine.filter(item => !!item.error);
