@@ -52,8 +52,12 @@ if __name__ == '__main__':
     parser.add_argument('--once', action='store_true')
     args = parser.parse_args()
     store, paused = Store(), set()  # only what this guard paused is ever resumed by it
+    started = int(time.time() * 1000)
     while True:
-        rate = hourly(USAGE.read_text().splitlines() if USAGE.exists() else [], int(time.time() * 1000))
+        # Spend from before this guard started was someone else's pace: judging by it would stall a fresh start.
+        now_ms = int(time.time() * 1000)
+        window = max(60_000, min(WINDOW_MS, now_ms - started))
+        rate = hourly(USAGE.read_text().splitlines() if USAGE.exists() else [], now_ms, window) if now_ms - started >= 60_000 else 0
         for oid in args.organizations:
             svc = Counterparties(DataService(store, oid))
             control = svc.control()
