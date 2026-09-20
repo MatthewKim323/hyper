@@ -82,6 +82,43 @@ Object storage is configured separately (`backend/STORAGE.md`). Search and inges
 depend on it: the worker reads the uploaded file from the bucket before it indexes anything, so
 Elasticsearch alone does not make uploads work.
 
+### Where the reranker goes
+
+Reranking is configured above, and where it sits in the pipeline decides whether it helps. A
+cross-encoder scores how well a chunk's wording answers the question. Retrieval also has a
+branch that matches knowledge-graph entity IDs, and a document that matters because its invoice
+was settled by the payment in the question shares no wording with it. Reranking the final fused
+list therefore rescores exactly that contribution away. Measured on the 172-question Meridian
+set against this project, with Jina embeddings and `.jina-reranker-v3.5`:
+
+| Shape | Recall@10 | Relationship-only questions |
+| --- | --- | --- |
+| reranker over the fused list | 0.770 | 0.377 |
+| reranker over the text retrievers only | **0.944** | **0.864** |
+
+`retrieval.py` builds `rrf[ rerank(rrf[bm25, semantic]), graph ]` for this reason. A question
+naming no known entity has no graph branch, and the reranker wraps the text as before. Latency
+roughly doubles either way, to about 1.1 s at the median. See `backend/GRAPH.md` and
+`benchmarks/retrieval-jina.json`.
+
+### The index still needs the company in it
+
+Provisioning does not put data in the index. As of 2026-09-20 `hyper-evidence-v1` on the
+Serverless project held zero documents, so the agent, the Jina endpoints and the graph branch
+were all wired to an empty index and every investigation would find nothing. Loading it needs,
+against the production environment:
+
+```sh
+uv run python -m app.data_cli import-demo --organization-id demo-meridian
+```
+
+and a running `ingestion-worker`, which is what builds the knowledge graph rows and writes
+`entity_ids` onto every chunk. `import-demo` loads the 39 datasets, the visible case files and
+the 612 narrative documents; without that last group the demo answers questions about ledger
+rows but has no correspondence to cite. `GET /graph/stats` is the quickest confirmation that
+the graph exists in a deployment; a search whose `mode` lacks `+graph`, or an empty
+`query_entities`, means it does not.
+
 ### Agent Builder
 
 The investigator agent is provisioned on the same Serverless project over A2A, which needs no
