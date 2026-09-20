@@ -227,8 +227,11 @@ export default function OnboardingWorkspace() {
   // Whether onboarding was already done when this mounted, as opposed to completing here.
   const arrivedComplete = useRef(savedComplete);
   const [covered, setCovered] = useState(false);
-  // On /world the world is simply shown: there is no session to hand off from.
-  const showDashboard = onWorld || (complete && (!sessionShown || covered));
+  // On /world the world is simply shown: there is no session to hand off from. The second
+  // branch is the onboarding handoff and only applies there -- unscoped it also matched the
+  // landing page, where a returning (complete) visitor has no session shown, so the world
+  // stayed un-warmed on / and came back over the landing scene after navigating home.
+  const showDashboard = onWorld || (onOnboarding && complete && (!sessionShown || covered));
 
   // Latched in an effect, not during render: a render-phase setState here runs before the
   // external-store subscriptions settle, and `visible` depends on sceneReady, which
@@ -238,16 +241,22 @@ export default function OnboardingWorkspace() {
   }, [visible, complete, sessionShown]);
 
   useEffect(() => {
+    let timer = 0;
     const onOut = (event: Event) => {
       const { from, to } = (event as CustomEvent<{ from?: string; to?: string }>).detail ?? {};
       const leaving = (from ?? "").replace(/\/+$/, "") || "/";
       const arriving = (to ?? "").replace(/\/+$/, "") || "/";
-      if (leaving === WORLD_PATH && arriving !== WORLD_PATH) setLeavingWorld(true);
+      if (leaving === WORLD_PATH && arriving !== WORLD_PATH) { setLeavingWorld(true); timer = failsafe(); }
     };
     const onEnd = () => setLeavingWorld(false);
+    // navigate-end is the normal release, but it only fires if the out transition finished.
+    // A stalled one (its GSAP timeline never advances in a hidden tab) would otherwise hold
+    // the world open over the landing scene for good, so release on a cap as well.
+    const failsafe = () => window.setTimeout(() => setLeavingWorld(false), 4000);
     window.addEventListener("hyper:navigate-out", onOut);
     window.addEventListener("hyper:navigate-end", onEnd);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("hyper:navigate-out", onOut);
       window.removeEventListener("hyper:navigate-end", onEnd);
     };

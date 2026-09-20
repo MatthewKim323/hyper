@@ -4,16 +4,9 @@ import { store } from "../../core/store";
 import { Transition, removeView, type TransitionInArgs, type TransitionOutArgs } from "./base";
 import { captureWorldStill } from "@/lib/onboarding/world-still";
 
-/** Clear the blend flag once the world's own hidden state has taken over, or after a cap. */
-function waitForWarm(attempt = 0) {
-  const room = document.querySelector<HTMLElement>('[data-warm]');
-  // 20 frames is far longer than a React commit; never leave the flag stuck.
-  if (room || attempt > 20) {
-    delete document.body.dataset.worldBlending;
-    return;
-  }
-  requestAnimationFrame(() => waitForWarm(attempt + 1));
-}
+// Longest authored blend is 3 s; clear a little after in case the timeline never ends.
+const BLEND_FAILSAFE_MS = 4000;
+let blendFailsafe = 0;
 
 export class ToHomeTransition extends Transition {
   in({ done }: TransitionInArgs) {
@@ -54,6 +47,11 @@ export class ToHomeTransition extends Transition {
         //    and the landing page then pops in when the timeline ends. The still was already
         //    read on the line above, which is the only thing that needed the flag.
         document.body.dataset.worldBlending = "true";
+        // The timeline's onComplete clears this, but that callback is GSAP-driven and so
+        // rAF-driven: if the tab is hidden mid-navigation the timeline never advances and
+        // the flag would keep the world hidden for good. Self-heal on a plain timer.
+        clearTimeout(blendFailsafe);
+        blendFailsafe = window.setTimeout(() => { delete document.body.dataset.worldBlending; }, BLEND_FAILSAFE_MS);
         delete document.body.dataset.atriumActive;
         // AtriumPreview disables the gallery's render pass while the world is up and only
         // restores it on cleanup, which runs after this transition. Without turning it back
@@ -84,7 +82,8 @@ export class ToHomeTransition extends Transition {
             // Hold the flag until React has re-warmed the world and its own
             // [data-warm] rule takes over. Clearing it here would leave the room
             // visible for the frames in between, which is the flash this fixes.
-            waitForWarm();
+            clearTimeout(blendFailsafe);
+            delete document.body.dataset.worldBlending;
             removeView(from);
             done();
           },
