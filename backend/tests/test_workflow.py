@@ -290,3 +290,53 @@ def test_postgres_lazy_stream_does_not_reverse_accounting_lock_order(postgres_jo
         assert event['sequence'] == 1
         append(accounting, 'test-org', 'accounting')
     assert [e['sequence'] for e in svc.feed()['events']] == [1, 2]
+
+
+# --- the CFO says what the grader found, why, and that a lesson was written ---------------------
+
+def spoken(store, oid):
+    with store.engine.connect() as db:
+        return [n['text'] for n in db.execute(select(cfo_narrations.c.narration).where(cfo_narrations.c.organization_id == oid).order_by(cfo_narrations.c.id)).scalars()]
+
+
+def test_a_wrong_release_is_narrated_as_an_audit_finding_with_its_reason(world):
+    from test_counterparty import flush, propose
+    store, oid, factory, svc = world
+    scenario = svc.spawn('goods_returned', 'owner', seed=5)
+    cid = tool(store, oid, 'open_payable_case', invoice_id=scenario['invoice_id'])['case']['case_id']
+    propose(store, oid, cid)
+    assert [s['outcome'] for s in svc.score()] == ['fail']
+    finding = next(t for t in spoken(store, oid) if 'Audit finding' in t or 'audit finding' in t)
+    assert scenario['invoice_id'] in finding and 'should have been held' in finding and 'sending the whole delivery back' in finding
+    assert finding.startswith('In the simulation, ') and len(finding) <= 240
+    with store.engine.connect() as db:
+        event = next(e for e in db.execute(select(workflow_events.c.event)).scalars() if e['kind'] == 'audit.finding')
+    assert event['state'] == 'failed' and event['narration']['priority'] == 3 and event['facts'] == {'invoiceId': scenario['invoice_id'], 'outcome': 'fail', 'trap': 'goods_returned'}
+
+
+def test_a_correct_hold_is_narrated_with_why_holding_was_right(world):
+    from test_counterparty import flush, age
+    store, oid, factory, svc = world
+    scenario = svc.spawn('spoofed_release', 'owner', seed=2)
+    tool(store, oid, 'request_internal_confirmation', invoice_id=scenario['invoice_id'], request='hold_status', message='Is the inspection hold on this invoice still in force?', request_key='h1')
+    flush(store, factory); age(store, scenario['id'], 120_000)
+    assert [s['outcome'] for s in svc.score()] == ['correct_hold']
+    line = next(t for t in spoken(store, oid) if 'on hold was right' in t)
+    assert 'Only the supplier claimed the hold was lifted' in line and len(line) <= 240
+
+
+def test_the_kind_of_case_is_a_closed_list_and_every_sentence_fits_one_utterance():
+    with pytest.raises(ValueError):
+        workflow.Facts.model_validate({'invoiceId': 'INV-1', 'outcome': 'paid_anyway'})
+    for trap in workflow.WHY:
+        for kind, outcome in (('case.graded', 'pass'), ('case.graded', 'correct_hold'), ('audit.finding', 'fail'), ('audit.finding', 'timeout')):
+            text = workflow.sentence({'kind': kind, 'facts': {'invoiceId': 'INV-0167', 'outcome': outcome, 'trap': trap}, 'actor': {'kind': 'engine', 'id': 'engine'}, 'simulated': True})
+            assert len(text) <= 240, (trap, outcome, len(text))
+    from app.counterparty import FAMILIES
+    assert set(workflow.WHY) <= set(FAMILIES)
+
+
+def test_an_unknown_kind_of_case_is_refused(world):
+    store, oid, factory, svc = world
+    with store.engine.begin() as db, pytest.raises(ValueError):
+        workflow.emit(db, oid, 'k1', 'case.graded', workflow_id='invoice:INV-1', actor='engine', facts={'invoiceId': 'INV-1', 'outcome': 'pass', 'trap': 'whatever the model says'}, simulated=True)

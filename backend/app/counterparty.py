@@ -489,6 +489,14 @@ class Counterparties:
                 with self.engine.begin() as db:
                     db.execute(update(scenarios).where(scenarios.c.id == row['id']).values(status='scored', outcome=outcome, scored_at=now()))
                     emit(db, self.oid, 'score:' + row['id'], 'exception.scored', {'invoice_id': row['invoice_id'], 'outcome': outcome})
+                    # The CFO says what the grader found, and why, in fixed words. A narration problem must never undo a grade.
+                    try:
+                        from .workflow import WHY
+                        with db.begin_nested():
+                            workflow_emit(db, self.oid, 'graded:' + row['id'], 'case.graded' if outcome in ('pass', 'correct_hold') else 'audit.finding',
+                                          workflow_id='invoice:' + row['invoice_id'], actor='engine', section='cases', simulated=True,
+                                          facts={'invoiceId': row['invoice_id'], 'outcome': outcome, **({'trap': row['family']} if row['family'] in WHY else {})})
+                    except Exception: pass
                 graded.append({**public(row), 'outcome': outcome})
         return graded
 

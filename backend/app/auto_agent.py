@@ -286,7 +286,7 @@ def run_once(store, data_factory=None, llm=None):
                                     'lessons_at_start': mine.get('lessons_at_start', len(Counterparties(data_factory(row['organization_id'])).lessons(200))),
                                     'trace': (mine.get('trace', []) + trace)[-60:]}
                 db.execute(update(scenarios).where(scenarios.c.id == row['id']).values(state=current))
-                workflow_emit(db, row['organization_id'], row['id'] + ':' + str(started_at) + ':completed', 'work.completed',
+                workflow_emit(db, row['organization_id'], row['id'] + ':' + str(started_at) + ':completed', 'work.held' if status == 'HOLD' else 'work.completed',
                     workflow_id='invoice:' + row['invoice_id'], run_id=row['id'] + ':' + str(started_at),
                     facts={'invoiceId': row['invoice_id']}, section='cases', simulated=True)
             succeeded = True
@@ -298,7 +298,13 @@ def run_once(store, data_factory=None, llm=None):
         if not row['state'].get('agent', {}).get('trace'): continue
         METER_CONTEXT.clear(); METER_CONTEXT.update(organization_id=row['organization_id'], invoice_id=row['invoice_id'], scenario_id=row['id'], purpose='lesson')
         try:
-            if row['organization_id'] not in control_orgs(): write_lesson(Counterparties(data_factory(row['organization_id'])), row, model, llm or complete)
+            if row['organization_id'] not in control_orgs():
+                write_lesson(Counterparties(data_factory(row['organization_id'])), row, model, llm or complete)
+                if row['outcome'] not in ('pass', 'correct_hold'):
+                    from .workflow import WHY
+                    with store.engine.begin() as db:
+                        workflow_emit(db, row['organization_id'], 'lesson:' + row['id'], 'lesson.learned', workflow_id='invoice:' + row['invoice_id'],
+                                      facts={'invoiceId': row['invoice_id'], **({'trap': row['family']} if row['family'] in WHY else {})}, section='cases', simulated=True)
         finally:
             with store.engine.begin() as db:
                 state = dict(row['state']); state['agent'] = {**state.get('agent', {}), 'lesson_written': True}
