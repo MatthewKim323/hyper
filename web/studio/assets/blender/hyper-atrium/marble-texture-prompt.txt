@@ -1,0 +1,6 @@
+Use case: photorealistic-natural
+Asset type: square tileable PBR albedo texture for real 3D architectural marble, not a scene render.
+Primary request: produce a high-resolution 2048 by 2048 square, flat orthographic scan of honed ivory marble with a very pale blush undertone. The full frame is the continuous stone surface. Soft irregular cloudy mineral inclusions and naturally branching, delicate rose-gray veins should be visible at medium distance. Include fine crystalline grain and subtle mottled mineral density between the veins. Veins vary in width and dissolve softly into the body of the stone. Approximately a two-meter square physical patch.
+Color palette: light warm ivory and cream, subtle pale pink mineral clouds, muted gray-taupe vein detail. The stone must remain luminous and largely ivory. Natural medium-low contrast with readable mineral variation.
+Lighting: perfectly uniform diffuse albedo, no lighting gradient, shadows, reflections, specular highlights, ambient occlusion or baked relief.
+Constraints: seamless tileable edges horizontally and vertically; material fills the entire image; no text, labels, objects, borders, grout, tile lines, thick black cracks, dramatic Calacatta stripes, gold, orange cast, vignetting, perspective, bevels or staged scene. This is a usable surface texture for a 3D shader.

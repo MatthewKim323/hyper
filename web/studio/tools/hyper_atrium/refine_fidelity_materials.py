@@ -4,6 +4,7 @@ Call apply(bpy.context.scene) after architecture and landscape changes. This
 module never loads, saves, exports, or renders a file. Units are meters.
 """
 import math
+from pathlib import Path
 
 import bpy
 from mathutils import Vector
@@ -96,59 +97,60 @@ def _stone():
             links.new(second, socket)
         return node.outputs["Vector"]
 
-    domain = vector("SCALE", position, 0.58)
-    warp_noise = _noise(material, 0.65, domain, 3)
-    warp_noise.label = "Meter-scale mineral folding"
-    warp = vector("SUBTRACT", warp_noise.outputs["Color"], (0.5, 0.5, 0.5))
-    folded = vector("ADD", domain, vector("SCALE", warp, 1.1))
-    axis = nodes.new("ShaderNodeVectorMath")
-    axis.operation = "DOT_PRODUCT"
-    links.new(position, axis.inputs[0])
-    axis.inputs[1].default_value = (0.68, 0.31, 0.94)
-    folds = _noise(material, 0.48, position, 2)
-    folds.label = "Slow geological folding, not closed noise contours"
-    splinter = _noise(material, 3.8, folded, 2)
-    phase = _math(material, "ADD", axis.outputs["Value"], _math(material,"MULTIPLY",folds.outputs["Fac"],3.2))
-    phase = _math(material, "ADD", phase, _math(material,"MULTIPLY",splinter.outputs["Fac"],0.18))
-    distance = _math(material,"ABSOLUTE",_math(material,"SINE",phase,0),0)
-    coverage = _range(material,warp_noise.outputs["Fac"],0.30,0.65,0.10,0.34)
-    primary = _math(material,"MULTIPLY",_range(material,distance,0.009,0.031,1,0),coverage)
-    shoulders = _range(material, distance, 0.020, 0.08, 0.07, 0)
-    branch_phase = _math(material,"ADD",_math(material,"MULTIPLY",phase,1.035),_math(material,"MULTIPLY",splinter.outputs["Fac"],0.64))
-    branch_distance = _math(material,"ABSOLUTE",_math(material,"SINE",branch_phase,0),0)
-    branches = _math(material,"MULTIPLY",_range(material,branch_distance,0.004,0.014,0.10,0),_range(material,distance,0.1,0.45,1,0))
-    veins = _math(material, "MAXIMUM", primary, branches)
-    mineral = _noise(material, 1.15, position, 3)
-    base = tuple(material.diffuse_color[:3])
-    body = nodes.new("ShaderNodeVectorMath")
-    body.operation = "SCALE"
-    body.inputs[0].default_value = base
-    links.new(_range(material, mineral.outputs["Fac"], 0.12, 0.88, 0.96, 1.04), body.inputs["Scale"])
-    shoulder_color = nodes.new("ShaderNodeMixRGB")
-    links.new(shoulders, shoulder_color.inputs[0])
-    links.new(body.outputs["Vector"], shoulder_color.inputs[1])
-    shoulder_color.inputs[2].default_value = tuple(a*b for a,b in zip(base,(0.80,0.77,0.80)))+(1,)
-    vein_color = nodes.new("ShaderNodeMixRGB")
-    links.new(veins, vein_color.inputs[0])
-    links.new(shoulder_color.outputs[0], vein_color.inputs[1])
-    vein_color.inputs[2].default_value = tuple(a*b for a,b in zip(base,(0.48,0.43,0.50)))+(1,)
-    links.new(vein_color.outputs[0], shader.inputs["Base Color"])
+    texture_path = Path(__file__).resolve().parents[2] / "public/assets/hyper-atrium/textures/ivory-rose-marble.png"
+    image = bpy.data.images.load(str(texture_path), check_existing=True)
+    image.colorspace_settings.name = "sRGB"
+    image.pack()
+    image.filepath = "//../../../public/assets/hyper-atrium/textures/ivory-rose-marble.png"
+    scale = vector("SCALE", position, 0.25)
+    split = nodes.new("ShaderNodeSeparateXYZ")
+    links.new(scale, split.inputs[0])
+    # Mirror each four-meter tile so imperfect texture edges never form seams.
+    mirrored = [_math(material, "PINGPONG", split.outputs[axis], 1) for axis in "XYZ"]
+    geometry = nodes.new("ShaderNodeNewGeometry")
+    normal = nodes.new("ShaderNodeSeparateXYZ")
+    links.new(geometry.outputs["Normal"], normal.inputs[0])
+    weights = [_math(material, "POWER", _math(material, "ABSOLUTE", normal.outputs[axis], 0), 6) for axis in "XYZ"]
+    total = _math(material, "ADD", _math(material, "ADD", weights[0], weights[1]), weights[2])
+    layers = []
+    for axis, uv in enumerate(((1, 2), (0, 2), (0, 1))):
+        coordinates = nodes.new("ShaderNodeCombineXYZ")
+        links.new(mirrored[uv[0]], coordinates.inputs["X"])
+        links.new(mirrored[uv[1]], coordinates.inputs["Y"])
+        texture = nodes.new("ShaderNodeTexImage")
+        texture.image = image
+        texture.extension = "EXTEND"
+        texture.interpolation = "Linear"
+        texture.label = "Ivory rose mineral albedo, four-meter world slab"
+        links.new(coordinates.outputs[0], texture.inputs["Vector"])
+        layers.append(vector("SCALE", texture.outputs["Color"], _math(material, "DIVIDE", weights[axis], total)))
+    albedo = vector("ADD", vector("ADD", layers[0], layers[1]), layers[2])
+    variation = vector("DIVIDE", albedo, (0.82045, 0.731935, 0.665303))
+    balance = vector("ADD", vector("SCALE", variation, 0.85), (0.15, 0.15, 0.15))
+    links.new(vector("MULTIPLY", balance, tuple(material.diffuse_color[:3])), shader.inputs["Base Color"])
+    luminance = nodes.new("ShaderNodeVectorMath")
+    luminance.operation = "DOT_PRODUCT"
+    links.new(variation, luminance.inputs[0])
+    luminance.inputs[1].default_value = (0.2126, 0.7152, 0.0722)
+    mineral = luminance.outputs["Value"]
     pores = _noise(material, 72, position, 3)
     pores.label = "Fine honed mineral grain"
-    height = _math(material, "SUBTRACT", _math(material,"MULTIPLY",pores.outputs["Fac"],0.0007), _math(material,"MULTIPLY",veins,0.0012))
+    height = _math(material, "ADD", _math(material,"MULTIPLY",pores.outputs["Fac"],0.0007), _math(material,"MULTIPLY",mineral,0.0003))
     bump = nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.35
+    bump.inputs["Strength"].default_value = 1.0
     bump.inputs["Distance"].default_value = 1.0
     links.new(height, bump.inputs["Height"])
     links.new(bump.outputs["Normal"], shader.inputs["Normal"])
-    links.new(_math(material,"ADD",_range(material,pores.outputs["Fac"],0.1,0.9,0.34,0.45),_math(material,"MULTIPLY",veins,0.02)),shader.inputs["Roughness"])
+    grain_roughness = _math(material, "MULTIPLY", _math(material, "SUBTRACT", pores.outputs["Fac"], 0.5), 0.025)
+    mineral_roughness = _math(material, "MULTIPLY", _math(material, "SUBTRACT", 1, mineral), 0.08)
+    links.new(_math(material, "ADD", 0.40, _math(material, "ADD", grain_roughness, mineral_roughness)), shader.inputs["Roughness"])
     shader.inputs["Subsurface Weight"].default_value = 0.025
     shader.inputs["Subsurface Radius"].default_value = (0.085, 0.045, 0.025)
     shader.inputs["Coat Weight"].default_value = 0.10
     shader.inputs["Coat Roughness"].default_value = 0.30
     material["runtime_surface"] = "marble"
-    material["marble_world_scale"] = 0.58
-    material["marble_character"] = "Honed ivory and rose-gray marble; sparse folded mineral seams and submillimeter grain"
+    material["marble_world_scale"] = 0.25
+    material["marble_character"] = "Honed ivory and rose-gray marble; cloudy mineral albedo, four-meter world slabs, submillimeter grain"
     return material
 
 

@@ -5,7 +5,7 @@ An editable Blender reconstruction of the supplied concept image, with the archi
 ## Files
 
 - `hyper-atrium.blend`: authored camera, carved stone architecture, floating pearl and orbit, five main relic stations, warm window lighting, rose gardens, and animated water. The hidden **Crystal library | reusable onboarding stations** collection holds ten standalone station variants. Glass covers and their polished rims remain hidden only as composition guides and are excluded from station exports.
-- `hyper-atrium.png`: current 2560×1441 Cycles render at 96 samples, including the clustered garden, narrow station light inlays, and softer pearl light. Rendered on the Apple M2 GPU in 27 minutes 50 seconds, including a brief pause for browser verification; rendering left the source unchanged.
+- `hyper-atrium.png`: last full 2560×1441 Cycles render at 96 samples, before the final textured marble pass, including the clustered garden, narrow station light inlays, and softer pearl light. Rendered on the Apple M2 GPU in 27 minutes 50 seconds, including a brief pause for browser verification; rendering left the source unchanged.
 - `hotspots.json`: normalized camera projections for the original five-station composition.
 - `verification.json`: saved-scene and reusable-asset checks.
 - `composition-verification.json`: measured reference aperture bounds and the evaluated Blender geometry's projected bounds. This verifies placement, not photographic fidelity.
@@ -51,13 +51,15 @@ Station illumination comes from narrow 20 mm annular inlays seated into the ston
 
 `refine_reference.py` reapplies measured composition, botanical geometry, and physical materials to an existing source. It writes fresh aperture measurements. `refine_fidelity_materials.apply(scene)` is also callable in memory; it never saves or renders on its own. Source volumetric haze, actual relic uplights, honed marble, and cloudy pearl transmission are editable node graphs.
 
-The shared stone material preserves its original `Hyper | blush ivory honed limestone` identifier for runtime compatibility. It now shades ivory and rose-gray marble with sparse folded veins, faint branching mineral seams, 72-per-meter grain, varying roughness, and submillimeter relief. Its world-space coordinates keep the pattern scale consistent across architecture, fountain, and plinths. Procedural Cycles graphs remain editable in the source; GLB exports contain their physical fallback constants and the browser supplies a matching procedural shader.
+The shared stone material preserves its original `Hyper | blush ivory honed limestone` identifier for runtime compatibility. It shades ivory and rose-gray marble using the packed `ivory-rose-marble.png` albedo, cloudy mineral variation, 72-per-meter grain, varying roughness, and submillimeter relief. Three world-space projections use mirrored four-meter tiles across architecture, fountain, and plinths. Normalizing the texture around its measured linear mean preserves the approved base color. The editable Cycles graph and live browser shader share the texture, scale, blend strength, and roughness behavior. GLB exports retain physical fallback constants; no geometry re-export is needed for this material-only pass.
+
+`update_marble.py --save` refreshes only this shared material and packs the albedo. It verifies that camera, light powers/colors, exposure, object transforms/visibility, and mesh counts remain unchanged. An optional `--preview /tmp/marble-check.png` renders a temporary 640×360 material check without saving render overrides.
 
 `side_light.apply(scene)` adds the right clerestory baffle and a warm 720 kW key through three real openings. It is entirely off camera. Wall targets are projected from visible camera positions so both warm bands remain inside the composition. The approved lighting balance halves broad/window fill, reduces the glossy sky branch to 1.6, and uses haze anisotropy 0.15. Cycles watts and the browser's legacy Three.js intensity require separate calibration. `verify.py` checks the side-light aperture paths, on-camera targets, and rear sun visibility at the pearl and basin. The side-light geometry and lamp metadata are exported together for the browser renderer.
 
 `update_marble_lighting.py --preview` produces a temporary 640×360, 32-sample CPU material check outside the tracked assets. `--save` verifies and saves only the marble and approved lighting update, preserving the camera, water, garden, hero material, and station geometry. Export the environment and station library afterward to synchronize the baffle, physical material constants, and manifests.
 
-Use the full macOS executable path. A Homebrew symlink can prevent Blender from locating its bundled Python and color-management resources. Fonts are packed into the blend file; materials and landscape details are procedural.
+Use the full macOS executable path. A Homebrew symlink can prevent Blender from locating its bundled Python and color-management resources. Fonts and the marble albedo are packed into the blend file; other materials and landscape details remain procedural.
 
 ## Onboarding handoff
 

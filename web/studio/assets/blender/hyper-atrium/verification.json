@@ -73,8 +73,8 @@
     ]
   },
   "marble_verified": {
-    "world_scale": 0.58,
-    "nodes": 44,
+    "world_scale": 0.25,
+    "nodes": 49,
     "channels": [
       "color",
       "roughness",

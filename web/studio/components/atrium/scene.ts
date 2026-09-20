@@ -553,6 +553,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     const environment = await loader.loadAsync("/assets/hyper-atrium/environment.glb");
     if (disposed) { disposeModel(environment.scene); return api; }
     room = environment.scene;
+    await atmosphere.loadSurfaces();
+    if (disposed) return api;
     atmosphere.decorate(room);
     scene.add(room);
     const orbitParts: Object3D[] = [];
