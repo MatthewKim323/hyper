@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BENCHMARK_EVOLUTION, EVOLUTION_SOURCE, EVOLUTION_STANDING } from "./evolution";
+import { BENCHMARK_EVOLUTION, BENCHREC_TRADEOFF, EVOLUTION_SOURCE, EVOLUTION_STANDING } from "./evolution";
 
 // The page may only show figures that are in the source document. If someone edits a number in one
 // place and not the other, this fails.
@@ -19,4 +19,8 @@ test("phases are ordered and the negative result is kept", () => {
   expect(BENCHMARK_EVOLUTION.map(phase => phase.phase)).toEqual([1, 2, 3, 4, 5]);
   expect(BENCHMARK_EVOLUTION.find(phase => phase.id === "prompting")?.state).toBe("negative");
   expect(EVOLUTION_STANDING.some(row => row.state === "unsupported")).toBe(true);
+});
+
+test("charted precision and recall are the documented figures", () => {
+  for (const row of BENCHREC_TRADEOFF) for (const value of [row.precision, row.recall]) expect(source.includes(`${value.toFixed(2)}%`)).toBe(true);
 });

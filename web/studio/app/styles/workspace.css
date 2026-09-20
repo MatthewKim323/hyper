@@ -149,3 +149,14 @@
 .ws-lessons ul { margin: 0.25rem 0 0.75rem; padding-left: 1.1rem; line-height: 1.55; }
 .ws-lessons li { margin: 0.4rem 0; }
 @media (max-width: 900px) { .ws-score { grid-template-columns: repeat(2, 1fr); } .ws-adversary__head { flex-direction: column; gap: 0.75rem; } }
+
+/* Workspace charts. */
+.ws-figure { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.ws-figure h3 { margin: 0; font-size: clamp(1.7rem, 2.6vw, 2.5rem); font-weight: 400; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+.ws-card h3[data-ties="false"] { color: #892d2d; } .ws-card h3 small { font-size: 0.8rem; letter-spacing: 0; color: inherit; }
+.ws-chart--waterfall { height: 190px; margin-top: 0.6rem; }
+.ws-chart--routes { height: 78px; margin-top: 0.7rem; }
+.ws-ring { flex: none; width: 84px; height: 84px; }
+.ws-ring-center { font-size: 0.8rem; font-variant-numeric: tabular-nums; color: #63574e; } .ws-ring-center strong { font-size: 1.05rem; font-weight: 400; color: #252321; }
+.chart-scope { position: relative; width: 100%; } .chart-scope svg { overflow: visible; } .chart-scope svg text { font-family: inherit; }
+.ws-ring.chart-scope { width: 84px; }

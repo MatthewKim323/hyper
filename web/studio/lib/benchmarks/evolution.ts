@@ -90,3 +90,13 @@ export const EVOLUTION_STANDING: { label: string; status: string; state: "done" 
   { label: "Paired live pilot", status: "Registered, waiting on reachable HTTPS", state: "waiting" },
   { label: "Broad improvement claim", status: "Not supported yet, by design", state: "unsupported" },
 ];
+
+/** BenchRec v3, precision and recall in percent, every system scored under the same metric. */
+export const BENCHREC_TRADEOFF: { system: string; precision: number; recall: number }[] = [
+  { system: "Worker baseline", precision: 95.83, recall: 91.22 },
+  { system: "Improved prompts", precision: 96.23, recall: 88.72 },
+  { system: "Balance check", precision: 95.92, recall: 84.92 },
+  { system: "Distributed reference", precision: 95.20, recall: 62.20 },
+  { system: "Rules only", precision: 99.51, recall: 46.48 },
+  { system: "Stricter rules", precision: 99.86, recall: 8.70 },
+];

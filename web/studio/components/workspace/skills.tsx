@@ -10,13 +10,13 @@ import { useBackend } from "./useBackend";
 
 const STATUS: Record<SkillStatus, { label: string; tone: string }> = {
   active: { label: "In use", tone: "ok" },
-  draft: { label: "Draft, not in use", tone: "idle" },
-  quarantined: { label: "Pulled after a failed run", tone: "warn" },
-  stale: { label: "Evidence changed", tone: "warn" },
+  draft: { label: "Draft", tone: "idle" },
+  quarantined: { label: "Pulled", tone: "warn" },
+  stale: { label: "Stale", tone: "warn" },
   retired: { label: "Retired", tone: "idle" },
 };
 const stamp = (value: number | string) => new Date(typeof value === "number" && value < 1e12 ? value * 1000 : value).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-const denied = (reason: unknown, fallback: string) => reason instanceof BackendError && reason.status === 403 ? "Only an organization owner can do this." : (reason as Error).message || fallback;
+const denied = (reason: unknown, fallback: string) => reason instanceof BackendError && reason.status === 403 ? "Owner only" : (reason as Error).message || fallback;
 
 function SkillReview({ skill, onChanged }: { skill: SkillDetail; onChanged: () => void }) {
   const [reviewed, setReviewed] = useState(false);
@@ -28,43 +28,42 @@ function SkillReview({ skill, onChanged }: { skill: SkillDetail; onChanged: () =
   const run = skill.latest_run;
   const canActivate = ["draft", "quarantined"].includes(skill.status) && run?.outcome === "passed" && run.evidence_current && skill.evidence_current && skill.resources.some(path => path.startsWith("tests/"));
   const blocker = skill.status === "active" || skill.status === "retired" ? null
-    : !run ? "No run has been reported yet, so there is nothing to review."
-    : run.outcome !== "passed" ? "The latest run did not pass."
-    : !run.evidence_current || !skill.evidence_current ? "The evidence behind this version changed. The agent has to run it again."
-    : !skill.resources.some(path => path.startsWith("tests/")) ? "This version has no tests, so it cannot be put into use." : null;
+    : !run ? "No run yet"
+    : run.outcome !== "passed" ? "Latest run failed"
+    : !run.evidence_current || !skill.evidence_current ? "Evidence changed"
+    : !skill.resources.some(path => path.startsWith("tests/")) ? "No tests" : null;
 
   async function act(work: () => Promise<unknown>, done: string) {
     if (sending.current) return;
     sending.current = true; setBusy(true); setNote(null);
     try { await work(); setNote({ ok: true, text: done }); onChanged(); }
-    catch (cause) { setNote({ ok: false, text: denied(cause, "That did not go through.") }); }
+    catch (cause) { setNote({ ok: false, text: denied(cause, "Failed") }); }
     finally { sending.current = false; setBusy(false); }
   }
-  const open = (path: string) => void backend.skillResource(skill.id, path).then(setFile).catch(cause => setNote({ ok: false, text: denied(cause, "Could not open that file.") }));
+  const open = (path: string) => void backend.skillResource(skill.id, path).then(setFile).catch(cause => setNote({ ok: false, text: denied(cause, "Unavailable") }));
 
   return <div className="ws-skill-review">
     <pre className="ws-skill-md">{skill.skill_md}</pre>
-    {skill.resources.length > 0 && <div className="ws-skill-files"><span className="ws-eyebrow">Files in this version</span>
+    {skill.resources.length > 0 && <div className="ws-skill-files"><span className="ws-eyebrow">Files</span>
       <ul>{skill.resources.map(path => <li key={path}><button type="button" className="ws-link" aria-pressed={file?.path === path} onClick={() => file?.path === path ? setFile(null) : open(path)}>{path}</button></li>)}</ul>
       {file && <pre className="ws-mono ws-skill-file" aria-label={file.path}>{file.content}</pre>}
     </div>}
     {skill.research_urls.length > 0 && <p className="ws-note">Cited: {skill.research_urls.map((url, index) => <span key={url}>{index > 0 && ", "}<a className="ws-link" href={url} target="_blank" rel="noreferrer">{new URL(url).hostname}</a></span>)}</p>}
     <section className="ws-skill-run" data-outcome={run?.outcome ?? "none"}>
-      <span className="ws-eyebrow">Latest run, as reported by the agent</span>
+      <span className="ws-eyebrow">Latest run · agent reported</span>
       {run ? <>
         <p><strong>{run.outcome === "passed" ? "Passed" : run.outcome === "failed" ? "Failed" : "Needs input"}</strong> · {stamp(run.created_at)}{run.duration_ms !== null ? ` · ${(run.duration_ms / 1000).toFixed(1)}s` : ""}</p>
         {run.summary && <p>{run.summary}</p>}
         <ul className="ws-checks">{run.checks.map((check, index) => <li key={index} data-ok={run.outcome === "passed"}>{check}</li>)}</ul>
-        <p className="ws-note">This report is the agent&apos;s own. Nothing here has been checked independently until you review it.</p>
-      </> : <p className="ws-note">No runs reported.</p>}
+      </> : <p className="ws-note">None</p>}
     </section>
     {blocker && <p className="ws-warning">{blocker}</p>}
     {canActivate && <div className="ws-skill-activate">
       <label><input type="checkbox" checked={reviewed} disabled={busy} onChange={event => setReviewed(event.target.checked)} /><span>{SKILL_ATTESTATION}</span></label>
-      <div className="ws-actions"><button type="button" disabled={!reviewed || busy} onClick={() => run && void act(() => backend.activateSkill(skill, run.run_id), "This version is now in use. The previous active version was retired.")}>Put version {skill.version} into use</button></div>
+      <div className="ws-actions"><button type="button" disabled={!reviewed || busy} onClick={() => run && void act(() => backend.activateSkill(skill, run.run_id), "In use")}>Put into use</button></div>
     </div>}
-    {skill.status === "active" && <form className="ws-inline" onSubmit={event => { event.preventDefault(); if (reason.trim().length >= 10) void act(() => backend.retireSkill(skill.id, reason.trim()), "Retired. Its record is kept, and agents will no longer reuse it."); }}>
-      <input value={reason} onChange={event => setReason(event.target.value)} maxLength={2000} disabled={busy} placeholder="Why retire it (at least 10 characters)" aria-label="Reason for retiring this skill" />
+    {skill.status === "active" && <form className="ws-inline" onSubmit={event => { event.preventDefault(); if (reason.trim().length >= 10) void act(() => backend.retireSkill(skill.id, reason.trim()), "Retired"); }}>
+      <input value={reason} onChange={event => setReason(event.target.value)} maxLength={2000} disabled={busy} placeholder="Reason" aria-label="Reason for retiring this skill" />
       <button type="submit" disabled={busy || reason.trim().length < 10}>Retire</button>
     </form>}
     {note && <p className={note.ok ? "ws-note" : "ws-warning"} role="status">{note.text}</p>}
@@ -79,9 +78,9 @@ function SkillRow({ skill, open, toggle, onChanged }: { skill: SkillSummary; ope
     <header><span className="ws-chip"><i aria-hidden="true" />{status.label}</span><time>version {skill.version} · {stamp(skill.created_at)}</time></header>
     <h3>{skill.name.replaceAll("-", " ")}</h3>
     <p>{skill.description}</p>
-    <button type="button" className="ws-link" aria-expanded={open} onClick={toggle}>{open ? "Close" : skill.status === "draft" || skill.status === "quarantined" ? "Review this version" : "Open"}</button>
+    <button type="button" className="ws-link" aria-expanded={open} onClick={toggle}>{open ? "Close" : skill.status === "draft" || skill.status === "quarantined" ? "Review" : "Open"}</button>
     {open && (detail.data ? <SkillReview skill={detail.data} onChanged={() => { detail.refresh(); onChanged(); }} />
-      : <p className={detail.error ? "ws-warning" : "ws-note"} role="status">{detail.error ?? "Opening the skill…"}</p>)}
+      : <p className={detail.error ? "ws-warning" : "ws-note"} role="status">{detail.error ?? "Loading…"}</p>)}
   </article>;
 }
 
@@ -94,10 +93,9 @@ export function LearnedSkills({ active }: { active: boolean }) {
   const sorted = [...skills].sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status) || a.name.localeCompare(b.name) || b.version - a.version);
   const waiting = skills.filter(skill => skill.status === "draft" || skill.status === "quarantined").length;
   return <section className="ws-section" data-pointable="group:learned-skills" data-pointable-label="Learned skills">
-    <span className="ws-eyebrow">Learned skills{skills.length ? ` · ${skills.filter(skill => skill.status === "active").length} in use${waiting ? `, ${waiting} waiting for your review` : ""}` : ""}</span>
+    <span className="ws-eyebrow">Skills{skills.length ? ` · ${skills.filter(skill => skill.status === "active").length} in use${waiting ? ` · ${waiting} to review` : ""}` : ""}</span>
     {error && <p className="ws-warning" role="status">{error}</p>}
-    {data && !skills.length && <p className="ws-empty">Nothing learned yet. When the agent solves a recurring task it can save the procedure, its tests and its evidence here for you to review.</p>}
+    {data && !skills.length && <p className="ws-empty">No skills yet</p>}
     <div className="ws-stack">{sorted.map(skill => <SkillRow key={skill.id} skill={skill} open={openId === skill.id} toggle={() => setOpenId(openId === skill.id ? null : skill.id)} onChanged={refresh} />)}</div>
-    {data?.has_more && <p className="ws-note">Showing the first 30 versions.</p>}
   </section>;
 }
