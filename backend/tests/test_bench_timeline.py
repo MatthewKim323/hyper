@@ -3,10 +3,13 @@ from app.database import counterparty_scenarios as scenarios, organizations, ins
 from app import bench_timeline as bt
 bt.VALID_SINCE = 0
 
+FAMILY = {1: 'clean', 2: 'backorder', 3: 'duplicate_credit'}
+
 def case(db, org, i, outcome, tier, at, seconds, twin=None, sessions=2):
-    db.execute(scenarios.insert().values(id=f'{org}-{i}', organization_id=org, family='clean', title='t', invoice_id=f'INV-{i}', vendor_id='V',
+    # difficulty is the adversary's level at spawn, deliberately not the family's tier here.
+    db.execute(scenarios.insert().values(id=f'{org}-{i}', organization_id=org, family=FAMILY[tier], title='t', invoice_id=f'INV-{i}', vendor_id='V',
         facts={}, state={'requests': 2, 'repeats': 0, 'agent': {'model': 'm1', 'sessions': sessions, 'lessons_at_start': i}}, status='scored', outcome=outcome,
-        difficulty=tier, created_by=f'mirror:{twin}' if twin else 'adversary', created_at=at - seconds * 1000, scored_at=at))
+        difficulty=5, created_by=f'mirror:{twin}' if twin else 'adversary', created_at=at - seconds * 1000, scored_at=at))
 
 def world(tmp_path, n=24):
     store = Store(str(tmp_path / 'db'))

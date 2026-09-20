@@ -21,7 +21,7 @@ load_dotenv(Path(__file__).resolve().parents[1] / '.env')
 
 from sqlalchemy import func, select  # noqa: E402
 
-from .counterparty import Counterparties  # noqa: E402
+from .counterparty import Counterparties, TIERS  # noqa: E402
 from .database import (agent_lessons as lessons, benchmark_points as points, counterparty_scenarios as scenarios,  # noqa: E402
                        adversary_controls, insert_ignore, learned_skills)
 
@@ -43,7 +43,7 @@ EVENTS = [
     {'at': 1789887482298, 'label': 'tier 5 live'},
     {'at': 1789888077210, 'label': 'adversary leans on the newest tier'},
 ]
-HARD_TIER = 5
+HARD_TIER = max(TIERS)
 CAVEATS = [
     'Tiers 1 to 4 name their own diagnosis in the case title and are saturated. Tier 5 is the only tier where a wrong release is possible, so it is the only accuracy series worth reading.',
     'Development series: no battery is held out from the worker prompt.',
@@ -54,6 +54,10 @@ CAVEATS = [
 
 
 def now(): return int(time.time() * 1000)
+
+def family_tier(family):
+    """A case's tier is its family's. `difficulty` on the row is the adversary's level when it spawned, which is a different thing."""
+    return next((tier for tier, families in TIERS.items() if family in families), None)
 
 def git():
     def run(*args):
@@ -82,7 +86,7 @@ def summary(rows, costs=None):
             # Only cases worked after the usage log began naming its case have a cost.
             'median_usd_per_case': round(median(c['usd'] for c in spent), 4) if spent else None,
             'median_tokens_per_case': round(median(c['tokens'] for c in spent)) if spent else None, 'costed_cases': len(spent),
-            'top_tier': max(r['difficulty'] for r in rows)}
+            'top_tier': max((family_tier(r['family']) or 0 for r in rows), default=0)}
 
 def case_costs():
     """{scenario id: tokens and list-price dollars}, from the worker's metered usage."""
@@ -115,9 +119,10 @@ def exception_series(rows, bucket_ms=BUCKET_MS, costs=None):
         agent = [r['state'].get('agent') or {} for r in mine]
         tiers = {}
         for r in mine:
-            t = tiers.setdefault(str(r['difficulty']), {'n': 0, 'correct': 0}); t['n'] += 1; t['correct'] += int(r['outcome'] in GOOD)
+            t = tiers.setdefault(str(family_tier(r['family']) or 'unknown'), {'n': 0, 'correct': 0}); t['n'] += 1; t['correct'] += int(r['outcome'] in GOOD)
         out.append({'at': (bucket + 1) * bucket_ms, 'valid': all(r['created_at'] >= VALID_SINCE for r in mine),
                     'bucket': summary(mine, costs), 'rolling': summary(seen[-ROLLING:], costs),
+                    'adversary_level_at_spawn': max(r['difficulty'] for r in mine),
                     'cumulative': {k: v for k, v in summary(seen).items() if k in ('n', 'correct', 'accuracy', 'wrong_releases', 'timeouts')},
                     'level': Counterparties.level(seen), 'by_tier': tiers,
                     'models': sorted({a['model'] for a in agent if a.get('model')}),
@@ -129,7 +134,7 @@ def exception_series(rows, bucket_ms=BUCKET_MS, costs=None):
 def memory_series(treatment, control, bucket_ms=BUCKET_MS, costs=None, tier=None):
     """Memory on against memory off on twinned cases, cumulative, so late points are the ones with enough cases to read."""
     twins = {r['created_by'][7:]: r for r in control if str(r['created_by']).startswith('mirror:')}
-    paired = [(r, twins[r['id']]) for r in treatment if r['id'] in twins and r['created_at'] >= VALID_SINCE and (tier is None or r['difficulty'] == tier)]
+    paired = [(r, twins[r['id']]) for r in treatment if r['id'] in twins and r['created_at'] >= VALID_SINCE and (tier is None or family_tier(r['family']) == tier)]
     out, seen = [], []
     buckets = {}
     for pair in paired: buckets.setdefault(max(pair[0]['scored_at'], pair[1]['scored_at']) // bucket_ms, []).append(pair)
