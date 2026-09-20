@@ -32,6 +32,9 @@
 .custom { display: flex; gap: 8px; margin-top: 10px; }
 .custom input { flex: 1; min-width: 0; padding: 7px 3px; background: transparent; border: 0; border-bottom: 1px solid rgb(70 50 35 / 18%); color: #292524; font: inherit; font-size: 12px; outline: none; }
 .custom button { font-size: 12px; }
+.unavailable { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+.retrySuggestions { flex-shrink: 0; padding: 4px 0; border: 0; background: transparent; color: #51473f; font: inherit; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.retrySuggestions:disabled { opacity: .5; cursor: default; }
 .decision .notice, .decision .error { margin: 9px 0 0; }
 .findings { margin-top: 12px; font-size: 12px; line-height: 1.45; }
 .findings summary { cursor: pointer; width: fit-content; }

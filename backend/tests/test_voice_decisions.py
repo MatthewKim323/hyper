@@ -1,6 +1,11 @@
 import pytest
-from app import voice, decision_intent
+import httpx
+from sqlalchemy import select
+from app import voice, decision_intent, dashboard
+from app.database import concern_jobs, concern_decisions
 from app.store import Store
+from test_concerns import flow
+from test_simulator import setup
 
 
 @pytest.fixture
@@ -57,3 +62,47 @@ async def test_question_remains_normal_conversation(bridge, monkeypatch):
     await session.inject('What would option two do?', 'question-one')
     assert sent[-1] == {'type': 'InjectUserMessage', 'content': 'What would option two do?'}
     assert not session.decision_turn
+
+
+async def test_failed_card_has_current_voice_context_and_only_accepts_custom_instructions(flow, monkeypatch):
+    store, service, _, args, _, _ = flow
+    class UnavailableReview:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def post(self, *args, **kwargs): raise httpx.ConnectError('Review unavailable')
+    monkeypatch.setattr(httpx, 'Client', lambda **kwargs: UnavailableReview())
+    concern = service.raise_concern(args)
+    assert concern['status'] == 'card_failed'
+    assert concern['card'] is None and concern['card_hash'] is None
+    assert concern['card_revision'] == 0
+    state = store.dashboard('alice')
+    events = []
+    async def emit(event): events.append(event)
+    async def send(event): pass
+    session = voice.VoiceSession(state, store, emit)
+    session.send = send
+    session.decision_context = decision_intent.validate_context({
+        'concernId': concern['id'], 'cardHash': '', 'cardRevision': 0,
+        'expectedDecisionRevision': 0, 'contextGeneration': 1,
+    })
+    current = dashboard.execute(store, state, 'get_active_decision', {}, decision_context=session.decision_context)
+    assert current['available'] and current['current']
+    assert current['concern']['decision_cues'] == []
+
+    await session.handle({'type': 'UserStartedSpeaking'})
+    await session.handle({'type': 'ConversationText', 'role': 'user', 'content': 'Go with option one.'})
+    assert any(e['type'] == 'concern.decision' and e['status'] == 'clarify' for e in events)
+    with store.engine.connect() as db:
+        assert not db.execute(select(concern_jobs)).all()
+
+    await session.handle({'type': 'UserStartedSpeaking'})
+    await session.handle({'type': 'ConversationText', 'role': 'user', 'content': 'Please compare the supplied invoice records.'})
+    assert any(e['type'] == 'concern.decision' and e['status'] == 'queued' for e in events)
+    with store.engine.connect() as db:
+        assert len(db.execute(select(concern_jobs)).all()) == 1
+        saved = db.execute(select(concern_decisions)).mappings().one()
+    assert saved['input'] == 'voice'
+    assert saved['request']['choice']['optionId'] == 'custom'
+    assert saved['instruction'] == 'compare the supplied invoice records.'
+    # A successful command advances the decision revision even without a reviewed card.
+    assert not dashboard.execute(store, state, 'get_active_decision', {}, decision_context=session.decision_context)['current']

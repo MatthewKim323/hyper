@@ -80,3 +80,72 @@ test('Card requires three unique complete options',()=>{
   card.options[2].id='option_1';
   assert.throws(()=>validateCard(card));
 });
+
+test('One rejected review can repair the failed dimensions, then requires fresh Jev approval',async()=>{
+  const prior=process.env.CONCERN_MODEL;process.env.CONCERN_MODEL='test-model';
+  try {
+    const requests=[];let reviews=0;
+    const result=await concernCard(state,{
+      generateText:async request=>{requests.push(request);return {output:exampleCard()};},
+      evaluate:async request=>{
+        assert.equal(request.abortSignal,requests[0].abortSignal);
+        assert.equal(request.model,'typesafe-ai/jev');
+        reviews++;
+        return {answers:{grounded:{probability:reviews===1?0.82:0.95},distinct:{probability:0.95},authority:{probability:0.95}}};
+      },
+    });
+    assert.equal(result.approved,true);
+    assert.equal(result.evaluation.threshold,0.85);
+    assert.equal(result.evaluation.attempts,2);
+    assert.equal(reviews,2);
+    assert.equal(requests.length,2);
+    assert.equal(requests[1].abortSignal,requests[0].abortSignal);
+    const prompt=JSON.parse(requests[1].prompt);
+    assert.deepEqual(prompt.evidence,state.evidence);
+    assert.deepEqual(prompt.review_feedback.failed_dimensions,['grounded']);
+    assert.match(prompt.review_feedback.corrections[0],/source records/);
+    assert.equal(prompt.review_feedback.previous_card.summary.endsWith(selectionBoundary),true);
+  } finally {if(prior===undefined)delete process.env.CONCERN_MODEL;else process.env.CONCERN_MODEL=prior;}
+});
+
+test('A second rejection stays rejected; there is no unbounded regeneration',async()=>{
+  const prior=process.env.CONCERN_MODEL;process.env.CONCERN_MODEL='test-model';
+  try {
+    let drafts=0,reviews=0;
+    const result=await concernCard(state,{
+      generateText:async()=>{drafts++;return {output:exampleCard()};},
+      evaluate:async()=>{reviews++;return {answers:{grounded:{probability:0.84},distinct:{probability:0.95},authority:{probability:0.95}}};},
+    });
+    assert.equal(drafts,2);assert.equal(reviews,2);
+    assert.equal(result.approved,false);assert.equal(result.evaluation.attempts,2);
+  } finally {if(prior===undefined)delete process.env.CONCERN_MODEL;else process.env.CONCERN_MODEL=prior;}
+});
+
+test('Repair is skipped when the shared request deadline has insufficient time',async()=>{
+  const prior=process.env.CONCERN_MODEL;process.env.CONCERN_MODEL='test-model';
+  try {
+    let drafts=0,clock=0;
+    const result=await concernCard(state,{
+      now:()=>{const time=clock;clock=66000;return time;},
+      generateText:async()=>{drafts++;return {output:exampleCard()};},
+      evaluate:async()=>({answers:{grounded:{probability:0.84},distinct:{probability:0.95},authority:{probability:0.95}}}),
+    });
+    assert.equal(drafts,1);assert.equal(result.approved,false);assert.equal(result.evaluation.attempts,1);
+  } finally {if(prior===undefined)delete process.env.CONCERN_MODEL;else process.env.CONCERN_MODEL=prior;}
+});
+
+test('An authority repair cannot replace a previously grounded summary with new claims',async()=>{
+  const prior=process.env.CONCERN_MODEL;process.env.CONCERN_MODEL='test-model';
+  try {
+    let drafts=0,reviews=0;
+    const result=await concernCard(state,{
+      generateText:async()=>({output:{...exampleCard(),summary:++drafts===1?'The invoice lists 12 units.':'No other invoice exists anywhere.'}}),
+      evaluate:async request=>{
+        reviews++;
+        assert.equal(request.state.card.summary,'The invoice lists 12 units. '+selectionBoundary);
+        return {answers:{grounded:{probability:0.95},distinct:{probability:0.95},authority:{probability:reviews===1?0.8:0.95}}};
+      },
+    });
+    assert.equal(result.approved,true);assert.equal(reviews,2);
+  } finally {if(prior===undefined)delete process.env.CONCERN_MODEL;else process.env.CONCERN_MODEL=prior;}
+});

@@ -14,8 +14,10 @@ export type DecisionCommand = {
   input: "click" | "text" | "voice"; choice: DecisionChoice; userTurnId?: string;
 };
 export function decisionContext(concern: DecisionConcern, contextGeneration: number): DecisionContext | null {
-  return Number.isSafeInteger(concern.card_revision) && concern.card_revision > 0 && !!concern.card_hash && Number.isSafeInteger(concern.decision_revision)
-    ? { concernId: concern.id, cardRevision: concern.card_revision, cardHash: concern.card_hash, expectedDecisionRevision: concern.decision_revision, contextGeneration } : null;
+  const failedFirstReview = concern.status === "card_failed" && concern.card_revision === 0 && (concern.card_hash == null || concern.card_hash === "");
+  const reviewedRevision = concern.card_revision > 0 && typeof concern.card_hash === "string" && !!concern.card_hash;
+  return Number.isSafeInteger(concern.card_revision) && (failedFirstReview || reviewedRevision) && Number.isSafeInteger(concern.decision_revision) && concern.decision_revision >= 0
+    ? { concernId: concern.id, cardRevision: concern.card_revision, cardHash: concern.card_hash ?? "", expectedDecisionRevision: concern.decision_revision, contextGeneration } : null;
 }
 export function decisionCommand(context: DecisionContext, choice: DecisionChoice, input: DecisionCommand["input"], commandId: string): DecisionCommand {
   return { commandId, concernId: context.concernId, expectedDecisionRevision: context.expectedDecisionRevision, cardRevision: context.cardRevision, cardHash: context.cardHash, choice, input };
@@ -29,7 +31,7 @@ export function parseDecisionChoice(text: string): DecisionChoice | null {
   return { optionId: `option_${option}` as "option_1" | "option_2" | "option_3" };
 }
 export function hasReviewedOptions(concern: DecisionConcern): boolean {
-  return !!decisionContext(concern, 0) && concern.card?.options?.length === 3
+  return concern.status !== "card_failed" && !!decisionContext(concern, 0) && concern.card?.options?.length === 3
     && [...concern.card.options].sort((a, b) => a.id.localeCompare(b.id)).every((option, index) => option.id === `option_${index + 1}` && !!option.title && !!option.action);
 }
 

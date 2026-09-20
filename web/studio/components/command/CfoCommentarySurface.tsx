@@ -31,9 +31,9 @@ export function CfoCommentarySurface({ mode, caption, error, needsAudio, leader,
 type DecisionProps = {
   concern: DecisionConcern; busy: boolean; error: string; message: string; frozen: boolean;
   job: DecisionJob | null;
-  onSubmit: (choice: DecisionChoice, input?: "click" | "text") => Promise<boolean>; onDismiss: () => void;
+  onSubmit: (choice: DecisionChoice, input?: "click" | "text") => Promise<boolean>; onDismiss: () => void; onRetrySuggestions: () => Promise<void>;
 };
-export function CfoDecisionCard({ concern, busy, error, message, frozen, job, onSubmit, onDismiss }: DecisionProps) {
+export function CfoDecisionCard({ concern, busy, error, message, frozen, job, onSubmit, onDismiss, onRetrySuggestions }: DecisionProps) {
   const [instruction, setInstruction] = useState("");
   const awaiting = ["awaiting_response", "needs_input", "card_failed"].includes(concern.status);
   const reviewed = hasReviewedOptions(concern);
@@ -45,7 +45,9 @@ export function CfoDecisionCard({ concern, busy, error, message, frozen, job, on
     {awaiting && <>
       {reviewed ? <div className={styles.options}>{[...concern.card!.options].sort((a, b) => a.id.localeCompare(b.id)).map((option, index) => <button key={`${concern.card_revision}:${option.id}`} type="button" disabled={busy || frozen} onClick={() => { void onSubmit({ optionId: option.id }); }}>
         <span className={styles.number}>{index + 1}</span><span><strong>{option.title}</strong><span>{option.action}</span><small>{option.tradeoff}</small></span>
-      </button>)}</div> : <p className={styles.notice}>Reviewed suggestions are unavailable. You can still give a custom instruction.</p>}
+      </button>)}</div> : <div className={styles.unavailable}><p className={styles.notice}>Reviewed suggestions are unavailable. You can still give a custom instruction.</p>
+        {concern.status === "card_failed" && <button className={styles.retrySuggestions} type="button" disabled={busy || frozen} onClick={() => { void onRetrySuggestions(); }}>Retry suggestions</button>}
+      </div>}
       <form className={styles.custom} onSubmit={async event => { event.preventDefault(); if (instruction.trim() && await onSubmit({ optionId: "custom", instruction: instruction.trim() }, "text")) setInstruction(""); }}>
         <input aria-label="Custom decision instruction" placeholder="Or give a different instruction..." value={instruction} maxLength={4000} onChange={event => setInstruction(event.target.value)} disabled={busy || frozen} />
         <button type="submit" disabled={!instruction.trim() || busy || frozen}>Send</button>

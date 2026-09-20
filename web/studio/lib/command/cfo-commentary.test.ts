@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
 import { eligible, mergeNarrationHistory, queueNarrations, readWorkflowPage, type WorkflowEvent } from "./cfo-commentary";
-import { decisionCommand, decisionContext, decisionProgress, parseDecisionChoice, type DecisionConcern } from "./cfo-decisions";
+import { decisionCommand, decisionContext, decisionProgress, hasReviewedOptions, parseDecisionChoice, type DecisionConcern } from "./cfo-decisions";
 const event = (sequence: number, priority = 1, key = String(sequence)): WorkflowEvent => ({ id: String(sequence), sequence, kind: "work.started", workflowId: "case", state: "started", narration: { id: `n${sequence}`, eventIds: [String(sequence)], text: "The invoice review has started.", textHash: "hash", templateVersion: 1, priority, createdAt: 0, expiresAt: 10000, supersessionKey: key } });
 test("duplicate/reordered activity and same-stage supersession produce one latest utterance", () => {
   const result = queueNarrations([event(1, 1, "stage")], [event(2, 1, "stage"), event(1, 1, "stage"), event(3, 3)], "demo", 5);
@@ -53,4 +53,24 @@ test("new investigation cannot display the previous job's completion or findings
     text: "Your choice is recorded. The investigation is queued.", notes: "", notesVerified: false,
   });
   assert.equal(decisionProgress({ ...concern, status: "needs_input" }, { id: "j2", status: "needs_input", waiting_reason: "Confirm which invoice applies." }).text, "Confirm which invoice applies.");
+});
+
+test("failed first card binds custom instructions to revision zero without enabling numbered choices", () => {
+  const failed = { id: "c1", status: "card_failed", card_revision: 0, card_hash: null, decision_revision: 0, card: null } as unknown as DecisionConcern;
+  const context = decisionContext(failed, 3)!;
+  assert.deepEqual(context, { concernId: "c1", cardRevision: 0, cardHash: "", expectedDecisionRevision: 0, contextGeneration: 3 });
+  assert.deepEqual(decisionCommand(context, { optionId: "custom", instruction: "Compare invoice quantities." }, "text", "retry0"), {
+    commandId: "retry0", concernId: "c1", cardRevision: 0, cardHash: "", expectedDecisionRevision: 0, input: "text", choice: { optionId: "custom", instruction: "Compare invoice quantities." },
+  });
+  assert.equal(hasReviewedOptions(failed), false);
+  assert.equal(decisionContext({ ...failed, status: "awaiting_response" }, 3), null);
+  assert.equal(decisionContext({ ...failed, card_revision: -1 }, 3), null);
+  assert.equal(decisionContext({ ...failed, decision_revision: -1 }, 3), null);
+  assert.equal(decisionContext({ ...failed, card_revision: 2, card_hash: "" }, 3), null);
+  const recovered = { ...failed, status: "awaiting_response", card_revision: 2, card_hash: "currenthash", decision_revision: 4,
+    card: { options: [1, 2, 3].map(id => ({ id: `option_${id}`, title: "Reviewed", action: "Investigate", tradeoff: "Wait", requires_approval: false })) } } as DecisionConcern;
+  assert.equal(hasReviewedOptions(recovered), true);
+  assert.equal(hasReviewedOptions({ ...recovered, status: "card_failed" }), false);
+  assert.equal(context.cardRevision, 0);
+  assert.equal(decisionContext(recovered, 4)?.cardHash, "currenthash");
 });

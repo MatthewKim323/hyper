@@ -377,7 +377,7 @@ function CommandSession({ scope }: { scope: string }) {
         onSend={() => { void submit(); }}
         onMicrophone={() => { void toggle(); }}
       >
-        {decision.concern && <CfoDecisionCard key={decision.concern.id} concern={decision.concern} busy={decision.busy} error={decision.error} message={decision.message} job={decision.job} frozen={userSpeaking} onSubmit={(choice, input) => { interruptCommentary(); return decision.submit(choice, input); }} onDismiss={decision.dismiss} />}
+        {decision.concern && <CfoDecisionCard key={decision.concern.id} concern={decision.concern} busy={decision.busy} error={decision.error} message={decision.message} job={decision.job} frozen={userSpeaking} onSubmit={(choice, input) => { interruptCommentary(); return decision.submit(choice, input); }} onDismiss={decision.dismiss} onRetrySuggestions={() => { interruptCommentary(); return decision.retrySuggestions(); }} />}
         <CfoCommentarySurface mode={commentary.mode} caption={commentary.caption} history={commentary.history} error={commentary.error} needsAudio={commentary.needsAudio} leader={commentary.leader} connected={commentary.connected} speakingConversation={conversationActive} onMode={commentary.setMode} onEnableAudio={() => { void commentary.enableAudio(); }} />
       </WorldVoiceBox>
     </div>

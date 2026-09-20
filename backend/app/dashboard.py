@@ -84,7 +84,9 @@ def execute(store, state, name, args, pointer=None, decision_context=None):
         from .data_service import DataService
         concern = ConcernService(DataService(store, state['organization_id'])).get(decision_context['concernId'])
         return {'available': True, 'concern': concern,
-                'current': concern.get('card_revision') == decision_context['cardRevision'] and concern.get('card_hash') == decision_context['cardHash']}
+                'current': (concern.get('card_revision') or 0) == decision_context['cardRevision']
+                and (concern.get('card_hash') or '') == decision_context['cardHash']
+                and (concern.get('decision_revision') or 0) == decision_context['expectedDecisionRevision']}
     if name == 'get_pointer_context':
         NoArguments.model_validate(args)
         if not pointer or time.time() - pointer['received_at'] > POINTER_TTL_SECONDS:
