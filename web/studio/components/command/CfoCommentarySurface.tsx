@@ -37,23 +37,31 @@ export function CfoDecisionCard({ concern, busy, error, message, frozen, job, on
   const [instruction, setInstruction] = useState("");
   const awaiting = ["awaiting_response", "needs_input", "card_failed"].includes(concern.status);
   const reviewed = hasReviewedOptions(concern);
+  const options = reviewed ? [...concern.card!.options].sort((a, b) => a.id.localeCompare(b.id)) : [];
   const progress = decisionProgress(concern, job);
   const status = busy ? message || "Saving your instruction..." : progress.text;
   return <section className={styles.decision} aria-label="Your decision" aria-busy={busy}>
     <div className={styles.decisionTitle}><h3>{concern.request.title}</h3><button type="button" onClick={onDismiss} disabled={busy || frozen} aria-label="Defer this decision">Later</button></div>
-    <p className={styles.summary}>{concern.card?.summary || concern.request.description}</p>
     {awaiting && <>
-      {reviewed ? <div className={styles.options}>{[...concern.card!.options].sort((a, b) => a.id.localeCompare(b.id)).map((option, index) => <button key={`${concern.card_revision}:${option.id}`} type="button" disabled={busy || frozen} onClick={() => { void onSubmit({ optionId: option.id }); }}>
-        <span className={styles.number}>{index + 1}</span><span><strong>{option.title}</strong><span>{option.action}</span><small>{option.tradeoff}</small></span>
-      </button>)}</div> : <div className={styles.unavailable}><p className={styles.notice}>Reviewed suggestions are unavailable. You can still give a custom instruction.</p>
+      {reviewed ? <div className={styles.options} role="group" aria-label="Choose a response">{options.map((option, index) => <button key={`${concern.card_revision}:${option.id}`} type="button" disabled={busy || frozen} onClick={() => { void onSubmit({ optionId: option.id }); }}>
+        <span className={styles.number}>{index + 1}</span><span className={styles.optionTitle}>{option.title}</span><span className={styles.optionArrow} aria-hidden="true">↗</span>
+      </button>)}</div> : <div className={styles.unavailable}><p className={styles.notice}>Suggestions unavailable.</p>
         {concern.status === "card_failed" && <button className={styles.retrySuggestions} type="button" disabled={busy || frozen} onClick={() => { void onRetrySuggestions(); }}>Retry suggestions</button>}
       </div>}
       <form className={styles.custom} onSubmit={async event => { event.preventDefault(); if (instruction.trim() && await onSubmit({ optionId: "custom", instruction: instruction.trim() }, "text")) setInstruction(""); }}>
-        <input aria-label="Custom decision instruction" placeholder="Or give a different instruction..." value={instruction} maxLength={4000} onChange={event => setInstruction(event.target.value)} disabled={busy || frozen} />
+        <input aria-label="Custom decision instruction" placeholder="Or type your own..." value={instruction} maxLength={4000} onChange={event => setInstruction(event.target.value)} disabled={busy || frozen} />
         <button type="submit" disabled={!instruction.trim() || busy || frozen}>Send</button>
       </form>
-      {frozen && <p className={styles.notice}>Finish your voice turn to change this decision.</p>}
+      {frozen && <p className={styles.notice}>Finish speaking to choose.</p>}
     </>}
+    <details className={styles.decisionDetails} key={`${concern.id}:${concern.card_revision}:${concern.card_hash}`}>
+      <summary>Details</summary>
+      <p>{concern.card?.summary || concern.request.description}</p>
+      {awaiting && reviewed && <ol>{options.map(option => <li key={option.id}>
+        <strong>{option.title}</strong><p>{option.action}</p><small>{option.tradeoff}</small>
+        {option.requires_approval && <small>Further action requires approval.</small>}
+      </li>)}</ol>}
+    </details>
     {status && <p className={styles.notice} role="status">{status}</p>}
     {progress.notes && <details className={styles.findings} key={concern.latest_job_id}>
       <summary>Findings</summary>

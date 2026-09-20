@@ -40,15 +40,22 @@
 .ws-chip { display: inline-flex; align-items: center; gap: 0.4rem; text-transform: none; letter-spacing: 0; font-size: 0.7rem; }
 .ws-chip i { width: 0.55rem; height: 0.55rem; border-radius: 2px; }
 
-.ws-options { display: grid; gap: 0.5rem; margin: 1.1rem 0 0.75rem; padding: 0; list-style: none; counter-reset: option; }
-.ws-options button { display: grid; gap: 0.25rem; width: 100%; padding: 0.9rem 1rem 0.9rem 2.6rem; position: relative; text-align: left; border: 1px solid rgb(37 35 33 / 15%); border-radius: 0; background: rgb(255 255 255 / 70%); cursor: pointer; transition: background 160ms, transform 160ms; }
-.ws-options button::before { counter-increment: option; content: counter(option); position: absolute; left: 1rem; top: 0.95rem; font-size: 0.8rem; color: #9a8379; }
+.ws-options { display: grid; gap: 0.5rem; margin: 1.1rem 0 0.75rem; padding: 0; list-style: none; }
+.ws-options button { display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); align-items: baseline; gap: 0.6rem; width: 100%; min-height: 44px; padding: 0.9rem 1rem; text-align: left; border: 1px solid rgb(37 35 33 / 15%); border-radius: 0; background: rgb(255 255 255 / 70%); cursor: pointer; transition: background 160ms, transform 160ms; }
 .ws-options button:hover:not(:disabled) { background: #eee4df; }
 .ws-options button:active:not(:disabled) { transform: scale(0.995); }
 .ws-options button:disabled { opacity: 0.5; cursor: default; }
-.ws-options strong { font-weight: 500; font-size: 0.95rem; }
+.ws-options strong { font-weight: 500; font-size: 0.95rem; line-height: 1.4; overflow-wrap: anywhere; }
 .ws-options span { font-size: 0.86rem; line-height: 1.45; }
-.ws-options em { font-style: normal; font-size: 0.75rem; color: #8a4b1d; }
+.ws-options .ws-option-number { font-size: 0.78rem; color: #716860; font-variant-numeric: tabular-nums; }
+.ws-decision-details { margin-top: 0.9rem; font-size: 0.82rem; line-height: 1.5; overflow-wrap: anywhere; }
+.ws-decision-details > summary { width: fit-content; padding: 0.35rem 0; cursor: pointer; color: #63574e; }
+.ws-decision-details > header { margin-top: 0.9rem; }
+.ws-decision-details > ol { margin: 0.9rem 0; padding-left: 1.2rem; }
+.ws-decision-details > ol > li { padding: 0.65rem 0; }
+.ws-decision-details strong { font-weight: 500; }
+.ws-decision-details small, .ws-decision-details em { display: block; }
+.ws-decision-details em { margin-top: 0.3rem; font-style: normal; color: #8a4b1d; }
 .ws-inline { display: flex; gap: 0.5rem; }
 .ws-inline input { flex: 1; min-width: 0; min-height: 42px; padding: 0.6rem 0.9rem; border: 1px solid #d6cec8; border-radius: 0.7rem; background: rgb(255 255 255 / 70%); font-size: 0.88rem; }
 .ws-inline button, .ws-gate button { min-height: 42px; padding: 0.55rem 1.1rem; border: 1px solid #252321; border-radius: 99px; color: #fff; background: #252321; font-size: 0.82rem; cursor: pointer; }

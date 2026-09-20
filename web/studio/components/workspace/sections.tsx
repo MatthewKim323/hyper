@@ -41,6 +41,8 @@ function ConcernCard({ concern, onAnswered, onBusy }: { concern: Concern; onAnsw
   const saved = useRef(false);
   const [submitted, setSubmitted] = useState(false);
   const card = concern.card;
+  const options = [...(card?.options ?? [])].sort((a, b) => a.id.localeCompare(b.id));
+  const { card_revision: cardRevision, card_hash: cardHash } = concern as DecisionConcern;
   const evaluation = card?.evaluation;
   const checks = Object.entries(evaluation?.answers ?? {}).filter(([, a]) => a.probability > 0);
 
@@ -65,18 +67,11 @@ function ConcernCard({ concern, onAnswered, onBusy }: { concern: Concern; onAnsw
   }
 
   return <article className="ws-card ws-card--decision" data-pointable={`concern:${concern.id}`} data-pointable-label={concern.request.title} data-pointable-data={JSON.stringify({ severity: concern.request.severity, status: concern.status, source_ids: concern.request.source_ids })}>
-    <header>
-      <span className="ws-chip"><i style={{ background: SEVERITY[concern.request.severity] }} aria-hidden="true" />{concern.request.severity}</span>
-      <time>{when(concern.created_at)}</time>
-    </header>
     <h3>{concern.request.title}</h3>
-    <p>{card?.summary ?? concern.request.description}</p>
-    <ol className="ws-options">{card?.options.map((option) => <li key={option.id}>
-      <button type="button" disabled={busy || submitted} onClick={() => void answer({ option_id: option.id })}>
+    <ol className="ws-options" aria-label="Decision choices">{options.map((option, index) => <li key={`${cardRevision}:${option.id}`}>
+      <button type="button" aria-label={`Option ${index + 1}: ${option.title}`} disabled={busy || submitted} onClick={() => void answer({ option_id: option.id })}>
+        <span className="ws-option-number" aria-hidden="true">{index + 1}</span>
         <strong>{option.title}</strong>
-        <span>{option.action}</span>
-        <small>Trade-off: {option.tradeoff}</small>
-        {option.requires_approval && <em>Needs approval</em>}
       </button>
     </li>)}</ol>
     <form className="ws-inline" onSubmit={(e: FormEvent) => { e.preventDefault(); if (custom.trim()) void answer({ option_id: "custom", custom_response: custom.trim() }); }}>
@@ -84,10 +79,25 @@ function ConcernCard({ concern, onAnswered, onBusy }: { concern: Concern; onAnsw
       <button type="submit" disabled={busy || submitted || !custom.trim()}>Send</button>
     </form>
     {note && <p className={submitted ? "ws-note" : "ws-warning"} role="status">{note}</p>}
-    <footer>
-      <button type="button" className="ws-link" onClick={() => go("evidence")}>{concern.request.source_ids.length} evidence source{concern.request.source_ids.length === 1 ? "" : "s"}</button>
-      <span>{checks.length ? `Checked by ${evaluation?.model}: ${checks.map(([k, a]) => `${k} ${(a.probability * 100).toFixed(0)}%`).join(", ")}` : evaluation?.model ?? "Not evaluated"}</span>
-    </footer>
+    <details className="ws-decision-details" key={`${concern.id}:${cardRevision}:${cardHash}`}>
+      <summary>Details</summary>
+      <header>
+        <span className="ws-chip"><i style={{ background: SEVERITY[concern.request.severity] }} aria-hidden="true" />{concern.request.severity}</span>
+        <time>{when(concern.created_at)}</time>
+      </header>
+      <p>{card?.summary ?? concern.request.description}</p>
+      <ol>{options.map((option) => <li key={option.id}>
+        <strong>{option.title}</strong>
+        <p>{option.action}</p>
+        <small>{option.tradeoff}</small>
+        {option.requires_approval && <em>Needs approval</em>}
+      </li>)}</ol>
+      <p className="ws-note">Choices authorize investigation and preparation. Financial actions still need approval.</p>
+      <footer>
+        <button type="button" className="ws-link" onClick={() => go("evidence")}>{concern.request.source_ids.length} evidence source{concern.request.source_ids.length === 1 ? "" : "s"}</button>
+        <span>{checks.length ? `Checked by ${evaluation?.model}: ${checks.map(([k, a]) => `${k} ${(a.probability * 100).toFixed(0)}%`).join(", ")}` : evaluation?.model ?? "Not evaluated"}</span>
+      </footer>
+    </details>
   </article>;
 }
 

@@ -54,12 +54,14 @@
 .surface :global(.ws-options) { gap: 0; margin: 24px 0; }
 .surface :global(.ws-options li + li) { border-top: 1px solid var(--relic-line); }
 .surface :global(.ws-options button) { gap: 7px; padding: 17px 0; border: 0; border-radius: 0; color: var(--relic-ink); background: transparent; transform: none; box-shadow: none; transition: opacity 150ms ease; }
-.surface :global(.ws-options button::before) { display: none; }
 .surface :global(.ws-options button:hover:not(:disabled)) { background: transparent; opacity: .72; }
 .surface :global(.ws-options button:active:not(:disabled)) { transform: none; }
 .surface :global(.ws-options strong) { font-size: 15px; font-weight: 500; }
 .surface :global(.ws-options span) { font-size: 14px; line-height: 1.65; }
-.surface :global(.ws-options em) { color: #795148; font-size: 12px; line-height: 1.6; }
+.surface :global(.ws-options .ws-option-number) { font-size: 12px; color: var(--relic-muted); }
+.surface :global(.ws-decision-details) { font-size: 13px; }
+.surface :global(.ws-decision-details > summary) { color: var(--relic-muted); }
+.surface :global(.ws-decision-details em) { color: #795148; font-size: 12px; line-height: 1.6; }
 .surface :global(.ws-inline) { align-items: baseline; gap: 20px; padding-bottom: 9px; border-bottom: 1px solid var(--relic-line); }
 .surface :global(.ws-inline--search) { margin: 28px 0; }
 .surface :global(.ws-inline input) { min-height: 42px; padding: 8px 0; border: 0; border-radius: 0; background: transparent; color: var(--relic-ink); font-size: 14px; box-shadow: none; }

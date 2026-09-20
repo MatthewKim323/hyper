@@ -20,18 +20,27 @@
 .decisionTitle { display: flex; align-items: baseline; gap: 12px; }
 .decisionTitle h3 { font-size: 17px; line-height: 1.3; margin: 0; font-weight: 500; flex: 1; }
 .decisionTitle button { font-size: 11px; }
-.summary { margin: 8px 0 12px; font-size: 13px; line-height: 1.45; }
-.options { display: grid; gap: 7px; }
-.options > button { display: flex; gap: 10px; text-align: left; color: #292524; font: inherit; padding: 10px 12px; border-radius: 14px; border: 1px solid rgb(255 255 255 / 60%); background: rgb(255 253 250 / 32%); cursor: pointer; }
-.options > button:hover:not(:disabled) { background: rgb(255 253 250 / 65%); }
-.options strong { display: block; font-size: 13px; font-weight: 500; }
-.options span > span { display: block; font-size: 12px; line-height: 1.35; margin-top: 3px; }
-.options small { display: block; font-size: 10px; color: #706359; line-height: 1.3; margin-top: 4px; }
-.number { flex: 0 0 18px; font-size: 12px; padding-top: 1px; }
+.options { display: grid; gap: 8px; margin-top: 14px; }
+.options > button { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 11px 15px; border: 1px solid rgb(255 255 255 / 70%); border-radius: 24px; background: rgb(255 253 250 / 46%); color: #292524; font: inherit; text-align: left; cursor: pointer; transition: transform 140ms cubic-bezier(.23, 1, .32, 1), background-color 140ms ease; -webkit-tap-highlight-color: transparent; }
+.optionTitle { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+.optionArrow { color: #6c605a; font-size: 16px; line-height: 1; }
+.number { flex: 0 0 14px; font-size: 11px; color: #796c63; font-variant-numeric: tabular-nums; }
+.options > button:focus-visible { outline: 2px solid #5b4b42; outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .options > button:hover:not(:disabled) { background-color: rgb(255 253 250 / 82%); } }
+@media (pointer: fine) { .options > button:active:not(:disabled):not(:focus-visible) { transform: scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .options > button { transition: none; } .options > button:active:not(:disabled):not(:focus-visible) { transform: none; } }
 .options > button:disabled, .custom button:disabled { opacity: .5; cursor: default; }
 .custom { display: flex; gap: 8px; margin-top: 10px; }
 .custom input { flex: 1; min-width: 0; padding: 7px 3px; background: transparent; border: 0; border-bottom: 1px solid rgb(70 50 35 / 18%); color: #292524; font: inherit; font-size: 12px; outline: none; }
 .custom button { font-size: 12px; }
+.decisionDetails { margin-top: 12px; font-size: 12px; line-height: 1.45; color: #625851; }
+.decisionDetails summary { width: fit-content; cursor: pointer; font-size: 11px; }
+.decisionDetails p { margin: 9px 0; }
+.decisionDetails ol { margin: 12px 0 0; padding-left: 18px; }
+.decisionDetails li { padding: 0 0 10px 3px; }
+.decisionDetails strong { color: #292524; font-weight: 500; }
+.decisionDetails li p { margin: 3px 0; }
+.decisionDetails small { display: block; font-size: 11px; }
 .unavailable { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
 .retrySuggestions { flex-shrink: 0; padding: 4px 0; border: 0; background: transparent; color: #51473f; font: inherit; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .retrySuggestions:disabled { opacity: .5; cursor: default; }
