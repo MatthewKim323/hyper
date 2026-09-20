@@ -316,3 +316,33 @@ async def test_revoked_access_blocks_context_commit(tmp_path,monkeypatch):
     with pytest.raises(PermissionError):
         await s.tool({'id':'revoked','name':'update_context','arguments':json.dumps(BRIEF)},s.generation)
     assert not s.store.workspace('unit-user')['onboarding_complete']
+
+
+def test_prompt_names_the_fields_and_capabilities_it_is_graded_on():
+    """The evaluator gates completion on five brief fields and five rubric dimensions, and
+    the agent can only deliver the workflows the tool registry exposes. The prompt used to
+    say 'learn enough context' and name none of it, so the agent was interviewing against a
+    rubric it could not see and offering capabilities that do not exist."""
+    import json
+    from pathlib import Path
+    from app.voice import PROMPT
+    from app.agent import Brief
+
+    prompt = PROMPT.lower()
+    # Every field evaluate() requires before it will report ready (agent.py).
+    for field in ('company', 'objective', 'scope', 'success_criteria', 'next_action'):
+        assert field.replace('_', ' ') in prompt or field in prompt, field
+    assert set(Brief.model_fields) >= {'company', 'objective', 'scope', 'success_criteria', 'next_action'}
+
+    # Every dimension the evaluator scores (evaluator/decision.mjs).
+    rubric = Path(__file__).resolve().parents[1] / 'evaluator' / 'decision.mjs'
+    for dimension in ('goal', 'company', 'evidence', 'ambiguity'):
+        assert dimension in rubric.read_text()
+
+    # The interview must steer at real workflows, not generic finance talk.
+    for capability in ('payable', 'aging', 'anomal', 'settlement', 'accrual'):
+        assert capability in prompt, capability
+
+    # And must not promise authority the readiness decision explicitly withholds.
+    assert 'read-only' in prompt
+    assert 'never permission to send messages, post entries' in prompt
