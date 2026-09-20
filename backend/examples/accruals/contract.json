@@ -1,0 +1,16 @@
+[
+  {
+    "id": "contract",
+    "packet": {
+      "obligation_id": "service-1",
+      "vendor_id": "vendor-1",
+      "currency": "USD",
+      "start": "2026-09-01",
+      "end": "2026-10-31",
+      "authorized_qty": 100,
+      "unit_price_minor": 100000,
+      "expense_account": "6100",
+      "liability_account": "2100"
+    }
+  }
+]

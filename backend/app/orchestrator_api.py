@@ -40,7 +40,7 @@ def task(task_id:str,data=Depends(service)):
 def definitions(identity=Depends(machine)):
     tools=data_tools.tool_definitions()+[{'name':name,'parameters':model.model_json_schema()} for name,model in MODELS.items()]
     if identity['role']=='worker':
-        allowed={'list_datasets','query_financials','search_evidence','get_source','get_case','get_task','report_task_result','raise_concern','create_financial_artifact','get_financial_artifact'}
+        allowed={'list_datasets','query_financials','search_evidence','get_source','get_case','get_task','report_task_result','raise_concern','create_financial_artifact','get_financial_artifact','list_accounting_records','open_payable_case','analyze_payable','inspect_payable_credit','prepare_payable_proposal','reconcile_settlement','get_settlement_reconciliation','prepare_expense_accrual','get_expense_accrual','track_expense_accrual','search_learned_skills','get_learned_skill','get_skill_resource','save_learned_skill','record_skill_run','save_skill_execution_evidence'}
         tools=[t for t in tools if t['name'] in allowed]
     return {'identity':{k:v for k,v in identity.items() if k!='organization_id'},'tools':tools}
 @router.post('/tools')

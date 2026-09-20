@@ -1,0 +1,14 @@
+[
+  {
+    "id": "ledger",
+    "packet": {
+      "obligation_id": "service-1",
+      "vendor_id": "vendor-1",
+      "currency": "USD",
+      "coverage_from": "2026-09-01",
+      "coverage_through": "2026-10-31",
+      "complete": true,
+      "entries": []
+    }
+  }
+]

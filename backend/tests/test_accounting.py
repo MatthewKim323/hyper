@@ -1,0 +1,109 @@
+import json
+import pytest
+from sqlalchemy import select
+from mirror_resolve import store as ledger
+from mirror_resolve.fixtures import hero
+from app.accounting import Accounting, PromoteRecord, Approval
+from test_simulator import setup
+
+ATTEST='I verified this structured record against its source'
+
+def promote(data, typ, record, **kwargs):
+    source=data.ingest(typ+'-'+str(next(iter(record.values())))+'.json',json.dumps([record]).encode(),dataset='ap_'+typ.lower(),**kwargs)
+    svc=Accounting(data.store,data.oid)
+    return svc.promote(PromoteRecord(source_id=source['id'],row_number=1,record_type=typ,attestation=ATTEST),'human:alice')
+
+def initial(data):
+    eng=ledger.make_engine('sqlite:///:memory:')
+    with eng.begin() as db:
+        hero.seed_initial(db)
+        rows=[dict(r) for r in db.execute(select(ledger.records).order_by(ledger.records.c.id)).mappings()]
+    for row in rows:promote(data,row['record_type'],row['data'])
+    eng.dispose()
+    return Accounting(data.store,data.oid).execute('open_payable_case',{'invoice_id':'INV-1042'})['case']['case_id']
+
+def deliver(data,built):
+    typ,record,_=built
+    return promote(data,typ,record)
+
+def proposal(svc,cid):
+    snapshot=svc.execute('analyze_payable',{'case_id':cid})
+    return svc.execute('prepare_payable_proposal',{'case_id':cid,'based_on_revision':snapshot['case']['revision']})
+
+def test_partial_credit_blocks_then_exact_proposal_and_invalidation(setup):
+    store,a,_,_,_=setup;data=a.data;svc=Accounting(store,a.oid)
+    cid=initial(data)
+    before=svc.execute('analyze_payable',{'case_id':cid})
+    assert before['calculation']['invoice_face_cents']==12_000_000
+    deliver(data,hero.cancellation_record());deliver(data,hero.supplier_ack())
+    deliver(data,hero.price_credit())
+    svc.execute('inspect_payable_credit',{'case_id':cid,'credit_id':'CM-201'})
+    partial=proposal(svc,cid)
+    assert partial['proposal']['payload']['net_payable_cents']==10_000_000
+    assert partial['validation']['verdict']=='FAIL' and partial['approval'] is None
+    deliver(data,hero.quantity_credit())
+    svc.execute('inspect_payable_credit',{'case_id':cid,'credit_id':'CM-202'})
+    full=proposal(svc,cid)
+    assert full['validation']['verdict']=='PASS'
+    assert full['proposal']['payload']['net_payable_cents']==8_000_000
+    assert full['approval']['status']=='PENDING'
+    prop=full['proposal']
+    with pytest.raises(ValueError):svc.approve(Approval(proposal_id=prop['proposal_id'],proposal_hash='wrong',decision='APPROVED'),'alice')
+    assert svc.approve(Approval(proposal_id=prop['proposal_id'],proposal_hash=prop['hash'],decision='APPROVED'),'alice')['status']=='APPROVED'
+    # A corrected receipt invalidates the old proposal AND credit verification.
+    promote(data,'GOODS_RECEIPT',{'gr_id':'GR-771','po_id':'PO-481','received_on':'2026-09-08','lines':[{'item_id':hero.ITEM,'qty':850}]})
+    with pytest.raises(ValueError):svc.approve(Approval(proposal_id=prop['proposal_id'],proposal_hash=prop['hash'],decision='APPROVED'),'alice')
+    after=svc.execute('analyze_payable',{'case_id':cid})
+    assert after['calculation']['verified_credits_total_cents']==0
+    with store.engine.connect() as db:assert db.execute(select(ledger.economic_events)).first() is None
+
+def test_tenant_ids_source_provenance_and_unsupported_currency(setup):
+    store,a,b,_,_=setup
+    ca=initial(a.data);cb=initial(b.data)
+    assert ca!=cb
+    svc=Accounting(store,a.oid)
+    with pytest.raises(LookupError):Accounting(store,b.oid).execute('analyze_payable',{'case_id':ca})
+    source=a.data.ingest('record.json',json.dumps([{'vendor_id':'X','name':'X','approved_contact':'a','remit_account_ref':'b'}]).encode(),dataset='new')
+    args=PromoteRecord(source_id=source['id'],row_number=1,record_type='VENDOR_MASTER',attestation=ATTEST)
+    with pytest.raises(LookupError):Accounting(store,b.oid).promote(args,'human:bob')
+    first=svc.promote(args,'human:alice')
+    assert svc.promote(args,'human:alice')==first
+    assert first['source_sha256'] and first['verified_by']=='human:alice'
+    with pytest.raises(ValueError):promote(a.data,'PURCHASE_ORDER',{'po_id':'crypto','vendor_id':'X','currency':'ETH','lines':[{'item_id':'I','qty':1,'unit_price_cents':10}]})
+
+def test_http_owner_only_and_no_agent_approval_tool(setup,monkeypatch):
+    from fastapi.testclient import TestClient
+    from app import main, auth, data_tools
+    import time
+    store,a,_,_,_=setup
+    monkeypatch.setattr(main,'store',store)
+    monkeypatch.setattr(auth,'verify',lambda token:auth.Identity(token,int(time.time())+300))
+    store.add_member('teammate',a.oid)
+    source=a.data.ingest('vendor.json',json.dumps([{'vendor_id':'V','name':'v','approved_contact':'a','remit_account_ref':'b'}]).encode(),dataset='vendors')
+    body={'source_id':source['id'],'row_number':1,'record_type':'VENDOR_MASTER','attestation':ATTEST}
+    with TestClient(main.app) as client:
+        assert client.post('/accounting/records/verify',json=body).status_code==401
+        assert client.post('/accounting/records/verify',json=body,headers={'Authorization':'Bearer teammate'}).status_code==403
+        assert client.post('/accounting/records/verify',json=body,headers={'Authorization':'Bearer alice'}).status_code==200
+    assert 'prepare_payable_proposal' in data_tools.DESCRIPTIONS
+    assert not any('approve' in name or 'commit' in name or 'verify_record' in name for name in data_tools.DESCRIPTIONS)
+
+def test_source_replacement_revokes_proposal_before_verification(setup):
+    from app import data_tools
+    store,a,_,_,_=setup;cid=initial(a.data);svc=Accounting(store,a.oid)
+    result=proposal(svc,cid);pid=result['proposal']['proposal_id']
+    # Even a pending/blocked draft becomes stale when its raw backing record changes.
+    a.data.ingest('INVOICE-INV-1042.json',json.dumps([{'invoice_id':'INV-1042','unverified':'replacement'}]).encode(),dataset='ap_invoice')
+    with store.engine.connect() as db:
+        assert db.execute(select(ledger.proposals.c.status).where(ledger.proposals.c.proposal_id==pid)).scalar()=='INVALIDATED'
+    with pytest.raises(ValueError,match='superseded'):svc.execute('analyze_payable',{'case_id':cid})
+    json.dumps(data_tools.execute(store,a.oid,'list_accounting_records',{}))
+
+
+def test_currency_mismatch_and_invoice_total_block_proposal(setup):
+    store,a,_,_,_=setup;cid=initial(a.data);svc=Accounting(store,a.oid)
+    # Cross-currency contract prices must never be used as if denominated in USD.
+    promote(a.data,'AGREEMENT',{'agreement_id':'AGR-220','vendor_id':hero.VENDOR,'currency':'EUR','effective_from':'2026-01-01','prices':[{'item_id':hero.ITEM,'unit_price_cents':10000}]})
+    result=svc.execute('analyze_payable',{'case_id':cid})
+    assert any('currency' in str(issue['detail']) for issue in result['issues'])
+    assert proposal(svc,cid)['validation']['verdict']=='FAIL'

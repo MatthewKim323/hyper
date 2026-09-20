@@ -1,0 +1,54 @@
+# Expense Accrual API
+
+Clerk authentication and organization isolation apply to every route.
+
+| Route | Purpose |
+| --- | --- |
+| `POST /accounting/accruals` | Prepare an exact proposal from contract_source_id, delivery_source_id, ledger_source_id and cutoff (YYYY-MM-DD month-end). |
+| `GET /accounting/accruals/{accrual_id}` | Read calculation, journals, source citations, freshness, approval and latest lifecycle observation. |
+| `POST /accounting/accruals/{accrual_id}/approve` | Owner-only approval, bound to accrual_id and result_hash. |
+| `POST /accounting/accruals/{accrual_id}/track` | Read a lifecycle report using accrual_id and source_id; save a posting/reversal/invoice observation. |
+
+Agent tools: `prepare_expense_accrual`, `get_expense_accrual`, `track_expense_accrual`. Approval is not an agent tool. Existing `raise_concern` handles incomplete or uncertain evidence and user decisions; a concern response does not approve a journal.
+
+## Import and demo
+Upload each file in `examples/accruals/` through `POST /sources` using multipart fields `dataset=accrual_reports`, `id_field=id`, and a stable source_key for each report. Each file has exactly one row with `id` and nested `packet`. The nested packet preserves strict integer amounts and quantities. IDs must be stable organization-wide economic identifiers; source corrections reuse the same source_key.
+
+Call preparation with the three returned source IDs and `cutoff: "2026-09-30"`. The sample has 40 September units at 100000 minor units per unit and 10 October units. Only September's 4000000 minor units accrue. No posted expense is present. All amount fields are nonnegative integers; strings, floats and booleans are rejected. Ledger reversal amounts are positive with kind `reversal` and an explicit `reverses_id` referencing an earlier accrual entry. Reversals subtract from recorded expense and cannot exceed the original amount.
+
+Approval body:
+
+```json
+{
+  "accrual_id": "returned-id",
+  "result_hash": "returned-hash",
+  "attestation": "I verified delivery, rates, ledger completeness, and account mappings"
+}
+```
+
+Statuses: `blocked`, `no_accrual_needed`, `awaiting_approval`, `approved_not_posted`, `stale`. Source replacement invalidates readiness. A previous approval for the same obligation/cutoff blocks another approval even if its source later becomes stale; absence of posting cannot safely be assumed.
+
+The journal debits the supplied expense account and credits accrued liabilities. The proposed next-day reversal swaps those amounts. Both are balanced in code. They are not sent to an external ledger.
+
+## Subsequent invoice and reversal tracking
+Upload a fourth normalized packet (replace identifiers with the real returned accrual and stable ledger IDs):
+
+```json
+{
+  "accrual_id": "returned-id",
+  "obligation_id": "service-1",
+  "vendor_id": "vendor-1",
+  "currency": "USD",
+  "complete_through": "2026-10-31",
+  "complete": true,
+  "entries": [
+    {"id":"journal-1","kind":"accrual_posting","posted_on":"2026-09-30","amount_minor":4000000},
+    {"id":"reversal-1","kind":"reversal","posted_on":"2026-10-01","amount_minor":4000000},
+    {"id":"invoice-line-1","kind":"invoice","posted_on":"2026-10-12","amount_minor":4000000}
+  ]
+}
+```
+
+Wrap it in `[{"id":"lifecycle-report","packet": ...}]` and import it like the other reports. Invoice amounts must represent only the part explicitly allocated to this accrual's scope; the tool does not guess allocation. Track returns `matched_in_supplied_evidence`, `awaiting_invoice`, `exceptions`, or `stale` under `tracking`, while the original proposal retains its approval status. A matched observation does not assert that this application posted anything. Reports are retained as successive observations. Superseded evidence becomes stale on read.
+
+Complete Pydantic source contracts are in `app/accruals.py`; [the plan](plans/expense-accruals.md) explains boundaries and follow-on work.

@@ -89,3 +89,48 @@ The current investigator uses a bounded evidence sample, not a certified full-le
 This increment does not yet include a normalized transaction-analysis index, automatically merged cross-source cases, or a measured retrieval benchmark. Those remain follow-up work from the architecture plan. No benchmark improvement is claimed without measurements.
 
 References: [Jina models](https://www.elastic.co/docs/explore-analyze/machine-learning/nlp/ml-nlp-jina), [reranking](https://www.elastic.co/docs/solutions/search/ranking/semantic-reranking), [Agent Builder APIs](https://www.elastic.co/docs/explore-analyze/ai-features/agent-builder/kibana-api), [AI Workflow steps](https://www.elastic.co/docs/explore-analyze/workflows/steps/ai-steps), [Workflow run API](https://www.elastic.co/docs/api/doc/kibana/operation/operation-post-workflows-workflow-id-run).
+
+## A2A specialist delegation
+
+The preferred setup now uses Elastic Agent Builder's native A2A JSON-RPC endpoint. Existing workflow deployments remain supported. Set:
+
+```dotenv
+ELASTIC_AGENT_TRANSPORT=a2a
+ELASTIC_A2A_AGENT_ID=hyper-finance-<organization-hash>
+ELASTIC_KIBANA_URL=https://your-project.kb.region.cloud.es.io
+ELASTIC_KIBANA_API_KEY=<server-side-read-only-agent-key>
+ELASTIC_AGENT_ORGANIZATION_ID=<application-organization-id>
+```
+
+Optional `ELASTIC_KIBANA_SPACE` applies to both discovery and execution. No Workflow ID, public callback tunnel, callback connector or callback secret is needed for A2A. Without an explicit transport, a configured A2A agent ID selects A2A; otherwise legacy workflow selection is retained.
+
+Provision the read-only tools and specialist agent using an appropriately privileged setup credential (then use a restricted runtime credential):
+
+```sh
+uv run --directory backend python -m app.elastic_setup definitions --transport a2a
+uv run --directory backend python -m app.elastic_setup provision --transport a2a
+uv run --directory backend python -m app.elastic_setup check
+uv run --directory backend python -m app.elastic_worker
+```
+
+The generated tools use concrete index names and server-fixed organization filters. Organization IDs are not model-controlled tool parameters. Do not replace these with broad built-in index exploration/search tools using a cross-company credential. Provision Elasticsearch/Kibana permissions for the target company's resources; a prompt is not a tenancy boundary. This deployment remains explicitly bound to one application organization. Multi-organization provisioning requires separate credential/agent mappings.
+
+### Existing API, upgraded transport
+
+Dashboard/Devin agents call `investigate_financial_evidence` with source_id, question, request_key. HTTP clients use `POST /elastic/investigations` (202), then `GET /elastic/investigations/{id}`. The API queues durable work; the background worker discovers the configured Agent Card and calls `message/send`. The configured Kibana origin is fixed: URLs returned by the card are never followed.
+
+Elastic currently documents synchronous A2A completion and no streaming. The adapter supports JSON-RPC Agent Cards reporting protocolVersion 0.2.x or 0.3.x, direct agent messages, and completed task artifacts/status output. It requests a strict JSON Finding. It does not invent task-polling support or treat nonterminal task output as completion. An unsupported protocol fails before dispatch; 1.0 requires an explicit adapter upgrade.
+
+The worker accepts a finding only after schema checks and independent validation that every cited chunk belongs to this organization and remains active/indexed. A2A can cite additional current evidence found through its scoped tools; these source records are hydrated into the saved context. Legacy workflow callbacks retain their original supplied-bundle-only citation restriction.
+
+Responses expose source/chunk/locator citations, transport, search_scope, unresolved questions and retrieval_coverage_complete. That coverage flag concerns the retrieval/indexing inputs, not proof of an exhaustive audit. Search-scope descriptions are agent-reported. A finding never approves a payment, posts a journal, or changes company policy. Exact accounting totals still come from Postgres-backed tools.
+
+### Failure and retry behavior
+
+Stable investigation IDs identify JSON-RPC messages; they are not assumed to guarantee provider-side deduplication. Timeouts, malformed post-dispatch output and interrupted launches become dispatch_unknown and are never automatically resent. Inspect the remote run before reconciling an ambiguous dispatch. Reviewed findings still pass the existing publication freshness checks and concern creation flow. Capacity limits and leases apply to both transports; a five-minute dispatch lease exceeds the bounded discovery and execution request timeouts.
+
+### Validation and live prerequisites
+
+Mock-transport tests cover Agent Card discovery, JSON-RPC correlation, authentication, completed results, malformed/nonterminal results, timeout non-replay, source hydration, and organization isolation. Legacy workflow tests remain enabled. Local .env currently lacks Kibana URL/key, application organization binding and A2A agent ID, so live Elastic execution has not been verified.
+
+Sources: [Elastic A2A server](https://www.elastic.co/docs/explore-analyze/ai-features/agent-builder/a2a-server), [A2A 0.3 specification](https://a2a-protocol.org/v0.3.0/specification/).

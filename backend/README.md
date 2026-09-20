@@ -129,3 +129,13 @@ See [ELASTIC.md](ELASTIC.md) for Jina reranking, the persistent investigation AP
 ## World dashboard conversation
 
 `POST /world/agent`, `GET /world/agent/transcript`, and `WS /world/agent/stream` expose a persistent dashboard assistant for typed chat and voice, separate from onboarding. See [WORLD_AGENT_API.md](WORLD_AGENT_API.md) for authentication, streaming events, reconnect behavior, and frontend integration.
+
+## Deterministic accounting
+
+The shared agent tools now call the existing AP engine for exact invoice matching, credit verification and hash-bound payable proposals. [ACCOUNTING_API.md](ACCOUNTING_API.md) describes evidence attestation, owner-only approval, deterministic checks and supported accounting scope. Agents cannot attest records, approve proposals, or move money.
+
+Processor settlement reconciliation is available through authenticated API routes and shared dashboard/worker tools. See [SETTLEMENT_API.md](SETTLEMENT_API.md) for normalized report contracts, exact residual checks, owner verification and limitations; [the research plan](plans/settlement-reconciliation.md) compares candidate workflows.
+
+Fixed-rate service accruals now support cutoff calculations, balanced proposed journals, owner approval, and evidence-based posting/reversal/invoice tracking. See [ACCRUAL_API.md](ACCRUAL_API.md), [sample imports](examples/accruals/), and [implementation scope](plans/expense-accruals.md).
+
+Organization-scoped learned skills are available to dashboard and Devin agents: summary search, progressive loading, immutable S3 packages, execution evidence, owner activation and failure quarantine. See [SKILLS_API.md](SKILLS_API.md) and [the design](plans/learned-skills.md). Generated code executes in the worker workspace, never inside FastAPI.

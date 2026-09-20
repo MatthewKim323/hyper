@@ -10,7 +10,7 @@ from pathlib import PurePosixPath
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import select, update, func, cast, Numeric, text
-from .database import sources, records, chunks, jobs
+from .database import sources, records, chunks, jobs, organizations
 from .parsing import parse_file, numeric, NAME
 
 class StrictModel(BaseModel):
@@ -83,6 +83,7 @@ class DataService:
         with self.engine.begin() as db:
             # Serializes source versions and dataset ID overlap checks.
             if db.dialect.name=='postgresql':
+                db.execute(select(organizations.c.id).where(organizations.c.id==self.oid).with_for_update())
                 db.execute(text('SELECT pg_advisory_xact_lock(hashtext(:key))'),{'key':'ingest:'+self.oid})
             else:
                 db.exec_driver_sql('BEGIN IMMEDIATE')
@@ -124,6 +125,8 @@ class DataService:
             db.execute(jobs.insert().values(id='job_'+uuid.uuid4().hex,source_id=sid,
                 organization_id=self.oid,status='pending',attempts=0,lease_until=0,created_at=now))
             from .agent_events import emit
+            from .accounting import invalidate_replaced_sources
+            invalidate_replaced_sources(db, self.oid, source_key, sid)
             emit(db,self.oid,'source:'+sid,'source.created',{'source_id':sid,'dataset':dataset,'index_status':'pending'})
         return {**source_public(source),'deduplicated':False}
 

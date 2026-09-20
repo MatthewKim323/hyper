@@ -287,6 +287,13 @@ def on_new_evidence(conn: Connection, company_id: str, record: dict, actor: str 
         return []
     touched = affected_cases(conn, company_id, record)
     for case_id in touched:
+        if record['record_type'] != 'CREDIT_MEMO':
+            case = get_case(conn, case_id)
+            # Verification is dependent on invoice/contract/receipt versions, not permanent.
+            conn.execute(store.credits.update().where(
+                store.credits.c.company_id == company_id,
+                store.credits.c.invoice_id == case['invoice_id'],
+                store.credits.c.state == 'VERIFIED').values(state='RECEIVED', checks=[], updated_at=store.now()))
         bump_revision(conn, case_id, f"{record['record_type']} {record['record_id']} v{record['version']}", actor)
         evaluate_case(conn, case_id)
     return touched

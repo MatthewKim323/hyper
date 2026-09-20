@@ -11,6 +11,8 @@ class Store:
         self.path = path
         self.engine = make_engine(path)
         initialize(self.engine)
+        from mirror_resolve.store import md as accounting_metadata
+        accounting_metadata.create_all(self.engine)
 
     @contextmanager
     def connect(self):

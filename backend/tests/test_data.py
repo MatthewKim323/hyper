@@ -151,7 +151,7 @@ def test_partial_bulk_is_failure(monkeypatch):
 
 def test_agent_tools_are_scoped_and_reference_free():
     defs=tool_definitions()
-    assert {d['name'] for d in defs}=={'compose_financial_artifact','investigate_financial_evidence','get_evidence_investigation','list_datasets','query_financials','search_evidence','get_source','raise_concern','get_concern','list_concerns','claim_concern','resolve_concern','renew_concern_claim','create_financial_artifact','get_financial_artifact'}
+    assert {d['name'] for d in defs}=={'list_accounting_records','open_payable_case','analyze_payable','inspect_payable_credit','prepare_payable_proposal','reconcile_settlement','get_settlement_reconciliation','prepare_expense_accrual','get_expense_accrual','track_expense_accrual','search_learned_skills','get_learned_skill','get_skill_resource','save_learned_skill','record_skill_run','save_skill_execution_evidence','compose_financial_artifact','investigate_financial_evidence','get_evidence_investigation','list_datasets','query_financials','search_evidence','get_source','raise_concern','get_concern','list_concerns','claim_concern','resolve_concern','renew_concern_claim','create_financial_artifact','get_financial_artifact'}
     assert '$ref' not in json.dumps(defs)
     assert all('organization_id' not in d['parameters']['properties'] for d in defs)
 

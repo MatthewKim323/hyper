@@ -190,7 +190,7 @@ def execute(store,identity,name,args):
     from . import data_tools
     oid=identity['organization_id'];svc=AgentService(store,oid)
     if identity['role']=='worker':
-        permitted={'list_datasets','query_financials','search_evidence','get_source','get_case','get_task','report_task_result','raise_concern','create_financial_artifact','get_financial_artifact'}
+        permitted={'list_datasets','query_financials','search_evidence','get_source','get_case','get_task','report_task_result','raise_concern','create_financial_artifact','get_financial_artifact','list_accounting_records','open_payable_case','analyze_payable','inspect_payable_credit','prepare_payable_proposal','reconcile_settlement','get_settlement_reconciliation','prepare_expense_accrual','get_expense_accrual','track_expense_accrual','search_learned_skills','get_learned_skill','get_skill_resource','save_learned_skill','record_skill_run','save_skill_execution_evidence'}
         if name not in permitted:raise PermissionError('Tool not permitted for workers')
         if name in ('get_task','report_task_result') and args.get('task_id')!=identity['task_id']:raise PermissionError('Task scope mismatch')
         if name=='get_case' and args.get('case_id')!=identity['case_id']:raise PermissionError('Case scope mismatch')
