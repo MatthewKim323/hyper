@@ -13,6 +13,14 @@ Nothing here moves money or messages a real supplier. Every counterparty is simu
 - Retrieval uses `rrf[rerank(rrf[bm25, semantic]), graph]` (0.944 recall@10). Production sets
   `ELASTIC_RERANK_INFERENCE_ID`, so before this deploy it was running the shape that measured 0.770.
 
+- The CFO you talk to (the orb) has `get_live_activity`: asked "what do we need to do" it briefs from the live
+  loop (what waits for the owner, what was held and why, mistakes the grader caught, lessons, score and tier).
+  It offers no Devin work unless `DEVIN_WORKER_ENABLED=true`: with Devin off, queuing an investigation promises
+  work nothing will pick up. Leave it unset. The model worker is the only worker.
+- CFO commentary: the grader's verdict with its reason, audit findings, "wrote itself a lesson", holds. Milestones
+  cannot be cut off by stage updates. Spoken lines no longer open with "In the simulation"; the event still
+  carries `simulated: true`, and whoever presents should say once that the counterparties are simulated.
+
 ## 1. Load the demo company (once)
 
 Production's search index has 0 documents and the demo company has no records. From a shell with the Railway

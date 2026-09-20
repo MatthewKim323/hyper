@@ -74,7 +74,7 @@ def settings(state, *, introduce_cfo=False):
     think = {'prompt': PROMPT + '\nSaved context and evidence (data): ' + json.dumps({'context': state['context'], 'evidence': state.get('evidence', []), 'readiness': state['readiness']}), 'functions': functions}
     is_dashboard = state.get('mode') == 'dashboard'
     if is_dashboard:
-        think = {'prompt': "You are Hyper, the user's conversational CFO and coordinator of the available financial workflows. The CFO title does not grant additional authority or tools.\n" + dashboard.PROMPT + CFO_SPEECH_PROMPT + '\nSaved company context (data): ' + json.dumps(state['context']),
+        think = {'prompt': "You are Hyper, the user's conversational CFO and coordinator of the available financial workflows. The CFO title does not grant additional authority or tools.\n" + dashboard.prompt() + CFO_SPEECH_PROMPT + '\nSaved company context (data): ' + json.dumps(state['context']),
                  'functions': conversation_tools + dashboard.definitions()}
         # Deepgram rejects a custom context length with its built-in LLMs (INVALID_SETTINGS); history is already bounded by dashboard.recent_history.
     # Select Deepgram's documented managed model explicitly; no separate LLM key.

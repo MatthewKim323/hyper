@@ -63,7 +63,8 @@ def test_closed_fact_vocabulary_and_truthful_templates(journal):
             facts={'invoiceId': 'INV-1', 'proposalId': 'p1', 'proposalHash': 'h', 'decision': 'APPROVED'}, simulated=True)
     assert 'not accepted' in queued['narration']['text']
     assert 'Devin accepted' in accepted['narration']['text']
-    assert decision['narration']['text'].startswith('In the simulation, ')
+    # The disclosure is a flag on the event, not a prefix repeated in every spoken sentence.
+    assert decision['simulated'] is True and not decision['narration']['text'].startswith('In the simulation')
     assert 'paid' not in decision['narration']['text'] and 'sent' not in decision['narration']['text']
     assert 'approved' in decision['narration']['text']
 
@@ -306,9 +307,9 @@ def test_a_wrong_release_is_narrated_as_an_audit_finding_with_its_reason(world):
     cid = tool(store, oid, 'open_payable_case', invoice_id=scenario['invoice_id'])['case']['case_id']
     propose(store, oid, cid)
     assert [s['outcome'] for s in svc.score()] == ['fail']
-    finding = next(t for t in spoken(store, oid) if 'Audit finding' in t or 'audit finding' in t)
+    finding = next(t for t in spoken(store, oid) if 'Audit finding' in t)
     assert scenario['invoice_id'] in finding and 'should have been held' in finding and 'sending the whole delivery back' in finding
-    assert finding.startswith('In the simulation, ') and len(finding) <= 240
+    assert finding.startswith('Audit finding') and len(finding) <= 240
     with store.engine.connect() as db:
         event = next(e for e in db.execute(select(workflow_events.c.event)).scalars() if e['kind'] == 'audit.finding')
     assert event['state'] == 'failed' and event['narration']['priority'] == 3 and event['facts'] == {'invoiceId': scenario['invoice_id'], 'outcome': 'fail', 'trap': 'goods_returned'}
@@ -344,8 +345,8 @@ def test_an_unknown_kind_of_case_is_refused(world):
 
 def test_an_invoice_number_that_opens_a_sentence_keeps_its_capitals():
     say = lambda kind, **facts: workflow.sentence({'kind': kind, 'facts': facts, 'actor': {'kind': 'engine', 'id': 'engine'}, 'simulated': True})
-    assert say('invoice.received', invoiceId='INV-0057').startswith('In the simulation, INV-0057 arrived')
-    assert say('work.started', invoiceId='INV-0057').startswith('In the simulation, accounts payable has started')
+    assert say('invoice.received', invoiceId='INV-0057').startswith('INV-0057 arrived')
+    assert say('work.started', invoiceId='INV-0057').startswith('Accounts payable has started')
 
 
 def test_stage_chatter_cannot_cut_off_a_milestone_and_milestones_are_spoken_first(world):

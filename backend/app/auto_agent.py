@@ -197,9 +197,10 @@ def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None,
             break
         for call in calls:
             name = call['function']['name']
-            stage = {'open_payable_case': 'review', 'analyze_payable': 'checks',
-                     'inspect_payable_credit': 'credit', 'prepare_payable_proposal': 'proposal',
-                     'get_counterparty_thread': 'evidence'}.get(name)
+            # Only a stage worth hearing about. Every case opens, reads its thread and runs the checks, several
+            # times over: narrating each of those made the CFO say the same three sentences about every invoice.
+            # Inspecting a delivered credit memo is the one step that does not happen in every case.
+            stage = {'inspect_payable_credit': 'credit'}.get(name)
             if stage and run_id:
                 with store.engine.begin() as db:
                     workflow_emit(db, oid, run_id + ':tool:' + call['id'], 'work.stage',
@@ -235,7 +236,8 @@ def save_activity(store, scenario_id, status, started_at, workflow_context=None)
         run_id = scenario_id + ':' + str(started_at)
         if workflow_context and status in ('running', 'failed'):
             oid, invoice = workflow_context
-            workflow_emit(db, oid, run_id + ':' + status,
+            # One "started" per invoice: the key is the case, so later sessions on it add nothing to the feed.
+            workflow_emit(db, oid, (scenario_id + ':started') if status == 'running' else run_id + ':' + status,
                 'work.started' if status == 'running' else 'work.failed',
                 workflow_id='invoice:' + invoice, run_id=run_id,
                 facts={'invoiceId': invoice}, section='cases', simulated=True)
@@ -296,9 +298,12 @@ def run_once(store, data_factory=None, llm=None):
                                     'lessons_at_start': mine.get('lessons_at_start', len(Counterparties(data_factory(row['organization_id'])).lessons(200))),
                                     'trace': (mine.get('trace', []) + trace)[-60:]}
                 db.execute(update(scenarios).where(scenarios.c.id == row['id']).values(state=current))
-                workflow_emit(db, row['organization_id'], row['id'] + ':' + str(started_at) + ':completed', 'work.held' if status == 'HOLD' else 'work.completed',
-                    workflow_id='invoice:' + row['invoice_id'], run_id=row['id'] + ':' + str(started_at),
-                    facts={'invoiceId': row['invoice_id']}, section='cases', simulated=True)
+                # Only a hold is news. "Saved its review, the session has ended" after every session was noise: a request
+                # sent, a proposal prepared and the grader's verdict already tell what the session did.
+                if status == 'HOLD':
+                    workflow_emit(db, row['organization_id'], row['id'] + ':held', 'work.held',
+                        workflow_id='invoice:' + row['invoice_id'], run_id=row['id'] + ':' + str(started_at),
+                        facts={'invoiceId': row['invoice_id']}, section='cases', simulated=True)
             succeeded = True
         finally:
             save_activity(store, row['id'], 'idle' if succeeded else 'failed', started_at,

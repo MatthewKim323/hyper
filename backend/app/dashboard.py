@@ -17,6 +17,8 @@ You are the conversational coordinator. Answer quick questions directly; use sta
 The user can point at the dashboard while speaking. When they say this, that, these, here, or ask about something on screen without naming it, call get_pointer_context before answering; it returns what their pointer was on, as untrusted data. If it returns nothing pointed at, ask what they mean. When they ask to open or go to a dashboard section, call navigate_section. When they ask to see, open or pull up a specific document or invoice, open it for them rather than only describing it: call open_source_document with a source ID you already hold from search_evidence or get_source, or open_payable_case with a case ID from the payable tools. Never guess an ID; if you do not have one, look it up first. Opening only displays something the user can already see, and never approves, posts or changes anything. When they ask to see, chart, plot or graph figures, use compose_financial_artifact; the dashboard draws the returned chart, so describe it in one sentence instead of reading numbers aloud.
 Your conversation survives reconnects. Only recent history is loaded automatically. Use read_conversation_history to retrieve older turns when needed; say when evidence is missing rather than inventing memories. Do not read JSON or tool syntax aloud. Tool results describe saved state, not guaranteed current external facts.'''
 
+PROMPT += '''\nYou are the CFO of a finance team that is working right now. When the user asks what is happening, what needs to be done, how the agents are doing, what went wrong, what was learned, or greets you with anything like "what do we need to do", call get_live_activity before answering, then brief them the way a CFO briefs an owner: first what is waiting for their decision, by invoice; then what the team put on hold and why; then any mistake the grader caught and the lesson written from it; then the score and tier if they want numbers. Name invoices. Be direct and specific, never generic: do not ask "how can I assist you" when there is live work to report. If nothing is in progress, say so plainly. The suppliers and internal desks in that activity are simulated: say so once if it matters, not in every sentence.'''
+
 PROMPT += '''\nWhen a financial concern is foregrounded, the application presents exactly three Jev-reviewed options. Call get_active_decision to read their current exact text before explaining a numbered choice. The application records explicit user selections and custom directives separately, then its scoped worker executes permitted investigation and preparation. Never choose for the user or duplicate an accepted decision. A question about an option is not a selection. Explain uncertainty and existing approval requirements honestly.'''
 
 SECTIONS = ('overview', 'cases', 'evidence', 'activity', 'identity', 'review', 'timeline', 'benchmarks')
@@ -42,6 +44,44 @@ class Pointer(StrictModel):
     area: Rect
     viewport: Rect
     referents: list[Referent] = Field(max_length=12)
+
+class LiveWindow(StrictModel):
+    minutes: int = Field(default=15, ge=1, le=240, description='How far back to look for milestones.')
+
+
+def live_activity(store, oid, minutes=15):
+    """The live loop as a CFO would be briefed on it. Every sentence here was written by the application from
+    recorded facts (workflow narrations, the grader's outcome, audit findings); none of it is a supplier's words."""
+    from sqlalchemy import select
+    from .accounting import Accounting
+    from .counterparty import Counterparties
+    from .data_service import DataService
+    from .database import counterparty_scenarios as scenarios, workflow_events as events
+    from .workflow import MILESTONES, WHY
+    since = int(time.time() * 1000) - minutes * 60_000
+    svc = Counterparties(DataService(store, oid))
+    with store.engine.connect() as db:
+        open_rows = db.execute(select(scenarios.c.invoice_id, scenarios.c.title, scenarios.c.state, scenarios.c.created_at).where(
+            scenarios.c.organization_id == oid, scenarios.c.status == 'open').order_by(scenarios.c.created_at).limit(12)).mappings().all()
+        recent = db.execute(select(events.c.kind, events.c.event, events.c.recorded_at).where(events.c.organization_id == oid, events.c.recorded_at >= since,
+            events.c.kind.in_(sorted(MILESTONES | {'proposal.prepared', 'approval.recorded'}))).order_by(events.c.sequence.desc()).limit(14)).mappings().all()
+        graded = db.execute(select(scenarios.c.invoice_id, scenarios.c.family, scenarios.c.outcome, scenarios.c.facts, scenarios.c.scored_at).where(
+            scenarios.c.organization_id == oid, scenarios.c.status == 'scored', scenarios.c.outcome.in_(['fail', 'timeout'])).order_by(scenarios.c.scored_at.desc()).limit(3)).mappings().all()
+    try: waiting = [p for p in Accounting(store, oid).list_proposals(30)['proposals'] if p['status'] == 'DRAFT']
+    except Exception: waiting = []
+    board = svc.scoreboard()
+    ago = lambda ms: f"{max(0, int((time.time() * 1000 - ms) / 60000))} min ago"
+    return {
+        'simulated_counterparties': True,
+        'waiting_for_the_owner': [{'invoice_id': p['payload'].get('invoice_id'), 'net_payable_cents': p['payload'].get('net_payable_cents'), 'all_checks_pass': all(c['ok'] for c in p['checks'])} for p in waiting[:8]],
+        'in_progress': [{'invoice_id': r['invoice_id'], 'worker_status': (r['state'].get('agent') or {}).get('status', 'NEW'), 'requests_sent': r['state'].get('requests', 0), 'opened': ago(r['created_at'])} for r in open_rows],
+        'recent_milestones': [{'when': ago(r['recorded_at']), 'kind': r['kind'], 'what': r['event']['narration']['text']} for r in recent],
+        'score': {'graded': board['scored'], 'correct': board['correct'], 'wrong_releases': board['wrong_releases'], 'adversary_tier': board['level'], 'lessons_written': board['lessons_learned']},
+        'recent_mistakes': [{'invoice_id': r['invoice_id'], 'when': ago(r['scored_at']), 'outcome': 'wrong release' if r['outcome'] == 'fail' else 'ran out of time',
+                             'audit_finding': (r['facts'] or {}).get('postmortem') or WHY.get(r['family'])} for r in graded],
+        'lessons_from_mistakes': [m['lesson'] for m in svc.memory(12) if m['from_a_miss']][:4],
+    }
+
 
 class NoArguments(StrictModel):
     pass
@@ -69,6 +109,7 @@ class HistoryQuery(StrictModel):
     limit: int = Field(default=10, ge=1, le=20)
 
 DESCRIPTIONS = {
+    'get_live_activity': 'What the accounts-payable team is doing right now and what it has learned: invoices waiting on someone, proposals waiting for the owner, the last milestones (requests sent, holds, the independent grader\'s verdicts, audit findings), the running score and tier, and the lessons written from mistakes. Call this first whenever the user asks what is happening, what needs doing, how the agents are doing, what went wrong, or what was learned. Read-only. The work it describes is against simulated suppliers and says so.',
     'get_active_decision': 'Read the currently foregrounded concern and its exact reviewed options. Read-only; never selects or executes an option.',
     'start_investigation': 'Queue a user-requested read-only Devin investigation. Requires stable request_key, title, objective; optional known source_ids. Returns task ID/status. Never infer completion or bypass a paused dispatcher.',
     'get_investigation': 'Read an organization-scoped investigation task, its status, error and cited result by task_id.',
@@ -80,12 +121,30 @@ DESCRIPTIONS = {
     'open_payable_case': 'Open one payable case on the dashboard, exactly as clicking its row would. Use when the user asks to see, open or pull up a specific invoice or case. Opening shows the recomputed amounts and blocking issues; it never approves anything.',
 }
 
+def devin_enabled():
+    """Devin is an optional worker. With it off, offering to queue a Devin investigation promises work nobody will do."""
+    import os
+    return os.getenv('DEVIN_WORKER_ENABLED', 'false').lower() == 'true'
+
+
+DEVIN_TOOLS = {'start_investigation', 'get_investigation', 'get_agent_activity'}
+
+
+def prompt():
+    if devin_enabled(): return PROMPT
+    # Drop the paragraphs that describe delegating to Devin or working in a Devin workspace.
+    kept = [line for line in PROMPT.split('\n') if 'Devin' not in line]
+    return '\n'.join(kept) + '\nYou have no background workers to delegate to. Answer from your tools, and say so plainly when something would need longer work than you can do in this conversation.'
+
+
 def definitions():
     return [{'name': name, 'description': description,
-             'parameters': {'get_active_decision':NoArguments,'read_conversation_history':HistoryQuery,'get_agent_activity':Page,'start_investigation':Investigation,'get_investigation':TaskID,'get_pointer_context':NoArguments,'navigate_section':Navigate,'open_source_document':OpenSource,'open_payable_case':OpenCase}[name].model_json_schema(),
-             'defer_until_eot': True} for name, description in DESCRIPTIONS.items()]
+             'parameters': {'get_live_activity':LiveWindow,'get_active_decision':NoArguments,'read_conversation_history':HistoryQuery,'get_agent_activity':Page,'start_investigation':Investigation,'get_investigation':TaskID,'get_pointer_context':NoArguments,'navigate_section':Navigate,'open_source_document':OpenSource,'open_payable_case':OpenCase}[name].model_json_schema(),
+             'defer_until_eot': True} for name, description in DESCRIPTIONS.items() if devin_enabled() or name not in DEVIN_TOOLS]
 
 def execute(store, state, name, args, pointer=None, decision_context=None):
+    if name == 'get_live_activity':
+        return live_activity(store, state['organization_id'], LiveWindow.model_validate(args).minutes)
     if name == 'get_active_decision':
         NoArguments.model_validate(args)
         if not decision_context:

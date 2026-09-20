@@ -44,7 +44,8 @@ def test_dashboard_prompt_context_and_onboarding_isolation(client):
     config = voice.settings(state)
     names = {f['name'] for f in config['agent']['think']['functions']}
     assert 'update_context' not in names
-    assert {'read_conversation_history','get_agent_activity','query_financials'} <= names
+    # Devin's tools are offered only when Devin is on (DEVIN_WORKER_ENABLED); the live briefing always is.
+    assert {'read_conversation_history','get_live_activity','query_financials'} <= names and 'get_agent_activity' not in names
     assert not {'claim_concern', 'renew_concern_claim', 'resolve_concern'} & names
     assert len(json.dumps(config['agent']['context']['messages'])) < 65000
     assert 'NOT onboarding' in config['agent']['think']['prompt']
@@ -339,3 +340,36 @@ def test_navigate_section_reaches_every_station_the_router_serves():
     assert set(enum) == set(dashboard.SECTIONS)
     assert dashboard.execute(None, {}, 'navigate_section', {'section': 'identity'}) == {
         'section': 'identity', 'opened': True}
+
+
+def test_the_cfo_can_brief_on_live_work_and_never_offers_devin_when_it_is_off(tmp_path, monkeypatch):
+    """The orb answers "what do we need to do" from what the team is doing now, not with a generic greeting."""
+    from sqlalchemy import update
+    from app import dashboard
+    from app.counterparty import Counterparties
+    from app.data_service import DataService
+    from app.database import counterparty_scenarios
+    from app.store import Store
+
+    class Objects:
+        def __init__(self): self.values = {}
+        def put(self, key, body, content_type): self.values[key] = body
+        def read(self, key): return self.values[key]
+
+    monkeypatch.delenv('DEVIN_WORKER_ENABLED', raising=False)
+    store = Store(str(tmp_path / 'live.db'))
+    oid = store.workspace('alice')['id']
+    svc = Counterparties(DataService(store, oid, objects=Objects()))
+    missed, working = svc.spawn('goods_returned', 'adversary', seed=1), svc.spawn('price_only', 'adversary', seed=2)
+    with store.engine.begin() as db:
+        db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == missed['id']).values(status='scored', outcome='fail', scored_at=5))
+    svc.add_lesson(missed['id'], 'goods_returned', 'Goods on their way back are not paid for.')
+    brief = dashboard.execute(store, {'organization_id': oid}, 'get_live_activity', {})
+    assert [c['invoice_id'] for c in brief['in_progress']] == [working['invoice_id']]
+    assert brief['recent_mistakes'][0]['invoice_id'] == missed['invoice_id'] and 'returned' in brief['recent_mistakes'][0]['audit_finding']
+    assert brief['lessons_from_mistakes'] == ['Goods on their way back are not paid for.'] and brief['score']['wrong_releases'] == 1
+    assert brief['simulated_counterparties'] is True
+    names = [d['name'] for d in dashboard.definitions()]
+    assert names[0] == 'get_live_activity' and not (set(names) & dashboard.DEVIN_TOOLS) and 'devin' not in dashboard.prompt().lower()
+    monkeypatch.setenv('DEVIN_WORKER_ENABLED', 'true')
+    assert dashboard.DEVIN_TOOLS <= {d['name'] for d in dashboard.definitions()} and 'Devin' in dashboard.prompt()

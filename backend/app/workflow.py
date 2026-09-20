@@ -156,9 +156,9 @@ def sentence(event):
         'decision.accepted': 'The decision is recorded. Its next step is queued for the financial worker.',
     }
     text = lines[kind]
-    if event['simulated']:
-        # An identifier that opens the sentence keeps its capitals: "iNV-0057 arrived" is not a word.
-        text = 'In the simulation, ' + (text if text.startswith(invoice) and invoice != 'the invoice' else text[0].lower() + text[1:])
+    # Simulated work is marked on the event (`simulated`), not repeated in every spoken sentence: said forty times
+    # an hour it stops being a disclosure and becomes noise. Whoever presents the feed says it once, and the CFO
+    # says so when asked.
     if len(text) > 240:
         raise ValueError('Narration exceeds one short utterance')
     return text
