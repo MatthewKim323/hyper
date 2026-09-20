@@ -80,7 +80,8 @@ def mirror(store, data_factory):
     for treatment, control in pairs().items():
         with store.engine.begin() as db:
             insert_ignore(db, organizations, dict(id=control, name='Baseline without memory'))
-        AgentService(store, control).enable(True)
+        agents = AgentService(store, control)
+        if not agents.controller().get('enabled'): agents.enable(True)  # enabling writes an event, so only once
         with store.engine.connect() as db:
             sent = db.execute(select(scenarios.c.id, scenarios.c.family, scenarios.c.difficulty, scenarios.c.created_at).where(
                 scenarios.c.organization_id == treatment, scenarios.c.created_by == 'adversary').order_by(scenarios.c.created_at)).all()
