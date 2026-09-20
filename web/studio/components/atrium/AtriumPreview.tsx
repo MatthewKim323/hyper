@@ -21,7 +21,12 @@ function openStation(station: AtriumStation) {
   window.dispatchEvent(new CustomEvent("hyper:station-select", { detail: { station } }));
 }
 
-export default function AtriumPreview() {
+/**
+ * `warm` mounts the whole world (download, decode, environment maps, shader compile, first frame)
+ * without showing it or taking the gallery's renderer, so revealing it later costs nothing.
+ * The same instance is kept when `warm` turns off; nothing reloads.
+ */
+export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const plane = useRef<HTMLDivElement>(null);
@@ -38,7 +43,7 @@ export default function AtriumPreview() {
 
   useEffect(() => {
     const menu = store.ProjectMenu;
-    if (!menu) return;
+    if (!menu || warm) return;
     const previousControl = menu.allowControl;
     const previousRendering = menu.renderPass?.enabled;
     let active = true;
@@ -61,7 +66,7 @@ export default function AtriumPreview() {
         if (menu.renderPass && previousRendering !== undefined) menu.renderPass.enabled = previousRendering;
       }
     };
-  }, []);
+  }, [warm]);
 
   useEffect(() => {
     stationsRef.current = stations;
@@ -74,9 +79,10 @@ export default function AtriumPreview() {
   }, [stations]);
 
   useEffect(() => {
-    motionRef.current = reducedMotion;
-    renderer.current?.setPaused(reducedMotion);
-  }, [reducedMotion]);
+    // Hidden means paused: the scene still prepares its first frame, then stops drawing.
+    motionRef.current = reducedMotion || warm;
+    renderer.current?.setPaused(motionRef.current);
+  }, [reducedMotion, warm]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -97,7 +103,7 @@ export default function AtriumPreview() {
     update();
     window.addEventListener("hyper:section-change", update);
     element?.addEventListener("webglcontextlost", fail);
-    const timeout = window.setTimeout(() => { fail(); controller.abort(); }, 20000);
+    const timeout = window.setTimeout(() => { fail(); controller.abort(); }, 45000);
     async function mount() {
       if (!element) return;
       try {
@@ -115,7 +121,12 @@ export default function AtriumPreview() {
         renderer.current = instance;
         instance.setPaused(motionRef.current);
         await instance.setStations(stationsRef.current);
-        if (active && !controller.signal.aborted && renderer.current === instance) setFailed(false);
+        if (active && !controller.signal.aborted && renderer.current === instance) {
+          setFailed(false);
+          // The intro loader and the handoff both wait on this.
+          document.documentElement.dataset.atriumReady = "true";
+          window.dispatchEvent(new Event("hyper:atrium-ready"));
+        }
       } catch (error) {
         if (process.env.NODE_ENV === "development") console.error("[atrium] Scene initialization failed", error);
         fail();
@@ -173,7 +184,7 @@ export default function AtriumPreview() {
 
   const planeStyle = manifest ? { "--aspect": manifest.width / manifest.height } as CSSProperties : undefined;
   return <>
-    <div ref={scroller} className={styles.atrium} role="region" aria-label="Hyper finance atrium" tabIndex={0}
+    <div ref={scroller} className={styles.atrium} data-warm={warm || undefined} aria-hidden={warm || undefined} inert={warm} role="region" aria-label="Hyper finance atrium" tabIndex={0}
       onKeyDown={event => {
         if (event.target !== event.currentTarget || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
         event.preventDefault();
@@ -238,10 +249,10 @@ export default function AtriumPreview() {
       </div>
       <span className={styles.keyboardHint}>← → Explore the room</span>
     </div>
-    {failed && !covered && <nav className={styles.fallback} aria-label="Workspace navigation">
+    {failed && !covered && !warm && <nav className={styles.fallback} aria-label="Workspace navigation">
       <span className={styles.fallbackNote} role="status">The 3D view is unavailable. Your workspaces are still here.</span>
       <div>{stations.map(station => <button type="button" key={station.id} data-cursor="hide" onClick={() => openStation(station)}>{station.label} <span aria-hidden="true">↗</span></button>)}</div>
     </nav>}
-    {covered && <button type="button" className={styles.back} data-cursor="hide" onClick={() => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "overview" } }))}>← Back to atrium</button>}
+    {covered && !warm && <button type="button" className={styles.back} data-cursor="hide" onClick={() => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "overview" } }))}>← Back to atrium</button>}
   </>;
 }

@@ -142,3 +142,6 @@
   .hotspot:hover .arrowGlyph,
   .hotspot[data-pressed="true"] .arrowGlyph { transform: none; }
 }
+
+/* Preloaded but not shown yet. Keeps its layout size so the renderer sizes and compiles for real. */
+.atrium[data-warm] { visibility: hidden; pointer-events: none; }

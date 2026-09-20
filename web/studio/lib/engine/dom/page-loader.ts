@@ -9,6 +9,7 @@ import { E } from "../core/event-bus";
 // Stage timings (ms) and springs, in the order the stages run.
 const TO_70 = { type: "spring", duration: 1.6, bounce: 0 } as const;
 const STAGE = { type: "spring", duration: 1.1, bounce: 0 } as const;
+const WORLD_WAIT_CAP = 15000;
 const HOLD_70 = 1500;
 const HOLD_FULL = 600;
 const HOLD_END = 600;
@@ -82,7 +83,14 @@ export class PageLoader {
     }).then(() => wait(COUNT_PAUSE));
 
     // The fill to 100% waits for the scene's assets, never less than the authored hold.
-    await Promise.all([wait(HOLD_70), this.assetsReady]);
+    // The 3D world preloads hidden behind this layer. Hold here until it has rendered once, so
+    // nothing loads later. Capped: a slow or failed world must not trap the visitor on the loader.
+    const worldReady = new Promise<void>((resolve) => {
+      if (document.documentElement.dataset.atriumReady === "true") return resolve();
+      window.addEventListener("hyper:atrium-ready", () => resolve(), { once: true });
+      setTimeout(resolve, WORLD_WAIT_CAP);
+    });
+    await Promise.all([wait(HOLD_70), this.assetsReady, worldReady]);
     animate(white, { width: "100%" }, STAGE);
     wait(200).then(() => counter).then(() =>
       animate(70, 100, { duration: COUNT_REST, ease: COUNT_EASE, onUpdate: (v) => this.setCount(v) }),

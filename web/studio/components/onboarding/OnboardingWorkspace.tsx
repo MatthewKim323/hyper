@@ -228,6 +228,11 @@ export default function OnboardingWorkspace() {
     }
   }, [showDashboard, pathname, sceneReady]);
 
-  if (!visible) return null;
-  return showDashboard ? <AtriumPreview /> : <OnboardingSession onSkip={() => setSkipped(true)} />;
+  // The world mounts once, hidden, as soon as the page hydrates (so during the first loader, on
+  // any route) and is only revealed here. Remounting it at the handoff is what used to freeze.
+  if (!hydrated) return null;
+  return <>
+    <AtriumPreview warm={!(visible && showDashboard)} />
+    {visible && !showDashboard && <OnboardingSession onSkip={() => setSkipped(true)} />}
+  </>;
 }
