@@ -346,3 +346,18 @@ def test_an_invoice_number_that_opens_a_sentence_keeps_its_capitals():
     say = lambda kind, **facts: workflow.sentence({'kind': kind, 'facts': facts, 'actor': {'kind': 'engine', 'id': 'engine'}, 'simulated': True})
     assert say('invoice.received', invoiceId='INV-0057').startswith('In the simulation, INV-0057 arrived')
     assert say('work.started', invoiceId='INV-0057').startswith('In the simulation, accounts payable has started')
+
+
+def test_stage_chatter_cannot_cut_off_a_milestone_and_milestones_are_spoken_first(world):
+    store, oid, factory, svc = world
+    say = lambda key, kind, **facts: workflow.emit(db, oid, key, kind, workflow_id='invoice:INV-9', facts={'invoiceId': 'INV-9', **facts}, simulated=True)['narration']
+    with store.engine.begin() as db:
+        asked = say('a', 'evidence.requested', party='supplier', requestCategory='price_correction')
+        stage = say('b', 'work.stage', stage='checks')
+        later = say('c', 'work.stage', stage='credit')
+        held = say('d', 'work.held')
+        graded = say('e', 'case.graded', outcome='correct_hold', trap='goods_returned')
+    assert stage['supersessionKey'] == later['supersessionKey'], 'stages still replace each other'
+    assert len({asked['supersessionKey'], held['supersessionKey'], graded['supersessionKey'], stage['supersessionKey']}) == 4, 'a stage shares a key with no milestone, so it cannot interrupt one'
+    assert min(asked['priority'], held['priority'], graded['priority']) > stage['priority']
+    assert graded['expiresAt'] - graded['createdAt'] > stage['expiresAt'] - stage['createdAt'], 'a verdict waits its turn, a stale stage is dropped'

@@ -70,6 +70,9 @@ KINDS = {
     'concern.card_ready': ('needs_input', {'concernId', 'sourceIds'}),
     'decision.accepted': ('queued', {'concernId', 'decisionId', 'optionId', 'jobId'}),
 }
+# What a listener should hear in full: someone was asked for something, the case was left on hold, the grader
+# ruled, a lesson was written. Everything else about a case in progress is a caption that may be skipped.
+MILESTONES = {'evidence.requested', 'work.held', 'case.graded', 'audit.finding', 'lesson.learned'}
 ACTORS = {'ap': ('worker', 'Accounts payable'), 'cfo': ('cfo', 'The CFO'),
           'astra': ('worker', 'The financial worker'), 'devin': ('specialist', 'Devin'),
           'elastic': ('specialist', 'Elastic'), 'engine': ('engine', 'The accounting engine')}
@@ -209,12 +212,17 @@ def emit(db, oid, key, kind, *, workflow_id, actor='ap', state=None, facts=None,
     if recipient is not None:
         event['recipient'] = identity(recipient)
     text = sentence(event)
-    priority = 3 if default_state in ('needs_input', 'failed', 'unknown') else 2 if kind in ('approval.recorded', 'execution.completed', 'case.graded', 'lesson.learned') else 1
+    # Chatter and milestones. A worker emits a stage every second or two, and a listener cuts a sentence off when
+    # something newer arrives under the same supersession key, so on one shared key the CFO never finished a sentence
+    # about an invoice being worked. Stages still replace each other. A milestone has its own key: a stage cannot cut
+    # it off, only a newer milestone of the same kind for the same invoice can, and milestones are spoken first.
+    milestone = kind in MILESTONES
+    priority = 3 if default_state in ('needs_input', 'failed', 'unknown') else 2 if milestone or kind in ('approval.recorded', 'execution.completed') else 1
     narration = {'id': 'cfon_' + eid[4:], 'eventIds': [eid], 'text': text,
                  'textHash': hashlib.sha256(text.encode()).hexdigest(), 'templateVersion': 1,
                  'priority': priority, 'createdAt': stamp,
                  'expiresAt': stamp + (120_000 if priority > 1 else 15_000),
-                 'supersessionKey': workflow_id + (':proposal' if kind in ('proposal.prepared', 'approval.recorded') else ':activity')}
+                 'supersessionKey': workflow_id + (':proposal' if kind in ('proposal.prepared', 'approval.recorded') else ':' + kind if milestone else ':activity')}
     event['narration'] = narration
     db.execute(update(heads).where(heads.c.organization_id == oid).values(sequence=current + 1))
     db.execute(events.insert().values(id=eid, organization_id=oid, sequence=current + 1, event_key=key,
