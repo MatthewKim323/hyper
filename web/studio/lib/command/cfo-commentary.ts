@@ -18,6 +18,16 @@ export function eligible(event: WorkflowEvent, mode: CommentaryMode, now: number
   return mode !== "muted" && (mode !== "essential" || narration.priority >= 2)
     && (event.replay || narration.expiresAt === null || narration.expiresAt === undefined || narration.expiresAt > now);
 }
+/** Autoplay and config waits retain the utterance until output can actually start. */
+export function takeNarration(queue: WorkflowEvent[], decisions: WorkflowEvent[], state: { audioEnabled: boolean | null; playbackEnabled: boolean; decisionActive: boolean }) {
+  if (state.audioEnabled === null) return null;
+  const index = queue.findIndex(event => !state.decisionActive || event.narration.priority >= 3 || event.kind === "cfo.greeting");
+  const event = decisions[0] ?? queue[index];
+  if (!event) return null;
+  const delivery = !state.audioEnabled ? "caption-only" : !state.playbackEnabled ? "needs-audio" : "play";
+  if (delivery === "needs-audio") return { event, delivery, queue, decisions };
+  return { event, delivery, queue: decisions.length ? queue : queue.filter((_, position) => position !== index), decisions: decisions.length ? decisions.slice(1) : decisions };
+}
 /** Supersession and speech-time bounds are deterministic, independent of network speed. */
 export function queueNarrations(current: readonly WorkflowEvent[], incoming: readonly WorkflowEvent[], mode: CommentaryMode, now: number): WorkflowEvent[] {
   const byKey = new Map<string, WorkflowEvent>();

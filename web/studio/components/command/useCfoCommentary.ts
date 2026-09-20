@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { OnboardingVoiceClient } from "@/lib/onboarding/voice-client";
 import { cfoJson, cfoRequest, CfoApiError } from "@/lib/command/cfo-api";
-import { eligible, mergeNarrationHistory, queueNarrations, readWorkflowPage, type CommentaryMode, type NarrationRecord, type WorkflowEvent } from "@/lib/command/cfo-commentary";
+import { eligible, mergeNarrationHistory, queueNarrations, readWorkflowPage, takeNarration, type CommentaryMode, type NarrationRecord, type WorkflowEvent } from "@/lib/command/cfo-commentary";
 
 type State = { mode: CommentaryMode; history: NarrationRecord[]; caption: NarrationRecord | null; error: string; needsAudio: boolean; leader: boolean; connected: boolean };
 type DecisionCue = { event_id: string; text: string; textHash: string };
@@ -16,14 +16,15 @@ export function useCfoCommentary(scope: string, getClient: () => OnboardingVoice
     if (!scope) return;
     const lifetime = new AbortController();
     let decisionQueue: WorkflowEvent[] = [], decisionKey = "";
-    let lastCaption: WorkflowEvent | null = null;
+    let lastCaption: WorkflowEvent | null = null, greetingEvent: WorkflowEvent | null = null;
     let queue: WorkflowEvent[] = [], cursor: number | null = null, workspace = "", disposed = false, occupied = false, leader = false;
     let playing: AbortController | null = null, active: WorkflowEvent | null = null, timer: ReturnType<typeof setTimeout>, pollTimer: ReturnType<typeof setTimeout>;
     let lockAbort: AbortController | null = null, releaseLock: (() => void) | null = null;
-    let conversationBusy = false, userQuietUntil = 0, audioEnabled = false, hydrated = false;
+    let conversationBusy = false, userQuietUntil = 0, audioEnabled: boolean | null = null, hydrated = false, loadingConfig = false;
+    let configTimer: ReturnType<typeof setTimeout> | undefined;
     const clientId = crypto.randomUUID();
     const seen = new Set<string>();
-    const publish = (patch: Partial<State>) => { if (!disposed) setState(value => ({ ...value, ...patch })); };
+    const publish = (patch: Partial<State>) => { if (!disposed) setState(value => Object.entries(patch).every(([key, next]) => value[key as keyof State] === next) ? value : { ...value, ...patch }); };
     const mark = (event: WorkflowEvent, status: NarrationRecord["status"], caption = false) => {
       if (disposed) return;
       if (caption) lastCaption = event;
@@ -39,11 +40,15 @@ export function useCfoCommentary(scope: string, getClient: () => OnboardingVoice
       queue = queueNarrations(queue, [], mode.current, Date.now());
       const client = getClient();
       if (!client || client.hasQueuedAudio()) return;
-      const index = queue.findIndex(item => !decision.current || item.narration.priority >= 3);
-      const event = decisionQueue.shift() ?? (index < 0 ? null : queue.splice(index, 1)[0]);
-      if (!event) return;
-      if (!audioEnabled) { mark(event, "caption-only", true); return; }
-      if (!client.playbackEnabled()) { mark(event, "caption-only", true); publish({ needsAudio: true }); return; }
+      const next = takeNarration(queue, decisionQueue, { audioEnabled, playbackEnabled: client.playbackEnabled(), decisionActive: decision.current });
+      if (!next) return;
+      const { event, delivery } = next;
+      queue = next.queue; decisionQueue = next.decisions;
+      if (delivery === "caption-only") { mark(event, "caption-only", true); return; }
+      if (delivery === "needs-audio") {
+        if (lastCaption?.id !== event.id) mark(event, "caption-only", true);
+        publish({ needsAudio: true }); return;
+      }
       occupied = true; active = event;
       const abort = new AbortController(); playing = abort;
       const signal = AbortSignal.any([lifetime.signal, abort.signal, AbortSignal.timeout(40000)]);
@@ -132,8 +137,11 @@ export function useCfoCommentary(scope: string, getClient: () => OnboardingVoice
       interrupt,
       conversation: busy => { conversationBusy = busy; if (busy) { interrupt(); publish({ caption: null }); } },
       wake: () => {
-        publish({ needsAudio: false, error: "" });
-        if (lastCaption && !occupied && (lastCaption.kind === "cfo.greeting" || eligible(lastCaption, mode.current, Date.now()))) queue.unshift({ ...lastCaption, replay: true });
+        publish({ needsAudio: audioEnabled !== false && !getClient()?.playbackEnabled(), error: audioEnabled === false ? "CFO voice is unavailable. Captions are still live." : "" });
+        if (audioEnabled === null) void loadConfig();
+        const replay = lastCaption ?? greetingEvent;
+        if (replay && !occupied && !decisionQueue.some(item => item.id === replay.id) && !queue.some(item => item.id === replay.id)
+          && (replay.kind === "cfo.greeting" || eligible(replay, mode.current, Date.now()))) queue.unshift({ ...replay, replay: true });
         void drain();
       },
       decisions: (key, cues) => {
@@ -149,16 +157,28 @@ export function useCfoCommentary(scope: string, getClient: () => OnboardingVoice
     acquire(); void poll(); tick();
     document.addEventListener("visibilitychange", visibility);
     // The introduction uses the same literal REST route; it never starts STT.
-    void cfoJson<{ audio_enabled: boolean; greeting?: { event_id: string; text: string; textHash: string } }>("/world/cfo/config", { signal: lifetime.signal }).then(config => {
-      if (disposed) return;
-      audioEnabled = config.audio_enabled;
-      if (!config.audio_enabled || !config.greeting) return;
-      const greeting = config.greeting;
-      const event: WorkflowEvent = { id: greeting.event_id, sequence: 0, kind: "cfo.greeting", workflowId: "cfo", state: "ready", narration: { id: greeting.event_id, eventIds: [], text: greeting.text, textHash: greeting.textHash, templateVersion: 1, priority: 2, createdAt: Date.now(), expiresAt: Date.now() + 15000, supersessionKey: "cfo.greeting" } };
-      collect([event], false);
-    }).catch(() => {});
+    async function loadConfig() {
+      if (loadingConfig || disposed || audioEnabled !== null) return;
+      loadingConfig = true; clearTimeout(configTimer);
+      try {
+        const config = await cfoJson<{ audio_enabled: boolean; greeting?: { event_id: string; text: string; textHash: string } }>("/world/cfo/config", { signal: AbortSignal.any([lifetime.signal, AbortSignal.timeout(12000)]) });
+        if (disposed) return;
+        audioEnabled = config.audio_enabled;
+        publish({ error: config.audio_enabled ? "" : "CFO voice is unavailable. Captions are still live.", needsAudio: config.audio_enabled && !getClient()?.playbackEnabled() });
+        if (!config.audio_enabled || !config.greeting) return;
+        const greeting = config.greeting;
+        greetingEvent = { id: greeting.event_id, sequence: 0, kind: "cfo.greeting", workflowId: "cfo", state: "ready", narration: { id: greeting.event_id, eventIds: [], text: greeting.text, textHash: greeting.textHash, templateVersion: 1, priority: 2, createdAt: Date.now(), expiresAt: Date.now() + 15000, supersessionKey: "cfo.greeting" } };
+        collect([greetingEvent], false);
+      } catch (error) {
+        if (!disposed) {
+          publish({ error: error instanceof Error ? error.message : "CFO voice is reconnecting." });
+          configTimer = setTimeout(loadConfig, 4000);
+        }
+      } finally { loadingConfig = false; }
+    }
+    void loadConfig();
     return () => {
-      disposed = true; lifetime.abort(); playing?.abort(); clearTimeout(timer); clearTimeout(pollTimer);
+      disposed = true; lifetime.abort(); playing?.abort(); clearTimeout(timer); clearTimeout(pollTimer); clearTimeout(configTimer);
       lockAbort?.abort(); releaseLock?.(); document.removeEventListener("visibilitychange", visibility);
       if (runtime.current === owner) runtime.current = null;
     };

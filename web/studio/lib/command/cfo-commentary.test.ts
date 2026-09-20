@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import { strict as assert } from "node:assert";
-import { eligible, mergeNarrationHistory, queueNarrations, readWorkflowPage, type WorkflowEvent } from "./cfo-commentary";
+import { eligible, mergeNarrationHistory, queueNarrations, readWorkflowPage, takeNarration, type WorkflowEvent } from "./cfo-commentary";
 import { decisionCommand, decisionContext, decisionProgress, hasReviewedOptions, parseDecisionChoice, type DecisionConcern } from "./cfo-decisions";
 const event = (sequence: number, priority = 1, key = String(sequence)): WorkflowEvent => ({ id: String(sequence), sequence, kind: "work.started", workflowId: "case", state: "started", narration: { id: `n${sequence}`, eventIds: [String(sequence)], text: "The invoice review has started.", textHash: "hash", templateVersion: 1, priority, createdAt: 0, expiresAt: 10000, supersessionKey: key } });
 test("duplicate/reordered activity and same-stage supersession produce one latest utterance", () => {
@@ -26,6 +26,47 @@ test("malformed feed never becomes speech", () => {
   assert.equal(readWorkflowPage(page).next_after, 1);
   assert.throws(() => readWorkflowPage({ ...page, events: [{ ...event(1), narration: { text: "hello" } }] }));
   assert.throws(() => readWorkflowPage({ ...page, next_after: NaN }));
+});
+test("voice config loading cannot discard the greeting or decision cues", () => {
+  const queue = [event(1, 2)], decisions = [event(2, 3), event(3, 3)];
+  assert.equal(takeNarration(queue, decisions, { audioEnabled: null, playbackEnabled: true, decisionActive: true }), null);
+  assert.equal(queue.length, 1); assert.equal(decisions.length, 2);
+  const ready = takeNarration(queue, decisions, { audioEnabled: true, playbackEnabled: true, decisionActive: true })!;
+  assert.equal(ready.event.id, "2"); assert.equal(ready.delivery, "play");
+  assert.deepEqual(ready.decisions.map(item => item.id), ["3"]);
+});
+test("an autoplay lock preserves all three choices until the orb gesture enables playback", () => {
+  const queue = [event(1, 2)], decisions = [event(2, 3), event(3, 3), event(4, 3)];
+  for (let tick = 0; tick < 60; tick++) {
+    const waiting = takeNarration(queue, decisions, { audioEnabled: true, playbackEnabled: false, decisionActive: true })!;
+    assert.equal(waiting.delivery, "needs-audio"); assert.equal(waiting.event.id, "2");
+    assert.equal(waiting.queue, queue); assert.equal(waiting.decisions, decisions);
+  }
+  const ready = takeNarration(queue, decisions, { audioEnabled: true, playbackEnabled: true, decisionActive: true })!;
+  assert.equal(ready.event.id, "2"); assert.equal(ready.delivery, "play");
+  assert.deepEqual(ready.decisions.map(item => item.id), ["3", "4"]);
+});
+test("a pending decision does not silence the introduction but still holds routine chatter", () => {
+  const greeting = { ...event(1, 2), kind: "cfo.greeting" };
+  const state = { audioEnabled: true, playbackEnabled: true, decisionActive: true };
+  const ready = takeNarration([event(2), greeting], [], state)!;
+  assert.equal(ready.event, greeting); assert.equal(ready.delivery, "play");
+  assert.equal(takeNarration(ready.queue, ready.decisions, state), null);
+  assert.equal(takeNarration(ready.queue, ready.decisions, { ...state, decisionActive: false })?.event.id, "2");
+});
+test("a late orb gesture can replay the expired greeting even with a pending decision", () => {
+  const greeting = { ...event(1, 2), kind: "cfo.greeting" };
+  assert.equal(queueNarrations([greeting], [], "demo", 16000).length, 0);
+  const replay = { ...greeting, replay: true };
+  const queue = queueNarrations([], [replay], "demo", 16000);
+  const ready = takeNarration(queue, [], { audioEnabled: true, playbackEnabled: true, decisionActive: true })!;
+  assert.equal(ready.event.id, greeting.id); assert.equal(ready.delivery, "play");
+  assert.equal(ready.event.replay, true); assert.equal(eligible(ready.event, "demo", 16000), true);
+  assert.equal(eligible(ready.event, "muted", 16000), false);
+});
+test("explicitly disabled provider audio consumes caption updates without prompting for autoplay", () => {
+  const result = takeNarration([event(1)], [], { audioEnabled: false, playbackEnabled: false, decisionActive: false })!;
+  assert.equal(result.delivery, "caption-only"); assert.equal(result.queue.length, 0);
 });
 test("numbered decisions accept explicit directives, never questions, negation or ambiguity", () => {
   for (const text of ["go with option two", "Choose 2.", "option two", "2", "please do option two please"]) assert.deepEqual(parseDecisionChoice(text), { optionId: "option_2" });

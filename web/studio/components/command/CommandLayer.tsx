@@ -87,6 +87,7 @@ function CommandSession({ scope }: { scope: string }) {
   const { interrupt: interruptCommentary, conversation: setCommentaryConversation } = commentary;
   const { context: activeDecisionContext, submit: submitDecision, acceptEvent: acceptDecisionEvent } = decision;
   const { setDecisionCues } = commentary;
+  const { enableAudio } = commentary;
   useEffect(() => {
     const key = activeDecisionContext ? `${activeDecisionContext.concernId}:${activeDecisionContext.cardRevision}:${activeDecisionContext.cardHash}` : "";
     setDecisionCues(key, activeDecisionContext ? decision.concern?.decision_cues ?? [] : []);
@@ -176,12 +177,14 @@ function CommandSession({ scope }: { scope: string }) {
 
   useEffect(() => {
     const open = (event: Event) => {
+      // The orb is an explicit playback gesture, even when entry autoplay was blocked.
+      if (!cfoOpen) void enableAudio();
       setCfoInstant(!!(event as CustomEvent<{ keyboard?: boolean }>).detail?.keyboard);
       setCfoOpen(value => !value);
     };
     window.addEventListener("hyper:cfo-toggle", open);
     return () => window.removeEventListener("hyper:cfo-toggle", open);
-  }, []);
+  }, [cfoOpen, enableAudio]);
 
   useEffect(() => {
     if (!microphoneStream) return;
