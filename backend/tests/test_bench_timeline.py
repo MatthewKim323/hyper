@@ -60,5 +60,21 @@ def test_cases_from_the_broken_sandbox_are_shown_but_never_accumulated(tmp_path,
 
 def test_hard_tier_is_its_own_paired_series(tmp_path):
     store = world(tmp_path)
-    hard = bt.memory_series(bt.graded(store.engine, 'lab'), bt.graded(store.engine, 'lab-control'), tier=3)
+    hard = bt.memory_series(bt.graded(store.engine, 'lab'), bt.graded(store.engine, 'lab-control'), tier=(3,))
     assert hard[-1]['pairs'] == 8
+
+def test_a_wrong_release_on_a_warning_never_shown_is_not_counted(tmp_path):
+    store = world(tmp_path, n=2)
+    empty = {'tool': 'get_counterparty_thread', 'result': '{"invoice_id": "INV-9", "messages": []}'}
+    seen = {'tool': 'get_counterparty_thread', 'result': '{"invoice_id": "INV-9", "messages": [{"body": "do not pay"}]}'}
+    with store.engine.begin() as db:
+        for i, (org, trace) in enumerate([('lab', [empty, seen]), ('lab', [seen]), ('lab-control', [seen])]):
+            db.execute(scenarios.insert().values(id=f'trap-{i}', organization_id=org, family='internal_hold', title='t', invoice_id=f'INV-9{i}', vendor_id='V', facts={},
+                state={'requests': 0, 'agent': {'trace': trace}}, status='scored', outcome='fail', difficulty=5,
+                created_by='mirror:trap-0' if org == 'lab-control' else 'adversary', created_at=2_000_000_000, scored_at=2_000_030_000))
+    rows = bt.graded(store.engine, 'lab')
+    assert [bt.raced(r) for r in rows if r['id'].startswith('trap')] == [True, False]
+    point = bt.exception_series(rows)[-1]
+    assert point['not_shown_warning'] == 1 and point['bucket']['wrong_releases'] == 1 and point['by_tier'] == {'5': {'n': 1, 'correct': 0}}
+    # trap-0 raced, so its pair is dropped even though the twin was shown the warning.
+    assert bt.memory_series(rows, bt.graded(store.engine, 'lab-control'), tier=bt.HARD_TIERS) == []
