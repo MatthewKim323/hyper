@@ -78,3 +78,15 @@ def test_a_wrong_release_on_a_warning_never_shown_is_not_counted(tmp_path):
     assert point['not_shown_warning'] == 1 and point['bucket']['wrong_releases'] == 1 and point['by_tier'] == {'5': {'n': 1, 'correct': 0}}
     # trap-0 raced, so its pair is dropped even though the twin was shown the warning.
     assert bt.memory_series(rows, bt.graded(store.engine, 'lab-control'), tier=bt.HARD_TIERS) == []
+
+def test_a_timeout_the_machine_caused_is_not_the_agents(tmp_path, monkeypatch):
+    store = world(tmp_path, n=2)
+    monkeypatch.setattr(bt, 'DOWN_WINDOWS', [(3_000_000_000, 3_000_600_000)])
+    with store.engine.begin() as db:
+        for i, (created, agent) in enumerate([(2_000_000_000, {}), (3_000_100_000, {'sessions': 1}), (2_000_000_000, {'sessions': 2})]):
+            db.execute(scenarios.insert().values(id=f'late-{i}', organization_id='lab', family='clean', title='t', invoice_id=f'INV-7{i}', vendor_id='V', facts={},
+                state={'requests': 0, 'agent': agent}, status='scored', outcome='timeout', difficulty=1, created_by='adversary', created_at=created, scored_at=created + 600_000))
+    rows = {r['id']: r for r in bt.graded(store.engine, 'lab')}
+    # Never opened, dealt while down, and a real one the worker had and lost.
+    assert [bt.machine_timeout(rows[f'late-{i}']) for i in range(3)] == [True, True, False]
+    assert bt.exception_series(list(rows.values()))[-1]['cumulative']['timeouts'] == 1  # only the one a worker really had and lost

@@ -43,6 +43,8 @@ EVENTS = [
     {'at': 1789887482298, 'label': 'tier 5 live'},
     {'at': 1789892340000, 'label': 'loop down (all workers died at once)'},
     {'at': 1789895460000, 'label': 'loop back up'},
+    {'at': 1789896720000, 'label': 'laptop offline, then asleep'},
+    {'at': 1789899060000, 'label': 'laptop awake'},
     {'at': 1789888077210, 'label': 'adversary leans on the newest tier'},
     {'at': 1789889366247, 'label': 'tier 6 live; memory keeps lessons from misses'},
     {'at': 1789890592692, 'label': 'sandbox fix: opening warnings delivered at spawn'},
@@ -59,7 +61,17 @@ def raced(row):
     first = next((t for t in (row['state'].get('agent') or {}).get('trace') or [] if t.get('tool') == 'get_counterparty_thread'), None)
     return bool(first) and 'messages": []' in str(first.get('result'))
 
-def counted(row): return row['created_at'] >= VALID_SINCE and not raced(row)
+# Stretches when the machine, not the agent, was the reason nothing got worked: every worker died at once, then the
+# laptop lost its network and slept. Epoch ms.
+DOWN_WINDOWS = [(1789892220000, 1789895460000), (1789896720000, 1789899060000)]
+
+def machine_timeout(row):
+    """A timeout nobody could have prevented: never opened by a worker, or dealt while the machine was down."""
+    if row['outcome'] != 'timeout': return False
+    if not (row['state'].get('agent') or {}).get('sessions'): return True
+    return any(start <= row['created_at'] <= end for start, end in DOWN_WINDOWS)
+
+def counted(row): return row['created_at'] >= VALID_SINCE and not raced(row) and not machine_timeout(row)
 CAVEATS = [
     'Tiers 1 to 4 name their own diagnosis in the case title and are saturated. Tier 5 is the only tier where a wrong release is possible, so it is the only accuracy series worth reading.',
     'Development series: no battery is held out from the worker prompt.',
@@ -131,13 +143,14 @@ def exception_series(rows, bucket_ms=BUCKET_MS, costs=None):
     buckets = {}
     for r in rows: buckets.setdefault(r['scored_at'] // bucket_ms, []).append(r)
     for bucket in sorted(buckets):
-        everything = buckets[bucket]; mine = [r for r in everything if not raced(r)]; seen += [r for r in mine if counted(r)]
+        everything = buckets[bucket]; mine = [r for r in everything if not raced(r) and not machine_timeout(r)]; seen += [r for r in mine if counted(r)]
+        if not mine: continue
         agent = [r['state'].get('agent') or {} for r in mine]
         tiers = {}
         for r in mine:
             t = tiers.setdefault(str(family_tier(r['family']) or 'unknown'), {'n': 0, 'correct': 0}); t['n'] += 1; t['correct'] += int(r['outcome'] in GOOD)
         out.append({'at': (bucket + 1) * bucket_ms, 'valid': all(r['created_at'] >= VALID_SINCE for r in mine),
-                    'not_shown_warning': len(everything) - len(mine),
+                    'not_shown_warning': sum(map(raced, everything)), 'machine_timeouts': sum(map(machine_timeout, everything)),
                     'bucket': summary(mine, costs), 'rolling': summary(seen[-ROLLING:], costs),
                     'adversary_level_at_spawn': max(r['difficulty'] for r in everything),
                     'cumulative': {k: v for k, v in summary(seen).items() if k in ('n', 'correct', 'accuracy', 'wrong_releases', 'timeouts')},
