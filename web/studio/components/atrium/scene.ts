@@ -4,7 +4,7 @@ import { createAtriumAtmosphere } from "./atmosphere";
 import { createAtriumWater } from "./water";
 import { createAtriumSunlight } from "./sunlight";
 import { createAtriumPipeline } from "./rendering";
-import { ATRIUM_FRAME_RATE, atriumResolution } from "./resolution";
+import { atriumResolution } from "./resolution";
 import { createEtherealInteraction } from "./ethereal";
 import { createAtriumSideLight, type AtriumSideLightMetadata } from "./side-light";
 import { createAgentAura, type AgentAura } from "./agent-aura";
@@ -350,7 +350,6 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   function draw(now: number) {
     if (disposed || !ready || paused || document.hidden) return;
     frame = requestAnimationFrame(draw);
-    if (previous && now - previous < 1000 / ATRIUM_FRAME_RATE - .5) return;
     const delta = previous ? Math.min((now - previous) / 1000, 0.1) : 1 / 30;
     elapsed += delta;
     previous = now;
@@ -372,8 +371,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       if (frameSampleStarted) {
         const fps = 30000 / (now - frameSampleStarted);
         canvas.dataset.fps = fps.toFixed(1);
-        // Favor readable stone and geometry over an unsustainable 60fps target.
         // Lower resolution only inside the clarity floor, with slow recovery.
+        // Frame pacing follows the display without an application FPS cap.
         const next = fps < 24 ? Math.max(minimumQuality, quality - .06) : fps > 28 && ++steadySamples >= 4 ? Math.min(1, quality + .03) : quality;
         if (fps <= 28) steadySamples = 0;
         if (next !== quality) { quality = next; steadySamples = 0; canvas.dataset.quality = quality.toFixed(2); resize(); }

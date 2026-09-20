@@ -1,6 +1,4 @@
-/** Keep fine geometry legible instead of dropping below CSS resolution for 60fps. */
-export const ATRIUM_FRAME_RATE = 30;
-
+/** Keep fine geometry legible while adapting to the available rendering budget. */
 export function atriumResolution(width: number, height: number, deviceRatio: number, coarse: boolean, quality: number) {
   const area = Math.max(1, width) * Math.max(1, height);
   const nativeRatio = Math.max(1, deviceRatio || 1);
