@@ -28,7 +28,7 @@ function Measurement({ metric }: { metric: Metric }) {
 }
 
 function Reference({ reference }: { reference?: string | null }) {
-  if (!reference) return <span className={styles.muted}>No artifact reference recorded.</span>;
+  if (!reference) return <span className={styles.muted}>No artifact</span>;
   const href = artifactHref(reference);
   return href ? <a href={href} target="_blank" rel="noreferrer">Open evidence ↗</a> : <code className={styles.reference}>{reference}</code>;
 }
@@ -67,7 +67,7 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
     let cancelled = false;
     const load = () => fetchBenchmarks(REAL_URL).then((next) => {
       if (cancelled) return;
-      if (next.display_mode === "DEV_FIXTURE") throw new Error("The published export contains development fixtures. Real results are required here.");
+      if (next.display_mode === "DEV_FIXTURE") throw new Error("Export contains development fixtures.");
       setDoc(next); setError(""); setLoading(false);
     }).catch((reason: unknown) => {
       if (cancelled) return;
@@ -106,14 +106,13 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
     if (active) onMotion?.({ busy, selectedIndex, values: JSON.parse(valuesKey) as (number | null)[] });
   }, [active, busy, selectedIndex, valuesKey, onMotion]);
 
-  const definition = LANDSCAPE_METRICS.find((item) => item.id === metric)!;
   const selectedTrial = view?.trials.find((trial) => trial.id === trialId) ?? view?.trials[0];
   const available = suiteAvailability(view?.suite);
   const copyCommand = async () => {
     const command = view?.selectedRun?.reproduce;
     if (!command) return;
-    try { await navigator.clipboard.writeText(command); setCopied("Command copied."); }
-    catch { setCopied("Could not copy. Select the command below to copy it."); }
+    try { await navigator.clipboard.writeText(command); setCopied("Copied"); }
+    catch { setCopied("Could not copy."); }
   };
 
   return <section className={styles.landscape} aria-label="Framework performance landscape" aria-busy={loading}>
@@ -127,10 +126,9 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
       <div className={styles.metrics} role="group" aria-label="Performance metric">{LANDSCAPE_METRICS.map((item) => <button key={item.id} type="button" aria-pressed={metric === item.id} onClick={() => setMetric(item.id)}>{item.label}</button>)}</div>
       <button className={styles.refresh} type="button" aria-label="Refresh benchmark results" disabled={loading} onClick={() => { setLoading(true); setRevision((value) => value + 1); }}>↻</button>
     </div>
-    {error && <p className={styles.notice} role="alert">{error}{doc ? " Showing the last loaded export." : ""}</p>}
-    {loading && !doc && <p className={styles.empty} role="status">Reading your evaluation history…</p>}
+    {error && <p className={styles.notice} role="alert">{error}</p>}
+    {loading && !doc && <p className={styles.empty} role="status">Loading…</p>}
     {view && <>
-      <div className={styles.axisNote}><span>{definition.direction}</span><span>{metric === "success" ? "Absolute success rate" : "Run-level measurement · same suite"}</span></div>
       {available && <p className={styles.notice}><span className={styles.eyebrow}>{view.suite?.access ?? "Unavailable"}</span>{available}</p>}
       {view.columns.length ? <>
         <div className={styles.comparison}>
@@ -147,17 +145,15 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
           <span>{view.page.start + 1} to {view.page.end} of {view.columns.length}</span>
           <button type="button" disabled={view.page.page === view.page.pageCount - 1} onClick={() => setVersionPage(view.page.page + 1)}>Newer versions →</button>
         </nav>}
-        {view.page.selectedIndex < 0 && view.candidate && <p className={styles.offPage}>The selected candidate is on another page. <button type="button" onClick={() => setVersionPage(null)}>Show {view.candidate.label}</button></p>}
+        {view.page.selectedIndex < 0 && view.candidate && <p className={styles.offPage}><button type="button" onClick={() => setVersionPage(null)}>Show {view.candidate.label}</button></p>}
         <div className={styles.comparability}>
           <span className={styles.eyebrow}>{view.comparison.comparable ? "Matched evaluation" : "Comparison context"}</span>
-          {view.comparison.comparable ? <p>These runs have a recorded matched comparison.{view.comparison.record?.changed.length ? ` Changed: ${view.comparison.record.changed.join(", ")}.` : ""}</p>
+          {view.comparison.comparable ? !!view.comparison.record?.changed.length && <p>Changed: {view.comparison.record.changed.join(", ")}</p>
             : view.comparison.reasons.map((reason) => <p key={reason}>{reason}</p>)}
           {view.comparison.comparable && !!view.comparison.record?.tasks.length && <div className={styles.changeCounts}>{(["gained", "regressed", "both_pass", "both_fail", "unavailable"] as const).map((bucket) => <span key={bucket}><strong>{view.comparison.record!.tasks.filter((task) => task.bucket === bucket).length}</strong>{bucket.replaceAll("_", " ")}</span>)}</div>}
         </div>
       </> : <div className={styles.empty}>
-        <h3>Your first measured version starts here.</h3>
-        <p>No subject framework versions have been exported yet. Completed evaluations will form the columns above, with the measurements and evidence behind each one.</p>
-        {!!view.omitted && <small>{view.omitted} grader self-check or development run{view.omitted === 1 ? " is" : "s are"} excluded.</small>}
+        <h3>No versions yet</h3>
       </div>}
       {!!view.runs.length && <section className={styles.runSection} aria-labelledby={`${id}-runs`}>
         <div className={styles.sectionHeading}><h3 id={`${id}-runs`}>Recorded runs</h3><span>{view.runs.length} in this suite</span></div>
@@ -184,7 +180,7 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
               {selectedTrial.error_class && <p>Error: {selectedTrial.error_class}</p>}
               <Reference reference={selectedTrial.artifact_ref} />
             </section>
-          </div> : <p className={styles.muted}>No trial evidence was included in this export.</p>}
+          </div> : <p className={styles.muted}>No trial evidence</p>}
         </div>
       </details>}
       <footer className={styles.footer}><span>{view.suite?.provenance.replaceAll("_", " ")}{view.suite?.revision ? ` · ${view.suite.revision}` : ""}</span><span>Exported {dateLabel(doc?.generated_at)}</span></footer>

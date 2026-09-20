@@ -35,13 +35,13 @@ function RunDetail({ version, run }: { version: VersionSnapshot; run: VersionRun
   return <article className={styles.run}>
     <span className={styles.eyebrow}>{version.label} / {run ? words(run.mode) : "Recorded run"}</span>
     <h3>{run ? run.outcome.status : "No completed recording"}</h3>
-    <p className={styles.note}>{run?.outcome.summary ?? "Attach a completed recording for this case to inspect its outcome, steps, and evidence."}</p>
+    {run && <p className={styles.note}>{run.outcome.summary}</p>}
     {run && <>
       <div className={styles.runStamp}><span>{words(run.status)} · {words(run.outcome.verdict)}</span><time dateTime={run.startedAt}>{dateLabel(run.startedAt)}</time></div>
       <dl className={styles.measurements}>{([
         ["Duration", run.metrics.durationMs, "ms"], ["Tokens", run.metrics.totalTokens, "tokens"], ["Cost", run.metrics.costUsd, "USD"],
       ] as const).map(([label, metric, unit]) => <div key={label}><dt>{label}</dt><dd>{measurement(metric, unit)}</dd><small>{metric.status === "available" ? metric.source : metric.reason}</small></div>)}</dl>
-      {run.steps.length > 0 ? <ol className={styles.steps}>{run.steps.map(step => <li key={step.id}><span>{String(step.ordinal).padStart(2, "0")}</span><div><strong>{step.title}</strong><small>{words(step.status)}</small><p>{step.detail}</p>{step.evidenceIds.length > 0 && <small>Evidence: {step.evidenceIds.join(", ")}</small>}</div></li>)}</ol> : <p className={styles.note}>No steps are included in this recording.</p>}
+      {run.steps.length > 0 ? <ol className={styles.steps}>{run.steps.map(step => <li key={step.id}><span>{String(step.ordinal).padStart(2, "0")}</span><div><strong>{step.title}</strong><small>{words(step.status)}</small><p>{step.detail}</p>{step.evidenceIds.length > 0 && <small>Evidence: {step.evidenceIds.join(", ")}</small>}</div></li>)}</ol> : <p className={styles.note}>No steps</p>}
       <details className={styles.details}><summary>Evidence and recording</summary><References items={[run.provenance, ...run.evidence]} /></details>
     </>}
   </article>;
@@ -70,7 +70,7 @@ export default function TrainingTimeline({ active, onMotion }: Props) {
     setTimeline(next);
     if (!persistenceReady.current) return;
     try { localStorage.setItem(STORAGE_KEY, exportTimelineJson(next)); }
-    catch { setError("This browser could not save the timeline. Export it to keep your records."); }
+    catch { setError("Could not save the timeline."); }
   }, []);
 
   useEffect(() => {
@@ -90,17 +90,17 @@ export default function TrainingTimeline({ active, onMotion }: Props) {
           persistenceReady.current = true;
           updateTimeline(next);
         } catch {
-          setError("Saved timeline could not be read. The committed repository snapshot is still available; your saved file has been left intact.");
+          setError("Saved timeline could not be read.");
         }
       }
       try {
         const response = await fetch("/api/timeline", { cache: "no-store", signal: controller.signal });
-        if (!response.ok) throw new Error("Repository refresh is unavailable. Showing the last available snapshots.");
+        if (!response.ok) throw new Error("Repository refresh unavailable.");
         const incoming = importTimelineJson(await response.text());
         if (controller.signal.aborted) return;
         const count = incoming.versions.filter(version => !timelineRef.current.versions.some(known => known.id === version.id)).length;
         updateTimeline(mergeTimeline(timelineRef.current, incoming));
-        setMessage(response.headers.get("X-Timeline-Notice") ?? (revision ? count ? `${count} new source snapshot${count === 1 ? "" : "s"} added.` : "Up to date with the available source history." : ""));
+        setMessage(response.headers.get("X-Timeline-Notice") ?? (revision ? count ? `${count} new source snapshot${count === 1 ? "" : "s"} added.` : "Up to date" : ""));
       } catch (reason) {
         if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Could not load source history.");
       } finally {
@@ -131,7 +131,7 @@ export default function TrainingTimeline({ active, onMotion }: Props) {
     if (!file) return;
     setImporting(true); setError(""); setMessage("");
     try {
-      if (file.size > TIMELINE_LIMITS.jsonBytes) throw new Error("Choose a timeline JSON file smaller than 2 MB.");
+      if (file.size > TIMELINE_LIMITS.jsonBytes) throw new Error("File must be under 2 MB.");
       const incoming = importTimelineJson(await file.text());
       if (!mounted.current) return;
       const merged = mergeTimeline(timelineRef.current, incoming);
@@ -139,7 +139,7 @@ export default function TrainingTimeline({ active, onMotion }: Props) {
       updateTimeline(merged);
       setSelectedId(incoming.versions.at(-1)?.id ?? "");
       setSelectedRun("");
-      setMessage("Timeline imported. Its source snapshots and recordings are available below.");
+      setMessage("Timeline imported");
     } catch (reason) {
       if (mounted.current) setError(reason instanceof Error ? reason.message : "Could not import this timeline.");
     } finally { if (mounted.current) setImporting(false); }
@@ -157,7 +157,7 @@ export default function TrainingTimeline({ active, onMotion }: Props) {
     <div className="workspace-embedded"><LearnedSkills active={active} /></div>
     <div className={styles.toolbar}>
       <label className={styles.snapshotSelect}><span className={styles.eyebrow}>Framework snapshot</span><select aria-label="Framework snapshot" value={selected?.id ?? ""} disabled={!versions.length} onChange={event => { setSelectedId(event.target.value); setSelectedRun(""); }}>
-        {!versions.length && <option value="">No snapshots available</option>}{versions.map(version => <option key={version.id} value={version.id}>{version.label} · {version.title}</option>)}
+        {!versions.length && <option value="">No snapshots</option>}{versions.map(version => <option key={version.id} value={version.id}>{version.label} · {version.title}</option>)}
       </select></label>
       <div className={styles.tools}><button type="button" disabled={loading} onClick={() => { setLoading(true); setError(""); setMessage(""); setRevision(value => value + 1); }}>{loading ? "Refreshing…" : "Refresh"}</button><button type="button" disabled={importing || loading} onClick={() => fileInput.current?.click()}>{importing ? "Importing…" : "Import"}</button><button type="button" onClick={exportFile}>Export ↗</button></div>
       <input ref={fileInput} type="file" accept=".json,application/json" onChange={importFile} aria-label="Import framework timeline JSON" hidden />
@@ -168,16 +168,16 @@ export default function TrainingTimeline({ active, onMotion }: Props) {
       <div className={styles.detailBar}><div className={styles.views} role="group" aria-label="Timeline view"><button type="button" aria-pressed={view === "snapshot"} onClick={() => setView("snapshot")}>Snapshot</button><button type="button" aria-pressed={view === "compare"} onClick={() => setView("compare")}>Compare versions</button></div><span>{versions.length} source snapshot{versions.length === 1 ? "" : "s"}</span></div>
       {view === "snapshot" ? <>
         <div className={styles.snapshot}>
-          <article className={styles.source}><span className={styles.eyebrow}>{selected.framework.name} / {selected.framework.version}</span><h3>{selected.title}</h3><p className={styles.note}>{selected.summary}</p><div className={styles.provenance}><a href={`${REPOSITORY}/commit/${selected.commit}`} target="_blank" rel="noreferrer">{selected.commit.slice(0, 7)} ↗</a><time dateTime={selected.createdAt}>{dateLabel(selected.createdAt)}</time></div><ul className={styles.changes}>{selected.framework.changes.map((change, index) => <li key={index}>{change}</li>)}</ul><details className={styles.details}><summary>Snapshot sources</summary>{selected.framework.sourceRefs.length ? <References items={selected.framework.sourceRefs} /> : <p className={styles.note}>Read the committed source using the commit link above.</p>}</details><details className={styles.details}><summary>Recorded configuration</summary><dl className={styles.config}>{Object.entries(selected.framework.config).map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{value === null ? "Not supplied" : JSON.stringify(value)}</dd></div>)}</dl></details></article>
-          <aside className={styles.recordingSummary}><span className={styles.eyebrow}>Recorded runs</span><strong>{String(selected.runs.length).padStart(2, "0")}</strong><h4>{selected.runs.length ? "Recorded activity" : "No recorded runs yet."}</h4><p className={styles.note}>{selected.runs.length ? "Choose a case to read its recordings and evidence." : "This is a committed source snapshot. Outcomes and performance appear when a recorded run is attached."}</p></aside>
+          <article className={styles.source}><span className={styles.eyebrow}>{selected.framework.name} / {selected.framework.version}</span><h3>{selected.title}</h3><p className={styles.note}>{selected.summary}</p><div className={styles.provenance}><a href={`${REPOSITORY}/commit/${selected.commit}`} target="_blank" rel="noreferrer">{selected.commit.slice(0, 7)} ↗</a><time dateTime={selected.createdAt}>{dateLabel(selected.createdAt)}</time></div><ul className={styles.changes}>{selected.framework.changes.map((change, index) => <li key={index}>{change}</li>)}</ul><details className={styles.details}><summary>Snapshot sources</summary>{selected.framework.sourceRefs.length ? <References items={selected.framework.sourceRefs} /> : <p className={styles.note}>No sources</p>}</details><details className={styles.details}><summary>Recorded configuration</summary><dl className={styles.config}>{Object.entries(selected.framework.config).map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{value === null ? "Not supplied" : JSON.stringify(value)}</dd></div>)}</dl></details></article>
+          <aside className={styles.recordingSummary}><span className={styles.eyebrow}>Recorded runs</span><strong>{String(selected.runs.length).padStart(2, "0")}</strong><h4>{selected.runs.length ? "Recorded activity" : "No recorded runs"}</h4></aside>
         </div>
-        {caseIds.length > 0 && <section className={styles.caseSection}><label className={styles.field}><span className={styles.eyebrow}>Case</span><select aria-label="Recorded case" value={caseId} onChange={event => { setSelectedCase(event.target.value); setSelectedRun(""); }}>{caseIds.map(id => <option key={id} value={id}>{id}</option>)}</select></label>{selected.scenarios.filter(scenario => scenario.caseId === caseId).map(scenario => <details className={styles.details} key={scenario.id}><summary>{scenario.title} <span className={styles.sourceMode}>{words(scenario.mode)} · source definition</span></summary><p className={styles.note}>{scenario.summary}</p><References items={scenario.sourceRefs} /></details>)}{caseRuns.length > 0 && <><label className={styles.field}><span className={styles.eyebrow}>Recording</span><select aria-label="Case recording" value={recorded?.id ?? ""} onChange={event => setSelectedRun(event.target.value)}>{caseRuns.map(run => <option key={run.id} value={run.id}>{words(run.mode)} · {words(run.status)} · {run.id}</option>)}</select></label><RunDetail version={selected} run={recorded} /></>}{!caseRuns.length && <p className={styles.note}>No recording is attached to this case. Its source definition does not establish a result.</p>}</section>}
-      </> : !baseline || !comparison ? <div className={styles.empty}><span className={styles.eyebrow}>Version comparison</span><h3>One real snapshot, so far.</h3><p>Refresh after the next framework commit, or import another source snapshot. Recorded runs for the same case make performance comparisons possible.</p></div> : <>
+        {caseIds.length > 0 && <section className={styles.caseSection}><label className={styles.field}><span className={styles.eyebrow}>Case</span><select aria-label="Recorded case" value={caseId} onChange={event => { setSelectedCase(event.target.value); setSelectedRun(""); }}>{caseIds.map(id => <option key={id} value={id}>{id}</option>)}</select></label>{selected.scenarios.filter(scenario => scenario.caseId === caseId).map(scenario => <details className={styles.details} key={scenario.id}><summary>{scenario.title} <span className={styles.sourceMode}>{words(scenario.mode)} · source definition</span></summary><p className={styles.note}>{scenario.summary}</p><References items={scenario.sourceRefs} /></details>)}{caseRuns.length > 0 && <><label className={styles.field}><span className={styles.eyebrow}>Recording</span><select aria-label="Case recording" value={recorded?.id ?? ""} onChange={event => setSelectedRun(event.target.value)}>{caseRuns.map(run => <option key={run.id} value={run.id}>{words(run.mode)} · {words(run.status)} · {run.id}</option>)}</select></label><RunDetail version={selected} run={recorded} /></>}{!caseRuns.length && <p className={styles.note}>No recordings</p>}</section>}
+      </> : !baseline || !comparison ? <div className={styles.empty}><h3>Only one snapshot</h3></div> : <>
         <div className={styles.compareControls}><label className={styles.field}><span className={styles.eyebrow}>Baseline</span><select aria-label="Baseline snapshot" value={baseline.id} onChange={event => setBaselineId(event.target.value)}>{versions.filter(version => version.id !== selected.id).map(version => <option key={version.id} value={version.id}>{version.label} · {version.title}</option>)}</select></label><label className={styles.field}><span className={styles.eyebrow}>Case</span><select aria-label="Comparison case" value={caseId} disabled={!caseIds.length} onChange={event => setSelectedCase(event.target.value)}>{caseIds.length ? caseIds.map(id => <option key={id} value={id}>{id}</option>) : <option value="">No cases recorded</option>}</select></label></div>
-        <section className={styles.frameworkDiff}><span className={styles.eyebrow}>{baseline.label} → {selected.label}</span><h3>Framework changes</h3><div className={styles.diffColumns}><div><h4>Added in {selected.label}</h4>{comparison.frameworkChanges.added.length ? <ul className={styles.changes}>{comparison.frameworkChanges.added.map((change, index) => <li key={index}>{change}</li>)}</ul> : <p className={styles.note}>No added change notes.</p>}</div>{comparison.frameworkChanges.removed.length > 0 && <div><h4>Present only in {baseline.label}</h4><ul className={styles.changes}>{comparison.frameworkChanges.removed.map((change, index) => <li key={index}>{change}</li>)}</ul></div>}</div>{comparison.configChanges.length > 0 && <details className={styles.details}><summary>Configuration differences ({comparison.configChanges.length})</summary><dl className={styles.config}>{comparison.configChanges.map(change => <div key={change.key}><dt>{change.key}</dt><dd>{JSON.stringify(change.baseline) ?? "Not set"} → {JSON.stringify(change.candidate) ?? "Not set"}</dd></div>)}</dl></details>}</section>
-        {!comparison.baselineRun && !comparison.candidateRun ? <div className={styles.empty}><h3>No recorded comparison yet.</h3><p>Attach recordings for the same case in both snapshots to compare outcomes and performance. Source change notes are available above.</p></div> : <><p className={styles.note}>Latest completed or failed recording for each snapshot. Differences are candidate minus baseline.</p>{!comparison.comparable && <p className={styles.notice}>{comparison.reasons.join(" ")}</p>}<div className={styles.tableScroll}><table className={styles.metrics}><thead><tr><th>Metric</th><th>{baseline.label}</th><th>{selected.label}</th><th>Difference</th></tr></thead><tbody>{comparison.metrics.map(row => <tr key={row.key}><th>{row.label}</th><td title={row.baseline.status === "unavailable" ? row.baseline.reason : row.baseline.source}>{measurement(row.baseline, row.unit)}</td><td title={row.candidate.status === "unavailable" ? row.candidate.reason : row.candidate.source}>{measurement(row.candidate, row.unit)}</td><td title={row.reason ?? undefined}>{difference(row)}</td></tr>)}</tbody></table></div><div className={styles.runs}><RunDetail version={baseline} run={comparison.baselineRun} /><RunDetail version={selected} run={comparison.candidateRun} /></div></>}
+        <section className={styles.frameworkDiff}><span className={styles.eyebrow}>{baseline.label} → {selected.label}</span><h3>Framework changes</h3><div className={styles.diffColumns}><div><h4>Added in {selected.label}</h4>{comparison.frameworkChanges.added.length ? <ul className={styles.changes}>{comparison.frameworkChanges.added.map((change, index) => <li key={index}>{change}</li>)}</ul> : <p className={styles.note}>None</p>}</div>{comparison.frameworkChanges.removed.length > 0 && <div><h4>Present only in {baseline.label}</h4><ul className={styles.changes}>{comparison.frameworkChanges.removed.map((change, index) => <li key={index}>{change}</li>)}</ul></div>}</div>{comparison.configChanges.length > 0 && <details className={styles.details}><summary>Configuration differences ({comparison.configChanges.length})</summary><dl className={styles.config}>{comparison.configChanges.map(change => <div key={change.key}><dt>{change.key}</dt><dd>{JSON.stringify(change.baseline) ?? "Not set"} → {JSON.stringify(change.candidate) ?? "Not set"}</dd></div>)}</dl></details>}</section>
+        {!comparison.baselineRun && !comparison.candidateRun ? <div className={styles.empty}><h3>No recorded comparison</h3></div> : <>{!comparison.comparable && <p className={styles.notice}>{comparison.reasons.join(" ")}</p>}<div className={styles.tableScroll}><table className={styles.metrics}><thead><tr><th>Metric</th><th>{baseline.label}</th><th>{selected.label}</th><th>Difference</th></tr></thead><tbody>{comparison.metrics.map(row => <tr key={row.key}><th>{row.label}</th><td title={row.baseline.status === "unavailable" ? row.baseline.reason : row.baseline.source}>{measurement(row.baseline, row.unit)}</td><td title={row.candidate.status === "unavailable" ? row.candidate.reason : row.candidate.source}>{measurement(row.candidate, row.unit)}</td><td title={row.reason ?? undefined}>{difference(row)}</td></tr>)}</tbody></table></div><div className={styles.runs}><RunDetail version={baseline} run={comparison.baselineRun} /><RunDetail version={selected} run={comparison.candidateRun} /></div></>}
       </>}
-      <footer className={styles.footer}><span>Source history · {selected.label}</span><span>Recorded runs retain their live, replay, or fixture mode.</span></footer>
-    </> : <div className={styles.empty}><h3>No framework snapshots available.</h3><p>Refresh the repository history or import a timeline export to begin.</p></div>}
+      <footer className={styles.footer}><span>Source history · {selected.label}</span></footer>
+    </> : <div className={styles.empty}><h3>No snapshots</h3></div>}
   </section>;
 }

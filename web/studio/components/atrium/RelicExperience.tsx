@@ -81,6 +81,5 @@ export default function RelicExperience({ station, register, onMotion, onClose, 
       {section === "review" && <ApprovalsReview active={active} onMotion={onMotion} />}
       {section === "timeline" && <TrainingTimeline active={active} onMotion={onMotion} />}
     </div>
-    <footer className={styles.footer}><span>Esc to return to the atrium</span></footer>
   </section>;
 }

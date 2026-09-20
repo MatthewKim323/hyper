@@ -35,13 +35,13 @@ function SourceTile({ source, info, connection, onChanged }: { source: typeof SO
     catch (reason) {
       const message = (reason as Error).message;
       // The server names its missing settings; that is for whoever runs it, not for this screen.
-      setNote(reason instanceof BackendError && (reason.status === 503 || /^Missing server configuration/i.test(message)) ? "This source is not set up on the server yet." : message);
+      setNote(reason instanceof BackendError && (reason.status === 503 || /^Missing server configuration/i.test(message)) ? "Not set up on the server." : message);
     }
     finally { setBusy(false); }
   };
   const connect = () => {
     if (source.id === "ramp") { setForm(true); return; }
-    if (source.id === "plaid") { setNote("Bank linking is not available in this build."); return; }
+    if (source.id === "plaid") { setNote("Bank linking unavailable."); return; }
     // The window must open inside the click, before any await, or the browser blocks it.
     const popup = window.open("about:blank", "hyper-connect", "width=520,height=680");
     void run(async () => {
@@ -58,16 +58,15 @@ function SourceTile({ source, info, connection, onChanged }: { source: typeof SO
     });
   };
   return <li className={styles.source} data-live={live || undefined}>
-    <div className={styles.row}><h4>{source.name}</h4><span className={styles.badge}>{connection ? STATUS[connection.status] ?? connection.status : unavailable ? "Not set up on the server" : "Not connected"}</span></div>
-    <p>{source.reads}. Read only.</p>
-    {connection?.last_synced_at ? <p className={styles.note}>Last read {when(connection.last_synced_at)}</p> : live && <p className={styles.note}>First read is starting…</p>}
+    <div className={styles.row}><h4>{source.name}</h4><span className={styles.badge}>{connection ? STATUS[connection.status] ?? connection.status : unavailable ? "Unavailable" : "Not connected"}</span></div>
+    <p>Read only</p>
+    {connection?.last_synced_at ? <p className={styles.note}>Last read {when(connection.last_synced_at)}</p> : live && <p className={styles.note}>Starting…</p>}
     {connection?.error && <p className={styles.note} role="status">{connection.error}</p>}
     {form && <form className={styles.credentials} onSubmit={submitRamp}>
-      <input name="client_id" required autoComplete="off" placeholder="Ramp client ID" aria-label="Ramp client ID" />
-      <input name="client_secret" required type="password" autoComplete="off" placeholder="Ramp client secret" aria-label="Ramp client secret" />
+      <input name="client_id" required autoComplete="off" placeholder="Client ID" aria-label="Ramp client ID" />
+      <input name="client_secret" required type="password" autoComplete="off" placeholder="Client secret" aria-label="Ramp client secret" />
       <select name="environment" aria-label="Ramp environment" defaultValue="sandbox"><option value="sandbox">Sandbox</option><option value="production">Production</option></select>
       <div className={styles.actions}><button type="submit" className={styles.action} disabled={busy}>{busy ? "Connecting…" : "Connect Ramp"}</button><button type="button" className={styles.textButton} onClick={() => setForm(false)}>Cancel</button></div>
-      <p className={styles.note}>Sent once to your server, stored encrypted, never shown again.</p>
     </form>}
     {!form && <div className={styles.actions}>
       {live ? <><button type="button" className={styles.action} disabled={busy} onClick={() => void run(() => backend.syncConnection(connection!.id))}>{busy ? "Reading…" : "Read now"}</button>
@@ -101,7 +100,7 @@ export default function IdentityPrism({ active, onMotion }: Props) {
 
   function connect() {
     const provider = browserWallet();
-    if (!provider) { setWalletNote("Open Hyper in a browser with an Ethereum wallet extension, then try again."); return; }
+    if (!provider) { setWalletNote("No wallet extension found."); return; }
     setWalletNote("");
     session.current ??= createWalletSession(provider, setWallet);
     void session.current.connect();
@@ -109,7 +108,7 @@ export default function IdentityPrism({ active, onMotion }: Props) {
   async function copyAddress() {
     if (!wallet.address) return;
     try { await navigator.clipboard.writeText(wallet.address); setCopied(true); if (copyTimer.current) clearTimeout(copyTimer.current); copyTimer.current = setTimeout(() => setCopied(false), 1600); }
-    catch { setWalletNote("Copy isn’t available in this browser. Select the address to copy it."); }
+    catch { setWalletNote("Copy unavailable."); }
   }
     const org = usable ? workspace.data?.organization : null;
   return <div className={styles.prism}>
@@ -126,21 +125,19 @@ export default function IdentityPrism({ active, onMotion }: Props) {
       {facet === 0 && <>
         <section>
           <span className={styles.eyebrow}>Give your agent access</span>
-          <h3>Connect a source and it starts reading.</h3>
-          <p>You grant access once. From then on the agent reads new activity on its own, files what it finds as evidence, and opens cases without being asked.</p>
-          {!usable ? <><p>Sign in to connect your organization&rsquo;s sources.</p>{auth.ready && auth.mode === "clerk" && <button className={styles.action} type="button" onClick={() => void openSignIn()}>Sign in</button>}</>
+          <h3>Connect a source</h3>
+          {!usable ? <><p>Sign in to view</p>{auth.ready && auth.mode === "clerk" && <button className={styles.action} type="button" onClick={() => void openSignIn()}>Sign in</button>}</>
             : connections.error ? <p role="status">Sources couldn&rsquo;t be loaded. <button type="button" className={styles.textButton} onClick={connections.refresh}>Try again</button></p>
             : <ul className={styles.sources}>{SOURCES.map(source => <SourceTile key={source.id} source={source}
                 info={providers.data?.providers.find(item => item.id === source.id)}
                 connection={connections.data?.connections.filter(item => item.provider === source.id).sort((x, y) => Number(LIVE.has(y.status)) - Number(LIVE.has(x.status)) || y.created_at - x.created_at)[0]}
                 onChanged={() => { connections.refresh(); sources.refresh(); }} />)}</ul>}
-          {usable && sources.data && <p className={styles.note}>{sources.data.sources.length ? `Latest evidence filed ${when(sources.data.sources[0].created_at)}: ${sources.data.sources[0].filename}.` : "No evidence filed yet."}</p>}
+          {usable && sources.data && <p className={styles.note}>{sources.data.sources.length ? `Latest evidence filed ${when(sources.data.sources[0].created_at)}: ${sources.data.sources[0].filename}.` : "No evidence yet"}</p>}
         </section>
       </>}
       {facet === 1 && <>
-        <section><h3>Agent permissions</h3><p>The agent can investigate connected records and request your review.</p>
+        <section><h3>Agent permissions</h3>
           <ul className={styles.permissions}><li><i />Read connected evidence <span>Available</span></li><li><i />Investigate and prepare findings <span>Available</span></li><li><i />Request a human decision <span>Available</span></li><li data-unavailable><i />Move funds or sign transactions <span>Unavailable</span></li><li data-unavailable><i />Change access permissions <span>Unavailable</span></li></ul>
-          <p className={styles.note}>Wallet access is limited to your address and network.</p>
         </section>
       </>}
       {facet === 2 && <>
@@ -148,14 +145,14 @@ export default function IdentityPrism({ active, onMotion }: Props) {
           <span className={styles.eyebrow}>Your workspace</span>
           <h3>{org?.name ?? (usable ? "Loading workspace…" : "Workspace")}</h3>
           {org ? <><p className={styles.note}>{org.onboarding_complete ? "Onboarding complete." : "Onboarding in progress."}</p><details className={styles.details}><summary>Workspace details</summary><dl><div><dt>Organization ID</dt><dd>{org.id}</dd></div><div><dt>Member ID</dt><dd>{workspace.data?.user_id}</dd></div></dl></details></>
-            : <p>{!auth.ready ? "Checking your sign-in…" : usable ? workspace.error ?? "Retrieving your organization." : auth.mode === "unconfigured" ? "Workspace sign-in is not available yet." : "Sign in to see your workspace."}</p>}
+            : <p>{!auth.ready ? "Loading…" : usable ? workspace.error ?? "Loading…" : auth.mode === "unconfigured" ? "Sign-in unavailable" : "Sign in to view"}</p>}
           {!usable && auth.ready && auth.mode === "clerk" && <button className={styles.action} type="button" onClick={() => void openSignIn()}>Sign in</button>}
           {usable && workspace.error && <button type="button" className={styles.action} onClick={workspace.refresh}>Try again</button>}
         </section>
         <section className={styles.wallet}>
           <div className={styles.row}><span className={styles.eyebrow}>Browser wallet</span>{wallet.address && <span className={styles.badge}>Address shared</span>}</div>
-          {wallet.address ? <><p className={styles.address}>{wallet.address}</p><p>{chainLabel(wallet.chain)}</p><div className={styles.actions}><button type="button" className={styles.action} onClick={() => void copyAddress()}>{copied ? "Copied" : "Copy address"}</button><button type="button" onClick={() => { session.current?.hide(); setWallet(EMPTY_WALLET); setCopied(false); }} className={styles.textButton}>Hide address</button></div><p className={styles.note}>Address shared with this page. Manage site permissions in your wallet.</p></>
-            : <><h4>No wallet connected</h4><p>Optional. Connect to view your address and network.</p><button type="button" className={styles.action} disabled={wallet.pending} onClick={connect}>{wallet.pending ? "Waiting for your wallet…" : "Connect wallet"}</button></>}
+          {wallet.address ? <><p className={styles.address}>{wallet.address}</p><p>{chainLabel(wallet.chain)}</p><div className={styles.actions}><button type="button" className={styles.action} onClick={() => void copyAddress()}>{copied ? "Copied" : "Copy address"}</button><button type="button" onClick={() => { session.current?.hide(); setWallet(EMPTY_WALLET); setCopied(false); }} className={styles.textButton}>Hide address</button></div></>
+            : <><h4>No wallet connected</h4><button type="button" className={styles.action} disabled={wallet.pending} onClick={connect}>{wallet.pending ? "Waiting…" : "Connect wallet"}</button></>}
           {(wallet.error || walletNote) && <p className={styles.note} role="status">{wallet.error || walletNote}</p>}
         </section>
       </>}

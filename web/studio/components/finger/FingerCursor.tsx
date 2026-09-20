@@ -20,7 +20,6 @@ export default function FingerCursor() {
   const [status, setStatus] = useState<Status>("off");
   const [gesture, setGesture] = useState<FingerState>("lost");
   const [error, setError] = useState("");
-  const [fps, setFps] = useState(0);
   const canvas = useRef<HTMLCanvasElement>(null);
   const preview = useRef<HTMLDivElement>(null);
   const session = useRef<{ tracker: HandTracker; controller: FingerController } | null>(null);
@@ -53,13 +52,12 @@ export default function FingerCursor() {
       if (process.env.NODE_ENV !== "production") (window as unknown as { __finger?: FingerController }).__finger = controller;
       await tracker.start();
       preview.current?.appendChild(tracker.video);
-      setFps(Math.round(tracker.fps));
       document.documentElement.setAttribute("data-finger", controller.state === "lost" ? "idle" : "tracking");
       setStatus("live");
     } catch (cause) {
       stop();
       const denied = cause instanceof DOMException && (cause.name === "NotAllowedError" || cause.name === "SecurityError");
-      setError(denied ? "Camera access is off. Allow it in the address bar and try again." : "The hand cursor could not start on this device.");
+      setError(denied ? "Camera access is off." : "Hand cursor could not start.");
       setStatus("error");
     } finally {
       busy.current = false;
@@ -93,8 +91,6 @@ export default function FingerCursor() {
         {status === "live" && (
           <p className="finger-hint">
             <strong>{LABELS[gesture]}</strong>
-            <span>Pinch to click and drag · two fingers to scroll · fist to hold</span>
-            {fps > 0 && <span>Camera {fps} fps</span>}
           </p>
         )}
         {status === "error" && <p className="finger-hint finger-hint--error" role="alert">{error}</p>}

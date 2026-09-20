@@ -29,11 +29,11 @@ function SourceDownload({ sourceId, filename }: { sourceId: string; filename: st
     abort.current = controller;
     try {
       const token = await getBackendToken();
-      if (!token) throw new Error("Sign in again to download the original.");
+      if (!token) throw new Error("Sign in again.");
       const response = await fetch(`/api/onboarding/sources/${encodeURIComponent(sourceId)}/download`, {
         headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal: controller.signal,
       });
-      if (!response.ok) throw new Error("The original could not be downloaded. Please try again.");
+      if (!response.ok) throw new Error("Download failed. Try again.");
       const blob = await response.blob();
       if (controller.signal.aborted) return;
       const url = URL.createObjectURL(blob);
@@ -44,7 +44,7 @@ function SourceDownload({ sourceId, filename }: { sourceId: string; filename: st
       if (!controller.signal.aborted) setError((reason as Error).message);
     } finally { if (!controller.signal.aborted) setBusy(false); }
   }
-  return <div><button className={styles.textButton} type="button" disabled={busy} onClick={() => void download()}>{busy ? "Preparing original…" : "Download original ↗"}</button>{error && <p className={styles.warning} role="status">{error}</p>}</div>;
+  return <div><button className={styles.textButton} type="button" disabled={busy} onClick={() => void download()}>{busy ? "Preparing…" : "Download original ↗"}</button>{error && <p className={styles.warning} role="status">{error}</p>}</div>;
 }
 
 function SourcePages({ sourceId, active }: { sourceId: string; active: boolean }) {
@@ -52,12 +52,11 @@ function SourcePages({ sourceId, active }: { sourceId: string; active: boolean }
   const source = useBackend(async () => ({ offset, detail: await backend.source(sourceId, offset, 10) }), active, 15000);
   const detail = source.data?.offset === offset ? source.data.detail : null;
   return <details className={styles.sourcePages}>
-    <summary>Source evidence <span>Read the imported passages</span></summary>
+    <summary>Source evidence</summary>
     {source.error && <p className={styles.warning} role="status">{source.error}</p>}
-    {!detail && !source.error && <p className={styles.note}>Opening the source…</p>}
+    {!detail && !source.error && <p className={styles.note}>Loading…</p>}
     {detail && <>
       <div className={styles.sourceMeta}><span>{detail.source.filename} · v{detail.source.version}</span><SourceDownload key={sourceId} sourceId={sourceId} filename={detail.source.filename} /></div>
-      <p className={styles.note}>Original content, preserved as imported. A source may contain several invoices.</p>
       {detail.chunks.map(chunk => <section className={styles.passage} key={chunk.id}><span>{chunk.locator}</span><pre>{chunk.content}</pre></section>)}
       <div className={styles.pagination}><button type="button" disabled={offset === 0} onClick={() => { setOffset(Math.max(0, offset - 10)); source.refresh(); }}>Previous passages</button><button type="button" disabled={!detail.has_more} onClick={() => { setOffset(detail.next_offset ?? offset + 10); source.refresh(); }}>Next passages</button></div>
     </>}
@@ -89,10 +88,9 @@ function InvoicePaper({ row, active }: { row: InvoiceRow; active: boolean }) {
         const lineAmount = invoiceAmount(line, row.currency);
         const unitPrice = invoiceAmount(line, row.currency, ["unit_price_cents", "unit_price_minor", "unit_price"]);
         return <tr key={index}><td>{fieldText(line, "description", "name", "item", "product_name", "sku") ?? `Line ${index + 1}`}</td><td>{valueText(line.quantity) ?? "Not supplied"}</td><td>{unitPrice ? <Amount amount={unitPrice} /> : "Not supplied"}</td><td>{lineAmount ? <Amount amount={lineAmount} /> : "Not supplied"}</td></tr>;
-      })}</tbody></table></div> : <p className={styles.note}>This record does not include itemized lines. Read the source evidence below for the original text.</p>}
+      })}</tbody></table></div> : <p className={styles.note}>No line items</p>}
     </section>
     <div className={styles.paperTotal}><span>Gross invoice amount</span><div><Amount amount={amount} /></div></div>
-    <p className={styles.finePrint}>Amounts as imported. Payments, credits, and allocations are not deducted.</p>
     <details className={styles.fields}><summary>All recorded fields</summary><dl>{Object.entries(record).map(([key, value]) => <div key={key}><dt>{words(key)}</dt><dd>{value === null ? "Not supplied" : typeof value === "object" ? JSON.stringify(value) : String(value)}</dd></div>)}</dl></details>
     <SourcePages key={row.source_id} sourceId={row.source_id} active={active} />
     <footer className={styles.paperFooter}><span>Source {row.source_id}</span><span>Row {row.row_number}</span></footer>
@@ -107,13 +105,12 @@ function AgentNotes({ row, cases, tasks, concerns, errors, partial, loading }: {
   const uniqueErrors = [...new Set(errors.filter(Boolean))];
   return <aside className={styles.agentNotes} aria-label="Agent notes">
     <span className={styles.eyebrow}>Agent notes</span><h3>What needs attention</h3>
-    <p className={styles.note}>Linked to this source; may cover other invoices in the same file.</p>
     {uniqueErrors.map(error => <p className={styles.warning} key={error} role="status">{error}</p>)}
-    {loading && <p className={styles.note} role="status">Opening the agent&apos;s case notes…</p>}
-    {partial && <p className={styles.note}>Showing the first available cases, tasks, and decisions. Additional work may exist.</p>}
+    {loading && <p className={styles.note} role="status">Loading…</p>}
+    {partial && <p className={styles.note}>Partial results</p>}
     {waiting.length > 0 && <section className={styles.noteSection}><h4>Waiting on you</h4>{waiting.map(concern => <div key={concern.id}><strong>{concern.request.title}</strong><p>{concern.card?.summary ?? concern.request.description}</p><button type="button" className={styles.textButton} onClick={() => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "review" } }))}>Review decision ↗</button></div>)}</section>}
-    {!loading && <section className={styles.noteSection}><h4>Still unknown</h4>{unknowns.length ? <ul>{unknowns.map((item, index) => <li key={`${item.id}:${index}`}>{item.text}</li>)}</ul> : <p className={styles.note}>No unresolved questions are linked in the loaded cases. Payment readiness is unknown.</p>}</section>}
-    {!loading && <section className={styles.noteSection}><h4>The agent&apos;s next step</h4>{actions.length ? <ul>{actions.map((item, index) => <li key={`${item.id}:${index}`}>{item.text}</li>)}</ul> : <p className={styles.note}>No next action is recorded for this source.</p>}</section>}
+    {!loading && <section className={styles.noteSection}><h4>Still unknown</h4>{unknowns.length ? <ul>{unknowns.map((item, index) => <li key={`${item.id}:${index}`}>{item.text}</li>)}</ul> : <p className={styles.note}>None recorded</p>}</section>}
+    {!loading && <section className={styles.noteSection}><h4>The agent&apos;s next step</h4>{actions.length ? <ul>{actions.map((item, index) => <li key={`${item.id}:${index}`}>{item.text}</li>)}</ul> : <p className={styles.note}>None recorded</p>}</section>}
     {work.tasks.length > 0 && <section className={styles.noteSection}><h4>Investigation activity</h4>{work.tasks.map(task => <div key={task.id}><strong>{task.objective}</strong><span className={styles.taskStatus} data-live={task.status === "running" || undefined}>{words(task.status)}</span>{(task.result?.summary || task.error) && <p>{task.result?.summary ?? task.error}</p>}</div>)}</section>}
   </aside>;
 }
@@ -135,15 +132,15 @@ function FolioPages({ dataset, active, onMotion }: Props & { dataset: string }) 
   useEffect(() => { onMotion?.({ busy, selectedIndex }); }, [onMotion, busy, selectedIndex]);
   useEffect(() => () => { onMotion?.({ busy: false, selectedIndex: 0 }); }, [onMotion]);
   const filterId = useId();
-  if (page.error && !data) return <div className={styles.empty}><span className={styles.eyebrow}>Folio unavailable</span><h3>We couldn&apos;t open these invoices.</h3><p role="status">{page.error}</p><button type="button" onClick={page.refresh}>Try again</button></div>;
-  if (!data) return <div className={styles.loading} role="status"><div className={styles.loadingPaper} aria-hidden="true" /><span>Opening your invoice folio…</span></div>;
-  if (!data.rows.length) return <div className={styles.empty}><span className={styles.eyebrow}>Your folio is empty</span><h3>No invoice records in this dataset yet.</h3><p>Import an AP export or connect your billing account to make its records available here. CSV, JSON, and JSONL imports preserve the source file and row references.</p><button type="button" onClick={page.refresh}>Check again</button></div>;
+  if (page.error && !data) return <div className={styles.empty}><span className={styles.eyebrow}>Folio unavailable</span><p role="status">{page.error}</p><button type="button" onClick={page.refresh}>Try again</button></div>;
+  if (!data) return <div className={styles.loading} role="status"><div className={styles.loadingPaper} aria-hidden="true" /><span>Loading…</span></div>;
+  if (!data.rows.length) return <div className={styles.empty}><h3>No invoices</h3><button type="button" onClick={page.refresh}>Check again</button></div>;
   return <>
-    {page.error && <p className={styles.warning} role="status">{page.error} Showing the last loaded records.</p>}
+    {page.error && <p className={styles.warning} role="status">{page.error}</p>}
     <div className={styles.folio}>
       <aside className={styles.queue} aria-label="Invoice queue">
         <header><span className={styles.eyebrow}>Invoice index</span><span className={styles.pageCount}>{data.total_matching.toLocaleString()} records</span></header>
-        <label className={styles.search} htmlFor={filterId}><span className={styles.srOnly}>Filter this page of invoices</span><input id={filterId} value={filter} onChange={event => setFilter(event.target.value)} placeholder="Find on this page…" type="search" /></label>
+        <label className={styles.search} htmlFor={filterId}><span className={styles.srOnly}>Filter this page of invoices</span><input id={filterId} value={filter} onChange={event => setFilter(event.target.value)} placeholder="Find…" type="search" /></label>
         <div className={styles.queueItems}>{items.map(item => {
           const number = fieldText(item.payload, "invoice_number", "invoice_id", "id") ?? item.record_id;
           const chosen = !!row && key(item) === key(row);
@@ -151,7 +148,7 @@ function FolioPages({ dataset, active, onMotion }: Props & { dataset: string }) 
           return <button type="button" className={styles.sheetTab} key={key(item)} aria-pressed={chosen} onClick={() => setSelected(key(item))}>
             <span className={styles.sheetNumber}>{String(offset + data.rows.findIndex(candidate => key(candidate) === key(item)) + 1).padStart(2, "0")}</span><span className={styles.sheetContent}><strong>{fieldText(item.payload, "vendor_name", "vendor_display_name", "supplier_name", "vendor_id") ?? number}</strong><span>{number}</span><small>{amount ? `${amount.value} ${amount.currency ?? "Currency unspecified"}${amount.units ? ` · ${amount.units}` : ""}` : "Amount not supplied"}</small>{(isSyntheticRecord(item.payload) || dataset === "sim_bill") && <em>Simulated</em>}</span><span className={styles.sheetArrow} aria-hidden="true">↗</span>
           </button>;
-        })}{items.length === 0 && <p className={styles.note}>No matches on this page. Try another name or use the page controls.</p>}</div>
+        })}{items.length === 0 && <p className={styles.note}>No matches</p>}</div>
         <footer className={styles.pagination}><button type="button" disabled={offset === 0} onClick={() => { setOffset(Math.max(0, offset - PAGE_SIZE)); setSelected(null); page.refresh(); }}>← Previous</button><span>{offset + 1} to {offset + data.rows.length}</span><button type="button" disabled={!data.has_more} onClick={() => { setOffset(data.next_offset); setSelected(null); page.refresh(); }}>Next →</button></footer>
       </aside>
       {row && <div className={styles.readingArea}><InvoicePaper key={key(row)} row={row} active={active} /><AgentNotes row={row} cases={cases.data?.cases ?? []} tasks={tasks.data?.tasks ?? []} concerns={concerns.data?.concerns ?? []} errors={[cases.error, tasks.error, concerns.error]} partial={!!cases.data?.has_more || !!tasks.data?.has_more || !!concerns.data?.has_more} loading={(!cases.data && !cases.error) || (!tasks.data && !tasks.error) || (!concerns.data && !concerns.error)} /></div>}
@@ -166,13 +163,13 @@ export default function AccountsFolio({ active, onMotion }: Props) {
   const datasets = eligibleInvoiceDatasets(catalog.data?.datasets ?? []);
   const dataset = datasets.some(item => item.dataset === chosenDataset) ? chosenDataset : preferredInvoiceDataset(datasets);
   const selectId = useId();
-  if (!auth.ready) return <div className={styles.empty} role="status"><p>Opening your workspace…</p></div>;
-  if (!auth.signedIn) return <div className={styles.empty}><span className={styles.eyebrow}>Your private folio</span><h3>Your invoices belong here.</h3><p>{auth.mode === "unconfigured" ? "Sign-in is not available in this environment yet. Your invoice folio will open once workspace access is configured." : "Sign in to open the invoice records and investigations saved to your organization."}</p>{auth.mode === "clerk" && <button type="button" onClick={() => void openSignIn()}>Sign in</button>}</div>;
+  if (!auth.ready) return <div className={styles.empty} role="status"><p>Loading…</p></div>;
+  if (!auth.signedIn) return <div className={styles.empty}><h3>{auth.mode === "unconfigured" ? "Sign-in unavailable" : "Sign in to view"}</h3>{auth.mode === "clerk" && <button type="button" onClick={() => void openSignIn()}>Sign in</button>}</div>;
   return <div className={styles.root}>
-    <div className={styles.toolbar}><p>Source-linked records</p>{datasets.length > 0 && <label htmlFor={selectId}><span>Collection</span><select id={selectId} value={dataset ?? ""} onChange={event => setChosenDataset(event.target.value)}>{!dataset && <option value="" disabled>Choose an invoice dataset</option>}{datasets.map(item => <option key={item.dataset} value={item.dataset}>{words(item.dataset)} ({item.record_count})</option>)}</select></label>}</div>
+    <div className={styles.toolbar}><p>Source-linked records</p>{datasets.length > 0 && <label htmlFor={selectId}><span>Collection</span><select id={selectId} value={dataset ?? ""} onChange={event => setChosenDataset(event.target.value)}>{!dataset && <option value="" disabled>Choose</option>}{datasets.map(item => <option key={item.dataset} value={item.dataset}>{words(item.dataset)} ({item.record_count})</option>)}</select></label>}</div>
     {catalog.error && <p className={styles.warning} role="status">{catalog.error} <button type="button" className={styles.textButton} onClick={catalog.refresh}>Retry</button></p>}
-    {!catalog.data && !catalog.error && <div className={styles.loading} role="status"><div className={styles.loadingPaper} aria-hidden="true" /><span>Finding your invoice collections…</span></div>}
-    {catalog.data && !dataset && <div className={styles.empty}><span className={styles.eyebrow}>A place for your payables</span><h3>No payable invoices yet.</h3><p>{catalog.data.datasets.length > 0 ? "Your workspace has imported records, but no payable invoice or bill collection is available. Connect your billing account or import an AP invoice export to start this folio." : "Connect your billing account or import an AP invoice export. Supported exports are CSV, JSON, and JSONL; use a stable invoice ID so records stay linked to their sources."}</p><button type="button" onClick={catalog.refresh}>Check for imports</button></div>}
+    {!catalog.data && !catalog.error && <div className={styles.loading} role="status"><div className={styles.loadingPaper} aria-hidden="true" /><span>Loading…</span></div>}
+    {catalog.data && !dataset && <div className={styles.empty}><h3>No invoices</h3><button type="button" onClick={catalog.refresh}>Check for imports</button></div>}
     {/* Payables the deterministic engine has worked out from owner-verified records, above the raw folio. */}
     <EngineCases active={active} />
     {dataset && <FolioPages key={dataset} dataset={dataset} active={active} onMotion={onMotion} />}
