@@ -616,6 +616,14 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     canvas.dataset.renderer = "live-3d";
     ready = true;
     resize();
+    // Every program for the room, water, transmission and the composer passes would
+    // otherwise link on the first visible frame, which reads as a freeze right as the
+    // world appears. renderer.compile covers the scene's own materials; one full offscreen
+    // frame after it also warms the reflection and post passes, which draw into their own
+    // targets and so are invisible to compile. Both run while the loading state is still up.
+    // resize() must precede this: it sizes the pipeline and water render targets.
+    renderer.compile(scene, camera);
+    render();
     sectionChanged();
   } catch (error) { api.dispose(); throw error; }
   return api;
