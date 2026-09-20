@@ -1,6 +1,6 @@
 # Hyper MCP
 
-Investigate your accounts-payable data from Claude Code, Codex, or any MCP client.
+Investigate your accounts-payable data from any MCP client.
 
 Read-only. Every tool calls the product's own API with your token, so it sees exactly what
 you see and nothing more. Posting to the ledger, approving a payable and verifying a record
@@ -8,15 +8,7 @@ are owner actions in the product and are not exposed here at all.
 
 ## Install
 
-```sh
-claude mcp add hyper --env HYPER_TOKEN=<your token> -- npx -y @hyper/mcp
-```
-
-Get the token from **Access → Agent access** in your workspace at
-[hyper.stephenhung.me](https://hyper.stephenhung.me).
-
-<details>
-<summary>Other clients</summary>
+Stdio MCP, so any client works. Most use this shape:
 
 ```json
 {
@@ -30,7 +22,17 @@ Get the token from **Access → Agent access** in your workspace at
 }
 ```
 
-</details>
+VS Code puts it under `servers` with `"type": "stdio"`; Zed under `context_servers`.
+Claude Code and Codex have a one-liner:
+
+```sh
+claude mcp add hyper --env HYPER_TOKEN=<your token> -- npx -y @hyper/mcp
+codex  mcp add hyper --env HYPER_TOKEN=<your token> -- npx -y @hyper/mcp
+```
+
+Get the token from **Access → Agent access** in your workspace at
+[hyper.stephenhung.me](https://hyper.stephenhung.me).
+Full per-client table: [hyper.stephenhung.me/docs/mcp](https://hyper.stephenhung.me/docs/mcp).
 
 ## Tools
 

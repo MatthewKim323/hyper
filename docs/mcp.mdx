@@ -1,24 +1,21 @@
 ---
 title: "Use your own agent"
-description: "Investigate your AP data from Claude Code, Codex, or any MCP client."
+description: "Investigate your AP data from any MCP client — the agent you already use."
 ---
 
-Hyper exposes its investigation tools over MCP, so you can work from the agent you already
-use. Same data, same guardrails, your terminal.
+Hyper exposes its investigation tools over the Model Context Protocol, so you can work from
+whichever agent you already use — Claude Code, Codex, Cursor, VS Code, Zed, or anything else
+that speaks MCP. Same data, same guardrails, your terminal.
 
 ## Install
 
+Hyper speaks the Model Context Protocol over stdio, so it works in any MCP client. Most take
+the same three fields — `command`, `args`, `env` — under a key whose name is the only thing
+that differs.
+
 <CodeGroup>
 
-```sh Claude Code
-claude mcp add hyper --env HYPER_TOKEN=<your token> -- npx -y @hyper/mcp
-```
-
-```sh Codex
-codex mcp add hyper --env HYPER_TOKEN=<your token> -- npx -y @hyper/mcp
-```
-
-```json Any MCP client
+```json Most clients
 {
   "mcpServers": {
     "hyper": {
@@ -30,12 +27,62 @@ codex mcp add hyper --env HYPER_TOKEN=<your token> -- npx -y @hyper/mcp
 }
 ```
 
+```json VS Code
+{
+  "servers": {
+    "hyper": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@hyper/mcp"],
+      "env": { "HYPER_TOKEN": "<your token>" }
+    }
+  }
+}
+```
+
+```json Zed
+{
+  "context_servers": {
+    "hyper": {
+      "command": "npx",
+      "args": ["-y", "@hyper/mcp"],
+      "env": { "HYPER_TOKEN": "<your token>" }
+    }
+  }
+}
+```
+
 </CodeGroup>
+
+Where that goes:
+
+| Client | Key | Location |
+| --- | --- | --- |
+| Claude Code | — | `claude mcp add hyper --env HYPER_TOKEN=<token> -- npx -y @hyper/mcp` |
+| Codex | — | `codex mcp add hyper --env HYPER_TOKEN=<token> -- npx -y @hyper/mcp` |
+| Claude Desktop | `mcpServers` | `claude_desktop_config.json` |
+| Cursor | `mcpServers` | `.cursor/mcp.json`, or Settings → MCP |
+| Windsurf | `mcpServers` | `~/.codeium/windsurf/mcp_config.json` |
+| VS Code | `servers` | `.vscode/mcp.json` |
+| Zed | `context_servers` | `settings.json`, or Settings → AI → MCP Servers |
+| Anything else | `mcpServers` | Its MCP configuration |
 
 <Note>
 Get your token from **Access → Agent access** in the workspace. It scopes the agent to your
 organization, and you can revoke it there at any time.
 </Note>
+
+### Without Node
+
+If `npx` is not available, run the server directly. It needs Node 20 or newer and nothing
+else — no build step, no native dependencies.
+
+```sh
+git clone https://github.com/MatthewKim323/hyper. && cd hyper./mcp && npm install
+HYPER_TOKEN=<your token> node server.mjs
+```
+
+Point your client's `command` at `node` and `args` at the absolute path of `server.mjs`.
 
 ## What it can do
 
@@ -61,7 +108,8 @@ owner actions. They are not exposed over MCP, and no token can grant them.
 
 ## Give your agent this context
 
-Paste into `CLAUDE.md`, `AGENTS.md`, or your system prompt:
+Every agent has somewhere to put standing instructions — `AGENTS.md`, `CLAUDE.md`,
+`.cursorrules`, a system prompt, a custom instructions box. Paste this into yours:
 
 ```md
 Hyper exposes read-only accounts-payable tools over MCP.
