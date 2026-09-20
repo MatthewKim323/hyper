@@ -2,9 +2,12 @@
 import json
 import random
 import time
+from contextlib import nullcontext
+from types import SimpleNamespace
 
 import pytest
-from sqlalchemy import update
+from sqlalchemy import event, select, update
+from sqlalchemy.dialects import postgresql
 
 from app import counterparty as cp, data_tools
 from app.counterparty import Counterparties, FAMILIES, build
@@ -159,3 +162,141 @@ def test_worker_sessions_resume_on_replies_and_learn_after_grading(world):
     flush(store, factory)
     script = iter(['STATUS: HOLD nothing further'])
     assert auto_agent.run_once(store, factory, llm) == 1                 # the reply woke it up
+
+
+def test_worker_activity_is_visible_during_provider_calls_and_idle_after_success(world, monkeypatch):
+    from app import auto_agent
+    store, oid, factory, svc = world
+    inv = svc.spawn('price_only', 'owner', seed=5)['invoice_id']
+    assert svc.list()['scenarios'][0]['agent']['activity'] is None
+    clock = [1_000_000]
+    monkeypatch.setattr(auto_agent, 'now', lambda: clock[0])
+    observed = []
+
+    def llm(payload):
+        # Read through another database connection, as the polling UI does while the model is busy.
+        agent = svc.list()['scenarios'][0]['agent']
+        activity = agent['activity']
+        observed.append(activity)
+        assert activity == {'status': 'running', 'started_at': 1_000_000, 'updated_at': clock[0],
+                            'expires_at': clock[0] + auto_agent.ACTIVITY_TTL_MS, 'error': None}
+        assert activity['expires_at'] - activity['updated_at'] > 180_000
+        assert agent['sessions'] == 0 and agent['status'] is None and agent['trace'] == []
+        if len(observed) == 1:
+            clock[0] += 181_000
+            return {'choices': [{'message': {'role': 'assistant', 'content': '', 'tool_calls': [
+                {'id': 'thread', 'type': 'function', 'function': {'name': 'get_counterparty_thread',
+                 'arguments': json.dumps({'invoice_id': inv})}}]}}]}
+        clock[0] += 2_000
+        return {'choices': [{'message': {'role': 'assistant', 'content': 'STATUS: WAITING awaiting supplier'}}]}
+
+    assert auto_agent.run_once(store, factory, llm) == 1
+    assert len(observed) == 2 and observed[1]['expires_at'] > observed[0]['expires_at']
+    agent = svc.list()['scenarios'][0]['agent']
+    assert agent['activity'] == {'status': 'idle', 'started_at': 1_000_000, 'updated_at': clock[0],
+                                 'expires_at': None, 'error': None}
+    assert agent['status'] == 'WAITING' and agent['sessions'] == 1
+    assert agent['trace'][0]['tool'] == 'get_counterparty_thread'
+    assert auto_agent.run_once(store, factory, llm) == 0
+    assert svc.list()['scenarios'][0]['agent'] == agent
+
+
+def test_worker_failure_clears_running_without_overwriting_session_history(world, monkeypatch):
+    from app import auto_agent
+    store, oid, factory, svc = world
+    scenario = svc.spawn('price_only', 'owner', seed=5)
+    prior = {'sessions': 2, 'seen': 0, 'status': 'HOLD', 'model': 'previous-model',
+             'lessons_at_start': 3, 'trace': [{'at': 100, 'say': 'STATUS: HOLD waiting for evidence'}]}
+    with store.engine.begin() as db:
+        row = db.execute(select(counterparty_scenarios).where(counterparty_scenarios.c.id == scenario['id'])).mappings().one()
+        before = {**row['state'], 'agent': prior}
+        db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == scenario['id']).values(state=before))
+        # A real incoming reply makes the previous HOLD eligible for the existing resumption rule.
+        svc._message(db, row, 'in', 'supplier', 'price_correction', 'A new supplier reply.')
+    clock = [2_000_000]
+    monkeypatch.setattr(auto_agent, 'now', lambda: clock[0])
+
+    def llm(payload):
+        agent = svc.list()['scenarios'][0]['agent']
+        assert agent['activity']['status'] == 'running'
+        for key in ('sessions', 'status', 'model', 'lessons_at_start', 'trace'):
+            assert agent[key] == prior[key]
+        clock[0] += 180_000
+        raise RuntimeError('provider rejected secret-token-and-private-response')
+
+    with pytest.raises(RuntimeError, match='secret-token-and-private-response'):
+        auto_agent.run_once(store, factory, llm)
+    with store.engine.connect() as db:
+        state = db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == scenario['id'])).scalar()
+    assert {key: value for key, value in state['agent'].items() if key != 'activity'} == prior
+    assert {key: value for key, value in state.items() if key != 'agent'} == {key: value for key, value in before.items() if key != 'agent'}
+    assert state['agent']['activity'] == {'status': 'failed', 'started_at': 2_000_000, 'updated_at': clock[0],
+                                         'expires_at': None, 'error': cp.AGENT_SESSION_ERROR}
+    assert svc.list()['scenarios'][0]['agent']['activity'] == state['agent']['activity']
+    assert 'secret-token' not in json.dumps(state)
+
+
+def test_public_activity_preserves_expiry_and_sanitizes_failure_details(world):
+    store, oid, factory, svc = world
+    scenario = svc.spawn('price_only', 'owner', seed=5)
+    with store.engine.begin() as db:
+        row = dict(db.execute(select(counterparty_scenarios).where(counterparty_scenarios.c.id == scenario['id'])).mappings().one())
+    activity = {'status': 'running', 'started_at': 1, 'updated_at': 2, 'expires_at': 300_002,
+                'error': None, 'private_provider_payload': 'secret-provider-body'}
+    row['state']['agent'] = {'activity': activity}
+    public = cp.public(row)['agent']['activity']
+    # Old timestamps remain explicit so clients can distinguish expired work from a live session.
+    assert public == {key: value for key, value in activity.items() if key != 'private_provider_payload'}
+    activity.update(status='failed', expires_at=None, error='secret-provider-error')
+    public = cp.public(row)['agent']['activity']
+    assert public['error'] == cp.AGENT_SESSION_ERROR and public['expires_at'] is None
+    assert 'secret-provider' not in json.dumps(public)
+
+
+def test_activity_update_preserves_reply_written_just_before_heartbeat(world):
+    from app import auto_agent
+    store, oid, factory, svc = world
+    scenario = svc.spawn('price_only', 'owner', seed=5)
+    with store.engine.connect() as db:
+        before = db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == scenario['id'])).scalar()
+    incoming = {**before, 'requests': 4, 'delivered': ['CREDIT_MEMO'],
+                'agent': {'sessions': 2, 'status': 'WAITING', 'trace': [{'at': 10, 'say': 'Prior session'}]}}
+    heartbeat_statements, delivered = [], False
+
+    def deliver_before_update(connection, cursor, statement, parameters, context, executemany):
+        nonlocal delivered
+        if delivered: return
+        heartbeat_statements.append(statement)
+        if statement.startswith('UPDATE counterparty_scenarios'):
+            delivered = True
+            # Commit a reply on a second connection immediately before the heartbeat writes.
+            with store.engine.begin() as reply_db:
+                reply_db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == scenario['id']).values(state=incoming))
+
+    event.listen(store.engine, 'before_cursor_execute', deliver_before_update)
+    try:
+        auto_agent.save_activity(store, scenario['id'], 'running', 1_000)
+    finally:
+        event.remove(store.engine, 'before_cursor_execute', deliver_before_update)
+    assert delivered and len(heartbeat_statements) == 1
+    with store.engine.connect() as db:
+        after = db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == scenario['id'])).scalar()
+    assert after['agent'].pop('activity')['status'] == 'running'
+    assert after == incoming
+
+
+def test_activity_update_compiles_to_atomic_postgres_jsonb_patch():
+    from app import auto_agent
+    statements = []
+    db = SimpleNamespace(dialect=postgresql.dialect(), execute=statements.append)
+    store = SimpleNamespace(engine=SimpleNamespace(begin=lambda: nullcontext(db)))
+    auto_agent.save_activity(store, 'scenario-123', 'running', 1_000)
+    assert len(statements) == 1
+    compiled = statements[0].compile(dialect=db.dialect)
+    sql, params = str(compiled), compiled.params
+    assert sql.startswith('UPDATE counterparty_scenarios SET state=jsonb_set(counterparty_scenarios.state,')
+    assert 'coalesce((counterparty_scenarios.state -> ' in sql and ' || CAST(' in sql
+    assert 'SELECT' not in sql and params['id_1'] == 'scenario-123'
+    assert params['jsonb_set_1'] == '{agent}' and params['state_1'] == 'agent'
+    assert params['param_1'] == {} and set(params['param_2']) == {'activity'}
+    assert params['param_2']['activity']['status'] == 'running'

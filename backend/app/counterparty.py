@@ -32,6 +32,7 @@ ATTESTATION = 'I verified this structured record against its source'
 SUPPLIER_REQUESTS = ('price_correction', 'quantity_correction', 'credit_memo_copy', 'delivery_status')
 INTERNAL_REQUESTS = ('quantity_status', 'price_basis', 'receiving_records')
 READY, HOLD = 'PAYMENT_READY', 'HOLD'
+AGENT_SESSION_ERROR = 'Agent session failed. Please try again.'
 
 
 def now(): return int(time.time() * 1000)
@@ -386,9 +387,13 @@ def public(row):
     out.update(requests=row['state'].get('requests', 0), repeated_requests=row['state'].get('repeats', 0), simulated=True)
     if row['status'] == 'scored': out['family'] = row['family']
     agent = row['state'].get('agent', {})
+    activity = agent.get('activity')
+    # Provider exceptions may contain request details. Expose only a fixed failure message.
+    activity = ({**{k: activity.get(k) for k in ('status', 'started_at', 'updated_at', 'expires_at')},
+                 'error': AGENT_SESSION_ERROR if activity.get('status') == 'failed' else None} if activity else None)
     # Observable actions only: tool names with clipped arguments and results. No private facts pass through tools.
     out['agent'] = {'sessions': agent.get('sessions', 0), 'status': agent.get('status'), 'model': agent.get('model'),
-                    'lessons_at_start': agent.get('lessons_at_start'), 'trace': agent.get('trace', [])[-30:]}
+                    'lessons_at_start': agent.get('lessons_at_start'), 'trace': agent.get('trace', [])[-30:], 'activity': activity}
     return out
 
 

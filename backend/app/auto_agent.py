@@ -22,10 +22,11 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / '.env')
 
-from sqlalchemy import select, update  # noqa: E402
+from sqlalchemy import cast, func, select, update  # noqa: E402
+from sqlalchemy.dialects.postgresql import JSONB  # noqa: E402
 
 from . import data_tools  # noqa: E402
-from .counterparty import Counterparties, now  # noqa: E402
+from .counterparty import AGENT_SESSION_ERROR, Counterparties, now  # noqa: E402
 from .data_service import DataService  # noqa: E402
 from .database import counterparty_scenarios as scenarios, counterparty_messages as messages  # noqa: E402
 from .store import Store  # noqa: E402
@@ -35,6 +36,8 @@ TOOLS = ('list_accounting_records', 'open_payable_case', 'analyze_payable', 'ins
          'request_supplier_document', 'request_internal_confirmation', 'get_counterparty_thread')
 MAX_STEPS = int(os.getenv('AUTO_AGENT_MAX_STEPS', '14'))
 MAX_SESSIONS = int(os.getenv('AUTO_AGENT_MAX_SESSIONS', '6'))
+# Allow the longest provider timeout (180 seconds) plus time to finish a tool or persist its result.
+ACTIVITY_TTL_MS = 300_000
 
 SYSTEM = """You are the accounts-payable exception worker for one company. You own blocked supplier invoices from start to finish.
 
@@ -120,7 +123,7 @@ def slim(name, result):
     return result
 
 
-def session(store, oid, scenario, data_factory, model, llm=None):
+def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None):
     """One bounded working session on one invoice. Returns the trace of observable actions."""
     svc = Counterparties(data_factory(oid))
     memory = svc.lessons() if os.getenv('AUTO_AGENT_MEMORY', 'true').lower() == 'true' else []
@@ -131,6 +134,7 @@ def session(store, oid, scenario, data_factory, model, llm=None):
     llm = llm or session_llm()
     trace, status = [], 'WAITING'
     for _ in range(MAX_STEPS):
+        if heartbeat: heartbeat()
         reply = llm({'model': model, 'messages': convo, 'tools': tool_specs(), 'max_tokens': 1200})['choices'][0]['message']
         convo.append({k: v for k, v in reply.items() if k in ('role', 'content', 'tool_calls')})
         calls = reply.get('tool_calls') or []
@@ -149,7 +153,24 @@ def session(store, oid, scenario, data_factory, model, llm=None):
                 args, result = call['function'].get('arguments'), {'error': str(exc)[:300]}
             trace.append({'at': now(), 'tool': name, 'args': brief(args, 240), 'result': brief(result, 240)})
             convo.append({'role': 'tool', 'tool_call_id': call['id'], 'content': brief(slim(name, result))})
+            if heartbeat: heartbeat()
     return status, trace
+
+
+def save_activity(store, scenario_id, status, started_at):
+    """Persist session liveness separately from the last completed session's result."""
+    stamp = now()
+    activity = {'status': status, 'started_at': started_at, 'updated_at': stamp,
+                'expires_at': stamp + ACTIVITY_TTL_MS if status == 'running' else None,
+                'error': AGENT_SESSION_ERROR if status == 'failed' else None}
+    with store.engine.begin() as db:
+        # Patch the current database value atomically so a heartbeat cannot erase a concurrent reply.
+        if db.dialect.name == 'postgresql':
+            agent = func.coalesce(scenarios.c.state['agent'], cast({}, JSONB))
+            state = func.jsonb_set(scenarios.c.state, '{agent}', agent.op('||')(cast({'activity': activity}, JSONB)), True)
+        else:
+            state = func.json_set(scenarios.c.state, '$.agent.activity', func.json(json.dumps(activity)))
+        db.execute(update(scenarios).where(scenarios.c.id == scenario_id).values(state=state))
 
 
 def write_lesson(svc, scenario, model, llm=complete):
@@ -177,14 +198,21 @@ def run_once(store, data_factory=None, llm=None):
                                 .order_by(messages.c.sequence.desc()).limit(1)).scalar() or 0
         fresh = latest > agent.get('seen', 0)
         if agent.get('sessions', 0) >= MAX_SESSIONS or (agent.get('sessions', 0) > 0 and not fresh and agent.get('status') != 'NEW'): continue
-        status, trace = session(store, row['organization_id'], row, data_factory, model, llm)
-        with store.engine.begin() as db:
-            current = dict(db.execute(select(scenarios.c.state).where(scenarios.c.id == row['id'])).scalar())
-            mine = current.get('agent', {})
-            current['agent'] = {'sessions': mine.get('sessions', 0) + 1, 'seen': latest, 'status': status, 'model': model,
-                                'lessons_at_start': mine.get('lessons_at_start', len(Counterparties(data_factory(row['organization_id'])).lessons(200))),
-                                'trace': (mine.get('trace', []) + trace)[-60:]}
-            db.execute(update(scenarios).where(scenarios.c.id == row['id']).values(state=current))
+        started_at, succeeded = now(), False
+        save_activity(store, row['id'], 'running', started_at)
+        try:
+            status, trace = session(store, row['organization_id'], row, data_factory, model, llm,
+                                    heartbeat=lambda: save_activity(store, row['id'], 'running', started_at))
+            with store.engine.begin() as db:
+                current = dict(db.execute(select(scenarios.c.state).where(scenarios.c.id == row['id'])).scalar())
+                mine = current.get('agent', {})
+                current['agent'] = {**mine, 'sessions': mine.get('sessions', 0) + 1, 'seen': latest, 'status': status, 'model': model,
+                                    'lessons_at_start': mine.get('lessons_at_start', len(Counterparties(data_factory(row['organization_id'])).lessons(200))),
+                                    'trace': (mine.get('trace', []) + trace)[-60:]}
+                db.execute(update(scenarios).where(scenarios.c.id == row['id']).values(state=current))
+            succeeded = True
+        finally:
+            save_activity(store, row['id'], 'idle' if succeeded else 'failed', started_at)
         work += 1
     for row in unlearned:
         if not row['state'].get('agent', {}).get('trace'): continue
