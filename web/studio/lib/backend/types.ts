@@ -119,7 +119,9 @@ export const SKILL_ATTESTATION = "I independently reviewed the tests, accounting
 
 // Sandbox counterparties and the adversary (backend/app/counterparty.py). The private fact sheet never appears here.
 export type ExceptionFamily = "clean" | "price_only" | "partial_correction" | "valid_amendment" | "backorder" | "disputed_cancellation"
-  | "claim_without_memo" | "silent_supplier" | "duplicate_credit" | "bank_change_attack";
+  | "claim_without_memo" | "silent_supplier" | "duplicate_credit" | "bank_change_attack"
+  | "internal_hold" | "withdrawn_credit" | "short_credit" | "cleared_hold" | "misdirected_hold" | "superseded_invoice"
+  | "already_paid" | "goods_returned" | "spoofed_release" | "internal_release" | "unrelated_wire";
 export type AgentStep = { at: number; tool?: string; args?: string; result?: string; say?: string };
 export type AgentActivity = {
   status: "running" | "idle" | "failed";

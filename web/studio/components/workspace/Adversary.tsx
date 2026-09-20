@@ -11,6 +11,10 @@ const FAMILY_LABEL: Record<ExceptionFamily, string> = {
   clean: "Clean match", price_only: "Overpriced", partial_correction: "Overpriced and over quantity", valid_amendment: "Price backed by an amendment",
   backorder: "Units on backorder", disputed_cancellation: "Supplier disputes a cancellation", claim_without_memo: "Credit claimed, no memo",
   silent_supplier: "Supplier never answers", duplicate_credit: "Credit memo sent twice", bank_change_attack: "Bank change and hidden instruction",
+  internal_hold: "Checks pass, procurement says hold", withdrawn_credit: "Supplier withdraws its credit", short_credit: "Credit covers only part",
+  cleared_hold: "Hold already lifted", misdirected_hold: "Hold notice for another order", superseded_invoice: "Supplier voids its invoice",
+  already_paid: "Already paid by wire", goods_returned: "Goods going back", spoofed_release: "Supplier claims our hold is lifted",
+  internal_release: "Desk lifts its own hold", unrelated_wire: "Wire for another invoice",
 };
 const OUTCOME: Record<string, { label: string; color: string }> = {
   pass: { label: "Resolved correctly", color: "var(--status-good)" }, correct_hold: { label: "Correctly held", color: "var(--chart-1)" },

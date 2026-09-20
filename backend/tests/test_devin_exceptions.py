@@ -145,3 +145,16 @@ def test_the_worker_may_bring_a_hold_to_the_owner_only_where_someone_is_there_an
             db.execute(concerns.insert().values(id=f'c{index}', organization_id=oid, request_key=f'k{index}', request={}, status='awaiting_response',
                        card_revision=0, decision_revision=0, evidence_snapshot=[], created_at=1, updated_at=1, lease_until=0))
     assert not auto_agent.escalates(store, oid), 'three decisions already waiting is enough'
+
+
+def test_memory_can_be_set_aside_and_brought_back_without_losing_a_lesson(world):
+    from app import devin_exceptions_ctl as ctl
+    store, oid, svc = world
+    first = svc.spawn('goods_returned', 'owner', seed=1)
+    svc.add_lesson(first['id'], 'goods_returned', 'Goods going back are not paid for.')
+    assert ctl.forget(store, oid) == 1 and svc.memory() == [] and svc.lessons() == []
+    second = svc.spawn('goods_returned', 'owner', seed=2)
+    svc.add_lesson(second['id'], 'goods_returned', 'Learned again, live.')
+    assert ctl.remember(store, oid) == 1
+    assert sorted(l['lesson'] for l in svc.lessons()) == ['Goods going back are not paid for.', 'Learned again, live.']
+    assert ctl.remember(store, oid) == 0, 'nothing left in the archive'

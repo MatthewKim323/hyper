@@ -4,6 +4,8 @@
     uv run --directory backend python -m app.devin_exceptions_ctl compare ORG [CONTROL_ORG] [--since EPOCH_MS]
     uv run --directory backend python -m app.devin_exceptions_ctl skills ORG
     uv run --directory backend python -m app.devin_exceptions_ctl moved NEW_BASE_URL
+    uv run --directory backend python -m app.devin_exceptions_ctl forget|remember ORG
+    uv run --directory backend python -m app.devin_exceptions_ctl deal ORG FAMILY
 
 `on` starts the adversary that sends new exceptions, creating the organization if it is new (a lab
 organization keeps the high-volume sandbox out of the demo company's evidence). With --devin it also
@@ -56,6 +58,29 @@ def skills(store, oid):
             print(f"  {skill['status']:<11} {skill['name']} v{skill['version']}   runs {len(runs)}" + (f"   READY FOR REVIEW  skill_id={skill['id']} run_id={runs[0].id} hash={skill['package_hash']}" if ready else ''))
 
 
+ARCHIVE = '#memory-archive'
+
+
+def forget(store, oid):
+    """Set the worker's lessons aside so it meets every kind of case for the first time again. Nothing is deleted:
+    the lessons move to an archive name for the same company and `remember` brings them back."""
+    from sqlalchemy import update
+    from .database import agent_lessons as lessons, insert_ignore, organizations
+    with store.engine.begin() as db:
+        insert_ignore(db, organizations, dict(id=oid + ARCHIVE, name='Archived lessons'))
+        return db.execute(update(lessons).where(lessons.c.organization_id == oid).values(organization_id=oid + ARCHIVE)).rowcount
+
+
+def remember(store, oid):
+    from sqlalchemy import select, update
+    from .database import agent_lessons as lessons
+    with store.engine.begin() as db:
+        # A case can only carry one lesson per company: one learned again while the old ones were away wins.
+        again = set(db.execute(select(lessons.c.scenario_id).where(lessons.c.organization_id == oid)).scalars())
+        back = db.execute(update(lessons).where(lessons.c.organization_id == oid + ARCHIVE, lessons.c.scenario_id.notin_(again or {''})).values(organization_id=oid)).rowcount
+    return back
+
+
 def moved(store, base):
     """The tunnel address changes on every restart. Sessions in flight still hold the old one, so tell them."""
     from .database import agent_tasks
@@ -74,7 +99,7 @@ def moved(store, base):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['on', 'off', 'status', 'compare', 'skills', 'moved'])
+    parser.add_argument('action', choices=['on', 'off', 'status', 'compare', 'skills', 'moved', 'forget', 'remember', 'deal'])
     parser.add_argument('organization')
     parser.add_argument('control', nargs='?')
     # Devin takes minutes per case, so the default pace is slow: a faster adversary only produces timeouts.
@@ -88,6 +113,11 @@ if __name__ == '__main__':
     if args.action == 'compare': compare(store, args.organization, args.control or args.organization + '-control', args.since); raise SystemExit
     if args.action == 'skills': skills(store, args.organization); raise SystemExit
     if args.action == 'moved': moved(store, args.organization); raise SystemExit
+    if args.action == 'forget': print(f'set aside {forget(store, args.organization)} lessons; the worker starts from nothing'); raise SystemExit
+    if args.action == 'remember': print(f'brought back {remember(store, args.organization)} lessons'); raise SystemExit
+    if args.action == 'deal':
+        dealt = Counterparties(DataService(store, args.organization)).spawn(args.control, 'owner')
+        print('dealt', dealt['invoice_id'], 'to', args.organization); raise SystemExit
     adversary, agents = Counterparties(DataService(store, args.organization)), AgentService(store, args.organization)
     if args.action != 'status':
         on = args.action == 'on'
