@@ -36,10 +36,13 @@ export class HandTracker {
 
   async start() {
     // Camera and model load in parallel; the model is the slower of the two on first use.
-    const camera = navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 120, min: 24 }, facingMode: "user" },
-    });
+    const video = { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" };
+    // A camera that cannot promise 24 fps (cheap webcams, low light modes) still beats no hand cursor.
+    const camera = navigator.mediaDevices.getUserMedia({ audio: false, video: { ...video, frameRate: { ideal: 120, min: 24 } } })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException) || error.name !== "OverconstrainedError") throw error;
+        return navigator.mediaDevices.getUserMedia({ audio: false, video: { ...video, frameRate: { ideal: 60 } } });
+      });
     const model = (async () => {
       const { FilesetResolver, HandLandmarker } = await import("@mediapipe/tasks-vision");
       const fileset = await FilesetResolver.forVisionTasks(WASM);

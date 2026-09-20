@@ -5,6 +5,7 @@ import { OneEuro2D } from "./one-euro";
 import { VirtualPointer } from "./pointer";
 import { chooseTarget, snapPoint, type SnapRect, type SnapState } from "./snap";
 import type { HandFrame } from "./tracker";
+import { ZoomGesture, type ZoomDirection } from "./zoom";
 
 const SNAPPABLE = "a[href], button:not(:disabled), [role='button'], input:not([type='hidden']):not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [data-magnetic]";
 
@@ -79,6 +80,10 @@ export class FingerController {
   /** Last thumb to index distance over palm length, for tuning. */
   pinchRatio = 1;
   onState?: (state: FingerState) => void;
+  /** Closing an open hand ("in") or opening a closed one ("out"), at the cursor's position. */
+  onZoom?: (direction: ZoomDirection, x: number, y: number) => void;
+  /** Every camera frame, for the preview's skeleton. Null when the hand is gone. */
+  onLandmarks?: (frame: HandFrame | null) => void;
 
   private pointer = new VirtualPointer();
   private filter = new OneEuro2D(MIN_CUTOFF, BETA, 1);
@@ -105,6 +110,7 @@ export class FingerController {
   private targets: SnapRect[] = [];
   private targetsAt = 0;
   private snap: SnapState = { id: null };
+  private zoom = new ZoomGesture();
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d")!;
@@ -148,8 +154,10 @@ export class FingerController {
   }
 
   onLost = () => {
-    if (this.state === "lost") return;
+    // One dropped frame keeps the last pose, in the cursor and in the preview's skeleton alike.
     if (performance.now() - this.lastSeen < LOST_HOLD_MS) return;
+    this.onLandmarks?.(null);
+    if (this.state === "lost") return;
     // Never leave a button held when the hand leaves the frame.
     this.giveBack();
     this.pinched = this.dragging = false;
@@ -157,12 +165,14 @@ export class FingerController {
     this.prev = null;
     this.scrollVel = 0;
     this.filter.reset();
+    this.zoom.reset();
     this.sample.vel = { x: 0, y: 0 };
     this.setState("lost");
   };
 
   onFrame = (f: HandFrame) => {
     const now = performance.now();
+    this.onLandmarks?.(f);
     const dt = this.lastT ? clamp((f.t - this.lastT) / 1000, 1 / 240, 0.2) : 1 / 30;
     this.lastT = f.t;
     this.lastSeen = now;
@@ -186,6 +196,13 @@ export class FingerController {
     const ring = extended(16, 14);
     const pinky = extended(20, 18);
     const fist = !index && !middle && !ring && !pinky && ratio > PINCH_OFF * 0.6;
+    // A flat hand: every finger out and the thumb clear of the index, so a pinch never reads as open.
+    const openHand = index && middle && ring && pinky && ratio > PINCH_OFF * 1.4;
+    const zoomed = this.pinched ? null : this.zoom.update(openHand, fist, now);
+    if (zoomed) {
+      this.pops.push({ x: this.px.x, y: this.px.y, t: now });
+      this.onZoom?.(zoomed, this.px.x, this.px.y);
+    }
     const scrollPose = index && middle && !ring && !pinky && ratio > PINCH_OFF && dist3(w[8], w[12]) / palm < 0.42;
 
     // Pinch with hysteresis; entering needs consecutive frames, leaving is immediate.

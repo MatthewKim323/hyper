@@ -101,6 +101,27 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
     goHome();
   }, []);
 
+  // Hand cursor: a grab flies into the relic nearest the cursor, letting go flies back out.
+  const boundsRef = useRef(bounds);
+  useEffect(() => { boundsRef.current = bounds; }, [bounds]);
+  useEffect(() => {
+    if (warm || failed) return;
+    const onZoom = (event: Event) => {
+      const { direction, x, y } = (event as CustomEvent<{ direction: "in" | "out"; x: number; y: number }>).detail;
+      if (direction === "out") { if (document.body.dataset.workspaceSection !== "overview") goHome(); return; }
+      const rect = plane.current?.getBoundingClientRect();
+      if (focus || !atHome || !rect) return;
+      let nearest: StationBounds | null = null, best = Infinity;
+      for (const bound of boundsRef.current) {
+        const distance = Math.hypot(rect.left + (bound.left + bound.width / 2) * rect.width - x, rect.top + (bound.top + bound.height / 2) * rect.height - y);
+        if (distance < best) { best = distance; nearest = bound; }
+      }
+      if (nearest) openStation(nearest.station);
+    };
+    window.addEventListener("hyper:finger-zoom", onZoom);
+    return () => window.removeEventListener("hyper:finger-zoom", onZoom);
+  }, [warm, failed, focus, atHome]);
+
   useEffect(() => {
     if (warm || focus || !atHome || failed) resetAgentInteraction();
   }, [warm, focus, atHome, failed, resetAgentInteraction]);
@@ -384,7 +405,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
       <div ref={plane} className={styles.plane} style={planeStyle}>
         <canvas ref={canvas} className={styles.water} aria-hidden="true" />
         {!failed && !focus && atHome && agentBounds && <button
-          ref={agentButton} type="button" className={styles.agent} data-cursor="hide" aria-label="Talk to Hyper" title="Talk to Hyper (V)"
+          ref={agentButton} type="button" className={styles.agent} data-cursor="hide" data-cfo-trigger="" aria-label="Open CFO" aria-haspopup="dialog" aria-controls="hyper-cfo-panel" title="CFO · agent activity"
           style={{ left: `${agentBounds.left * 100}%`, top: `${agentBounds.top * 100}%`, width: `${agentBounds.width * 100}%`, height: `${agentBounds.height * 100}%` }}
           onPointerEnter={hoverAgent}
           onPointerMove={hoverAgent}
@@ -416,7 +437,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
           onClick={event => {
             event.stopPropagation();
             if (event.detail > 0 && !withinAgent(event.currentTarget, event.clientX, event.clientY)) return;
-            window.dispatchEvent(new Event("hyper:agent-toggle"));
+            window.dispatchEvent(new CustomEvent("hyper:cfo-toggle", { detail: { keyboard: event.detail === 0 } }));
           }}
         />}
         {!failed && !warm && <RelicOrbit section={customFocus ? null : focusedStation?.section ?? null} register={registerOrbit} />}
