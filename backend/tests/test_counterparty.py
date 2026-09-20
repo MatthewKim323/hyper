@@ -373,3 +373,90 @@ def test_a_delivered_document_is_named_by_its_id_whatever_order_storage_returns_
     assert 'CM-' in json.dumps(arrived) and '"qty"' not in json.dumps(arrived.get('delivered', arrived))
     for family in FAMILIES:
         for kind, record in [tuple(r) for r in build(family, 1, random.Random(1))['facts']['opening']]: assert isinstance(cp.record_id(kind, record), str)
+
+
+# --- tier 5: the ledger says pay, the conversation says do not ---------------------------------
+
+def credits(store, oid, cid):
+    for record in tool(store, oid, 'list_accounting_records')['records']:
+        if record['record_type'] == 'CREDIT_MEMO': tool(store, oid, 'inspect_payable_credit', case_id=cid, credit_id=record['original_record_id'])
+
+
+def propose(store, oid, cid):
+    state = tool(store, oid, 'analyze_payable', case_id=cid)
+    return state, tool(store, oid, 'prepare_payable_proposal', case_id=cid, based_on_revision=state['case']['revision'])
+
+
+def age(store, scenario_id, ms):
+    with store.engine.begin() as db: db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == scenario_id).values(created_at=cp.now() - ms))
+
+
+def test_tier_five_titles_do_not_name_the_diagnosis():
+    for family in cp.TIERS[5]:
+        title = build(family, 3, random.Random(1))['title']
+        assert title == 'INV-0003 is blocked for payment'
+
+
+def test_paying_through_an_internal_hold_is_a_wrong_release_even_though_every_check_passes(world):
+    store, oid, factory, svc = world
+    scenario = svc.spawn('internal_hold', 'owner', seed=2)
+    flush(store, factory)
+    notice = tool(store, oid, 'get_counterparty_thread', invoice_id=scenario['invoice_id'])['messages'][-1]
+    assert notice['party'] == 'internal' and ('hold' in notice['body'].lower() or 'not' in notice['body'].lower())
+    cid = tool(store, oid, 'open_payable_case', invoice_id=scenario['invoice_id'])['case']['case_id']
+    state, _ = propose(store, oid, cid)
+    assert state['calculation']['ties'], 'the engine has no reason to block: that is the trap'
+    assert [s['outcome'] for s in svc.score()] == ['fail']
+
+
+def test_respecting_an_internal_hold_is_correct(world):
+    store, oid, factory, svc = world
+    scenario = svc.spawn('internal_hold', 'owner', seed=2)
+    flush(store, factory)
+    tool(store, oid, 'request_internal_confirmation', invoice_id=scenario['invoice_id'], request='quantity_status', message='Is the inspection dispute still open?', request_key='h1')
+    flush(store, factory); age(store, scenario['id'], 120_000)
+    assert [s['outcome'] for s in svc.score()] == ['correct_hold']
+
+
+def test_a_credit_the_supplier_withdrew_must_not_be_paid_on(world):
+    store, oid, factory, svc = world
+    scenario = svc.spawn('withdrawn_credit', 'owner', seed=6)
+    inv = scenario['invoice_id']
+    cid = tool(store, oid, 'open_payable_case', invoice_id=inv)['case']['case_id']
+    tool(store, oid, 'request_supplier_document', invoice_id=inv, request='price_correction', message='The unit price exceeds the agreement price.', request_key='w1')
+    flush(store, factory)
+    last_two = tool(store, oid, 'get_counterparty_thread', invoice_id=inv)['messages'][-2:]
+    assert last_two[0]['source_ids'] and not last_two[1]['source_ids'], 'the credit and its withdrawal arrive together, in that order'
+    credits(store, oid, cid)
+    state, _ = propose(store, oid, cid)
+    assert state['calculation']['ties'], 'the engine still counts the memo'
+    assert [s['outcome'] for s in svc.score()] == ['fail']
+
+
+def test_going_back_for_the_rest_of_a_short_credit_pays_the_right_amount_and_is_not_a_repeat(world):
+    store, oid, factory, svc = world
+    scenario = svc.spawn('short_credit', 'owner', seed=9)
+    inv = scenario['invoice_id']
+    expected = build('short_credit', 1, random.Random(9))['facts']['expected_net_cents']
+    cid = tool(store, oid, 'open_payable_case', invoice_id=inv)['case']['case_id']
+    ask = lambda key: tool(store, oid, 'request_supplier_document', invoice_id=inv, request='price_correction', message='The credit does not cover the full price variance.', request_key=key)
+    ask('s1'); flush(store, factory); credits(store, oid, cid)
+    assert not tool(store, oid, 'analyze_payable', case_id=cid)['calculation']['ties'], 'half a credit does not settle it, whatever the supplier said'
+    ask('s2'); flush(store, factory); credits(store, oid, cid)
+    state, _ = propose(store, oid, cid)
+    assert state['calculation']['ties'] and state['calculation']['net_after_credits_cents'] == expected
+    assert [s['outcome'] for s in svc.score()] == ['pass']
+    with store.engine.connect() as db: repeats = lambda: db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == scenario['id'])).scalar()['repeats']
+    with store.engine.connect() as db: assert db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == scenario['id'])).scalar()['repeats'] == 0
+
+
+def test_the_top_tier_is_reachable_and_a_miss_drops_a_tier():
+    good = [{'outcome': 'pass'}] * 12
+    assert Counterparties.level(good) == 5
+    assert Counterparties.level(good + [{'outcome': 'fail'}]) == 4
+
+
+def test_a_post_mortem_exists_only_where_the_ledger_cannot_explain_the_miss():
+    for family in FAMILIES:
+        facts = build(family, 1, random.Random(0))['facts']
+        assert bool(facts['postmortem']) == (family in cp.TIERS[5])

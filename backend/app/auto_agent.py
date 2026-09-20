@@ -197,7 +197,11 @@ def save_activity(store, scenario_id, status, started_at):
 def write_lesson(svc, scenario, model, llm=complete):
     """One reusable sentence or two from a graded case. Scoped to evidence patterns, never to a vendor."""
     trace = scenario['state'].get('agent', {}).get('trace', [])[-24:]
+    # A miss the ledger cannot explain comes with what an auditor would say about it. Without that the
+    # worker only knows it was wrong, not why, and the lesson is a guess.
+    finding = (scenario.get('facts') or {}).get('postmortem') if scenario['outcome'] not in ('pass', 'correct_hold') else None
     prompt = (f'An accounts-payable case was graded {scenario["outcome"]}. Family of situation: {scenario["title"]}. Observable actions taken:\n{brief(trace, 5000)}\n\n'
+              + (f'Audit finding on this case: {finding}\n\n' if finding else '') +
               'Write ONE lesson, at most two sentences, that would help on a future similar case. It must describe an evidence pattern and the right next action. '
               'It must not name a vendor, an invoice or an amount, and must never suggest skipping a check or trusting a party by reputation. Reply with the lesson only.')
     text = llm({'model': model, 'messages': [{'role': 'user', 'content': prompt}], 'max_tokens': 160})['choices'][0]['message'].get('content') or ''

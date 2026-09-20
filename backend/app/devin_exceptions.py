@@ -101,7 +101,7 @@ def learn(store, data_factory):
     """One lesson per graded case, from the grade and the session's own report. Never for a control organization."""
     controls, written = set(pairs().values()), 0
     with store.engine.connect() as db:
-        rows = db.execute(select(scenarios.c.id, scenarios.c.organization_id, scenarios.c.family, scenarios.c.title, scenarios.c.outcome, scenarios.c.state, tasks.c.result)
+        rows = db.execute(select(scenarios.c.id, scenarios.c.organization_id, scenarios.c.family, scenarios.c.title, scenarios.c.outcome, scenarios.c.state, scenarios.c.facts, tasks.c.result)
                           .join(tasks, (tasks.c.organization_id == scenarios.c.organization_id) & (tasks.c.request_key == 'dashboard:exception:' + scenarios.c.id))
                           .where(scenarios.c.status == 'scored').order_by(scenarios.c.scored_at.desc()).limit(40)).mappings().all()
     for row in rows:
@@ -113,7 +113,7 @@ def learn(store, data_factory):
         said = ((row['result'] or {}).get('summary') or 'no result was reported').replace('\n', ' ')[:500]
         state = row['state'] or {}
         text = (f"A case like \"{row['title'].split(' ', 1)[-1]}\" {verdict} ({state.get('requests', 0)} requests, {state.get('repeats', 0)} repeated). "
-                f"What the worker reported: {said} " + ('Repeat what worked.' if good else 'Do not repeat this approach: find what the engine still required and who owed it.'))
+                f"What the worker reported: {said} " + ('Repeat what worked.' if good else 'Audit finding: ' + finding if (finding := (row['facts'] or {}).get('postmortem')) else 'Do not repeat this approach: find what the engine still required and who owed it.'))
         before = len(svc.lessons(200)); svc.add_lesson(row['id'], row['family'], text); written += len(svc.lessons(200)) - before
     return written
 
