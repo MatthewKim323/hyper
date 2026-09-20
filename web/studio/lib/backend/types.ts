@@ -7,10 +7,15 @@ export type Workspace = {
   next_step: "onboarding" | "workspace";
 };
 
+export type ConnectorProvider = "gmail" | "drive" | "ramp" | "plaid";
+export type ConnectionStatus = "authorizing" | "connected" | "authorization_failed" | "error" | "reauth_required" | "disconnected";
 export type Connection = {
-  id: string; provider: string; label: string; status: string;
-  created_at: number; last_synced_at: number | null; error: string | null;
+  id: string; provider: ConnectorProvider | string; label: string; status: ConnectionStatus | string;
+  created_at: number; last_synced_at: number | null; next_sync_at?: number | null; failures?: number; error: string | null;
 };
+/** `configured` is false when the server has no credentials for that provider, so connecting cannot work yet. */
+export type ProviderInfo = { id: ConnectorProvider | string; configured: boolean; auth: string; imports: string[]; environment?: string };
+export type ConnectionItem = { item_id: string; filename: string | null; status: string; error: string | null; updated_at: number; source_ids: string[] };
 
 export type ConcernStatus =
   | "draft" | "generating" | "card_failed" | "awaiting_response" | "queued" | "resolving" | "resolved" | "needs_input" | "failed";

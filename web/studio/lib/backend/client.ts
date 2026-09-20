@@ -6,7 +6,7 @@
 import type {
   AccountingRecord, EngineCase, PayableProposal,
   AgentCase, AgentTask, Artifact, Concern, ConcernStatus, Controller, Dataset, EvidenceSearch, FinancialAggregate,
-  FinancialQuery, Simulation, SimulationEvent, Source, SourceDetail, Workspace, Connection,
+  FinancialQuery, Simulation, SimulationEvent, Source, SourceDetail, Workspace, Connection, ConnectionItem, ProviderInfo,
 } from "./types";
 
 const BASE = "/api/onboarding";
@@ -45,6 +45,15 @@ const query = (params: Record<string, string | number | undefined>) => {
 export const backend = {
   workspace: () => call<Workspace>("/me/workspace"),
   connections: () => call<{ connections: Connection[]; has_more: boolean }>("/connections"),
+  // Access. Connectors are read-only. Provider secrets are never returned by any of these.
+  providers: () => call<{ providers: ProviderInfo[]; read_only: boolean; sync_method: string }>("/connections/providers"),
+  /** Returns a Google consent URL. The provider redirects to the backend, so poll `connections` for the result. */
+  authorizeGoogle: (kind: "gmail" | "drive", label?: string) =>
+    post<{ connection_id: string; authorization_url: string; expires_in: number }>(`/connections/google/${kind}/authorize`, label ? { label } : {}),
+  connectRamp: (body: { client_id: string; client_secret: string; environment: "sandbox" | "production"; label?: string }) => post<Connection>("/connections/ramp", body),
+  syncConnection: (id: string) => post<Connection>(`/connections/${encodeURIComponent(id)}/sync`),
+  disconnect: (id: string) => post<Connection>(`/connections/${encodeURIComponent(id)}/disconnect`),
+  connectionItems: (id: string, limit = 5) => call<{ items: ConnectionItem[]; has_more: boolean }>(`/connections/${encodeURIComponent(id)}/items${query({ limit })}`),
 
   // Review. Claim and resolve exist on the API but are agent actions; they are deliberately absent here.
   concerns: (status?: ConcernStatus, limit = 50, offset = 0) => call<{ concerns: Concern[]; has_more: boolean }>(`/concerns${query({ status, limit, offset })}`),
