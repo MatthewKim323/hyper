@@ -103,7 +103,16 @@ def main():
     for d in documents:
         body=f"{d['kind'].replace('_',' ').title()} | {d['date']}\nSubject: {d['subject']}\n\n{d['body']}\n"
         by_source[svc.ingest(d['document_id']+'.txt',body.encode(),source_key='demo/narratives/'+d['document_id'])['id']]=d['document_id']
+    # One refresh at the end, not one per source: on Serverless a refresh costs seconds and there are 650 sources.
+    refresh,search.refresh=search.refresh,lambda:None
     while run_once(store,search):pass
+    search.refresh=refresh;search.refresh()
+    from sqlalchemy import select,func
+    from .database import sources as source_table
+    with store.engine.connect() as db:
+        unready=db.execute(select(func.count()).select_from(source_table).where(source_table.c.active.is_(True),source_table.c.index_status!='ready')).scalar()
+    # A benchmark over a half-built index measures the outage, not retrieval.
+    if unready:raise SystemExit(f'{unready} sources are not indexed; fix and rerun with --reuse')
     built=None if args.reuse else round(time.time()-started,1)
     from .graph import Graph
     shape=Graph(store.engine,svc.oid).stats()

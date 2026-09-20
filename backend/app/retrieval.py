@@ -98,33 +98,32 @@ class ElasticSearch:
         filters=[{'term':{'organization_id':oid}},{'terms':{'source_id':source_ids}}]
         def branch(field):
             return {'standard':{'query':{'bool':{'filter':filters,'must':[{'match':{field:query}}]}}}}
-        retrievers=[branch('content')]
-        if self.inference_id:
-            retrievers.append(branch('semantic'))
-            if entities or related:
-                # Text gets one vote and the graph gets one. Flat, two text retrievers outvote an exact match
-                # (measured: recall@10 0.74 flat against 0.93 without embeddings at all).
-                retrievers=[{'rrf':{'retrievers':retrievers,'rank_window_size':max(50,limit)}}]
+        window=max(50,limit)
+        def rerank(candidate):
+            return {'text_similarity_reranker':{'retriever':candidate,'field':'content','inference_id':self.rerank_id,
+                'inference_text':query,'rank_window_size':window}}
+        text=branch('content')
+        if self.inference_id:text={'rrf':{'retrievers':[text,branch('semantic')],'rank_window_size':window}}
         if entities or related:
             # Exact identifiers beat graph neighbours, near neighbours beat far ones, documents beat ledger rows.
             # Text relevance only breaks ties, so it can never outvote an exact match.
             linked=[{'constant_score':{'filter':{'terms':{'entity_ids':list(entities)}},'boost':8}}] if entities else []
             for hop in sorted(set((related or {}).values())):
                 linked.append({'constant_score':{'filter':{'terms':{'entity_ids':[k for k,v in related.items() if v==hop]}},'boost':4/hop/hop}})
-            retrievers.append({'standard':{'query':{'bool':{'filter':filters,
+            graph={'standard':{'query':{'bool':{'filter':filters,
                 'must':[{'bool':{'should':linked,'minimum_should_match':1}}],
                 'should':[{'constant_score':{'filter':{'term':{'dataset':''}},'boost':2}},
-                          {'match':{'content':{'query':query,'boost':0.01}}}]}}}})
-        body={'size':limit,'_source':['source_id','chunk_id','locator']}
-        if len(retrievers)>1:
-            body['retriever']={'rrf':{'retrievers':retrievers,'rank_window_size':max(50,limit)}}
+                          {'match':{'content':{'query':query,'boost':0.01}}}]}}}}
+            # Text gets one vote and the graph gets one. Measured on the same questions: three flat voters let two
+            # text retrievers outvote an exact match (recall@10 0.74), and reranking the fused list rescored away the
+            # documents related by record rather than by wording (0.77). So the reranker judges text only, and the
+            # graph then votes against the reranked text.
+            retriever={'rrf':{'retrievers':[rerank(text) if self.rerank_id else text,graph],'rank_window_size':window}}
         else:
-            body['query']=branch('content')['standard']['query']
-        if self.rerank_id:
-            candidate=body.pop('retriever',None) or {'standard':{'query':body.pop('query')}}
-            body['retriever']={'text_similarity_reranker':{
-                'retriever':candidate,'field':'content','inference_id':self.rerank_id,
-                'inference_text':query,'rank_window_size':max(50,limit)}}
+            retriever=rerank(text) if self.rerank_id else text
+        body={'size':limit,'_source':['source_id','chunk_id','locator']}
+        if 'standard' in retriever:body['query']=retriever['standard']['query']
+        else:body['retriever']=retriever
         result=self.request('POST',f'{self.index}/_search',json=body)
         if result.get('timed_out') or result.get('_shards',{}).get('failed'):
             raise RuntimeError('Search returned incomplete results')

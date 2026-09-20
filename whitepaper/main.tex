@@ -189,14 +189,23 @@ A separate post-hoc conservation gate on the original BenchRec assignments raise
 
 \subsection{Retrieval with the knowledge graph}
 
-We measured evidence retrieval on the synthetic Meridian company: 612 draft emails, chats, notes and contract excerpts among 115{,}348 ledger rows, against a local Elasticsearch 9.3 with ELSER v2 embeddings on documents and no reranker. The answer key is the list of record identifiers each document was authored from, which is never indexed. 172 templated questions fall in three families: an identifier the documents also contain, a counterparty name only, and an identifier \emph{no document mentions} (a payment, a journal entry) that only a recorded relationship connects to the correspondence. That last family is keyed by joining the raw exports, not by asking the graph. Scores are over the top ten documents.
+We measured evidence retrieval on the synthetic Meridian company: 612 draft emails, chats, notes and contract excerpts among 115{,}348 ledger rows, first against a local Elasticsearch 9.3 with ELSER v2 embeddings on documents and no reranker. The answer key is the list of record identifiers each document was authored from, which is never indexed. 172 templated questions fall in three families: an identifier the documents also contain, a counterparty name only, and an identifier \emph{no document mentions} (a payment, a journal entry) that only a recorded relationship connects to the correspondence. That last family is keyed by joining the raw exports, not by asking the graph. Scores are over the top ten documents.
 
 \begin{table}[h]
 \centering\small
 \liveretrievaltable
 \end{table}
 
-\noindent Embeddings alone move little here, because the documents that matter cite \texttt{VEN-002}, not the vendor's name. An identifier nobody wrote down is nearly unfindable by text and is recovered by one or two recorded hops. The first fusion treated BM25, embeddings and the graph retriever as three equal voters and scored 0.735 recall@10, \emph{below} the graph with no embeddings at all: two text voters outvoted an exact match. Text is now fused first and the graph fused against the result. The limits are plain: the documents are synthetic drafts that repeat their identifiers, which flatters every lexical mode; the questions are templated, so this measures entity and relationship recall and says nothing about paraphrase; relevance is binary and document-level; the reranking path is unmeasured. The questions are asked again whenever retrieval code changes and the scores are appended to the timeline below.
+\noindent Embeddings alone move little here, because the documents that matter cite \texttt{VEN-002}, not the vendor's name. An identifier nobody wrote down is nearly unfindable by text and is recovered by one or two recorded hops. The first fusion treated BM25, embeddings and the graph retriever as three equal voters and scored 0.735 recall@10, \emph{below} the graph with no embeddings at all: two text voters outvoted an exact match. Text is now fused first and the graph fused against the result. \par\medskip The same questions were then asked on \textbf{Elastic Cloud Serverless} with \textbf{Jina} models throughout: \texttt{.jina-embeddings-v5-text-small} behind \texttt{semantic\_text} and \texttt{.jina-reranker-v3.5} for reranking, both preconfigured on the project.
+
+\begin{table}[h]
+\centering\small
+\livejinatable
+\end{table}
+
+\noindent Two results, neither of which we expected to write. First, the embedding model barely matters on this corpus: Jina and ELSER with the graph land within a thousandth of each other, because recall here comes from recorded relationships. Second, the reranker placed where every tutorial places it, over the final fused list, made retrieval \emph{worse}, and by a wide margin on the questions only a relationship can answer. A cross-encoder scores wording, and a document that is relevant because its invoice was settled by the payment in the question shares no wording with it, so reranking rescored the graph's contribution away. The reranker now judges the text retrievers alone, and the graph retriever votes against the reranked text. That is the best configuration measured, it keeps what reranking is good at (it sharpens the top of the list when the question and the document do share words), and it costs roughly twice the latency. The production deployment was running the first shape until this measurement.
+
+The limits are plain: the documents are synthetic drafts that repeat their identifiers, which flatters every lexical mode; the questions are templated, so this measures entity and relationship recall and says nothing about paraphrase; relevance is binary and document-level. The questions are asked again whenever retrieval code changes and the scores are appended to the timeline below.
 
 \subsection{A continuous adversarial loop, measured over time}
 

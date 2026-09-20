@@ -217,6 +217,17 @@ def measure_retrieval(engine):
         for mode, r in report['results'].items()}, {'code': code, 'questions': report['questions'], 'embedding': report['embedding']})
     return 'measured'
 
+def record_retrieval_files(engine):
+    """Labelled benchmark runs (another cluster, another embedding model) are started by hand; whatever they wrote is recorded once."""
+    for path in sorted((BACKEND / 'benchmarks').glob('retrieval-*.json')):
+        report = json.loads(path.read_text()); subject = 'meridian-' + path.stem[len('retrieval-'):]
+        stamp = {'file': path.name, 'results': report['results']}
+        previous = last(engine, 'retrieval', subject)
+        if previous and previous['context'].get('fingerprint') == json.dumps(stamp, sort_keys=True): continue
+        record(engine, 'retrieval', subject, {mode: {**r['all'], 'linked_recall@10': r['linked']['recall@10'], 'latency_p50_ms': r['latency_ms']['p50']}
+            for mode, r in report['results'].items()}, {'fingerprint': json.dumps(stamp, sort_keys=True), 'target': report.get('target'),
+            'embedding': report.get('embedding'), 'rerank': report.get('rerank'), 'questions': report['questions']})
+
 def measure_tests(engine):
     head = git()['sha']; previous = last(engine, 'tests', 'backend')
     if previous and previous['context'].get('sha') == head and not git()['dirty']: return 'unchanged'
@@ -299,6 +310,20 @@ def paper(engine, doc, org):
                   '\\textbf{Retrievers} & \\textbf{Recall@10} & \\textbf{Unwritten-ID recall@10} & \\textbf{MRR@10} & \\textbf{nDCG@10} & \\textbf{p50} \\\\', '\\midrule',
                   *[f"{name} & {ret[m]['recall@10']:.3f} & {ret[m]['linked_recall@10']:.3f} & {ret[m]['mrr@10']:.3f} & {ret[m]['ndcg@10']:.3f} & {ret[m]['latency_p50_ms']}\\,ms \\\\" for m, name in modes if m in ret],
                   '\\bottomrule', '\\end{tabular}}']
+    shapes = [('retrieval-jina.json', 'hybrid', 'Jina v5 (BM25 + embeddings)'), ('retrieval-jina.json', 'hybrid+rerank', 'Jina v5 + Jina reranker'),
+              ('retrieval-jina.json', 'hybrid+graph', 'Jina v5 + graph'),
+              ('retrieval-jina-rerank-on-top.json', 'hybrid+graph+rerank', 'Jina v5 + graph, reranker over the fused list'),
+              ('retrieval-jina.json', 'hybrid+graph+rerank', 'Jina v5 + graph, reranker on text only')]
+    jina = []
+    for name, mode, label in shapes:
+        path = BACKEND / 'benchmarks' / name
+        if not path.exists(): continue
+        r = json.loads(path.read_text())['results'].get(mode)
+        if r: jina.append(f"{label} & {r['all']['recall@10']:.3f} & {r['linked']['recall@10']:.3f} & {r['all']['mrr@10']:.3f} & {r['all']['ndcg@10']:.3f} & {r['latency_ms']['p50']}\\,ms \\\\")
+    if jina:
+        lines += ['\\newcommand{\\livejinatable}{%', '\\begin{tabular}{@{}lrrrrr@{}}', '\\toprule',
+                  '\\textbf{Serverless, Jina models} & \\textbf{Recall@10} & \\textbf{Unwritten-ID recall@10} & \\textbf{MRR@10} & \\textbf{nDCG@10} & \\textbf{p50} \\\\', '\\midrule',
+                  *jina, '\\bottomrule', '\\end{tabular}}']
     tests = (by.get(('tests', 'backend')) or [None])[-1]
     if tests: lines.append(f"\\newcommand{{\\livetests}}{{{tests['passed']} passed, {tests['failed']} failed}}")
     target = BACKEND.parent / 'whitepaper/live-results.tex'
@@ -318,6 +343,8 @@ def tick(engine, orgs, measure=True):
         done['tests'] = measure_tests(engine)
         try: done['retrieval'] = measure_retrieval(engine)
         except Exception as exc: done['retrieval'] = 'failed: ' + type(exc).__name__
+    try: record_retrieval_files(engine)
+    except Exception as exc: done['retrieval_files'] = 'failed: ' + type(exc).__name__
     out = BACKEND / 'benchmarks/timeline.json'
     out.parent.mkdir(exist_ok=True)
     doc = document(engine, orgs)

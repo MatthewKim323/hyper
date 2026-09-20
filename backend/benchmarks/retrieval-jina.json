@@ -1,0 +1,210 @@
+{
+ "corpus": {
+  "documents": 612,
+  "structured_rows": 115348,
+  "graph": {
+   "nodes": 115348,
+   "edges": 281315,
+   "mentions": 400376
+  },
+  "ingest_index_seconds": null
+ },
+ "questions": {
+  "identifier": 60,
+  "name": 52,
+  "linked": 60
+ },
+ "seed": 20260919,
+ "scope": "documents_only, top 10",
+ "target": "cloud",
+ "label": "jina",
+ "embedding": ".jina-embeddings-v5-text-small",
+ "rerank": ".jina-reranker-v3.5",
+ "results": {
+  "keyword": {
+   "latency_ms": {
+    "p50": 335,
+    "p95": 568
+   },
+   "identifier": {
+    "recall@5": 0.816,
+    "recall@10": 0.866,
+    "mrr@10": 0.9,
+    "ndcg@10": 0.84
+   },
+   "all": {
+    "recall@5": 0.519,
+    "recall@10": 0.546,
+    "mrr@10": 0.671,
+    "ndcg@10": 0.548
+   },
+   "name": {
+    "recall@5": 0.544,
+    "recall@10": 0.521,
+    "mrr@10": 0.835,
+    "ndcg@10": 0.56
+   },
+   "linked": {
+    "recall@5": 0.2,
+    "recall@10": 0.248,
+    "mrr@10": 0.299,
+    "ndcg@10": 0.247
+   }
+  },
+  "keyword+graph": {
+   "latency_ms": {
+    "p50": 395,
+    "p95": 680
+   },
+   "identifier": {
+    "recall@5": 0.973,
+    "recall@10": 0.99,
+    "mrr@10": 0.992,
+    "ndcg@10": 0.98
+   },
+   "all": {
+    "recall@5": 0.819,
+    "recall@10": 0.93,
+    "mrr@10": 0.928,
+    "ndcg@10": 0.886
+   },
+   "name": {
+    "recall@5": 0.902,
+    "recall@10": 0.948,
+    "mrr@10": 0.99,
+    "ndcg@10": 0.937
+   },
+   "linked": {
+    "recall@5": 0.593,
+    "recall@10": 0.855,
+    "mrr@10": 0.81,
+    "ndcg@10": 0.747
+   }
+  },
+  "hybrid": {
+   "latency_ms": {
+    "p50": 449,
+    "p95": 698
+   },
+   "identifier": {
+    "recall@5": 0.785,
+    "recall@10": 0.843,
+    "mrr@10": 0.916,
+    "ndcg@10": 0.82
+   },
+   "all": {
+    "recall@5": 0.521,
+    "recall@10": 0.533,
+    "mrr@10": 0.702,
+    "ndcg@10": 0.55
+   },
+   "name": {
+    "recall@5": 0.578,
+    "recall@10": 0.522,
+    "mrr@10": 0.941,
+    "ndcg@10": 0.602
+   },
+   "linked": {
+    "recall@5": 0.207,
+    "recall@10": 0.233,
+    "mrr@10": 0.279,
+    "ndcg@10": 0.236
+   }
+  },
+  "hybrid+graph": {
+   "latency_ms": {
+    "p50": 547,
+    "p95": 866
+   },
+   "identifier": {
+    "recall@5": 0.967,
+    "recall@10": 0.996,
+    "mrr@10": 0.951,
+    "ndcg@10": 0.953
+   },
+   "all": {
+    "recall@5": 0.82,
+    "recall@10": 0.936,
+    "mrr@10": 0.919,
+    "ndcg@10": 0.884
+   },
+   "name": {
+    "recall@5": 0.87,
+    "recall@10": 0.954,
+    "mrr@10": 0.99,
+    "ndcg@10": 0.939
+   },
+   "linked": {
+    "recall@5": 0.63,
+    "recall@10": 0.861,
+    "mrr@10": 0.826,
+    "ndcg@10": 0.768
+   }
+  },
+  "hybrid+rerank": {
+   "latency_ms": {
+    "p50": 1032,
+    "p95": 1292
+   },
+   "identifier": {
+    "recall@5": 0.981,
+    "recall@10": 0.982,
+    "mrr@10": 0.972,
+    "ndcg@10": 0.965
+   },
+   "all": {
+    "recall@5": 0.683,
+    "recall@10": 0.663,
+    "mrr@10": 0.744,
+    "ndcg@10": 0.678
+   },
+   "name": {
+    "recall@5": 0.808,
+    "recall@10": 0.731,
+    "mrr@10": 1.0,
+    "ndcg@10": 0.805
+   },
+   "linked": {
+    "recall@5": 0.277,
+    "recall@10": 0.287,
+    "mrr@10": 0.294,
+    "ndcg@10": 0.281
+   }
+  },
+  "hybrid+graph+rerank": {
+   "latency_ms": {
+    "p50": 1092,
+    "p95": 1466
+   },
+   "identifier": {
+    "recall@5": 0.992,
+    "recall@10": 0.996,
+    "mrr@10": 1.0,
+    "ndcg@10": 0.993
+   },
+   "all": {
+    "recall@5": 0.832,
+    "recall@10": 0.944,
+    "mrr@10": 0.94,
+    "ndcg@10": 0.907
+   },
+   "name": {
+    "recall@5": 0.899,
+    "recall@10": 0.975,
+    "mrr@10": 0.981,
+    "ndcg@10": 0.957
+   },
+   "linked": {
+    "recall@5": 0.613,
+    "recall@10": 0.864,
+    "mrr@10": 0.846,
+    "ndcg@10": 0.777
+   }
+  }
+ },
+ "limits": [
+  "Documents are synthetic drafts that usually repeat their identifiers, which flatters every lexical mode.",
+  "Questions are templated, so this measures entity and relationship recall, not paraphrase understanding.",
+  "Relevance is document-level and binary, from authoring metadata."
+ ]
+}

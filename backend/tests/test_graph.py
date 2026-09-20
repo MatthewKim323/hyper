@@ -170,3 +170,16 @@ def test_skipped_organizations_are_not_indexed_and_do_not_break_coverage(world,m
     while run_once(store,search):pass
     assert svc.source(extra['id'])['index_status']=='skipped' and extra['id']+':0' not in search.docs
     assert svc.search_evidence(EvidenceQuery(query='Granite Legal'))['coverage_complete'] is True
+
+def test_the_reranker_judges_text_and_the_graph_votes_after(monkeypatch):
+    monkeypatch.setenv('ELASTIC_INFERENCE_ID','embed');monkeypatch.setenv('ELASTIC_RERANK_INFERENCE_ID','rerank')
+    es=ElasticSearch();captured={}
+    es.request=lambda method,path,**kwargs:captured.update(kwargs['json']) or {'hits':{'hits':[]}}
+    es.search('org-1',['s1'],'granite',5,entities=['vendor:VEN-002'],related={'purchase_order:PO-1':1})
+    text,graph=captured['retriever']['rrf']['retrievers']
+    # Reranking sits under the fusion, around text alone. Nothing rescored the graph branch by wording.
+    assert text['text_similarity_reranker']['inference_id']=='rerank' and len(text['text_similarity_reranker']['retriever']['rrf']['retrievers'])==2
+    assert 'text_similarity_reranker' not in json.dumps(graph) and 'entity_ids' in json.dumps(graph) and 'entity_ids' not in json.dumps(text)
+    assert graph['standard']['query']['bool']['filter']==[{'term':{'organization_id':'org-1'}},{'terms':{'source_id':['s1']}}]
+    es.search('org-1',['s1'],'granite',5)
+    assert list(captured['retriever'])==['text_similarity_reranker']

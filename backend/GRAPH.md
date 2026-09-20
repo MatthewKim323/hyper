@@ -121,6 +121,20 @@ What it does not show: the documents are synthetic drafts that repeat their iden
 - `occurred_at` versus `observed_at` on edges. Late receipts and revised invoices need both.
 - A paraphrase question family. Templated questions cannot show what `semantic_text` adds.
 
+## Jina on Serverless, and where the reranker goes
+
+`uv run python -m app.retrieval_bench --target cloud --embedding .jina-embeddings-v5-text-small --rerank .jina-reranker-v3.5 --label jina` runs the same 172 questions on the Elastic Cloud Serverless project (`ELASTIC_CLOUD_URL`, `ELASTIC_CLOUD_API_KEY`). Results: `benchmarks/retrieval-jina.json`, and `retrieval-jina-rerank-on-top.json` for the shape that was replaced.
+
+| Configuration | recall@10 | unwritten-ID recall@10 | MRR@10 | p50 |
+|---|---:|---:|---:|---:|
+| Jina v5 (BM25 + embeddings) | 0.533 | 0.233 | 0.702 | 449 ms |
+| Jina v5 + Jina reranker | 0.663 | 0.287 | 0.744 | 1032 ms |
+| Jina v5 + graph | 0.936 | 0.861 | 0.919 | 547 ms |
+| Jina v5 + graph, reranker over the fused list | 0.770 | 0.377 | 0.764 | 1096 ms |
+| Jina v5 + graph, reranker on text only | **0.944** | 0.864 | 0.940 | 1092 ms |
+
+The embedding model barely matters here (ELSER + graph is 0.937). The reranker's position does: over the fused list it rescores by wording and throws out documents that are relevant by record, not by words. `retrieval.py` now builds `rrf[ rerank(rrf[bm25, semantic]), graph ]`. With no entities in the question there is no graph branch and the reranker wraps the text as before.
+
 ## Tracked over time
 
 `app/bench_timeline.py` asks these questions again whenever `retrieval.py`, `graph.py`, `data_service.py`, `parsing.py` or `ingestion_worker.py` change, and appends the scores to the benchmark timeline (`GET /benchmarks/timeline`, series `retrieval`) stamped with the commit.
