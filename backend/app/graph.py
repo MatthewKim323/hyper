@@ -178,13 +178,13 @@ class Graph:
         sid,dataset=source['id'],source['dataset']
         spec=ONTOLOGY.get(dataset)
         lookup=None if spec else self.alias_index(db)
-        offset=0
+        after=0
         while True:
             page=db.execute(select(records.c.row_number,records.c.record_id,records.c.payload).where(
-                records.c.source_id==sid,records.c.organization_id==self.oid).order_by(records.c.row_number)
-                .offset(offset).limit(2000)).mappings().all()
+                records.c.source_id==sid,records.c.organization_id==self.oid,records.c.row_number>after)
+                .order_by(records.c.row_number).limit(2000)).mappings().all()
             if not page:break
-            offset+=len(page)
+            after=page[-1]['row_number']
             n,e,a,m=[],[],[],[]
             for row in page:
                 payload,number=row['payload'],row['row_number']

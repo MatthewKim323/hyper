@@ -38,7 +38,7 @@ def run_once(store, search, organization_id=None):
         # Graph first: the index stores which entities each chunk mentions.
         graph=Graph(store.engine,source['organization_id'])
         graph.build_source(source)
-        offset=0
+        after=-1
         semantic_datasets={x.strip() for x in os.getenv('ELASTIC_SEMANTIC_DATASETS','').split(',') if x.strip()}
         semantic = bool(getattr(search,'inference_id','')) and (not source['dataset'] or source['dataset'] in semantic_datasets)
         # Keep inference queues short so interactive retrieval is not starved by uploads.
@@ -46,13 +46,13 @@ def run_once(store, search, organization_id=None):
         while True:
             with store.engine.connect() as db:
                 rows=db.execute(select(chunks).where(chunks.c.source_id==source['id'],
-                    chunks.c.organization_id==source['organization_id']).order_by(chunks.c.ordinal)
-                    .offset(offset).limit(batch_size)).mappings().all()
+                    chunks.c.organization_id==source['organization_id'],chunks.c.ordinal>after)
+                    .order_by(chunks.c.ordinal).limit(batch_size)).mappings().all()
             if not rows:break
             named=graph.chunk_entities([r['id'] for r in rows])
             rows=[{**r,'entity_ids':index_terms(named[r['id']])} for r in rows]
             search.index_chunks(source,rows)
-            offset+=len(rows)
+            after=rows[-1]['ordinal']
             with store.engine.begin() as db:
                 result=db.execute(update(jobs).where(jobs.c.id==job['id'],jobs.c.claim_token==token)
                     .values(lease_until=int(time.time())+600))

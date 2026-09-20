@@ -20,11 +20,13 @@ class ElasticSearch:
             self.auth=(os.environ['ELASTICSEARCH_USERNAME'],os.environ.get('ELASTICSEARCH_PASSWORD',''))
 
     def request(self, method, path, **kwargs):
-        with httpx.Client(timeout=120,headers=self.headers,auth=self.auth,
-                          verify=os.getenv('ELASTICSEARCH_CA_CERT') or True) as client:
-            r=client.request(method,self.url+'/'+path.lstrip('/'),**kwargs)
-            r.raise_for_status()
-            return r.json()
+        # One pooled client: a bulk import is thousands of calls to the same host.
+        if getattr(self,'_client',None) is None:
+            self._client=httpx.Client(timeout=120,headers=self.headers,auth=self.auth,
+                verify=os.getenv('ELASTICSEARCH_CA_CERT') or True)
+        r=self._client.request(method,self.url+'/'+path.lstrip('/'),**kwargs)
+        r.raise_for_status()
+        return r.json()
 
     def ensure_index(self):
         mapping={'dynamic':'strict','properties':{
