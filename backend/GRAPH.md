@@ -120,3 +120,7 @@ What it does not show: the documents are synthetic drafts that repeat their iden
 - Edges from the AP engine (`resolve` cases, issues, credits, proposals, approvals) and from counterparty threads.
 - `occurred_at` versus `observed_at` on edges. Late receipts and revised invoices need both.
 - A paraphrase question family. Templated questions cannot show what `semantic_text` adds.
+
+## Tracked over time
+
+`app/bench_timeline.py` asks these questions again whenever `retrieval.py`, `graph.py`, `data_service.py`, `parsing.py` or `ingestion_worker.py` change, and appends the scores to the benchmark timeline (`GET /benchmarks/timeline`, series `retrieval`) stamped with the commit.
