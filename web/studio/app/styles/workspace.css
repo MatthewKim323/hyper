@@ -161,14 +161,16 @@
 .ws-hero { margin: 0 0 1.4rem; } .ws-chart--volume { height: 170px; margin-top: 0.5rem; }
 .ws-gauge { max-width: 300px; margin: 0.4rem auto 0.8rem; } .ws-rings { width: 150px; height: 150px; margin: 0 auto; }
 
-/* Route-level back link (components/RouteBack.tsx). Sits over the WebGL canvas, which is
-   z-40, but well under the loading layer (12000) so it cannot show through the intro. It
-   also waits for data-loader-cleared, the same flag the hand-cursor dock uses. */
+/* Route-level back link (components/RouteBack.tsx). It must clear the onboarding surface,
+   which is a full-viewport fixed layer at z-index 80 with pointer-events, so a lower value
+   leaves this link rendered underneath it and unclickable. 110 also clears .ws-signin (90,
+   another full-viewport layer) and the grid toggle (100), while staying far below the
+   loading layer (12000). It waits for data-loader-cleared like the hand-cursor dock. */
 .route-back {
   position: fixed;
   left: 20px;
   top: 20px;
-  z-index: 60;
+  z-index: 110;
   display: inline-flex;
   align-items: center;
   gap: 6px;

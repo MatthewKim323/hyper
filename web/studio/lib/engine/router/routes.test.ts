@@ -71,6 +71,24 @@ describe("route table", () => {
     assert.deepEqual(offenders, []);
   });
 
+
+  test("the route-level back link outranks every full-viewport overlay it shares a page with", () => {
+    // .hyper-onboarding (80) and .ws-signin (90) are fixed, inset:0 and take pointer events,
+    // so a lower .route-back renders underneath them and cannot be clicked.
+    const css = (name: string) => readFileSync(join(import.meta.dirname, "../../../app/styles", name), "utf8");
+    const zOf = (text: string, selector: string) => {
+      const at = text.indexOf(selector);
+      assert.ok(at >= 0, `missing ${selector}`);
+      const block = text.slice(at, text.indexOf("}", at));
+      return Number(/z-index:\s*(\d+)/.exec(block)?.[1]);
+    };
+    const back = zOf(css("workspace.css"), ".route-back {");
+    assert.ok(back > zOf(css("onboarding.css"), ".hyper-onboarding {"), "back link is under the onboarding surface");
+    assert.ok(back > zOf(css("workspace.css"), ".ws-signin {"), "back link is under the sign-in overlay");
+    // ...and stays under the loading layer, which must cover everything.
+    assert.ok(back < 12000, "back link would show through the loading screen");
+  });
+
   test("normalizePath adds exactly one trailing slash", () => {
     assert.equal(normalizePath("/world"), "/world/");
     assert.equal(normalizePath("/world/"), "/world/");
