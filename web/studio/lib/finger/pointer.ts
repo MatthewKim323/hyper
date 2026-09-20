@@ -92,12 +92,29 @@ export class VirtualPointer {
     target.dispatchEvent(new WheelEvent("wheel", { ...this.init(), deltaX: dx, deltaY: dy, deltaMode: 0 }));
   }
 
-  /** Release everything, for when the hand leaves the frame. */
+  /**
+   * Release everything, for when the hand leaves the frame or the mode turns off. Leaving the hovered
+   * element matters as much as releasing the button: hover states (the site's own cursor hides itself
+   * over buttons) would otherwise stay stuck with nothing left to undo them.
+   */
   cancel() {
     if (this.pressed) {
       this.pressed = false;
       this.downTarget = null;
       this.fire(document.documentElement, "mouseup");
     }
+    if (this.over) {
+      const left = this.over;
+      this.over = null;
+      this.fire(left, "mouseout", { relatedTarget: null });
+      for (const el of chain(left)) this.fire(el, "mouseleave", { bubbles: false, relatedTarget: null });
+    }
+  }
+
+  /** Hand the pointer back to the hardware mouse at its last real position. */
+  handBack(x: number, y: number) {
+    this.cancel();
+    this.move(x, y);
+    this.over = null;
   }
 }

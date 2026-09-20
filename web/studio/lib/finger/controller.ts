@@ -3,7 +3,34 @@
 // pointer events, drawing) happens in render, so a 30 fps camera still gives a smooth cursor.
 import { OneEuro2D } from "./one-euro";
 import { VirtualPointer } from "./pointer";
+import { chooseTarget, snapPoint, type SnapRect, type SnapState } from "./snap";
 import type { HandFrame } from "./tracker";
+
+const SNAPPABLE = "a[href], button:not(:disabled), [role='button'], input:not([type='hidden']):not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [data-magnetic]";
+
+/** Everything clickable that is really on screen and really on top, as plain rects. */
+// Stable ids, so a target keeps its hold on the cursor when the page around it re-renders.
+const targetIds = new WeakMap<Element, number>();
+let nextTargetId = 1;
+
+function collectTargets(): SnapRect[] {
+  const out: SnapRect[] = [];
+  for (const el of document.querySelectorAll<HTMLElement>(SNAPPABLE)) {
+    let id = targetIds.get(el);
+    if (!id) { id = nextTargetId++; targetIds.set(el, id); }
+    const r = el.getBoundingClientRect();
+    if (r.width < 6 || r.height < 6 || r.bottom < 0 || r.right < 0 || r.top > window.innerHeight || r.left > window.innerWidth) continue;
+    // Whole-screen catchers and page-sized areas need no help to hit.
+    if (r.width > 600 && r.height > 300) continue;
+    if (el.closest("[inert], [aria-hidden='true']")) continue;
+    const cx = Math.min(Math.max(r.left + r.width / 2, 1), window.innerWidth - 1);
+    const cy = Math.min(Math.max(r.top + r.height / 2, 1), window.innerHeight - 1);
+    const top = document.elementFromPoint(cx, cy);
+    if (!top || !(el === top || el.contains(top) || top.contains(el))) continue;
+    out.push({ id, left: r.left, top: r.top, width: r.width, height: r.height });
+  }
+  return out;
+}
 
 type P2 = { x: number; y: number };
 type P3 = { x: number; y: number; z: number };
@@ -36,8 +63,6 @@ const DRAG_THRESHOLD = 0.028;
 const FIST_MS = 150;
 const LOST_HOLD_MS = 220;
 const PREDICT_S = 0.036;
-const MAGNET_RADIUS = 72;
-const MAGNET_PULL = 0.34;
 const SCROLL_GAIN = 2.4;
 
 const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
@@ -77,13 +102,15 @@ export class FingerController {
   private trail: P2[] = [];
   private pops: { x: number; y: number; t: number }[] = [];
   private alpha = 0;
-  private magnets: DOMRect[] = [];
-  private magnetsAt = 0;
+  private targets: SnapRect[] = [];
+  private targetsAt = 0;
+  private snap: SnapState = { id: null };
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d")!;
     this.resize();
     window.addEventListener("resize", this.resize);
+    window.addEventListener("mousemove", this.onRealMouse, { passive: true, capture: true });
     this.raf = requestAnimationFrame(this.render);
     this.poll = window.setInterval(this.tick, POLL_MS);
   }
@@ -92,7 +119,19 @@ export class FingerController {
     cancelAnimationFrame(this.raf);
     clearInterval(this.poll);
     window.removeEventListener("resize", this.resize);
-    this.pointer.cancel();
+    window.removeEventListener("mousemove", this.onRealMouse, { capture: true });
+    this.giveBack();
+  }
+
+  // Only hardware moves are trusted; the finger's own events are synthetic.
+  private realMouse: P2 | null = null;
+  private onRealMouse = (event: MouseEvent) => { if (event.isTrusted) this.realMouse = { x: event.clientX, y: event.clientY }; };
+
+  /** Return control to the hardware mouse: clear every hover the finger caused and put the pointer back where the mouse is. */
+  private giveBack() {
+    this.snap.id = null;
+    const at = this.realMouse ?? { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    this.pointer.handBack(at.x, at.y);
   }
 
   private resize = () => {
@@ -112,7 +151,7 @@ export class FingerController {
     if (this.state === "lost") return;
     if (performance.now() - this.lastSeen < LOST_HOLD_MS) return;
     // Never leave a button held when the hand leaves the frame.
-    this.pointer.cancel();
+    this.giveBack();
     this.pinched = this.dragging = false;
     this.pinchCount = 0;
     this.prev = null;
@@ -211,26 +250,11 @@ export class FingerController {
     const ahead = Math.min((now - t) / 1000, 0.05) + PREDICT_S * smoothstep(0.12, 0.9, speed);
     let x = clamp(pos.x + vel.x * ahead) * window.innerWidth;
     let y = clamp(pos.y + vel.y * ahead) * window.innerHeight;
-    if (this.state === "point") {
-      if (now - this.magnetsAt > 400) {
-        this.magnetsAt = now;
-        this.magnets = Array.from(document.querySelectorAll<HTMLElement>("a, button, [data-magnetic]"))
-          .map((el) => el.getBoundingClientRect())
-          .filter((r) => r.width > 0 && r.height > 0 && Math.max(r.width, r.height) < 260);
-      }
-      let best: { d: number; cx: number; cy: number } | null = null;
-      for (const r of this.magnets) {
-        const cx = r.left + r.width / 2;
-        const cy = r.top + r.height / 2;
-        const d = Math.hypot(cx - x, cy - y);
-        if (d < MAGNET_RADIUS && (!best || d < best.d)) best = { d, cx, cy };
-      }
-      if (best) {
-        const pull = MAGNET_PULL * (1 - smoothstep(0, MAGNET_RADIUS, best.d));
-        x += (best.cx - x) * pull;
-        y += (best.cy - y) * pull;
-      }
-    }
+    if (this.state === "point" || this.state === "hold") {
+      if (now - this.targetsAt > 300) { this.targetsAt = now; this.targets = collectTargets(); }
+      const target = chooseTarget(x, y, this.targets, this.snap, speed, vel);
+      if (target) ({ x, y } = snapPoint(x, y, target));
+    } else if (this.state !== "pinch") this.snap.id = null;
     return { x, y };
   }
 
