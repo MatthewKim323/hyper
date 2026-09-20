@@ -7,6 +7,37 @@ from sqlalchemy.dialects.postgresql import JSONB, insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 metadata = MetaData()
+# Simulated counterparties and the adversary that schedules them. `facts` is private: it holds what
+# each party knows and the expected outcome, and is never returned by an agent tool or a user route.
+counterparty_scenarios = Table('counterparty_scenarios', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('family', Text, nullable=False), Column('title', Text, nullable=False),
+    Column('invoice_id', Text, nullable=False), Column('vendor_id', Text, nullable=False),
+    Column('facts', JSON().with_variant(JSONB, 'postgresql'), nullable=False),
+    Column('state', JSON().with_variant(JSONB, 'postgresql'), nullable=False),
+    Column('status', Text, nullable=False), Column('outcome', Text), Column('difficulty', Integer, nullable=False),
+    Column('created_by', Text, nullable=False), Column('created_at', BigInteger, nullable=False),
+    Column('scored_at', BigInteger), UniqueConstraint('organization_id','invoice_id'))
+counterparty_messages = Table('counterparty_messages', metadata,
+    Column('sequence', Integer, primary_key=True, autoincrement=True), Column('id', Text, unique=True, nullable=False),
+    Column('organization_id', Text, nullable=False), Column('scenario_id', Text, ForeignKey('counterparty_scenarios.id'), nullable=False),
+    Column('direction', Text, nullable=False), Column('party', Text, nullable=False), Column('kind', Text, nullable=False),
+    Column('request_key', Text), Column('body', Text, nullable=False),
+    Column('payload', JSON().with_variant(JSONB, 'postgresql'), nullable=False),
+    Column('source_ids', JSON().with_variant(JSONB, 'postgresql'), nullable=False),
+    Column('status', Text, nullable=False), Column('deliver_at', BigInteger, nullable=False), Column('created_at', BigInteger, nullable=False),
+    UniqueConstraint('organization_id','request_key'))
+Index('counterparty_due', counterparty_messages.c.status, counterparty_messages.c.deliver_at)
+adversary_controls = Table('adversary_controls', metadata,
+    Column('organization_id', Text, primary_key=True), Column('enabled', Boolean, nullable=False),
+    Column('interval_seconds', Integer, nullable=False), Column('max_open', Integer, nullable=False),
+    Column('next_spawn_at', BigInteger, nullable=False), Column('seed', Integer, nullable=False),
+    Column('spawned', Integer, nullable=False))
+agent_lessons = Table('agent_lessons', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('family', Text, nullable=False), Column('lesson', Text, nullable=False),
+    Column('scenario_id', Text, nullable=False), Column('created_at', BigInteger, nullable=False),
+    UniqueConstraint('organization_id','scenario_id'))
 accounting_evidence = Table('accounting_evidence', metadata,
     Column('organization_id', Text, primary_key=True), Column('source_id', Text, primary_key=True),
     Column('row_number', Integer, primary_key=True), Column('record_type', Text, nullable=False),

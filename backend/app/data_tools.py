@@ -29,7 +29,9 @@ DESCRIPTIONS={
     'get_source':'Read paginated original extracted source content using a source_id from another tool. Returns row/page citations and an authenticated download URL.',
 }
 
-from . import accounting, settlements, accruals, learned_skills
+from . import accounting, settlements, accruals, learned_skills, counterparty
+TOOL_MODELS.update(counterparty.TOOL_MODELS)
+DESCRIPTIONS.update(counterparty.DESCRIPTIONS)
 TOOL_MODELS.update(learned_skills.TOOL_MODELS)
 DESCRIPTIONS.update(learned_skills.DESCRIPTIONS)
 TOOL_MODELS.update(accruals.TOOL_MODELS)
@@ -55,6 +57,8 @@ def tool_definitions():
     return result
 
 def execute(store, oid, name, args):
+    if name in counterparty.TOOL_MODELS:
+        return jsonable_encoder(counterparty.Counterparties(DataService(store,oid,search=ElasticSearch())).execute(name,args))
     if name in learned_skills.TOOL_MODELS:
         return learned_skills.Skills(store,oid).execute(name,args)
     if name in accruals.TOOL_MODELS:

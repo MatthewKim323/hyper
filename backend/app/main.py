@@ -290,3 +290,6 @@ app.include_router(accrual_router)
 
 from .skills_api import router as skills_router
 app.include_router(skills_router)
+
+from .counterparty_api import router as counterparty_router
+app.include_router(counterparty_router)

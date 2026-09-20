@@ -68,7 +68,10 @@ class Accounting:
         for doc_id in rows:
             active=db.execute(select(sources.c.active).join(accounting_evidence,accounting_evidence.c.source_id==sources.c.id).where(accounting_evidence.c.organization_id==self.oid,accounting_evidence.c.doc_id==doc_id)).scalars().all()
             if not active or not any(active):raise ValueError('Accounting evidence is missing or superseded; an owner must verify its replacement before analysis')
-    def promote(self,args,actor):
+    def promote(self,args,actor,source_system='ERP',channel='OWNER_VERIFIED',sender=None):
+        """Owner attestation is the default trust basis. The only other caller is the sandbox
+        counterparty service, which passes a simulated portal channel and the namespaced sender so
+        resolve applies its own supplier-portal rule (sender must be the approved vendor)."""
         with self.transaction() as db:
             source=db.execute(select(sources).where(sources.c.id==args.source_id,sources.c.organization_id==self.oid,sources.c.active.is_(True))).mappings().first()
             row=db.execute(select(records.c.payload).where(records.c.source_id==args.source_id,records.c.organization_id==self.oid,records.c.row_number==args.row_number)).scalar()
@@ -89,7 +92,7 @@ class Accounting:
             if old and old['record_type']!=args.record_type:raise ValueError('Record ID already belongs to another type')
             if old and args.record_type=='CREDIT_MEMO' and old['data']!=namespaced:raise ValueError('A credit memo cannot be overwritten; issue a new memo ID for review')
             # The trust basis is an authenticated OWNER attestation, not a source label supplied by an LLM.
-            rec=receive_record(db,self.oid,args.record_type,namespaced,source_system='ERP',channel='OWNER_VERIFIED',actor=actor,source_msg_id=args.source_id+':'+str(args.row_number))
+            rec=receive_record(db,self.oid,args.record_type,namespaced,source_system=source_system,channel=channel,sender=self.internal_id(sender) if sender else None,actor=actor,source_msg_id=args.source_id+':'+str(args.row_number))
             result=dict(organization_id=self.oid,source_id=args.source_id,row_number=args.row_number,record_type=args.record_type,
                         original_record_id=clean[key],doc_id=rec['doc_id'],source_sha256=source['sha256'],verified_by=actor)
             db.execute(insert(accounting_evidence).values(**result))
