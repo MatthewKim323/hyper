@@ -46,11 +46,19 @@ export class ToHomeTransition extends Transition {
         // On now, not at the timeline's first tick: the world hides this frame.
         store.HomeContact.savePass.enabled = true;
         store.HomeContact.transitionPass.enabled = true;
-        // The live atrium is a fixed layer at z-index 50; the engine canvas this blend draws
-        // into is z-index 40. Without hiding it the whole 3 s wipe plays *behind* the world
-        // and all the viewer sees is the atrium snapping away at the end. The still captured
-        // a moment ago stands in for it, so the blend starts from the same frame.
+        // Two things have to happen now that the still is in hand, or the blend is invisible.
+        // 1. The live atrium is a fixed layer at z-index 50 and the engine canvas this draws
+        //    into is z-index 40, so without hiding it the wipe plays behind the world.
+        // 2. gl.ts skips composer.render() entirely while body[data-atrium-active] is set, so
+        //    leaving it on freezes this canvas on its last frame: the world appears to hold
+        //    and the landing page then pops in when the timeline ends. The still was already
+        //    read on the line above, which is the only thing that needed the flag.
         document.body.dataset.worldBlending = "true";
+        delete document.body.dataset.atriumActive;
+        // AtriumPreview disables the gallery's render pass while the world is up and only
+        // restores it on cleanup, which runs after this transition. Without turning it back
+        // on the composer would draw an empty scene under the blend.
+        if (store.ProjectMenu?.renderPass) store.ProjectMenu.renderPass.enabled = true;
       }
       store.HomeContact.enable();
       store.HomeContact.isHome = true;
