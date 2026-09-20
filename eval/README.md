@@ -91,6 +91,8 @@ it is not a full-system measurement. See [EXTERNAL_BENCHMARK_PLAN.md](docs/EXTER
 
 First external pilot result: **18/18 customer net totals within $0.01, $0.00 total absolute error**, one public Invoice Sandbox fixture, isolated Devin worker with no Hyperfinance Agent backend tools. See [the measured report and limitations](docs/INVOICE_WORKER_PILOT.md). This is not an internal AP or full-system score.
 
+For the full arc from isolated baselines through the paired-experiment framework, see [BENCHMARK_EVOLUTION.md](docs/BENCHMARK_EVOLUTION.md).
+
 ## Backend-connected preparation experiments
 
 `python scripts/preparation.py` is a separate preparation-only harness. It does not
