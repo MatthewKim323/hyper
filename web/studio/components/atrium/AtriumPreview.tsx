@@ -510,9 +510,9 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
 
 function RelicStatus({ activity }: { activity?: RelicActivity }) {
   if (!activity || activity.status === "idle") return null;
-  const labels = { working: "Working", waiting: "Waiting", attention: "Needs you", complete: "Complete", error: "Needs attention" };
+  // The label is the message ("2 proposals awaiting your approval"). Swapping a long one for "Needs attention"
+  // left a pill that pinged without saying what for. It already carries its own count, so none is appended.
   return <span className={styles.status} data-status={activity.status}>
-    <ActivityOrb status={activity.status} label={activity.label} />{activity.label.length <= 22 ? activity.label : labels[activity.status]}
-    {activity.count && activity.count > 1 ? ` · ${activity.count}` : ""}
+    <ActivityOrb status={activity.status} label={activity.label} />{activity.label}
   </span>;
 }

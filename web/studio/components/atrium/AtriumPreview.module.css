@@ -85,7 +85,7 @@
   align-items: center;
   gap: .5em;
   width: max-content;
-  max-width: 220px;
+  max-width: min(340px, 60vw);
   padding: .42em .7em;
   border: 1px solid color-mix(in srgb, var(--signal) 25%, transparent);
   border-radius: 0;
