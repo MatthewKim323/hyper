@@ -68,5 +68,8 @@
   "trustedDependencies": [
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "patchedDependencies": {
+    "three@0.143.0": "patches/three@0.143.0.patch"
+  }
 }

@@ -1,0 +1,122 @@
+diff --git a/build/three.cjs b/build/three.cjs
+index 6a800f99ecb69dbad031f87dcfc98dfed02eed93..f561d0717ab0ac2cf3618b3770c1314639546488 100644
+--- a/build/three.cjs
++++ b/build/three.cjs
+@@ -19529,7 +19529,10 @@ function WebGLRenderer(parameters = {}) {
+ 	this.physicallyCorrectLights = false; // tone mapping
+ 
+ 	this.toneMapping = NoToneMapping;
+-	this.toneMappingExposure = 1.0; //
++	this.toneMappingExposure = 1.0;
++
++	// Optional long-edge limit for the shared transmission framebuffer only.
++	this.transmissionResolutionLimit = Infinity; //
+ 
+ 	Object.defineProperties(this, {
+ 		// @deprecated since r136, 0e21088102b4de7e0a0a33140620b7a3424b9e6d
+@@ -20279,7 +20282,7 @@ function WebGLRenderer(parameters = {}) {
+ 		if (_transmissionRenderTarget === null) {
+ 			_transmissionRenderTarget = new WebGLRenderTarget(1, 1, {
+ 				generateMipmaps: true,
+-				type: extensions.has('EXT_color_buffer_half_float') ? HalfFloatType : UnsignedByteType,
++				type: (extensions.has('EXT_color_buffer_half_float') || (isWebGL2 && extensions.has('EXT_color_buffer_float'))) ? HalfFloatType : UnsignedByteType,
+ 				minFilter: LinearMipmapLinearFilter,
+ 				samples: isWebGL2 && _antialias === true ? 4 : 0
+ 			});
+@@ -20287,6 +20290,16 @@ function WebGLRenderer(parameters = {}) {
+ 
+ 		_this.getDrawingBufferSize(_vector2);
+ 
++		// Always derive from the canvas, including reflection captures. Reusing
++		// one size prevents the private shared target reallocating between passes.
++		const transmissionLimit = _this.transmissionResolutionLimit;
++		if ( Number.isFinite( transmissionLimit ) && transmissionLimit > 0 ) {
++
++			const scale = Math.min( 1, transmissionLimit / Math.max( _vector2.x, _vector2.y ) );
++			_vector2.set( Math.max( 1, Math.floor( _vector2.x * scale ) ), Math.max( 1, Math.floor( _vector2.y * scale ) ) );
++
++		}
++
+ 		if (isWebGL2) {
+ 			_transmissionRenderTarget.setSize(_vector2.x, _vector2.y);
+ 		} else {
+diff --git a/build/three.module.js b/build/three.module.js
+index 9c83f94e04d8815b81a9b51679534f212e719213..df9590b726f55705d0e2b7a2c1a22601d6594b5d 100644
+--- a/build/three.module.js
++++ b/build/three.module.js
+@@ -26670,6 +26670,9 @@ function WebGLRenderer( parameters = {} ) {
+ 	this.toneMapping = NoToneMapping;
+ 	this.toneMappingExposure = 1.0;
+ 
++	// Optional long-edge limit for the shared transmission framebuffer only.
++	this.transmissionResolutionLimit = Infinity;
++
+ 	//
+ 
+ 	Object.defineProperties( this, {
+@@ -27772,7 +27775,7 @@ function WebGLRenderer( parameters = {} ) {
+ 
+ 			_transmissionRenderTarget = new WebGLRenderTarget( 1, 1, {
+ 				generateMipmaps: true,
+-				type: extensions.has( 'EXT_color_buffer_half_float' ) ? HalfFloatType : UnsignedByteType,
++				type: ( extensions.has( 'EXT_color_buffer_half_float' ) || ( isWebGL2 && extensions.has( 'EXT_color_buffer_float' ) ) ) ? HalfFloatType : UnsignedByteType,
+ 				minFilter: LinearMipmapLinearFilter,
+ 				samples: ( isWebGL2 && _antialias === true ) ? 4 : 0
+ 			} );
+@@ -27781,6 +27784,16 @@ function WebGLRenderer( parameters = {} ) {
+ 
+ 		_this.getDrawingBufferSize( _vector2 );
+ 
++		// Always derive from the canvas, including reflection captures. Reusing
++		// one size prevents the private shared target reallocating between passes.
++		const transmissionLimit = _this.transmissionResolutionLimit;
++		if ( Number.isFinite( transmissionLimit ) && transmissionLimit > 0 ) {
++
++			const scale = Math.min( 1, transmissionLimit / Math.max( _vector2.x, _vector2.y ) );
++			_vector2.set( Math.max( 1, Math.floor( _vector2.x * scale ) ), Math.max( 1, Math.floor( _vector2.y * scale ) ) );
++
++		}
++
+ 		if ( isWebGL2 ) {
+ 
+ 			_transmissionRenderTarget.setSize( _vector2.x, _vector2.y );
+diff --git a/src/renderers/WebGLRenderer.js b/src/renderers/WebGLRenderer.js
+index 2a967ff00fc0ea9a57509cc6ae710e8824a15218..ed7554f7f4c9a4c3939381d001313dbd5036624a 100644
+--- a/src/renderers/WebGLRenderer.js
++++ b/src/renderers/WebGLRenderer.js
+@@ -134,6 +134,9 @@ function WebGLRenderer( parameters = {} ) {
+ 	this.toneMapping = NoToneMapping;
+ 	this.toneMappingExposure = 1.0;
+ 
++	// Optional long-edge limit for the shared transmission framebuffer only.
++	this.transmissionResolutionLimit = Infinity;
++
+ 	//
+ 
+ 	Object.defineProperties( this, {
+@@ -1236,7 +1239,7 @@ function WebGLRenderer( parameters = {} ) {
+ 
+ 			_transmissionRenderTarget = new WebGLRenderTarget( 1, 1, {
+ 				generateMipmaps: true,
+-				type: extensions.has( 'EXT_color_buffer_half_float' ) ? HalfFloatType : UnsignedByteType,
++				type: ( extensions.has( 'EXT_color_buffer_half_float' ) || ( isWebGL2 && extensions.has( 'EXT_color_buffer_float' ) ) ) ? HalfFloatType : UnsignedByteType,
+ 				minFilter: LinearMipmapLinearFilter,
+ 				samples: ( isWebGL2 && _antialias === true ) ? 4 : 0
+ 			} );
+@@ -1245,6 +1248,16 @@ function WebGLRenderer( parameters = {} ) {
+ 
+ 		_this.getDrawingBufferSize( _vector2 );
+ 
++		// Always derive from the canvas, including reflection captures. Reusing
++		// one size prevents the private shared target reallocating between passes.
++		const transmissionLimit = _this.transmissionResolutionLimit;
++		if ( Number.isFinite( transmissionLimit ) && transmissionLimit > 0 ) {
++
++			const scale = Math.min( 1, transmissionLimit / Math.max( _vector2.x, _vector2.y ) );
++			_vector2.set( Math.max( 1, Math.floor( _vector2.x * scale ) ), Math.max( 1, Math.floor( _vector2.y * scale ) ) );
++
++		}
++
+ 		if ( isWebGL2 ) {
+ 
+ 			_transmissionRenderTarget.setSize( _vector2.x, _vector2.y );
