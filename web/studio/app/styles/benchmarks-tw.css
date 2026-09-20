@@ -15,8 +15,8 @@
 @source "../../components/command";
 
 /* Chart tokens live on the workspace root, never on :root, so the engine's own
-   variables cannot collide. Series order is fixed and validated for CVD on this surface
-   (validate_palette.js, light, #f6f2f0): identity always ships with a label or the table view. */
+   variables cannot collide. Series colours come from the room's own palette. Identity always ships with a label or the table view,
+   never colour alone. */
 .bench, .workspace, .cmd, .chart-scope {
     --background: #f6f2f0;
     --foreground: #252321;
@@ -28,11 +28,14 @@
     --legend-muted: #efe8e4;
     --legend-muted-foreground: #716860;
     --legend-track: #e4dbd5;
-    --chart-1: #2a78d6;
-    --chart-2: #eb6834;
-    --chart-3: #1baf7a;
-    --chart-4: #eda100;
-    --chart-5: #e87ba4;
+    /* Drawn from the room itself: lavender fields, clay and blush stone, sage, sand, periwinkle sky.
+       Each holds at least 3:1 against the #f6f2f0 surface; series also differ in lightness, not hue alone. */
+    --chart-1: #6f5a8c;
+    --chart-2: #b0766a;
+    --chart-3: #5f8a70;
+    --chart-4: #a67c3d;
+    --chart-5: #6f7ac6;
+    --chart-negative: #a0524f;
     --chart-background: transparent;
     --chart-foreground: #252321;
     --chart-foreground-muted: #716860;
@@ -52,16 +55,16 @@
     --chart-label: #716860;
     /* sequential, one hue, light to dark */
     --chart-scale-01: #ece6e2;
-    --chart-scale-02: #b7d3f6;
-    --chart-scale-03: #6da7ec;
-    --chart-scale-04: #2a78d6;
-    --chart-scale-05: #184f95;
+    --chart-scale-02: #d4c9e3;
+    --chart-scale-03: #a894c4;
+    --chart-scale-04: #6f5a8c;
+    --chart-scale-05: #44355a;
     --chart-scale-pattern-color: #d6cec8;
     /* status: reserved for outcomes, never reused as a series colour */
-    --status-good: #0ca30c;
-    --status-warning: #fab219;
-    --status-serious: #ec835a;
-    --status-critical: #d03b3b;
+    --status-good: #5f8a70;
+    --status-warning: #a67c3d;
+    --status-serious: #b0766a;
+    --status-critical: #a0524f;
     --status-neutral: #b9aea6;
 }
 

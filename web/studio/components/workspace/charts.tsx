@@ -27,7 +27,7 @@ export function RouteBars({ netCents, supportedCents, currency }: { netCents: nu
   return <div className="chart-scope ws-chart--routes" role="img" aria-label={ties ? "Both routes agree" : "The two routes disagree"} data-currency={currency}>
     <BarChart data={rows} xDataKey="route" orientation="horizontal" aspectRatio="auto" className="h-full" barGap={0.4} margin={{ left: 84, right: 16, top: 4, bottom: 4 }}>
       <Grid vertical horizontal={false} />
-      <Bar dataKey="value" fill={ties ? "var(--chart-line-primary)" : "var(--chart-line-secondary)"} />
+      <Bar dataKey="value" fill={ties ? "var(--chart-line-primary)" : "var(--chart-negative)"} />
       <BarYAxis showAllLabels />
       <ChartTooltip showCrosshair={false} />
     </BarChart>
@@ -36,7 +36,7 @@ export function RouteBars({ netCents, supportedCents, currency }: { netCents: nu
 
 /** Code checks as a bklit RingChart: the ring closes as checks pass. */
 export function ChecksRing({ passed, total }: { passed: number; total: number }) {
-  const data = [{ label: `of ${total} checks`, value: passed, maxValue: Math.max(total, 1), color: passed === total ? "var(--chart-3)" : "var(--chart-2)" }];
+  const data = [{ label: `of ${total} checks`, value: passed, maxValue: Math.max(total, 1), color: passed === total ? "var(--chart-3)" : "var(--chart-negative)" }];
   return <div className="chart-scope ws-ring" role="img" aria-label={`${passed} of ${total} checks pass`}>
     <RingChart data={data} size={132} strokeWidth={12} baseInnerRadius={44}>
       <Ring index={0} />
@@ -82,7 +82,7 @@ export function OutcomeRings({ passed, failed, needsInput }: { passed: number; f
   const total = Math.max(passed + failed + needsInput, 1);
   const data = [
     { label: "Passed", value: passed, maxValue: total, color: "var(--chart-3)" },
-    { label: "Failed", value: failed, maxValue: total, color: "var(--chart-2)" },
+    { label: "Failed", value: failed, maxValue: total, color: "var(--chart-negative)" },
     { label: "Needs input", value: needsInput, maxValue: total, color: "var(--chart-4)" },
   ];
   return <div className="chart-scope ws-rings" role="img" aria-label={`${passed} passed, ${failed} failed, ${needsInput} need input`}>

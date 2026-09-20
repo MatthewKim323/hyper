@@ -73,13 +73,13 @@
   background: #a89f97;
 }
 
-.status[data-tone="active"] i { background: #2a9d63; animation: orbit-pulse 1.6s ease-in-out infinite; }
-.status[data-tone="waiting"] i { background: #d08a1e; animation: orbit-pulse 2.2s ease-in-out infinite; }
-.status[data-tone="alert"] i { background: #b3362f; }
+.status[data-tone="active"] i { background: #5f8a70; animation: orbit-pulse 1.6s ease-in-out infinite; }
+.status[data-tone="waiting"] i { background: #a67c3d; animation: orbit-pulse 2.2s ease-in-out infinite; }
+.status[data-tone="alert"] i { background: #a0524f; }
 
 @keyframes orbit-pulse {
-  50% { box-shadow: 0 0 0 6px rgb(42 157 99 / 0%); transform: scale(1.25); }
-  0%, 100% { box-shadow: 0 0 0 0 rgb(42 157 99 / 35%); }
+  50% { box-shadow: 0 0 0 6px rgb(95 138 112 / 0%); transform: scale(1.25); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(95 138 112 / 35%); }
 }
 
 .top { width: 236px; }
