@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { openSignIn } from "@/lib/backend/auth";
-import { Activity, OverviewStrip } from "./sections";
+import { Activity } from "./sections";
 import { useAuth } from "./useBackend";
 
 const EXIT_MS = 420;
@@ -13,7 +13,6 @@ type Screen = keyof typeof SCREENS;
 export default function WorkspaceSections() {
   const pathname = usePathname();
   const auth = useAuth();
-  const [section, setSection] = useState("overview");
   const [unlocked, setUnlocked] = useState(false);
   // The panel outlives its section by one exit animation, so closing is a motion, not a cut.
   const [shown, setShown] = useState<{ section: string; leaving: boolean } | null>(null);
@@ -22,7 +21,6 @@ export default function WorkspaceSections() {
     let exit = 0;
     const onSection = (event: Event) => {
       const next = (event as CustomEvent<{ section: string }>).detail?.section ?? "overview";
-      setSection(next);
       clearTimeout(exit);
       if (next in SCREENS) { setShown({ section: next, leaving: false }); return; }
       setShown(previous => previous ? { ...previous, leaving: true } : null);
@@ -39,7 +37,7 @@ export default function WorkspaceSections() {
 
   if (pathname !== "/projects" || !unlocked) return null;
   const usable = auth.ready && auth.signedIn;
-  if (!shown) return section === "overview" && usable ? <OverviewStrip active /> : null;
+  if (!shown) return null;
   const Body = SCREENS[shown.section as Screen];
 
   return <main className="workspace bench-tokens" aria-label={shown.section} data-section={shown.section} data-leaving={shown.leaving || undefined} inert={shown.leaving}>
