@@ -5,7 +5,7 @@ An editable Blender reconstruction of the supplied concept image, with the archi
 ## Files
 
 - `hyper-atrium.blend`: authored camera, carved stone architecture, floating pearl and orbit, five main relic stations, warm window lighting, rose gardens, and animated water. The hidden **Crystal library | reusable onboarding stations** collection holds ten standalone station variants. Glass covers and their polished rims remain hidden only as composition guides and are excluded from station exports.
-- `hyper-atrium.png`: earlier 2560×1441 Cycles render. The current `.blend` and live GLBs are newer and include the clustered garden, narrow station light inlays, and softer pearl light. Regenerate this PNG to show those revisions.
+- `hyper-atrium.png`: current 2560×1441 Cycles render at 96 samples, including the clustered garden, narrow station light inlays, and softer pearl light. Rendered on the Apple M2 GPU in 27 minutes 50 seconds, including a brief pause for browser verification; rendering left the source unchanged.
 - `hotspots.json`: normalized camera projections for the original five-station composition.
 - `verification.json`: saved-scene and reusable-asset checks.
 - `composition-verification.json`: measured reference aperture bounds and the evaluated Blender geometry's projected bounds. This verifies placement, not photographic fidelity.
