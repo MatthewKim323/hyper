@@ -5,7 +5,9 @@
 // composed charts land here as bklit cards.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
+import { getAudioContext } from "voice-glow";
 import ArtifactCard from "./ArtifactCard";
+import WorldVoiceBox from "./WorldVoiceBox";
 import { readArtifactCard, type ArtifactCardModel } from "@/lib/command/artifact";
 import { PointerContext } from "@/lib/command/pointer-context";
 import { OnboardingVoiceClient, type VoiceConnection } from "@/lib/onboarding/voice-client";
@@ -32,12 +34,15 @@ export default function CommandLayer() {
 
 function CommandSession() {
   const [agentOpen, setAgentOpen] = useState(false);
-  const agentPanel = useRef<HTMLElement>(null);
   const [connection, setConnection] = useState<VoiceConnection>("idle");
   const [listening, setListening] = useState(false);
+  const [requesting, setRequesting] = useState(false);
+  const [microphoneStream, setMicrophoneStream] = useState<MediaStream | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [sending, setSending] = useState(false);
+  const pendingSend = useRef(false);
   const [status, setStatus] = useState("");
-  const [heard, setHeard] = useState("");
-  const [said, setSaid] = useState("");
+  const [transcript, setTranscript] = useState("");
   const [error, setError] = useState("");
   const [cards, setCards] = useState<ArtifactCardModel[]>([]);
   const client = useRef<OnboardingVoiceClient | null>(null);
@@ -55,7 +60,7 @@ function CommandSession() {
     const visual = bindWorldVoice();
     voiceVisual.current = visual;
     const session = new OnboardingVoiceClient({
-      onPresentation: (p) => { setStatus(p.status ?? ""); visual.publish({ presentation: p }); },
+      onPresentation: (p) => { setStatus(p.status ?? ""); setProcessing(p.processing ?? false); visual.publish({ presentation: p }); },
       onConnection: (next) => {
         setConnection(next);
         visual.publish({ connection: next });
@@ -65,6 +70,8 @@ function CommandSession() {
           mic.current?.getTracks().forEach(track => track.stop());
           mic.current = null;
           setListening(false);
+          setRequesting(false);
+          setMicrophoneStream(null);
           visual.publish({ microphoneStream: null });
         }
       },
@@ -76,7 +83,7 @@ function CommandSession() {
       onPlaybackStream: (stream) => visual.publish({ playbackStream: stream }),
       onComplete: () => {},
       onEvent: (event) => {
-        if (event.type === "transcript" && typeof event.text === "string") (event.role === "user" ? setHeard : setSaid)(event.text);
+        if (event.type === "transcript" && typeof event.text === "string") setTranscript(event.text);
         if (event.type !== "tool.result" || typeof event.name !== "string") return;
         const result = event.result;
         if (event.name === "navigate_section" && result && typeof result === "object" && "section" in result && SECTIONS.has(String(result.section)))
@@ -89,7 +96,7 @@ function CommandSession() {
       },
     }, "world");
     client.current = session;
-    // The orb starts the connection. Entering the world stays quiet and idle.
+    // An orb, microphone or text gesture starts the session. Mounting stays quiet.
     return () => {
       // Invalidate any permission prompt that resolves after this session leaves.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,6 +112,24 @@ function CommandSession() {
       pointer.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!microphoneStream) return;
+    const tracks = microphoneStream.getAudioTracks();
+    const ended = () => {
+      if (mic.current !== microphoneStream || tracks.some(track => track.readyState !== "ended")) return;
+      micRequest.current++;
+      startingMic.current = false;
+      mic.current = null;
+      setMicrophoneStream(null);
+      setRequesting(false);
+      setListening(false);
+      voiceVisual.current?.publish({ microphoneStream: null });
+      void client.current?.setMicrophone(null);
+    };
+    tracks.forEach(track => track.addEventListener("ended", ended));
+    return () => tracks.forEach(track => track.removeEventListener("ended", ended));
+  }, [microphoneStream]);
 
   const sharePointer = useCallback(() => {
     const now = performance.now();
@@ -138,19 +163,30 @@ function CommandSession() {
   const submit = useCallback(async () => {
     const text = draft.trim();
     const session = client.current;
-    if (!text || !session) return;
+    if (!text || !session || pendingSend.current) return;
+    pendingSend.current = true;
+    setSending(true);
+    setAgentOpen(true);
+    // Unlock playback before connect awaits. Typed turns never request a mic.
+    void session.primePlayback().catch(() => {});
     void voiceVisual.current?.resumeAudio();
     voiceVisual.current?.publish({ error: null });
     setError("");
-    setDraft("");
-    setHeard(text);
+    setTranscript(text);
     try {
       await session.connect();
+      if (client.current !== session) return;
       lastSent.current = "";
       sharePointer();
-      if (!(await session.sendText(text))) setError("Your message could not be sent. Try again.");
+      const delivered = await session.sendText(text);
+      if (client.current !== session) return;
+      if (delivered) setDraft(current => current.trim() === text ? "" : current);
+      else setError("Your message could not be sent. Your draft is kept. Try again.");
     } catch {
-      setError("Your agent is unavailable. Try again in a moment.");
+      if (client.current === session) setError("Your agent is unavailable. Your draft is kept. Try again in a moment.");
+    } finally {
+      pendingSend.current = false;
+      if (client.current === session) setSending(false);
     }
   }, [draft, sharePointer]);
 
@@ -159,28 +195,33 @@ function CommandSession() {
     const session = client.current;
     if (!session) return;
     void voiceVisual.current?.resumeAudio();
-    if (mic.current) {
+    if (mic.current || startingMic.current) {
       micRequest.current++;
       startingMic.current = false;
-      mic.current.getTracks().forEach((t) => t.stop());
+      mic.current?.getTracks().forEach((t) => t.stop());
       mic.current = null;
+      setMicrophoneStream(null);
+      setRequesting(false);
       voiceVisual.current?.publish({ microphoneStream: null });
       setListening(false);
       void session.setMicrophone(null).catch(() => {});
       return;
     }
-    if (startingMic.current) return;
     startingMic.current = true;
+    setRequesting(true);
     const request = ++micRequest.current;
     setError("");
     voiceVisual.current?.publish({ error: null });
     try {
+      // VoiceBeam analyses this same stream; resume its silent analyser in the gesture.
+      getAudioContext();
       const playback = session.primePlayback();
       // Observe a playback failure while the permission prompt is still open.
       void playback.catch(() => {});
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
       if (request !== micRequest.current || client.current !== session) { stream.getTracks().forEach(track => track.stop()); return; }
       mic.current = stream;
+      setMicrophoneStream(stream);
       await playback;
       if (request !== micRequest.current || client.current !== session) return;
       voiceVisual.current?.publish({ microphoneStream: stream });
@@ -193,12 +234,13 @@ function CommandSession() {
       if (request !== micRequest.current || client.current !== session) return;
       mic.current?.getTracks().forEach((t) => t.stop());
       mic.current = null;
+      setMicrophoneStream(null);
       voiceVisual.current?.publish({ microphoneStream: null, error: true });
       setListening(false);
       const denied = cause instanceof DOMException && cause.name === "NotAllowedError";
       setError(denied ? "Microphone access is off. Allow it in the address bar and try again." : "The agent could not start listening. Try again.");
     } finally {
-      if (request === micRequest.current) startingMic.current = false;
+      if (request === micRequest.current) { startingMic.current = false; setRequesting(false); }
     }
   }, []);
 
@@ -207,17 +249,16 @@ function CommandSession() {
     startingMic.current = false;
     mic.current?.getTracks().forEach(track => track.stop());
     mic.current = null;
+    setMicrophoneStream(null);
+    setRequesting(false);
     client.current?.disconnect();
     voiceVisual.current?.publish({ connection: "disconnected", error: null, microphoneStream: null, playbackStream: null, presentation: { orbState: "composing" } });
     setListening(false);
     setError("");
+    setTranscript("");
     setAgentOpen(false);
     document.querySelector<HTMLButtonElement>('button[aria-label="Talk to Hyper"]')?.focus({ preventScroll: true });
   }, []);
-
-  useEffect(() => {
-    if (agentOpen) agentPanel.current?.focus({ preventScroll: true });
-  }, [agentOpen]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -235,33 +276,26 @@ function CommandSession() {
     };
   }, [agentOpen, closeAgent, toggle]);
 
-  const line = error || (listening ? heard || status || "Listening. Point at something and ask." : said || "Ask about what you are pointing at");
   return (
-    <div className="cmd" data-agent-open={agentOpen} data-listening={listening} data-connection={connection}>
+    <div className="cmd" data-agent-open="true" data-listening={listening} data-connection={connection}>
       <div className="cmd-cards" aria-live="polite">
         {cards.map((card) => <ArtifactCard key={card.id} card={card} onDismiss={() => setCards((previous) => previous.filter((c) => c.id !== card.id))} />)}
       </div>
-      {agentOpen && <section ref={agentPanel} className="cmd-agent" role="dialog" aria-label="Hyper voice agent" tabIndex={-1} data-error={!!error}>
-        <header>
-          <span>Hyper</span>
-          <button type="button" onClick={closeAgent} aria-label="Close voice agent" data-cursor="hide">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
-          </button>
-        </header>
-        <p className="cmd-transcript" role={error ? "alert" : "status"}>{line}</p>
-        <form onSubmit={event => { event.preventDefault(); void submit(); }}>
-          <input
-            value={draft}
-            onChange={event => setDraft(event.target.value)}
-            placeholder="Or type here..."
-            aria-label="Ask your agent"
-            maxLength={2000}
-          />
-          <button type="submit" aria-label="Send message" disabled={!draft.trim()} data-cursor="hide">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" /></svg>
-          </button>
-        </form>
-      </section>}
+      <WorldVoiceBox
+        stream={microphoneStream}
+        listening={listening}
+        requesting={requesting}
+        processing={processing}
+        sending={sending}
+        transcript={transcript}
+        status={requesting && !microphoneStream ? "Waiting for microphone permission..." : status}
+        error={error}
+        draft={draft}
+        visible
+        onDraft={setDraft}
+        onSend={() => { void submit(); }}
+        onMicrophone={() => { void toggle(); }}
+      />
     </div>
   );
 }
