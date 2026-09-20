@@ -1,0 +1,26 @@
+import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { boardRows, PUBLIC_ROWS, resultsFor } from "./board";
+import { EVOLUTION_SOURCE } from "./evolution";
+import { shapeLoopTimeline, type LoopTimeline } from "./loop-timeline";
+
+const source = readFileSync(join(import.meta.dir, "../../../..", EVOLUTION_SOURCE), "utf8").replace(/\s+/g, " ");
+
+test("every public headline figure is in the source document", () => {
+  for (const bar of PUBLIC_ROWS.flatMap(row => row.bars)) expect(source.includes(bar.text)).toBe(true);
+  for (const row of PUBLIC_ROWS) expect(resultsFor(row.match!).length).toBeGreaterThan(0);
+});
+
+test("bars are shares of one and ours comes first", () => {
+  for (const bar of PUBLIC_ROWS.flatMap(row => row.bars)) { expect(bar.share).toBeGreaterThan(0); expect(bar.share).toBeLessThanOrEqual(1); }
+  expect(PUBLIC_ROWS.find(row => row.id === "benchrec")!.bars.map(bar => bar.label)).toEqual(["Found", "Reference"]);
+});
+
+test("live rows come from the recorded timeline and lead the board", () => {
+  const doc = JSON.parse(readFileSync(join(import.meta.dir, "../../../../backend/benchmarks/timeline.json"), "utf8")) as LoopTimeline;
+  const rows = boardRows(shapeLoopTimeline(doc));
+  expect(rows.slice(0, 2).map(row => row.id)).toEqual(["loop", "retrieval"]);
+  expect(rows.find(row => row.id === "retrieval")!.bars[0].share).toBeGreaterThan(rows.find(row => row.id === "retrieval")!.bars[1].share!);
+  expect(boardRows(null).map(row => row.id)).toEqual(["invoices", "benchrec", "dabstep", "apex", "suite", "story"]);
+});

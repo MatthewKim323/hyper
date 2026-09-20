@@ -307,6 +307,9 @@ def tick(engine, orgs, measure=True):
     out.parent.mkdir(exist_ok=True)
     doc = document(engine, orgs)
     out.write_text(json.dumps(doc, indent=1) + '\n')
+    # Same document beside the web app, so the Benchmarks popup reads it without a sign-in.
+    public = BACKEND.parent / 'web/studio/public/benchmarks'
+    if public.is_dir(): (public / 'timeline.json').write_text(json.dumps(doc) + '\n')
     try: paper(engine, doc, orgs[0])
     except Exception as exc: done['paper'] = 'failed: ' + type(exc).__name__
     return done

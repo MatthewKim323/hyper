@@ -7,8 +7,6 @@ import {
   artifactHref, formatLandscapeMetric, LANDSCAPE_METRICS, landscapeColumns, landscapeComparison, landscapeMetric, landscapePage, landscapeValues,
   realLandscapeRuns, suiteAvailability, type LandscapeColumn, type LandscapeMetric,
 } from "./benchmark-landscape";
-import BenchmarkEvolution from "@/components/benchmarks/BenchmarkEvolution";
-import LoopTimeline from "@/components/benchmarks/LoopTimeline";
 import styles from "./BenchmarkLandscape.module.css";
 
 export type BenchmarkLandscapeMotion = { busy?: boolean; selectedIndex?: number; values?: readonly (number | null)[] };
@@ -186,8 +184,5 @@ export default function BenchmarkLandscape({ active, onMotion }: Props) {
       </details>}
       <footer className={styles.footer}><span>{view.suite?.provenance.replaceAll("_", " ")}{view.suite?.revision ? ` · ${view.suite.revision}` : ""}</span><span>Exported {dateLabel(doc?.generated_at)}</span></footer>
     </>}
-    {/* The story behind these numbers, including the experiment that did not work. */}
-    <LoopTimeline active={active} />
-    <BenchmarkEvolution />
   </section>;
 }

@@ -1,4 +1,4 @@
-.loop { margin-top: 2.2rem; padding-top: 1.8rem; border-top: 1px solid rgb(37 35 33 / 16%); color: #252321; font-family: Neue Montreal, sans-serif; }
+.loop { color: #252321; font-family: Neue Montreal, sans-serif; }
 .head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
 .eyebrow { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #716860; }
 .legend { font-size: 0.72rem; color: #63574e; white-space: nowrap; }

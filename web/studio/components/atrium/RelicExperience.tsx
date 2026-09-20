@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import AccountsFolio from "./workspaces/AccountsFolio";
-import BenchmarkLandscape from "./workspaces/BenchmarkLandscape";
+import BenchmarkBoard from "@/components/benchmarks/BenchmarkBoard";
 import IdentityPrism from "./workspaces/IdentityPrism";
 import EvidenceArchive from "./workspaces/EvidenceArchive";
 import ApprovalsReview from "./workspaces/ApprovalsReview";
@@ -76,7 +76,7 @@ export default function RelicExperience({ station, register, onMotion, onClose, 
     <div className={styles.content}>
       {section === "cases" && <AccountsFolio active={active} onMotion={onMotion} />}
       {section === "identity" && <IdentityPrism active={active} onMotion={onMotion} />}
-      {section === "benchmarks" && <BenchmarkLandscape active={active} onMotion={onMotion} />}
+      {section === "benchmarks" && <BenchmarkBoard active={active} onMotion={onMotion} />}
       {section === "evidence" && <EvidenceArchive active={active} onMotion={onMotion} />}
       {section === "review" && <ApprovalsReview active={active} onMotion={onMotion} />}
       {section === "timeline" && <TrainingTimeline active={active} onMotion={onMotion} />}
