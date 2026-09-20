@@ -145,6 +145,13 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
     const previousRendering = menu?.renderPass?.enabled;
     let active = true;
     document.body.dataset.atriumActive = "true";
+    // Route transitions hold their still of the world until this.
+    window.dispatchEvent(new Event("hyper:world-shown"));
+    // Labels and the dock fade in after the room has landed (see `[data-entering]` in the styles).
+    const room = scroller.current;
+    if (room) room.dataset.entering = "true";
+    document.body.dataset.worldEntering = "true";
+    const entered = window.setTimeout(() => { if (room) delete room.dataset.entering; delete document.body.dataset.worldEntering; }, 3200);
     const suspend = () => {
       if (!active || !menu) return;
       menu.allowControl = false;
@@ -156,6 +163,9 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
     window.addEventListener("hyper:section-change", suspend);
     return () => {
       active = false;
+      clearTimeout(entered);
+      if (room) delete room.dataset.entering;
+      delete document.body.dataset.worldEntering;
       delete document.body.dataset.atriumActive;
       window.removeEventListener("hyper:section-change", suspend);
       if (menu && store.ProjectMenu === menu) {
@@ -239,7 +249,8 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
           instance.setFocus(selected, share);
           setFailed(false);
           // A paused renderer draws when its pressed state is set, which is exactly one fresh frame.
-          setWarmFrameProvider(() => { instance?.setPressed(null); return element; });
+          // Live or hidden, the still is drawn in this task so the copy never reads a cleared buffer.
+          setWarmFrameProvider(() => { instance?.setPaused(true); instance?.setPressed(null); instance?.setPaused(motionRef.current); return element; });
           // The intro loader and the handoff both wait on this.
           document.documentElement.dataset.atriumReady = "true";
           window.dispatchEvent(new Event("hyper:atrium-ready"));
@@ -410,7 +421,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
         />}
         {!failed && !warm && <RelicOrbit section={customFocus ? null : focusedStation?.section ?? null} register={registerOrbit} />}
         {focus && <button type="button" className={styles.leave} data-cursor="hide" aria-label="Back to the atrium" onClick={closeExperience} />}
-        {!failed && !focus && atHome && bounds.map(bound => <button
+        {!failed && !focus && atHome && bounds.map((bound, index) => <button
           type="button"
           key={bound.station.id}
           data-station-id={bound.station.id}
@@ -418,7 +429,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
           data-cursor="hide"
           aria-label={`Open ${bound.station.label}${activityStates[bound.station.section as RelicActivitySection]?.status !== "idle" && activityStates[bound.station.section as RelicActivitySection]?.label ? `, ${activityStates[bound.station.section as RelicActivitySection]?.label}` : ""}`}
           data-activity={activityStates[bound.station.section as RelicActivitySection]?.status ?? "idle"}
-          style={{ zIndex: 1000 - Math.round(bound.depth * 10), left: `${bound.left * 100}%`, top: `${bound.top * 100}%`, width: `${bound.width * 100}%`, height: `${bound.height * 100}%`, "--station-font": `${bound.fontWidth * 100}cqw` } as CSSProperties}
+          style={{ "--i": index, zIndex: 1000 - Math.round(bound.depth * 10), left: `${bound.left * 100}%`, top: `${bound.top * 100}%`, width: `${bound.width * 100}%`, height: `${bound.height * 100}%`, "--station-font": `${bound.fontWidth * 100}cqw` } as CSSProperties}
           onPointerEnter={event => hoverStation(event, bound.station.id)}
           onPointerMove={event => hoverStation(event, bound.station.id)}
           onPointerLeave={event => { renderer.current?.setHover(null); releaseStation(event); }}

@@ -188,6 +188,20 @@
   .hotspot[data-pressed="true"] .arrowGlyph { transform: none; }
 }
 
+/* Arrival: the room lands first, then the words settle in over it, left to right. Only on reveal,
+   not each time the hotspots remount after a relic closes. */
+@keyframes label-in { from { opacity: 0; translate: 0 8px; filter: blur(3px); } }
+.atrium[data-entering] .label,
+.atrium[data-entering] .arrow {
+  animation: label-in 900ms var(--ease-out) backwards;
+  animation-delay: calc(650ms + var(--i, 0) * 90ms);
+}
+.atrium[data-entering] .arrow { animation-delay: calc(800ms + var(--i, 0) * 90ms); }
+@media (prefers-reduced-motion: reduce) {
+  .atrium[data-entering] .label,
+  .atrium[data-entering] .arrow { animation: none; }
+}
+
 /* Preloaded but not shown yet. Keeps its layout size so the renderer sizes and compiles for real. */
 .atrium[data-warm] { visibility: hidden; pointer-events: none; }
 

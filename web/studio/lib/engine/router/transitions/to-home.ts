@@ -2,6 +2,7 @@
 import gsap from "gsap";
 import { store } from "../../core/store";
 import { Transition, removeView, type TransitionInArgs, type TransitionOutArgs } from "./base";
+import { captureWorldStill } from "@/lib/onboarding/world-still";
 
 export class ToHomeTransition extends Transition {
   in({ done }: TransitionInArgs) {
@@ -22,8 +23,19 @@ export class ToHomeTransition extends Transition {
     }
 
     if (view === "projects") {
+      // Leaving the world: the blend starts from a still of it, taken before it is hidden, so the
+      // gallery room never shows in between.
+      const world = document.body.dataset.atriumActive === "true" ? captureWorldStill() : null;
+      if (world && document.body.dataset.workspaceSection !== "overview")
+        window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "overview" } }));
       store.HomeContact.transitionPass.uniforms.u_fromScene.value = store.HomeContact.savePass.renderTarget.texture;
-      store.HomeContact.transitionPass.uniforms.u_toScene.value = store.ProjectMenu.savePass.renderTarget.texture;
+      store.HomeContact.transitionPass.uniforms.u_toScene.value = world ?? store.ProjectMenu.savePass.renderTarget.texture;
+      store.HomeContact.transitionPass.uniforms.u_progress.value = 1;
+      if (world) {
+        // On now, not at the timeline's first tick: the world hides this frame.
+        store.HomeContact.savePass.enabled = true;
+        store.HomeContact.transitionPass.enabled = true;
+      }
       store.HomeContact.enable();
       store.HomeContact.isHome = true;
       store.HomeContact.tweenParams.cameraPathProgress = 1;
@@ -41,6 +53,10 @@ export class ToHomeTransition extends Transition {
             store.HomeContact.transitionPass.enabled = false;
             store.ProjectMenu.savePass.enabled = false;
             store.ProjectMenu.renderPass.enabled = false;
+            if (world) {
+              store.HomeContact.transitionPass.uniforms.u_toScene.value = store.ProjectMenu.savePass.renderTarget.texture;
+              world.dispose();
+            }
             removeView(from);
             done();
           },

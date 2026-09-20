@@ -197,12 +197,15 @@ export class Router {
   private popEventState: any = null;
   private replayingPop = false;
   private pendingPop = false;
+  /** pathname of the view on screen; `window.location` has already moved on a popstate */
+  private fromPath = "/";
 
   constructor({ constructManagers }: RouterOptions = {}) {
     if (constructManagers) setEngineFactory(constructManagers);
     store.Highway = this;
 
     this.location = this.Helpers.getLocation(window.location.href);
+    this.fromPath = this.location.pathname;
     const view = liveViews().pop() as HTMLElement;
     this.properties = this.Helpers.getProperties(view, this.location.pathname);
     this.cache.set(this.location.href, this.properties);
@@ -327,6 +330,24 @@ export class Router {
   }
 
   async beforeFetch() {
+    const from = this.From?.properties ? this.fromPath : this.Helpers.getLocation(window.location.href).pathname;
+    try {
+      await this.transit(from);
+    } catch (error) {
+      // A transition that throws used to leave `running` set for good, which killed every later
+      // click. Highway's answer to a failed navigation is a hard load; same here.
+      console.error("[router] transition failed, loading the page instead", error);
+      this.running = this.popping = false;
+      window.location.href = this.location.href;
+    }
+  }
+
+  private async transit(from: string) {
+    // React-side layers (the world, the command dock) follow these instead of the pathname, which
+    // only changes once the out transition is over.
+    const detail = { from, to: this.location.pathname };
+    window.dispatchEvent(new CustomEvent("hyper:navigate-out", { detail }));
+    document.documentElement.dataset.navigating = this.location.pathname;
     if (this.Contextual === false)
       this.getContextualFromRouter(
         this.Helpers.getLocation(window.location.href).pathname,
@@ -379,6 +400,9 @@ export class Router {
     });
     this.From = this.To;
     this.trigger = null;
+    delete document.documentElement.dataset.navigating;
+    window.dispatchEvent(new CustomEvent("hyper:navigate-end", { detail: { from: this.fromPath, to: this.location.pathname } }));
+    this.fromPath = this.location.pathname;
 
     if (this.pendingPop) {
       this.pendingPop = false;

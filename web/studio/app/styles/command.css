@@ -223,3 +223,12 @@ body[data-atrium-focus]:not([data-atrium-focus=""]) .cmd-cards {
     max-width: calc(53vw - 44px);
   }
 }
+
+/* The dock belongs to the world: it settles in after the room lands and leaves with it, instead of
+   riding a route transition onto the landing. */
+@keyframes cmd-in { from { opacity: 0; translate: 0 10px; } }
+body[data-world-entering] .cmd { animation: cmd-in 900ms cubic-bezier(0.23, 1, 0.32, 1) 1300ms backwards; }
+.cmd, .ws-account { transition: opacity 350ms ease, visibility 0s; }
+html[data-navigating] .cmd,
+html[data-navigating] .ws-account { opacity: 0; visibility: hidden; transition: opacity 350ms ease, visibility 0s 350ms; }
+@media (prefers-reduced-motion: reduce) { body[data-world-entering] .cmd { animation: none; } }

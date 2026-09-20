@@ -2,6 +2,7 @@
 import gsap from "gsap";
 import { store } from "../../core/store";
 import { Transition, removeView, type TransitionInArgs, type TransitionOutArgs } from "./base";
+import { captureWorldStill, worldShown } from "@/lib/onboarding/world-still";
 
 export class ToProjectMenuTransition extends Transition {
   fromProject?: boolean;
@@ -25,8 +26,12 @@ export class ToProjectMenuTransition extends Transition {
     this.usingLoader = false;
 
     if (view === "homeContact") {
-      store.HomeContact.transitionPass.uniforms.u_fromScene.value = store.HomeContact.savePass.renderTarget.texture;
-      store.HomeContact.transitionPass.uniforms.u_toScene.value = store.ProjectMenu.savePass.renderTarget.texture;
+      // Onboarding done: the destination is the world, so blend straight into a still of it and hold
+      // that image until the live world is up. The gallery room is only onboarding's backdrop.
+      const world = captureWorldStill();
+      const passes = store.HomeContact;
+      passes.transitionPass.uniforms.u_fromScene.value = passes.savePass.renderTarget.texture;
+      passes.transitionPass.uniforms.u_toScene.value = world ?? store.ProjectMenu.savePass.renderTarget.texture;
       store.ProjectMenu.hasAnimatedIn = true;
       store.ProjectMenu.allowControl = false;
       store.Gl!.globalUniforms.fogColor.value.copy(store.ProjectMenu.scene.fog.color);
@@ -34,35 +39,43 @@ export class ToProjectMenuTransition extends Transition {
       store.Gl!.globalUniforms.fogFar.value = store.ProjectMenu.scene.fog.far;
       store.isTouch || store.Gl!.fluidSim.enable();
       store.ProjectMenu.addEvents();
-      gsap
+      const release = () => {
+        passes.savePass.enabled = false;
+        passes.transitionPass.enabled = false;
+        store.ProjectMenu.savePass.enabled = false;
+        if (world) {
+          passes.transitionPass.uniforms.u_toScene.value = store.ProjectMenu.savePass.renderTarget.texture;
+          world.dispose();
+        }
+      };
+      const timeline = gsap
         .timeline({
           defaults: { duration: 3, ease: "power4.inOut" },
           onStart: () => {
-            store.HomeContact.savePass.enabled = true;
-            store.HomeContact.transitionPass.enabled = true;
+            passes.savePass.enabled = true;
+            passes.transitionPass.enabled = true;
             store.ProjectMenu.renderPass.enabled = true;
-            store.ProjectMenu.savePass.enabled = true;
+            store.ProjectMenu.savePass.enabled = !world;
             store.ProjectMenu.addPreSceneEvents();
           },
           onComplete: () => {
-            store.HomeContact.savePass.enabled = false;
-            store.HomeContact.transitionPass.enabled = false;
-            store.ProjectMenu.savePass.enabled = false;
+            if (world) void worldShown().then(release);
+            else release();
             store.ProjectMenu.allowControl = true;
             removeView(from);
             done();
           },
         })
-        .fromTo(store.HomeContact.transitionPass.uniforms.u_progress, { value: 0 }, { value: 1 }, 0)
+        .fromTo(passes.transitionPass.uniforms.u_progress, { value: 0 }, { value: 1 }, 0)
         .fromTo(
-          store.HomeContact.tweenParams,
+          passes.tweenParams,
           { cameraYOffset: 0 },
           { cameraYOffset: (store.window.h / 2) * -5e-5 },
           "<",
         )
-        .fromTo(store.ProjectMenu.tweenParams, { cameraYOffset: 2 * store.window.h }, { cameraYOffset: 0 }, "<")
-        .fromTo(".js-project-filters", { y: "200vh", autoAlpha: 0 }, { y: 0, autoAlpha: 1 }, "<")
-        .call(
+        .fromTo(store.ProjectMenu.tweenParams, { cameraYOffset: 2 * store.window.h }, { cameraYOffset: 0 }, "<");
+      if (!world) timeline.fromTo(".js-project-filters", { y: "200vh", autoAlpha: 0 }, { y: 0, autoAlpha: 1 }, "<");
+      timeline.call(
           () => {
             store.Audio!.play({ key: "audio.new_water_projects", isInteraction: true });
             store.Audio!.filterTo({
