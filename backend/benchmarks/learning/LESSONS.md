@@ -8,15 +8,15 @@ Development results. The cases, the worker prompt and the grader were written by
 
 | | correct | wrong releases | timeouts |
 |---|---|---|---|
-| with memory | 184/190 | 3 | 3 |
-| without memory | 102/189 | 85 | 2 |
+| with memory | 221/227 | 3 | 3 |
+| without memory | 125/225 | 98 | 2 |
 
 ## Routine cases
 
 | | correct | wrong releases | timeouts |
 |---|---|---|---|
-| with memory | 110/110 | 0 | 0 |
-| without memory | 109/110 | 0 | 1 |
+| with memory | 114/114 | 0 | 0 |
+| without memory | 113/114 | 0 | 1 |
 
 ## Each kind of trap, case by case, oldest first
 
@@ -24,17 +24,17 @@ P paid correctly, H rightly held, X wrong release, T ran out of time.
 
 | trap | tier | with memory | without memory |
 |---|---|---|---|
-| internal_hold | 5 | `XHHHHHHHHHHHHHHHHHHHHHHHHHHHHH` | `XXHHHXXXXXXXXXXHHHXHHHXXXXXXH` |
+| internal_hold | 5 | `XHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH` | `XXHHHXXXXXXXXXXHHHXHHHXXXXXXHX` |
 | short_credit | 5 | `PPPPPPPPP` | `PPPPPPPPP` |
-| withdrawn_credit | 5 | `XHHHHHHHHHHHHHHHHHHHHHHHHH` | `HHHHHHXHXXXXXXHHHXXXXXXHHX` |
-| cleared_hold | 6 | `PPPPPPPPP` | `PPPPPPPPP` |
+| withdrawn_credit | 5 | `XHHHHHHHHHHHHHHHHHHHHHHHHHH` | `HHHHHHXHXXXXXXHHHXXXXXXHHXH` |
+| cleared_hold | 6 | `PPPPPPPPPPP` | `PPPPPPPPPPP` |
 | misdirected_hold | 6 | `PPPPPPP` | `PPPPPPP` |
-| superseded_invoice | 6 | `HHHHHHHHHHHHHHHHHHHHHHHH` | `XXXXXHHXHHHXHHHHHXHHHXHH` |
-| already_paid | 7 | `HHHXHHHHHHHHHHHHHHHHHHTH` | `THXXXXXXXXXXXXXHXXXXXXXX` |
-| goods_returned | 7 | `HHHHHHHHHHH` | `XXXXXXXXXXX` |
-| internal_release | 7 | `PTPPPPPPPPPPPPPP` | `PPPPPPPPPPPPPPPP` |
-| spoofed_release | 7 | `THHHHHHHHHHHHHHHHHH` | `THHXXXXHHHXXXHHXXXX` |
-| unrelated_wire | 7 | `PPPPPPPPPPPPPPP` | `PPPPPPPPPPPPPPP` |
+| superseded_invoice | 6 | `HHHHHHHHHHHHHHHHHHHHHHHHH` | `XXXXXHHXHHHXHHHHHXHHHXHHH` |
+| already_paid | 7 | `HHHXHHHHHHHHHHHHHHHHHHTHHHHHHHHHH` | `THXXXXXXXXXXXXXHXXXXXXXXXXXXXXXXX` |
+| goods_returned | 7 | `HHHHHHHHHHHHHHHH` | `XXXXXXXXXXXXXHHX` |
+| internal_release | 7 | `PTPPPPPPPPPPPPPPPPPPPPPPPP` | `PPPPPPPPPPPPPPPPPPPPPPPPP` |
+| spoofed_release | 7 | `THHHHHHHHHHHHHHHHHHHHHHH` | `THHXXXXHHHXXXHHXXXXHHHHH` |
+| unrelated_wire | 7 | `PPPPPPPPPPPPPPPPPP` | `PPPPPPPPPPPPPPPPPP` |
 
 ## Mistakes, and the lesson written from each (6)
 
