@@ -18,6 +18,7 @@
             "pages": [
               "index",
               "architecture",
+              "mcp",
               "deployment"
             ]
           }

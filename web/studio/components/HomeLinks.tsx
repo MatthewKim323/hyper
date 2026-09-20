@@ -5,10 +5,10 @@
 import { useEffect, useState } from "react";
 import { store } from "@/lib/engine/core/store";
 
-const LINKS = [
+const LINKS: { label: string; href: string; external?: boolean }[] = [
   { label: "GitHub", href: "https://github.com/MatthewKim323/hyper." },
   { label: "White paper", href: "/hyper-whitepaper.pdf" },
-  { label: "Docs", href: "https://github.com/MatthewKim323/hyper./blob/main/INTEGRATION.md" },
+  { label: "Docs", href: "/docs", external: false },
 ];
 
 export default function HomeLinks() {
@@ -27,7 +27,10 @@ export default function HomeLinks() {
   }, []);
 
   return <nav className="home-links" data-ready={ready || undefined} aria-label="Project links">
-    {LINKS.map(link => <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" data-cursor="hide">
+    {LINKS.map(link => <a key={link.label} href={link.href}
+      {...(link.external === false ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+      {...(link.external === false ? { "data-router-disabled": "" } : {})}
+      data-cursor="hide">
       {link.label}
       <svg viewBox="0 0 10 10" width="8" height="8" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 8 8 2M3.5 2H8v4.5" /></svg>
     </a>)}

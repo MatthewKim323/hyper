@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const onboardingBackend = (process.env.ONBOARDING_BACKEND_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
+// Mintlify hosts the docs. Pointing the domain's CNAME at them would send *every* path
+// there, taking the product offline, so /docs is reverse-proxied instead.
+const docsHost = (process.env.DOCS_HOST ?? "hyper-23543524.mintlify.site").replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
   // The engine boots once and owns the DOM imperatively; strict-mode double mount would double-boot it.
@@ -18,6 +21,8 @@ const nextConfig: NextConfig = {
         source: "/api/onboarding/:path*",
         destination: `${onboardingBackend}/:path*`,
       },
+      { source: "/docs", destination: `https://${docsHost}/docs` },
+      { source: "/docs/:path*", destination: `https://${docsHost}/docs/:path*` },
     ];
   },
 };
