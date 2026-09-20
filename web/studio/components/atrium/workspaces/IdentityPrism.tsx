@@ -20,6 +20,11 @@ const SOURCES: { id: string; name: string; reads: string }[] = [
   { id: "plaid", name: "Bank (Plaid)", reads: "Bank transactions" },
 ];
 const LIVE = new Set(["connected", "authorizing"]);
+// Demo mode: the synthetic company's systems show as connected. Its data was imported from fixtures, not
+// pulled through these connectors, so this is a presentation switch and is off unless the flag is set.
+const DEMO_CONNECTED = process.env.NEXT_PUBLIC_DEMO_CONNECTED === "1";
+const isDemo = (connection?: Connection) => !!connection && connection.id.startsWith("demo:");
+const demoConnection = (provider: string, syncedAt: number | null): Connection => ({ id: `demo:${provider}`, provider, label: "Meridian", status: "connected", created_at: syncedAt ?? 0, last_synced_at: syncedAt, error: null });
 const STATUS: Record<string, string> = { connected: "Connected", authorizing: "Waiting for consent", reauth_required: "Needs sign-in again", error: "Sync failed", authorization_failed: "Consent failed", disconnected: "Disconnected" };
 
 function SourceTile({ source, info, connection, onChanged }: { source: typeof SOURCES[number]; info?: ProviderInfo; connection?: Connection; onChanged: () => void }) {
@@ -68,7 +73,7 @@ function SourceTile({ source, info, connection, onChanged }: { source: typeof SO
         <p>{connection?.error ?? (live ? (connection?.last_synced_at ? `Last read ${when(connection.last_synced_at)}` : "Starting…") : note || source.reads)}</p>
       </div>
       {!form && <div className={styles.sourceActions}>
-        {live ? <><button type="button" className={styles.textButton} disabled={busy} onClick={() => void run(() => backend.disconnect(connection!.id))}>Disconnect</button>
+        {isDemo(connection) ? null : live ? <><button type="button" className={styles.textButton} disabled={busy} onClick={() => void run(() => backend.disconnect(connection!.id))}>Disconnect</button>
           <button type="button" className={styles.connect} disabled={busy} onClick={() => void run(() => backend.syncConnection(connection!.id))}>{busy ? "Reading…" : "Read now"}</button></>
           : <button type="button" className={styles.connect} data-primary={!unavailable || undefined} disabled={busy || unavailable} onClick={connect}>{busy ? "Opening…" : unavailable ? "Unavailable" : connection ? "Reconnect" : "Connect"} <span aria-hidden="true">↗</span></button>}
       </div>}
@@ -135,7 +140,10 @@ export default function IdentityPrism({ active, onMotion }: Props) {
             : connections.error ? <p role="status">Sources couldn&rsquo;t be loaded. <button type="button" className={styles.textButton} onClick={connections.refresh}>Try again</button></p>
             : <ul className={styles.sources}>{SOURCES.map(source => <SourceTile key={source.id} source={source}
                 info={providers.data?.providers.find(item => item.id === source.id)}
-                connection={connections.data?.connections.filter(item => item.provider === source.id).sort((x, y) => Number(LIVE.has(y.status)) - Number(LIVE.has(x.status)) || y.created_at - x.created_at)[0]}
+                connection={(() => {
+                  const real = connections.data?.connections.filter(item => item.provider === source.id).sort((x, y) => Number(LIVE.has(y.status)) - Number(LIVE.has(x.status)) || y.created_at - x.created_at)[0];
+                  return DEMO_CONNECTED && !(real && LIVE.has(real.status)) ? demoConnection(source.id, sources.data?.sources[0]?.created_at ?? null) : real;
+                })()}
                 onChanged={() => { connections.refresh(); sources.refresh(); }} />)}</ul>}
           {usable && sources.data && <p className={styles.note}>{sources.data.sources.length ? `Latest evidence filed ${when(sources.data.sources[0].created_at)}: ${sources.data.sources[0].filename}.` : "No evidence yet"}</p>}
         </section>
