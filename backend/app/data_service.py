@@ -42,7 +42,12 @@ class FinancialQuery(StrictModel):
 class EvidenceQuery(StrictModel):
     query: str = Field(min_length=1,max_length=2000)
     dataset: str | None = Field(default=None,pattern=NAME)
+    documents_only: bool = False
     limit: int = Field(default=8,ge=1,le=20)
+    @model_validator(mode='after')
+    def one_scope(self):
+        if self.dataset and self.documents_only:raise ValueError('documents_only excludes datasets; drop one')
+        return self
 
 class SourceQuery(StrictModel):
     source_id: str = Field(min_length=1,max_length=128)
@@ -231,6 +236,7 @@ class DataService:
         with self.engine.connect() as db:
             cond=[sources.c.organization_id==self.oid,sources.c.active.is_(True)]
             if args.dataset:cond.append(sources.c.dataset==args.dataset)
+            if args.documents_only:cond.append(sources.c.dataset.is_(None))
             all_sources=db.execute(select(sources.c.id,sources.c.index_status).where(*cond)).mappings().all()
         ready=[s['id'] for s in all_sources if s['index_status']=='ready']
         pending=len(all_sources)-len(ready)

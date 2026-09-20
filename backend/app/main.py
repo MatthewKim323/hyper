@@ -293,3 +293,6 @@ app.include_router(skills_router)
 
 from .counterparty_api import router as counterparty_router
 app.include_router(counterparty_router)
+
+from .graph_api import router as graph_router
+app.include_router(graph_router)

@@ -142,3 +142,19 @@ def test_index_terms_and_remote_tool_scope():
     assert index_terms(['vendor:VEN-002','gl_account:1000'])==['gl_account:1000','identifier:VEN-002','vendor:VEN-002']
     tool=next(t for t in definitions('org-a','hyper-evidence-v1','connector')['tools'] if t['id'].endswith('entity_evidence'))
     assert 'organization_id == "org-a"' in tool['configuration']['query'] and list(tool['configuration']['params'])==['entity']
+
+def test_graph_routes_are_scoped_to_the_signed_in_user(world,monkeypatch):
+    from fastapi.testclient import TestClient
+    from app import auth, main
+    store,_,_,_,_=world
+    monkeypatch.setattr(main,'store',store)
+    who={'id':'alice'}
+    main.app.dependency_overrides[auth.current_user]=lambda:type('I',(),{'user_id':who['id']})()
+    try:
+        client=TestClient(main.app)
+        assert client.get('/graph/stats').json()['nodes']>0
+        assert client.post('/graph/path',json={'from_entity':'Casey Ledger','to_entity':'VEN-002'}).json()['hops']==3
+        who['id']='bob'
+        assert client.get('/graph/stats').json()['nodes']==0
+        assert client.post('/graph/entity',json={'entity':'VEN-002'}).json()['resolved'] is False
+    finally:main.app.dependency_overrides.clear()
