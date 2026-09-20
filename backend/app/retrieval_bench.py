@@ -10,7 +10,6 @@ import json
 import math
 import os
 import random
-import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -68,15 +67,19 @@ def main():
     parser.add_argument('--per-family',type=int,default=60)
     parser.add_argument('--seed',type=int,default=20260919)
     parser.add_argument('--skip',default='',help='Comma-separated datasets to leave out (usage_daily is 65k rows)')
+    parser.add_argument('--reuse',action='store_true',help='Keep the database and index from the last run; only ask the questions again')
     parser.add_argument('--out',default=str(Path(__file__).resolve().parents[1]/'benchmarks/retrieval.json'))
     args=parser.parse_args()
     load_dotenv(Path(__file__).resolve().parents[1]/'.env')
     os.environ['ELASTICSEARCH_INDEX']='hyper-bench-retrieval-v1'
     os.environ['ELASTIC_RERANK_INFERENCE_ID']=os.getenv('BENCH_RERANK_INFERENCE_ID','')
     search=ElasticSearch()
-    try:search.request('DELETE',search.index)
-    except Exception:pass
-    store=Store(tempfile.mkdtemp()+'/bench.sqlite')
+    database=Path(__file__).resolve().parents[1]/'var/bench/retrieval.sqlite'
+    if not (args.reuse and database.exists()):
+        try:search.request('DELETE',search.index)
+        except Exception:pass
+        database.parent.mkdir(parents=True,exist_ok=True);database.unlink(missing_ok=True)
+    store=Store(str(database))
     svc=DataService(store,store.workspace('bench')['id'],NoObjects(),search)
     started=time.time()
     schema=json.loads((ROOT/'visible/schema.json').read_text())
@@ -90,7 +93,7 @@ def main():
         body=f"{d['kind'].replace('_',' ').title()} | {d['date']}\nSubject: {d['subject']}\n\n{d['body']}\n"
         by_source[svc.ingest(d['document_id']+'.txt',body.encode(),source_key='demo/narratives/'+d['document_id'])['id']]=d['document_id']
     while run_once(store,search):pass
-    built=round(time.time()-started,1)
+    built=None if args.reuse else round(time.time()-started,1)
     from .graph import Graph
     shape=Graph(store.engine,svc.oid).stats()
     inference=search.inference_id

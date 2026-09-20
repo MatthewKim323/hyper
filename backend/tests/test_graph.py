@@ -135,8 +135,12 @@ def test_entity_retriever_is_filtered_and_ranks_exact_over_related(monkeypatch):
         assert branch['standard']['query']['bool']['filter']==[{'term':{'organization_id':'org-1'}},{'terms':{'source_id':['s1']}}]
     boosts=[c['constant_score']['boost'] for c in branches[1]['standard']['query']['bool']['must'][0]['bool']['should']]
     assert boosts==sorted(boosts,reverse=True) and boosts[0]==8
-    es.search('org-1',['s1'],'granite',5)
-    assert 'retriever' not in captured or captured.get('query')
+    # With embeddings, text is fused first so BM25 and semantic together get one vote against the graph's one.
+    monkeypatch.setenv('ELASTIC_INFERENCE_ID','test-embedding')
+    es=ElasticSearch();es.request=lambda method,path,**kwargs:captured.update(kwargs['json']) or {'hits':{'hits':[]}}
+    es.search('org-1',['s1'],'granite',5,entities=['vendor:VEN-002'])
+    text,linked=captured['retriever']['rrf']['retrievers']
+    assert len(text['rrf']['retrievers'])==2 and 'entity_ids' in json.dumps(linked) and 'entity_ids' not in json.dumps(text)
 
 def test_index_terms_and_remote_tool_scope():
     assert index_terms(['vendor:VEN-002','gl_account:1000'])==['gl_account:1000','identifier:VEN-002','vendor:VEN-002']

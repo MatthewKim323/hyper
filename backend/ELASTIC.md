@@ -134,3 +134,7 @@ Stable investigation IDs identify JSON-RPC messages; they are not assumed to gua
 Mock-transport tests cover Agent Card discovery, JSON-RPC correlation, authentication, completed results, malformed/nonterminal results, timeout non-replay, source hydration, and organization isolation. Legacy workflow tests remain enabled. Local .env currently lacks Kibana URL/key, application organization binding and A2A agent ID, so live Elastic execution has not been verified.
 
 Sources: [Elastic A2A server](https://www.elastic.co/docs/explore-analyze/ai-features/agent-builder/a2a-server), [A2A 0.3 specification](https://a2a-protocol.org/v0.3.0/specification/).
+
+## Knowledge graph and retrieval benchmark
+
+Evidence search is widened by the company knowledge graph and measured on the Meridian corpus. See [GRAPH.md](GRAPH.md): recall@10 0.598 for hybrid, 0.937 for hybrid plus graph.

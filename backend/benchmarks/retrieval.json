@@ -1,0 +1,148 @@
+{
+ "corpus": {
+  "documents": 612,
+  "structured_rows": 115348,
+  "graph": {
+   "nodes": 115348,
+   "edges": 281315,
+   "mentions": 400376
+  },
+  "ingest_index_seconds": null
+ },
+ "questions": {
+  "identifier": 60,
+  "name": 52,
+  "linked": 60
+ },
+ "seed": 20260919,
+ "scope": "documents_only, top 10",
+ "embedding": "hyper-elser",
+ "rerank": null,
+ "results": {
+  "keyword": {
+   "latency_ms": {
+    "p50": 249,
+    "p95": 484
+   },
+   "identifier": {
+    "recall@5": 0.819,
+    "recall@10": 0.867,
+    "mrr@10": 0.878,
+    "ndcg@10": 0.83
+   },
+   "all": {
+    "recall@5": 0.517,
+    "recall@10": 0.546,
+    "mrr@10": 0.668,
+    "ndcg@10": 0.544
+   },
+   "name": {
+    "recall@5": 0.536,
+    "recall@10": 0.515,
+    "mrr@10": 0.857,
+    "ndcg@10": 0.559
+   },
+   "linked": {
+    "recall@5": 0.2,
+    "recall@10": 0.252,
+    "mrr@10": 0.293,
+    "ndcg@10": 0.246
+   }
+  },
+  "keyword+graph": {
+   "latency_ms": {
+    "p50": 286,
+    "p95": 553
+   },
+   "identifier": {
+    "recall@5": 0.976,
+    "recall@10": 0.996,
+    "mrr@10": 1.0,
+    "ndcg@10": 0.987
+   },
+   "all": {
+    "recall@5": 0.819,
+    "recall@10": 0.93,
+    "mrr@10": 0.946,
+    "ndcg@10": 0.892
+   },
+   "name": {
+    "recall@5": 0.895,
+    "recall@10": 0.943,
+    "mrr@10": 0.99,
+    "ndcg@10": 0.933
+   },
+   "linked": {
+    "recall@5": 0.597,
+    "recall@10": 0.852,
+    "mrr@10": 0.853,
+    "ndcg@10": 0.76
+   }
+  },
+  "hybrid": {
+   "latency_ms": {
+    "p50": 281,
+    "p95": 491
+   },
+   "identifier": {
+    "recall@5": 0.912,
+    "recall@10": 0.957,
+    "mrr@10": 0.992,
+    "ndcg@10": 0.949
+   },
+   "all": {
+    "recall@5": 0.589,
+    "recall@10": 0.598,
+    "mrr@10": 0.734,
+    "ndcg@10": 0.619
+   },
+   "name": {
+    "recall@5": 0.637,
+    "recall@10": 0.587,
+    "mrr@10": 0.981,
+    "ndcg@10": 0.671
+   },
+   "linked": {
+    "recall@5": 0.223,
+    "recall@10": 0.248,
+    "mrr@10": 0.263,
+    "ndcg@10": 0.244
+   }
+  },
+  "hybrid+graph": {
+   "latency_ms": {
+    "p50": 299,
+    "p95": 486
+   },
+   "identifier": {
+    "recall@5": 0.979,
+    "recall@10": 0.992,
+    "mrr@10": 1.0,
+    "ndcg@10": 0.99
+   },
+   "all": {
+    "recall@5": 0.825,
+    "recall@10": 0.937,
+    "mrr@10": 0.971,
+    "ndcg@10": 0.906
+   },
+   "name": {
+    "recall@5": 0.899,
+    "recall@10": 0.96,
+    "mrr@10": 0.981,
+    "ndcg@10": 0.944
+   },
+   "linked": {
+    "recall@5": 0.607,
+    "recall@10": 0.861,
+    "mrr@10": 0.933,
+    "ndcg@10": 0.789
+   }
+  }
+ },
+ "limits": [
+  "Documents are synthetic drafts that usually repeat their identifiers, which flatters every lexical mode.",
+  "Questions are templated, so this measures entity and relationship recall, not paraphrase understanding.",
+  "Relevance is document-level and binary, from authoring metadata."
+ ]
+}

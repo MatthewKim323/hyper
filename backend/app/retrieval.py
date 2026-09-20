@@ -90,7 +90,12 @@ class ElasticSearch:
         def branch(field):
             return {'standard':{'query':{'bool':{'filter':filters,'must':[{'match':{field:query}}]}}}}
         retrievers=[branch('content')]
-        if self.inference_id:retrievers.append(branch('semantic'))
+        if self.inference_id:
+            retrievers.append(branch('semantic'))
+            if entities or related:
+                # Text gets one vote and the graph gets one. Flat, two text retrievers outvote an exact match
+                # (measured: recall@10 0.74 flat against 0.93 without embeddings at all).
+                retrievers=[{'rrf':{'retrievers':retrievers,'rank_window_size':max(50,limit)}}]
         if entities or related:
             # Exact identifiers beat graph neighbours, near neighbours beat far ones, documents beat ledger rows.
             # Text relevance only breaks ties, so it can never outvote an exact match.
