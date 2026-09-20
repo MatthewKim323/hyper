@@ -111,3 +111,14 @@ def test_execution_evidence_and_draft_discovery(setup):
     drafts=svc.search(Search(include_inactive=True))['skills']
     assert drafts[0]['id']==result['id'] and drafts[0]['status']=='draft'
     assert 'content' not in drafts[0]
+
+def test_workspace_sees_the_latest_report_to_review(setup):
+    svc,_,result,source,_,_=init(setup)
+    assert svc.get(result['id'])['latest_run'] is None
+    first=report(svc,result,source,'first','failed')
+    second=report(svc,result,source,'second')
+    latest=svc.get(result['id'])['latest_run']
+    # Activation only accepts the newest report, so that is the one an owner is shown.
+    assert latest['run_id']==second['run_id']!=first['run_id'] and latest['outcome']=='passed'
+    assert latest['checks'] and latest['evidence_current'] and latest['verification']=='self_reported'
+    assert activate(svc,result,{'run_id':latest['run_id']})['status']=='active'

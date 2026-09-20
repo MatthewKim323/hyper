@@ -13,6 +13,8 @@ All routes require Clerk authentication and are organization-scoped. The same no
 | `POST /skills/{id}/activate` | Owner only | Activate latest passing evidence after independent review. |
 | `POST /skills/{id}/retire` | Owner only | Remove a version from reuse; preserve its record. |
 
+`GET /skills/{id}` also returns `latest_run` (`run_id`, `outcome`, `summary`, `checks`, `duration_ms`, `created_at`, `evidence_current`, `verification`) or null. Activation only accepts the newest report, so this is the one to show an owner for review.
+
 ## Draft example
 
 ```json

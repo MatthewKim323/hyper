@@ -126,6 +126,11 @@ class Skills:
             row=self.owned(db,sid);result=self.summary(db,row)
             stats=db.execute(select(runs.c.outcome,func.count()).where(runs.c.skill_id==sid,runs.c.organization_id==self.oid).group_by(runs.c.outcome)).all()
             result['reported_runs']=dict(stats);result['evidence']=row['evidence'];result['activation']=row['activation']
+            # The owner activates against the latest report, so the workspace needs to show exactly that one.
+            last=db.execute(select(runs).where(runs.c.skill_id==sid,runs.c.organization_id==self.oid).order_by(runs.c.sequence.desc()).limit(1)).mappings().first()
+            result['latest_run']=None if not last else {'run_id':last['id'],'outcome':last['outcome'],'summary':last['report'].get('summary'),
+                'checks':last['report'].get('checks',[]),'duration_ms':last['report'].get('duration_ms'),'created_at':last['created_at'],
+                'evidence_current':self.fresh(db,last['report'].get('evidence',[])),'verification':'self_reported'}
         package=self.package(row)
         if path is not None:
             if path not in package['resources']:raise LookupError('Skill resource not found')
