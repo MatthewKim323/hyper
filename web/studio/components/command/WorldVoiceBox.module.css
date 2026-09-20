@@ -87,13 +87,8 @@
 .microphone[aria-pressed="true"] { color: #fff9f5; background: #493e3c; border-color: rgb(255 255 255 / 35%); }
 .send:disabled { opacity: .35; cursor: default; }
 
-@media (min-width: 900px) {
-  :global(body[data-atrium-focus]:not([data-atrium-focus=""])) .dock {
-    left: 22px;
-    width: min(390px, calc(34vw - 44px));
-    transform: none;
-  }
-}
+/* House rule (matt, 2026-09-20): the dock never moves. It stays bottom center in every state, and
+   panels, relics and the CFO view end above it with `var(--cmd-clear)` from app/styles/command.css. */
 
 @media (max-width: 600px) {
   .dock { bottom: max(16px, env(safe-area-inset-bottom)); width: calc(100vw - 28px); }
