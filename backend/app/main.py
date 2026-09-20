@@ -164,6 +164,15 @@ async def stream(ws: WebSocket, sid: str):
     if not state or sid in active:
         await ws.close(code=1008)
         return
+    # `active` only covers this process; the advisory lock covers the others.
+    try:
+        claim = await asyncio.to_thread(store.claim_stream, sid)
+    except PermissionError:
+        await ws.close(code=1008)
+        return
+    except Exception:
+        # A claim that cannot be taken must not deny service on a single-worker install.
+        claim = None
     active.add(sid)
     send_lock = asyncio.Lock()
     def authorize():
@@ -176,7 +185,16 @@ async def stream(ws: WebSocket, sid: str):
             if event['type'] == 'connection.closed' and state.get('mode') == 'dashboard':
                 # A dead provider must not leave a seemingly live dashboard socket.
                 await ws.close(code=1012, reason='Reconnect to resume saved conversation')
-    bridge = voice.VoiceSession(state, store, emit, authorize)
+    try:
+        bridge = voice.VoiceSession(state, store, emit, authorize)
+    except Exception:
+        # Building the bridge is the one step between taking the claim and the main
+        # try/finally. Without this a failure here leaves the session locked out.
+        active.discard(sid)
+        store.release_stream(claim)
+        with contextlib.suppress(Exception):
+            await ws.close(code=1011)
+        return
     started = False
     microphone = False
     async def watch_auth():
@@ -292,6 +310,7 @@ async def stream(ws: WebSocket, sid: str):
             await watcher
         await bridge.close()
         active.discard(sid)
+        store.release_stream(claim)
 
 
 from .data_api import router as data_router

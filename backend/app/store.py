@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import time
@@ -49,6 +50,38 @@ class Store:
         with self.connect() as db:
             return db.execute(select(memberships.c.user_id).where(
                 memberships.c.user_id==user_id,memberships.c.organization_id==oid)).scalar() is not None
+
+    def claim_stream(self, sid):
+        """Take the single-writer claim for a session across API workers, or return None.
+
+        The in-process `active` set only guards one process. Under multiple workers two
+        tabs land on different workers, both pass that check, and both bridges write the
+        same session row through save() -- last write wins and transcript turns are lost.
+        A Postgres advisory *session* lock spans workers and is released if the backend
+        dies, so no stale claim can lock a session out. SQLite runs one process, where the
+        in-process set is already sufficient.
+        """
+        if self.engine.dialect.name != 'postgresql':
+            return None
+        from sqlalchemy import text
+        connection = self.engine.connect()
+        try:
+            taken = connection.execute(text('SELECT pg_try_advisory_lock(hashtext(:key))'),
+                                       {'key': 'stream:' + sid}).scalar()
+        except Exception:
+            connection.close()
+            raise
+        if not taken:
+            connection.close()
+            raise PermissionError('This session is already open in another window')
+        return connection
+
+    @staticmethod
+    def release_stream(claim):
+        if claim is not None:
+            # Closing the connection drops every advisory lock it holds.
+            with contextlib.suppress(Exception):
+                claim.close()
 
     def create(self, user_id, demo=False):
         org = self.workspace(user_id)
