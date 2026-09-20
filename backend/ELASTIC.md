@@ -82,6 +82,30 @@ Object storage is configured separately (`backend/STORAGE.md`). Search and inges
 depend on it: the worker reads the uploaded file from the bucket before it indexes anything, so
 Elasticsearch alone does not make uploads work.
 
+### Agent Builder
+
+The investigator agent is provisioned on the same Serverless project over A2A, which needs no
+Kibana callback connector:
+
+```sh
+uv run python -m app.elastic_setup provision --transport a2a
+```
+
+| Variable | Value |
+| --- | --- |
+| `ELASTIC_KIBANA_URL` | the project's `.kb.` host, not the `.es.` one |
+| `ELASTIC_KIBANA_API_KEY` | same project key as Elasticsearch |
+| `ELASTIC_AGENT_ORGANIZATION_ID` | `demo-meridian` |
+| `ELASTIC_A2A_AGENT_ID` | the `agent_id` that `provision` prints |
+
+Each ES|QL tool has the organization ID compiled into its query, so an agent provisioned for
+one organization cannot read another's evidence even if asked to. Provisioning for a second
+organization means a second agent with its own scoped tools; `definitions` rejects any other
+organization ID outright.
+
+`check` reports every dependency in one call and is the fastest way to tell whether a
+deployment can actually run an investigation.
+
 ## API
 
 All investigation create/list/read/retry/refresh routes use the existing user organization authentication. The callback uses its separate server credential.
