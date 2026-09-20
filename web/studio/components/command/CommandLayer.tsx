@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { usePathname } from "next/navigation";
 import ArtifactCard from "./ArtifactCard";
 import { readArtifactCard, type ArtifactCardModel } from "@/lib/command/artifact";
-import { PointerContext, type Referent } from "@/lib/command/pointer-context";
+import { PointerContext } from "@/lib/command/pointer-context";
 import { OnboardingVoiceClient, type VoiceConnection } from "@/lib/onboarding/voice-client";
 import { bindWorldVoice, type WorldVoiceBinding } from "@/lib/command/world-voice";
 
@@ -31,6 +31,8 @@ export default function CommandLayer() {
 }
 
 function CommandSession() {
+  const [agentOpen, setAgentOpen] = useState(false);
+  const agentPanel = useRef<HTMLElement>(null);
   const [connection, setConnection] = useState<VoiceConnection>("idle");
   const [listening, setListening] = useState(false);
   const [status, setStatus] = useState("");
@@ -38,7 +40,6 @@ function CommandSession() {
   const [said, setSaid] = useState("");
   const [error, setError] = useState("");
   const [cards, setCards] = useState<ArtifactCardModel[]>([]);
-  const [target, setTarget] = useState<Referent | null>(null);
   const client = useRef<OnboardingVoiceClient | null>(null);
   const pointer = useRef<PointerContext | null>(null);
   const mic = useRef<MediaStream | null>(null);
@@ -67,7 +68,11 @@ function CommandSession() {
           visual.publish({ microphoneStream: null });
         }
       },
-      onError: (message) => { setError(message); visual.publish({ error: message }); },
+      onError: (message) => {
+        const worldMessage = message.replace(/onboarding/gi, "voice");
+        setError(worldMessage);
+        visual.publish({ error: worldMessage });
+      },
       onPlaybackStream: (stream) => visual.publish({ playbackStream: stream }),
       onComplete: () => {},
       onEvent: (event) => {
@@ -84,7 +89,7 @@ function CommandSession() {
       },
     }, "world");
     client.current = session;
-    void session.connect().catch(() => {});
+    // The orb starts the connection. Entering the world stays quiet and idle.
     return () => {
       // Invalidate any permission prompt that resolves after this session leaves.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,7 +110,6 @@ function CommandSession() {
     const now = performance.now();
     const region = pointer.current?.region(now - LOOKBACK_MS, now);
     const referents = (region?.referents ?? []).filter((r) => r.label || r.id).slice(0, 12);
-    setTarget(referents[0] ?? null);
     if (!region) return;
     const payload = {
       section: document.body.dataset.workspaceSection ?? null,
@@ -119,14 +123,13 @@ function CommandSession() {
     client.current?.sendPointer(payload);
   }, []);
 
-  // While listening, keep the agent informed of what is being pointed at, and show the same thing on screen.
+  // Share pointing context silently, without drawing target boxes over the scene.
   useEffect(() => {
     if (!listening) return;
     sharePointer();
     const timer = window.setInterval(sharePointer, POINTER_EVERY_MS);
     return () => {
       clearInterval(timer);
-      setTarget(null);
       lastSent.current = "";
     };
   }, [listening, sharePointer]);
@@ -145,8 +148,6 @@ function CommandSession() {
       await session.connect();
       lastSent.current = "";
       sharePointer();
-      // Show what "this" resolved to for a moment, then clear it: typed commands have no listening state.
-      window.setTimeout(() => { if (!mic.current) setTarget(null); }, 2600);
       if (!(await session.sendText(text))) setError("Your message could not be sent. Try again.");
     } catch {
       setError("Your agent is unavailable. Try again in a moment.");
@@ -154,6 +155,7 @@ function CommandSession() {
   }, [draft, sharePointer]);
 
   const toggle = useCallback(async () => {
+    setAgentOpen(true);
     const session = client.current;
     if (!session) return;
     void voiceVisual.current?.resumeAudio();
@@ -200,8 +202,26 @@ function CommandSession() {
     }
   }, []);
 
+  const closeAgent = useCallback(() => {
+    micRequest.current++;
+    startingMic.current = false;
+    mic.current?.getTracks().forEach(track => track.stop());
+    mic.current = null;
+    client.current?.disconnect();
+    voiceVisual.current?.publish({ connection: "disconnected", error: null, microphoneStream: null, playbackStream: null, presentation: { orbState: "composing" } });
+    setListening(false);
+    setError("");
+    setAgentOpen(false);
+    document.querySelector<HTMLButtonElement>('button[aria-label="Talk to Hyper"]')?.focus({ preventScroll: true });
+  }, []);
+
+  useEffect(() => {
+    if (agentOpen) agentPanel.current?.focus({ preventScroll: true });
+  }, [agentOpen]);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && agentOpen) { event.preventDefault(); closeAgent(); return; }
       if (event.key.toLowerCase() !== "v" || event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
       if ((event.target as HTMLElement | null)?.closest("input, textarea, select, [contenteditable]")) return;
       void toggle();
@@ -213,35 +233,35 @@ function CommandSession() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("hyper:agent-toggle", onOrb);
     };
-  }, [toggle]);
+  }, [agentOpen, closeAgent, toggle]);
 
   const line = error || (listening ? heard || status || "Listening. Point at something and ask." : said || "Ask about what you are pointing at");
   return (
-    <div className="cmd" data-listening={listening} data-connection={connection}>
-      {target && target.rect.width > 0 && (
-        <div className="cmd-target" style={{ left: target.rect.x, top: target.rect.y, width: target.rect.width, height: target.rect.height }} aria-hidden="true">
-          <span>{target.label.slice(0, 60)}</span>
-        </div>
-      )}
+    <div className="cmd" data-agent-open={agentOpen} data-listening={listening} data-connection={connection}>
       <div className="cmd-cards" aria-live="polite">
         {cards.map((card) => <ArtifactCard key={card.id} card={card} onDismiss={() => setCards((previous) => previous.filter((c) => c.id !== card.id))} />)}
       </div>
-      <div className="cmd-bar" data-error={!!error}>
-        <button type="button" className="cmd-mic" onClick={() => void toggle()} aria-pressed={listening} data-cursor="hide" title="Talk to your agent (V)">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-            <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
-          </svg>
-        </button>
-        <input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => { if (event.key === "Enter") void submit(); }}
-          placeholder={line}
-          aria-label="Ask your agent"
-          maxLength={2000}
-        />
-        <p className="sr" role={error ? "alert" : "status"}>{line}</p>
-      </div>
+      {agentOpen && <section ref={agentPanel} className="cmd-agent" role="dialog" aria-label="Hyper voice agent" tabIndex={-1} data-error={!!error}>
+        <header>
+          <span>Hyper</span>
+          <button type="button" onClick={closeAgent} aria-label="Close voice agent" data-cursor="hide">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+          </button>
+        </header>
+        <p className="cmd-transcript" role={error ? "alert" : "status"}>{line}</p>
+        <form onSubmit={event => { event.preventDefault(); void submit(); }}>
+          <input
+            value={draft}
+            onChange={event => setDraft(event.target.value)}
+            placeholder="Or type here..."
+            aria-label="Ask your agent"
+            maxLength={2000}
+          />
+          <button type="submit" aria-label="Send message" disabled={!draft.trim()} data-cursor="hide">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" /></svg>
+          </button>
+        </form>
+      </section>}
     </div>
   );
 }
