@@ -10,15 +10,27 @@ const pose = (signal: ReturnType<typeof create>) => {
   return values;
 };
 
-test("activity is visible without focusing a relic and settles back to hidden", () => {
+test("needed decisions radiate without focus and settle when resolved", () => {
   const signal = create();
-  for (let i = 0; i < 60; i++) signal.update("working", 1 / 60, false);
+  for (let i = 0; i < 60; i++) signal.update("attention", 1 / 60, false);
   assert.equal(signal.group.visible, true);
   const before = pose(signal);
-  for (let i = 0; i < 30; i++) signal.update("working", 1 / 60, false);
+  for (let i = 0; i < 30; i++) signal.update("attention", 1 / 60, false);
   assert.notDeepEqual(pose(signal), before);
   for (let i = 0; i < 120; i++) signal.update("idle", 1 / 60, false);
   assert.equal(signal.group.visible, false);
+  signal.dispose();
+});
+
+test("background work and external waits do not ask for the user's attention", () => {
+  const signal = create();
+  for (const status of ["working", "waiting", "complete"] as const) {
+    signal.update(status, 1 / 60, true);
+    assert.equal(signal.group.visible, false);
+    assert.equal(signal.intensity.value, 0);
+  }
+  signal.update("error", 1 / 60, true);
+  assert.equal(signal.group.visible, true);
   signal.dispose();
 });
 

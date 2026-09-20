@@ -158,7 +158,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const orbit = new Group();
   orbit.position.set(0, 3.07, -1.5);
   scene.add(orbit);
-  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; icon: Group; restPosition: Vector3; restBounds: Box3; parts: ReturnType<typeof createRelicParts>; hover: { value: number }; activity: { value: number }; velocity: number; phase: number; motion: RelicMotionState; live: RelicActivity; signal: ReturnType<typeof createRelicSignal> };
+  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; icon: Group; restPosition: Vector3; restBounds: Box3; parts: ReturnType<typeof createRelicParts>; hover: { value: number }; activity: { value: number }; radiance: { value: number }; velocity: number; phase: number; motion: RelicMotionState; live: RelicActivity; signal: ReturnType<typeof createRelicSignal> };
   let instances: Instance[] = [];
   let focusedStation: string | null = null;
   let focusShare = 1;
@@ -168,6 +168,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
 
   function prepareRelic(model: Object3D, hover: { value: number }, template: string) {
     const activity = { value: 0 };
+    const radiance = { value: 0 };
     const icon = new Group();
     icon.name = "Floating ethereal relic";
     const iconParts: Mesh[] = [];
@@ -193,24 +194,25 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
             shader.uniforms.uRelicHover = hover;
             shader.uniforms.uRelicTime = sceneClock;
             shader.uniforms.uRelicBusy = activity;
+            shader.uniforms.uRelicRadiance = radiance;
             shader.vertexShader = "varying vec3 vRelicWorld;\n" + shader.vertexShader.replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvRelicWorld=(modelMatrix*vec4(transformed,1.)).xyz;");
-            shader.fragmentShader = "varying vec3 vRelicWorld; uniform float uRelicHover; uniform float uRelicTime; uniform float uRelicBusy;\n" + shader.fragmentShader.replace("#include <output_fragment>", `
+            shader.fragmentShader = "varying vec3 vRelicWorld; uniform float uRelicHover; uniform float uRelicTime; uniform float uRelicBusy; uniform float uRelicRadiance;\n" + shader.fragmentShader.replace("#include <output_fragment>", `
               float edge=pow(1.-abs(dot(normalize(normal),normalize(vViewPosition))),2.4);
               float shimmer=.94+.06*sin(uRelicTime*.7+vRelicWorld.x*.31);
               outgoingLight+=vec3(2.6,2.15,2.4)*shimmer*(.055+edge*(.8+uRelicHover*.65)+uRelicHover*.14);
               float ribbon=pow(max(0.,sin(vRelicWorld.y*3.6-uRelicTime*2.1)),28.);
-              outgoingLight=mix(outgoingLight, outgoingLight*vec3(.58,.39,.94)+vec3(.32,.13,.62)*ribbon, uRelicBusy*.48);
-              outgoingLight+=vec3(1.25,.75,1.8)*ribbon*uRelicBusy*.7;
+              outgoingLight+=vec3(1.4,1.2,.95)*ribbon*uRelicBusy*.32;
+              outgoingLight+=vec3(3.5,3.,2.6)*(.24+edge*.65)*uRelicRadiance;
               #include <output_fragment>
             `);
           };
-          material.customProgramCacheKey = () => "hyper-floating-relic-v3";
+          material.customProgramCacheKey = () => "hyper-floating-relic-v4";
         }
         return material;
       };
       object.material = Array.isArray(object.material) ? object.material.map(illuminate) : illuminate(object.material);
     });
-    return { icon, activity, restPosition: center.clone(), restBounds: new Box3().setFromObject(icon), parts: createRelicParts(icon, template) };
+    return { icon, activity, radiance, restPosition: center.clone(), restBounds: new Box3().setFromObject(icon), parts: createRelicParts(icon, template) };
   }
 
   function animateRelics(delta: number, still = false) {
@@ -230,6 +232,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const busy = instance.motion.busy || status === "working";
       instance.activity.value += ((busy ? 1 : status === "attention" ? .45 : 0) - instance.activity.value) * (still ? 1 : 1 - Math.exp(-delta * 9));
       instance.signal.update(status, delta, still, instance.station.id === focusedStation);
+      instance.radiance.value = instance.signal.intensity.value;
       // The relic opens as the camera commits to it, and hints at it on hover.
       instance.parts.update(instance.station.id === focusedStation ? 1 : busy ? .28 : status === "attention" ? .18 : 0, delta, elapsed, still, { ...instance.motion, busy, activity: status, hover });
       const movement = still ? 0 : 1 - instance.parts.open;
@@ -241,6 +244,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const pressScale = pressed === instance.station.id && !still ? .97 : 1;
       instance.icon.scale.setScalar(instance.icon.scale.x + (pressScale - instance.icon.scale.x) * (still ? 1 : 1 - Math.exp(-delta * 24)));
       instance.icon.position.y = instance.restPosition.y + movement * (Math.sin(elapsed * .65 + instance.phase) * .065 + hover * .11 + instance.activity.value * (.14 + Math.sin(elapsed * 1.4 + instance.phase) * .065));
+      instance.signal.follow(instance.icon.position);
 
     }
   }

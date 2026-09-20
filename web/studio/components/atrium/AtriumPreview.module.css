@@ -76,7 +76,7 @@
 .label { width: 76%; opacity: 0.84; transition: opacity 150ms var(--ease-out); }
 .hotspot:not([data-activity="idle"]) .label { opacity: 1; }
 .status {
-  --signal: #7251b0;
+  --signal: #675249;
   position: absolute;
   bottom: calc(100% + .75em);
   left: 50%;
@@ -99,11 +99,7 @@
 }
 .status i { width: .55em; height: .55em; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 .status[data-status="working"] i { animation: live-pulse 1.4s cubic-bezier(0.77, 0, 0.175, 1) infinite; }
-.status[data-status="waiting"] { --signal: #926721; }
-.status[data-status="attention"] { --signal: #a95017; }
 .status[data-status="attention"] i { animation: live-pulse 2s cubic-bezier(0.77, 0, 0.175, 1) infinite; }
-.status[data-status="error"] { --signal: #a43542; }
-.status[data-status="complete"] { --signal: #176e58; }
 @keyframes live-pulse { 50% { opacity: .4; transform: scale(.7); } }
 .arrow {
   width: 1.6em;
