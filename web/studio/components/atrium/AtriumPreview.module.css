@@ -197,6 +197,12 @@
 /* Preloaded but not shown yet. Keeps its layout size so the renderer sizes and compiles for real. */
 .atrium[data-warm] { visibility: hidden; pointer-events: none; }
 
+/* Leaving the world: the route transition blends a still of this room into the landing
+   page on the engine canvas, which sits below this layer. Hide the live room for the
+   blend's duration or the wipe plays behind it and the room just cuts away at the end.
+   :global because the flag is on <body>, set by the toHome transition. */
+:global(body[data-world-blending]) .atrium { visibility: hidden; pointer-events: none; }
+
 /* While a relic is in focus the whole room is one quiet target: click it to fly back out. */
 .leave {
   position: absolute;

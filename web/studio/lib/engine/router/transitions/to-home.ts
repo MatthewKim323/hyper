@@ -4,6 +4,17 @@ import { store } from "../../core/store";
 import { Transition, removeView, type TransitionInArgs, type TransitionOutArgs } from "./base";
 import { captureWorldStill } from "@/lib/onboarding/world-still";
 
+/** Clear the blend flag once the world's own hidden state has taken over, or after a cap. */
+function waitForWarm(attempt = 0) {
+  const room = document.querySelector<HTMLElement>('[data-warm]');
+  // 20 frames is far longer than a React commit; never leave the flag stuck.
+  if (room || attempt > 20) {
+    delete document.body.dataset.worldBlending;
+    return;
+  }
+  requestAnimationFrame(() => waitForWarm(attempt + 1));
+}
+
 export class ToHomeTransition extends Transition {
   in({ done }: TransitionInArgs) {
     done();
@@ -35,6 +46,11 @@ export class ToHomeTransition extends Transition {
         // On now, not at the timeline's first tick: the world hides this frame.
         store.HomeContact.savePass.enabled = true;
         store.HomeContact.transitionPass.enabled = true;
+        // The live atrium is a fixed layer at z-index 50; the engine canvas this blend draws
+        // into is z-index 40. Without hiding it the whole 3 s wipe plays *behind* the world
+        // and all the viewer sees is the atrium snapping away at the end. The still captured
+        // a moment ago stands in for it, so the blend starts from the same frame.
+        document.body.dataset.worldBlending = "true";
       }
       store.HomeContact.enable();
       store.HomeContact.isHome = true;
@@ -57,6 +73,10 @@ export class ToHomeTransition extends Transition {
               store.HomeContact.transitionPass.uniforms.u_toScene.value = store.ProjectMenu.savePass.renderTarget.texture;
               world.dispose();
             }
+            // Hold the flag until React has re-warmed the world and its own
+            // [data-warm] rule takes over. Clearing it here would leave the room
+            // visible for the frames in between, which is the flash this fixes.
+            waitForWarm();
             removeView(from);
             done();
           },
