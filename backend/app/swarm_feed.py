@@ -21,6 +21,8 @@ from . import auth
 from .database import agent_cases, agent_controllers, agent_events, agent_tasks
 
 router = APIRouter(prefix='/agents/swarm', tags=['agents'])
+# How long a reconnect may poll at the fast cadence before settling to the normal one.
+DRAIN_SECONDS = 10
 SECTIONS = {'cases', 'evidence', 'review', 'timeline', 'benchmarks', 'identity'}
 # Only tool semantics determine location. Task prose and provider prose do not.
 TOOL_SECTIONS = {
@@ -397,6 +399,8 @@ def sse(event, payload, cursor=None):
 
 async def stream_events(request, svc, identity, after=None):
     cursor, previous, first = after, None, True
+    # Only a reconnect (a caller-supplied cursor) has a backlog worth draining fast.
+    draining, opened = after is not None, time.time()
     while not await request.is_disconnected():
         expired = time.time() >= identity.expires_at
         if expired or not await run_in_threadpool(svc.store.member, identity.user_id, svc.oid):
@@ -411,9 +415,14 @@ async def stream_events(request, svc, identity, after=None):
             first, previous = False, signature
         else:
             yield ': heartbeat\n\n'
-        # Drain reconnect backlogs without losing an event window.
-        await asyncio.sleep(.1 if snapshot['has_more'] and after else 2)
-        after = cursor
+        # Drain a reconnect backlog quickly, then settle to the normal cadence. `after` used
+        # to stand in for "still draining", but it was reassigned to the cursor below on every
+        # pass, so it was always truthy: any workspace reporting has_more polled at 10 Hz
+        # forever, one DB scan and one threadpool slot per tick, per connected client.
+        # Bounded: a workspace that always reports has_more (more events than one page)
+        # would otherwise hold the fast cadence open indefinitely.
+        draining = draining and snapshot['has_more'] and time.time() - opened < DRAIN_SECONDS
+        await asyncio.sleep(.1 if draining else 2)
 
 
 @router.get('/stream')

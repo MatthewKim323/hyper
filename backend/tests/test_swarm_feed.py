@@ -314,3 +314,41 @@ def test_feed_payload_budget_preserves_every_application_cursor_event(workspace,
     assert len(json.dumps(snapshot, ensure_ascii=False, separators=(',', ':')).encode()) <= 1_750_000
     assert snapshot['events_truncated']
     assert '50 of 200' in snapshot['provider_logs']['message']
+
+
+def test_stream_settles_to_the_slow_cadence(monkeypatch):
+    """`after` was reassigned to the cursor each pass, so the "draining a reconnect backlog"
+    guard was always true: any workspace reporting has_more polled at 10 Hz forever, one DB
+    scan and one threadpool slot per tick, per connected client."""
+    import asyncio, time, types
+    from app import swarm_feed
+
+    class Store:
+        def member(self, user_id, oid): return True
+
+    class Svc:
+        def __init__(self): self.calls = 0; self.store = Store(); self.oid = 'o1'
+        def snapshot(self, _a, cursor):
+            self.calls += 1
+            return {'cursor': 'c%d' % self.calls, 'has_more': True, 'tasks': [], 'generated_at': 0}
+
+    class Request:
+        async def is_disconnected(self): return False
+
+    async def drive(after, seconds):
+        svc = Svc()
+        identity = types.SimpleNamespace(expires_at=time.time() + 9999, user_id='u1')
+        stream = swarm_feed.stream_events(Request(), svc, identity, after=after)
+        started = time.time()
+        try:
+            while time.time() - started < seconds:
+                await asyncio.wait_for(stream.__anext__(), timeout=seconds)
+        except (asyncio.TimeoutError, StopAsyncIteration):
+            pass
+        return svc.calls
+
+    # A fresh connection has no backlog: roughly one snapshot per 2 s, never the 10 Hz path.
+    assert asyncio.run(drive(None, 2.2)) <= 4
+    # A reconnect may drain fast, but not forever.
+    monkeypatch.setattr(swarm_feed, 'DRAIN_SECONDS', 0.4)
+    assert asyncio.run(drive('seed', 2.2)) <= 12
