@@ -73,16 +73,17 @@ function caseActivity(data: RelicActivitySnapshot, previous: RelicActivitySnapsh
   if (waiting.length) {
     const requests = waiting.map(item => [...item.agent.trace].reverse().find(step => step.tool === "request_supplier_document" || step.tool === "request_internal_confirmation")?.tool);
     const who = requests.every(tool => tool === "request_supplier_document") ? "supplier" : requests.every(tool => tool === "request_internal_confirmation") ? "procurement" : "counterparty";
-    return state("waiting", `Waiting for ${who} ${waiting.length === 1 ? "reply" : "replies"}`, ids(waiting));
+    // Name who owes the reply. "Waiting for a reply" read as a request to the person looking at it.
+    return state("waiting", `Agent is waiting on the ${who === "counterparty" ? "counterparties" : who === "procurement" ? "procurement desk" : "supplier"}`, ids(waiting));
   }
   const held = open.filter(item => item.agent.status === "HOLD");
-  if (held.length) return state("waiting", `${quantity(held.length, "case")} on hold`, ids(held));
+  if (held.length) return state("waiting", `Agent is holding ${quantity(held.length, "case")}`, ids(held));
   const proposed = open.filter(item => item.agent.status === "PROPOSED");
-  if (proposed.length) return state("waiting", `Agent reported ${quantity(proposed.length, "proposal")}`, ids(proposed));
+  if (proposed.length) return state("waiting", `Agent prepared ${quantity(proposed.length, "proposal")}`, ids(proposed));
   const engineWaiting = engine.filter(item => item.work_status === "WAITING_EXTERNAL" || item.work_status === "WAITING_INTERNAL");
-  if (engineWaiting.length) return state("waiting", `${quantity(engineWaiting.length, "case")} awaiting evidence`, engineWaiting.map(item => item.case_id));
+  if (engineWaiting.length) return state("waiting", `Agent is gathering evidence on ${quantity(engineWaiting.length, "case")}`, engineWaiting.map(item => item.case_id));
   const queued = tasks.filter(task => task.status === "queued");
-  if (queued.length || open.length) return state("waiting", `${quantity(queued.length || open.length, queued.length ? "task" : "case")} queued`, queued.length ? ids(queued) : ids(open));
+  if (queued.length || open.length) return state("waiting", `Agent is working ${quantity(queued.length || open.length, "case")}`, queued.length ? ids(queued) : ids(open));
   const done = [
     ...completed(data.tasks, previous?.tasks, item => item.id, item => item.status === "complete"),
     ...completed(data.engineCases, previous?.engineCases, item => item.case_id, item => item.work_status === "RESOLVED"),
@@ -103,7 +104,7 @@ function evidenceActivity(data: RelicActivitySnapshot, previous?: RelicActivityS
   const running = sources.filter(item => item.index_status === "running");
   if (running.length) return state("working", `Indexing ${quantity(running.length, "source")}`, ids(running));
   const pending = sources.filter(item => item.index_status === "pending");
-  if (pending.length) return state("waiting", `${quantity(pending.length, "source")} queued for indexing`, ids(pending));
+  if (pending.length) return state("waiting", `Indexing ${quantity(pending.length, "source")}`, ids(pending));
   const done = completed(sources, previous?.sources?.filter(item => item.active), item => `${item.id}:${item.version}`, item => item.index_status === "ready");
   if (done.length) return state("complete", `${quantity(done.length, "source")} now searchable`, done);
   return idle(sources.length ? "Sources searchable" : "No sources yet", sources.length);
@@ -119,7 +120,7 @@ function reviewActivity(data: RelicActivitySnapshot, previous?: RelicActivitySna
   const running = concerns.filter(item => item.status === "generating" || item.status === "resolving");
   if (running.length) return state("working", `Preparing ${quantity(running.length, "review")}`, ids(running));
   const queued = concerns.filter(item => item.status === "queued" || item.status === "draft");
-  if (queued.length) return state("waiting", `${quantity(queued.length, "review")} queued`, ids(queued));
+  if (queued.length) return state("waiting", `Agent is preparing ${quantity(queued.length, "review")}`, ids(queued));
   const decisions = completed(data.proposals, previous?.proposals, item => item.proposal_id, decidedProposal);
   if (decisions.length) return state("complete", "Decision recorded", decisions);
   const resolved = completed(concerns, previous?.concerns, item => item.id, item => item.status === "resolved");

@@ -47,10 +47,14 @@ describe("relic live activity", () => {
   });
 
   it("separates supplier and procurement waits from owner approval", () => {
-    expect(mapRelicActivity(snapshot({ scenarios: [scenario("WAITING", "request_supplier_document")] })).cases).toMatchObject({ status: "waiting", label: "Waiting for supplier reply" });
-    expect(mapRelicActivity(snapshot({ scenarios: [scenario("WAITING", "request_internal_confirmation")] })).cases.label).toBe("Waiting for procurement reply");
+    // A waiting relic says the agent is waiting on someone else. Only an attention relic asks the reader for anything.
+    expect(mapRelicActivity(snapshot({ scenarios: [scenario("WAITING", "request_supplier_document")] })).cases).toMatchObject({ status: "waiting", label: "Agent is waiting on the supplier" });
+    expect(mapRelicActivity(snapshot({ scenarios: [scenario("WAITING", "request_internal_confirmation")] })).cases.label).toBe("Agent is waiting on the procurement desk");
     expect(mapRelicActivity(snapshot({ proposals: [proposal()] })).review).toMatchObject({ status: "attention", label: "1 decision waiting on you" });
-    expect(mapRelicActivity(snapshot({ scenarios: [scenario("HOLD")] })).cases.status).toBe("waiting");
+    expect(mapRelicActivity(snapshot({ scenarios: [scenario("HOLD")] })).cases).toMatchObject({ status: "waiting", label: "Agent is holding 1 case" });
+    const wording = Object.values(mapRelicActivity(snapshot({ scenarios: [scenario("WAITING", "request_supplier_document")], proposals: [proposal()] })));
+    expect(wording.filter(item => item.status === "waiting").every(item => !/your|you\b/i.test(item.label))).toBe(true);
+    expect(wording.filter(item => item.status === "attention").every(item => /you/i.test(item.label))).toBe(true);
   });
 
   it("does not treat a superseded, rejected or already approved proposal as awaiting owner", () => {
