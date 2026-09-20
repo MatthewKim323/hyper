@@ -104,3 +104,10 @@ export type PayableProposal = {
   approval: null | { status: "PENDING" | "APPROVED" | "REJECTED" | "INVALIDATED"; decided_by: string | null; decided_at: string | null };
 };
 export type AccountingRecord = { source_id: string; row_number: number; record_type: string; original_record_id: string; doc_id: string; source_sha256: string; verified_by: string };
+
+/* Learned skills (backend/SKILLS_API.md). Agents draft and report runs; only an owner activates or retires. */
+export type SkillStatus = "draft" | "active" | "retired" | "quarantined" | "stale";
+export type SkillSummary = { id: string; name: string; version: number; description: string; status: SkillStatus; package_hash: string; created_at: number | string; activated_by: string | null; evidence_current: boolean };
+export type SkillRun = { run_id: string; outcome: "passed" | "failed" | "needs_input"; summary: string | null; checks: string[]; duration_ms: number | null; created_at: number | string; evidence_current: boolean; verification: "self_reported" };
+export type SkillDetail = SkillSummary & { reported_runs: Partial<Record<SkillRun["outcome"], number>>; latest_run: SkillRun | null; skill_md: string; resources: string[]; research_urls: string[] };
+export const SKILL_ATTESTATION = "I independently reviewed the tests, accounting assumptions, and evidence for this skill version";

@@ -14,6 +14,7 @@ import { createAtriumGpuProfile } from "./gpu-profile";
 import { layoutAtriumStations } from "./layout";
 import { createFocusRig } from "./focus";
 import { createRelicParts } from "./relic-parts";
+import { isRelicExperience, relicExperienceFocus } from "./experience-config";
 import type { AtriumStation } from "./configuration";
 import type { RelicMotionState } from "./RelicExperience";
 
@@ -127,7 +128,6 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   let disposed = false;
   let ready = false;
   let paused = false;
-  let overlay = false;
   let frame = 0;
   let previous = 0;
   let elapsed = 0;
@@ -348,7 +348,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     render();
   }
   function draw(now: number) {
-    if (disposed || !ready || paused || document.hidden || overlay) return;
+    if (disposed || !ready || paused || document.hidden) return;
     frame = requestAnimationFrame(draw);
     if (previous && now - previous < 1000 / ATRIUM_FRAME_RATE - .5) return;
     const delta = previous ? Math.min((now - previous) / 1000, 0.1) : 1 / 30;
@@ -386,11 +386,10 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     cancelAnimationFrame(frame);
     previous = 0;
     frameSampleStarted = 0;
-    if (!disposed && ready && !paused && !document.hidden && !overlay) frame = requestAnimationFrame(draw);
+    if (!disposed && ready && !paused && !document.hidden) frame = requestAnimationFrame(draw);
     else render();
   }
   function sectionChanged() {
-    overlay = document.body.dataset.workspaceSection === "timeline";
     resume();
   }
   const observer = new ResizeObserver(resize);
@@ -398,7 +397,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   document.addEventListener("visibilitychange", resume);
   window.addEventListener("hyper:section-change", sectionChanged);
   const unsubscribeVoice = subscribeWorldVoice(() => {
-    if (disposed || !paused || !ready || document.hidden || overlay) return;
+    if (disposed || !paused || !ready || document.hidden) return;
     agentAura?.update(elapsed, 0, getWorldVoiceVisual(), true);
     render();
   });
@@ -509,11 +508,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const compact = window.innerWidth <= 900;
       const visibleHeight = Math.min(1, window.innerHeight / Math.max(1, canvas.parentElement?.clientHeight ?? window.innerHeight));
       const section = instance.station.section;
-      if (["cases", "identity", "benchmarks"].includes(section ?? "")) {
-        const landscape = section === "benchmarks";
-        focusRig.aim({ center, height: size.y, width: size.x * (landscape ? 2.25 : 1.5), fill: compact ? .14 : landscape ? .18 : .34,
-          x: compact || landscape ? 0 : section === "identity" ? -.52 : -.61,
-          y: (compact ? .74 : landscape ? .56 : .08) * visibleHeight, orbit: landscape ? .12 : section === "identity" ? -.04 : .035 }, visibleShare);
+      if (isRelicExperience(section)) {
+        focusRig.aim(relicExperienceFocus(section, center, size, compact, visibleHeight), visibleShare);
       } else focusRig.aim({ center, height: Math.max(size.y * 2.05, 1.5 * instance.scale) }, visibleShare);
       if (paused) { animateRelics(0, true); animateRoom(0, true); render(); }
     },

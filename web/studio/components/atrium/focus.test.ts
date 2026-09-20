@@ -5,7 +5,8 @@ import { Box3, Mesh, PerspectiveCamera, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import manifest from "../../public/assets/hyper-atrium/scene.json";
 import { DEFAULT_STATIONS } from "./configuration";
-import { createFocusRig, type FocusSubject } from "./focus";
+import { createFocusRig } from "./focus";
+import { relicExperienceFocus } from "./experience-config";
 import { layoutAtriumStations } from "./layout";
 
 const aspect = manifest.width / manifest.height;
@@ -38,7 +39,8 @@ async function relic(id: string) {
   return { center: box.getCenter(new Vector3()), size: box.getSize(new Vector3()) };
 }
 
-const subjects = Promise.all(["accounts-payable", "wallet-identity", "benchmarks"].map(relic));
+const sections = ["cases", "identity", "benchmarks", "evidence", "timeline", "review"] as const;
+const subjects = Promise.all(["accounts-payable", "wallet-identity", "benchmarks", "audit-evidence", "training-arena", "approvals"].map(relic));
 
 // This projects into the visible viewport, including the horizontal crop of the wider atrium canvas.
 function onScreen(center: Vector3, camera: PerspectiveCamera, width: number, height: number) {
@@ -48,18 +50,12 @@ function onScreen(center: Vector3, camera: PerspectiveCamera, width: number, hei
   return { x: (.5 + projected.x / 2) * frameWidth / width - (frameWidth - width) / (2 * width), y: (1 - projected.y) / 2 * frameHeight / height - (frameHeight - height) / (2 * height) };
 }
 
-function subject(index: number, shape: Awaited<ReturnType<typeof relic>>, compact: boolean, visibleHeightShare = 1): FocusSubject {
-  return {
-    center: shape.center, height: shape.size.y, width: shape.size.x * (index === 2 ? 2.25 : 1.5),
-    fill: compact ? .14 : index === 2 ? .18 : .34,
-    x: compact || index === 2 ? 0 : index === 1 ? -.52 : -.61,
-    y: (compact ? .74 : index === 2 ? .56 : .08) * visibleHeightShare,
-    orbit: index === 2 ? .12 : index === 1 ? -.04 : .035,
-  };
+function subject(index: number, shape: Awaited<ReturnType<typeof relic>>, compact: boolean, visibleHeightShare = 1) {
+  return relicExperienceFocus(sections[index], shape.center, shape.size, compact, visibleHeightShare);
 }
 
 describe("relic camera composition", () => {
-  test("shipped AP, wallet and benchmark geometry lands beside the desktop reading area", async () => {
+  test("all six shipped relics land beside the desktop reading area", async () => {
     const shapes = await subjects;
     for (const [width, height] of [[1440, 900], [1024, 768], [1920, 720]]) {
       for (const [index, shape] of shapes.entries()) {
@@ -67,8 +63,8 @@ describe("relic camera composition", () => {
         motion.aim(subject(index, shape, false, Math.min(1, height / (width / aspect))), Math.min(1, width / (height * aspect)));
         motion.update(0, quiet, true);
         const point = onScreen(shape.center, camera, width, height);
-        near(point.x, [.195, .24, .5][index], .012, `relic ${index} horizontal reading composition`);
-        near(point.y, index === 2 ? .22 : .46, .015, `relic ${index} vertical reading composition`);
+        near(point.x, [.195, .24, .5, .24, .5, .24][index], .012, `relic ${index} horizontal reading composition`);
+        near(point.y, index === 2 || index === 4 ? .22 : .46, .015, `relic ${index} vertical reading composition`);
         assert.ok(shape.center.clone().project(camera).z < 1, "the subject remains in the camera frustum");
       }
     }
@@ -105,7 +101,7 @@ describe("relic camera composition", () => {
     const { camera, motion } = rig();
     motion.update(0, quiet, true);
     const homeQuaternion = camera.quaternion.clone();
-    for (const index of [0, 2, 1, 0]) {
+    for (const index of [0, 2, 1, 3, 4, 5, 0]) {
       const before = camera.position.clone();
       motion.aim(subject(index, shapes[index], false), .8);
       assert.deepEqual(camera.position.toArray(), before.toArray(), "a new destination cannot teleport the camera");

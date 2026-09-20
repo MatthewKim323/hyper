@@ -19,7 +19,7 @@ const fineHover = (event: ReactPointerEvent) => event.pointerType !== "touch" &&
 const clampPointer = (value: number) => Math.max(-1, Math.min(1, value));
 
 // Sections that open beside their relic instead of covering the room.
-const FOCUS_SECTIONS = new Set(["cases", "evidence", "activity", "identity", "review", "benchmarks"]);
+const FOCUS_SECTIONS = new Set([...EXPERIENCE_SECTIONS, "activity"]);
 const goHome = () => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "overview" } }));
 
 function openStation(station: AtriumStation) {
@@ -45,14 +45,12 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     experience.current = handle;
     if (handle && lastFocusFrame.current) handle(lastFocusFrame.current);
   }, []);
-  const frameBounds = useCallback(() => canvas.current?.getBoundingClientRect(), []);
   const drag = useRef<{ pointerId: number; x: number; scrollLeft: number } | null>(null);
   const stations = useSyncExternalStore(subscribeAtriumStations, getAtriumStations, getDefaultAtriumStations);
   const stationsRef = useRef(stations);
   const [manifest, setManifest] = useState<AtriumManifest | null>(null);
   const [bounds, setBounds] = useState<StationBounds[]>([]);
   const [agentBounds, setAgentBounds] = useState<AgentBounds | null>(null);
-  const [covered, setCovered] = useState(false);
   // The station whose workspace is open. The camera flies to it; nothing covers the room.
   const [focus, setFocus] = useState<string | null>(null);
   const [atHome, setAtHome] = useState(true);
@@ -82,7 +80,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     if (process.env.NODE_ENV !== "development" || !document.querySelector("[data-atrium-dev]")) return;
     const navigate = (event: Event) => {
       const section = (event as CustomEvent<{ section: string }>).detail?.section;
-      if (!section || !["overview", ...FOCUS_SECTIONS, "timeline"].includes(section)) return;
+      if (!section || !["overview", ...FOCUS_SECTIONS].includes(section)) return;
       document.body.dataset.workspaceSection = section;
       window.dispatchEvent(new CustomEvent("hyper:section-change", { detail: { section } }));
     };
@@ -140,9 +138,13 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     let instance: AtriumRenderer | null = null;
     const update = () => {
       const section = document.body.dataset.workspaceSection ?? "overview";
-      setCovered(section === "timeline");
-      if (FOCUS_SECTIONS.has(section)) { homeReady.current = false; setAtHome(false); }
-      setFocus(FOCUS_SECTIONS.has(section) ? stationsRef.current.find(station => station.section === section)?.id ?? null : null);
+      const selected = FOCUS_SECTIONS.has(section) ? stationsRef.current.find(station => station.section === section)?.id ?? null : null;
+      if (selected) { homeReady.current = false; setAtHome(false); }
+      else if (!renderer.current || !lastFocusFrame.current || lastFocusFrame.current.progress < .02) {
+        homeReady.current = true;
+        setAtHome(true);
+      }
+      setFocus(selected);
       renderer.current?.setHover(null);
       renderer.current?.setPressed(null);
     };
@@ -298,14 +300,14 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     >
       <div ref={plane} className={styles.plane} style={planeStyle}>
         <canvas ref={canvas} className={styles.water} aria-hidden="true" />
-        {!covered && !failed && !focus && atHome && agentBounds && <button
+        {!failed && !focus && atHome && agentBounds && <button
           type="button" className={styles.agent} data-cursor="hide" aria-label="Talk to Hyper" title="Talk to Hyper (V)"
           style={{ left: `${agentBounds.left * 100}%`, top: `${agentBounds.top * 100}%`, width: `${agentBounds.width * 100}%`, height: `${agentBounds.height * 100}%` }}
           onClick={event => { event.stopPropagation(); window.dispatchEvent(new Event("hyper:agent-toggle")); }}
         />}
-        {!covered && !failed && !warm && <RelicOrbit section={customFocus ? null : focusedStation?.section ?? null} register={registerOrbit} />}
-        {focus && !covered && <button type="button" className={styles.leave} data-cursor="hide" aria-label="Back to the atrium" onClick={closeExperience} />}
-        {!covered && !failed && !focus && atHome && bounds.map(bound => <button
+        {!failed && !warm && <RelicOrbit section={customFocus ? null : focusedStation?.section ?? null} register={registerOrbit} />}
+        {focus && <button type="button" className={styles.leave} data-cursor="hide" aria-label="Back to the atrium" onClick={closeExperience} />}
+        {!failed && !focus && atHome && bounds.map(bound => <button
           type="button"
           key={bound.station.id}
           data-station-id={bound.station.id}
@@ -336,11 +338,10 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
       </div>
       {!focus && <span className={styles.keyboardHint}>← → Explore the room</span>}
     </div>
-    {!warm && !covered && <RelicExperience station={customFocus} register={registerExperience} frameBounds={frameBounds} onMotion={onRelicMotion} onClose={closeExperience} still={reducedMotion} fallback={failed} />}
-    {failed && !covered && !warm && <nav className={styles.fallback} aria-label="Workspace navigation">
+    {!warm && <RelicExperience station={customFocus} register={registerExperience} onMotion={onRelicMotion} onClose={closeExperience} still={reducedMotion} fallback={failed} />}
+    {failed && !warm && <nav className={styles.fallback} aria-label="Workspace navigation">
       <span className={styles.fallbackNote} role="status">The 3D view is unavailable. Your workspaces are still here.</span>
       <div>{stations.map(station => <button type="button" key={station.id} data-cursor="hide" onClick={() => openStation(station)}>{station.label} <span aria-hidden="true">↗</span></button>)}</div>
     </nav>}
-    {covered && !warm && <button type="button" className={styles.back} data-cursor="hide" onClick={() => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "overview" } }))}>← Back to atrium</button>}
   </>;
 }

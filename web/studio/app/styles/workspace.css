@@ -110,3 +110,16 @@
 .ws-actions { display: flex; align-items: center; gap: 1.1rem; margin-top: 0.8rem; }
 .ws-actions > button:first-child { padding: 0.6rem 1.15rem; border: 0; border-radius: 2rem; background: #252321; color: #fff; font-size: 0.85rem; cursor: pointer; transition: transform 0.2s ease, opacity 0.2s ease; }
 .ws-actions > button:first-child:hover:not(:disabled) { transform: translateY(-1px); } .ws-actions > button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Learned skills. */
+.ws-skill .ws-chip i { display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.4rem; border-radius: 50%; background: #a89f97; }
+.ws-skill[data-tone="ok"] .ws-chip i { background: #2a9d63; } .ws-skill[data-tone="warn"] .ws-chip i { background: #b3362f; }
+.ws-skill h3 { text-transform: capitalize; }
+.ws-skill-review { display: grid; gap: 0.9rem; margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid #ddd5cf; }
+.ws-skill-md, .ws-skill-file { margin: 0; padding: 0.9rem 1rem; max-height: 17rem; overflow: auto; border-radius: 0.7rem; background: rgb(37 35 33 / 5%); font-size: 0.76rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.ws-skill-files ul { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0.4rem 0; padding: 0; list-style: none; font-size: 0.8rem; }
+.ws-skill-files .ws-link[aria-pressed="true"] { font-weight: 500; }
+.ws-skill-run { padding: 0.8rem 1rem; border-radius: 0.7rem; border: 1px solid #ddd5cf; }
+.ws-skill-run[data-outcome="failed"] { border-color: #b3362f; }
+.ws-skill-activate label { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.85rem; line-height: 1.4; cursor: pointer; }
+.ws-skill-activate input { margin-top: 0.2rem; accent-color: #252321; }

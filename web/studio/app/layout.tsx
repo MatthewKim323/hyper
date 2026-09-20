@@ -14,7 +14,6 @@ import "./styles/benchmarks.css";
 import "./styles/workspace.css";
 import Shell, { ShellPost } from "@/components/Shell";
 import EngineRoot from "@/components/EngineRoot";
-import TimelineWorkspace from "@/components/timeline/TimelineWorkspace";
 import WorkspaceSections from "@/components/workspace/WorkspaceSections";
 import SignInGate from "@/components/workspace/SignInGate";
 import { ALWAYS_ONBOARD } from "@/lib/onboarding/interface";
@@ -49,7 +48,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </div>
         <ShellPost />
-        <TimelineWorkspace />
         <WorkspaceSections />
         <SignInGate />
         <OnboardingWorkspace />

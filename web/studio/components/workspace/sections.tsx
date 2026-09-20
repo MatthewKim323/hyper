@@ -2,12 +2,16 @@
 
 // One screen per workspace section, each reading the backend routes listed in INTEGRATION.md.
 // Nothing is pushed from the server, so every screen polls and keeps its last good data.
-import { useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Bar, BarChart, BarYAxis, ChartTooltip, Grid } from "@/components/charts";
 import { BackendError, backend } from "@/lib/backend/client";
-import type { AgentCase, AgentTask, Concern, EvidenceSearch, SimulationEvent, SourceDetail } from "@/lib/backend/types";
-import { EngineCases, PayableApprovals } from "./accounting";
+import type { AgentCase, AgentTask, Concern, EvidenceSearch, SimulationEvent } from "@/lib/backend/types";
 import { money, useBackend, when } from "./useBackend";
+import { createSubmissionGuard } from "./submission-guard";
+import { EngineCases, PayableApprovals } from "./accounting";
+import OriginalSourceDownload from "@/components/atrium/workspaces/OriginalSourceDownload";
+
+type RelicSectionProps = { active: boolean; embedded?: boolean; onMotion?: (state: { busy?: boolean; selectedIndex?: number }) => void };
 
 const go = (section: string) => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section } }));
 const words = (value: string) => value.replaceAll("_", " ");
@@ -22,19 +26,25 @@ function Status({ error, empty, children }: { error: string | null; empty?: stri
 
 const SEVERITY: Record<string, string> = { critical: "var(--status-critical)", high: "var(--status-serious)", medium: "var(--status-warning)", low: "var(--status-neutral)" };
 
-function ConcernCard({ concern, onAnswered }: { concern: Concern; onAnswered: () => void }) {
+function ConcernCard({ concern, onAnswered, onBusy }: { concern: Concern; onAnswered: () => void; onBusy?: (id: string, busy: boolean) => void }) {
   const [busy, setBusy] = useState(false);
   const [custom, setCustom] = useState("");
   const [note, setNote] = useState("");
+  const guard = useRef(createSubmissionGuard());
+  const saved = useRef(false);
+  const [submitted, setSubmitted] = useState(false);
   const card = concern.card;
   const evaluation = card?.evaluation;
   const checks = Object.entries(evaluation?.answers ?? {}).filter(([, a]) => a.probability > 0);
 
   async function answer(choice: Parameters<typeof backend.respond>[1]) {
-    setBusy(true); setNote("");
-    try { await backend.respond(concern.id, choice); onAnswered(); }
-    catch (reason) { setNote(reason instanceof BackendError && reason.conflict ? "Someone already answered this one." : (reason as Error).message); onAnswered(); }
-    finally { setBusy(false); }
+    if (saved.current || (choice.option_id === "custom" && (!choice.custom_response.trim() || choice.custom_response.trim().length > 6000))) return;
+    await guard.current.run(async () => {
+      setBusy(true); setNote(""); onBusy?.(concern.id, true);
+      try { await backend.respond(concern.id, choice); saved.current = true; setSubmitted(true); setNote("Your decision was saved."); onAnswered(); }
+      catch (reason) { setNote(reason instanceof BackendError && reason.conflict ? "Someone already answered this one." : (reason as Error).message); onAnswered(); }
+      finally { setBusy(false); onBusy?.(concern.id, false); }
+    });
   }
 
   return <article className="ws-card ws-card--decision" data-pointable={`concern:${concern.id}`} data-pointable-label={concern.request.title} data-pointable-data={JSON.stringify({ severity: concern.request.severity, status: concern.status, source_ids: concern.request.source_ids })}>
@@ -45,7 +55,7 @@ function ConcernCard({ concern, onAnswered }: { concern: Concern; onAnswered: ()
     <h3>{concern.request.title}</h3>
     <p>{card?.summary ?? concern.request.description}</p>
     <ol className="ws-options">{card?.options.map((option) => <li key={option.id}>
-      <button type="button" disabled={busy} onClick={() => void answer({ option_id: option.id })}>
+      <button type="button" disabled={busy || submitted} onClick={() => void answer({ option_id: option.id })}>
         <strong>{option.title}</strong>
         <span>{option.action}</span>
         <small>Trade-off: {option.tradeoff}</small>
@@ -53,10 +63,10 @@ function ConcernCard({ concern, onAnswered }: { concern: Concern; onAnswered: ()
       </button>
     </li>)}</ol>
     <form className="ws-inline" onSubmit={(e: FormEvent) => { e.preventDefault(); if (custom.trim()) void answer({ option_id: "custom", custom_response: custom.trim() }); }}>
-      <input value={custom} onChange={(e) => setCustom(e.target.value)} maxLength={6000} placeholder="Something else: tell the agent what to do" aria-label="Custom instruction" />
-      <button type="submit" disabled={busy || !custom.trim()}>Send</button>
+      <input value={custom} onChange={(e) => setCustom(e.target.value)} disabled={busy || submitted} maxLength={6000} placeholder="Or give a different instruction" aria-label="Custom instruction" />
+      <button type="submit" disabled={busy || submitted || !custom.trim()}>Send</button>
     </form>
-    {note && <p className="ws-warning">{note}</p>}
+    {note && <p className={submitted ? "ws-note" : "ws-warning"} role="status">{note}</p>}
     <footer>
       <button type="button" className="ws-link" onClick={() => go("evidence")}>{concern.request.source_ids.length} evidence source{concern.request.source_ids.length === 1 ? "" : "s"}</button>
       <span>{checks.length ? `Checked by ${evaluation?.model}: ${checks.map(([k, a]) => `${k} ${(a.probability * 100).toFixed(0)}%`).join(", ")}` : evaluation?.model ?? "Not evaluated"}</span>
@@ -64,27 +74,47 @@ function ConcernCard({ concern, onAnswered }: { concern: Concern; onAnswered: ()
   </article>;
 }
 
-export function Review({ active }: { active: boolean }) {
+export function Review({ active, embedded = false, onMotion }: RelicSectionProps) {
   const { data, error, refresh } = useBackend(() => backend.concerns(undefined, 100), active);
+  const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const onBusy = useCallback((id: string, busy: boolean) => setBusyIds(previous => { const next = new Set(previous); if (busy) next.add(id); else next.delete(id); return next; }), []);
   const concerns = data?.concerns ?? [];
   const waiting = concerns.filter((c) => c.status === "awaiting_response" || c.status === "needs_input");
   const failed = concerns.filter((c) => c.status === "card_failed");
   const rest = concerns.filter((c) => !waiting.includes(c) && !failed.includes(c));
+  const working = busyIds.size > 0 || concerns.some(concern => concern.status === "generating" || concern.status === "resolving");
+  useEffect(() => { onMotion?.({ busy: active && working, selectedIndex }); }, [active, working, selectedIndex, onMotion]);
   return <>
-    <Heading eyebrow="Review" title={<>Decisions that need <em>your</em> authority.</>} note="The agent investigates and prepares. Anything that commits money, changes a vendor or contacts someone outside comes here first." />
-    <PayableApprovals active={active} />
+    {embedded ? <p className="ws-note">Review the evidence and choose what the agent should do next.</p> : <Heading eyebrow="Review" title={<>Decisions that need <em>your</em> authority.</>} note="The agent investigates and prepares. Anything that commits money, changes a vendor or contacts someone outside comes here first." />}
+    <PayableApprovals active={active} onBusy={onBusy} />
+    {!data && !error && <p className="ws-note" role="status">Loading decisions…</p>}
     <Status error={error} empty={data && !concerns.length && "Nothing has been raised yet. Concerns appear here when an agent finds something it may not decide alone."}>
-      {waiting.length > 0 && <div className="ws-stack">{waiting.map((c) => <ConcernCard key={c.id} concern={c} onAnswered={refresh} />)}</div>}
+      {waiting.length > 0 && <div className="ws-stack">{waiting.map((c, index) => <div key={c.id} onFocusCapture={() => setSelectedIndex(index)} onClickCapture={() => setSelectedIndex(index)}><ConcernCard concern={c} onAnswered={refresh} onBusy={onBusy} /></div>)}</div>}
       {data && !waiting.length && concerns.length > 0 && <p className="ws-empty">Nothing is waiting on you.</p>}
-      {failed.map((c) => <p key={c.id} className="ws-warning">Could not prepare options for &ldquo;{c.request.title}&rdquo;. <button type="button" className="ws-link" onClick={() => void backend.regenerateCard(c.id).finally(refresh)}>Try again</button></p>)}
-      {rest.length > 0 && <section className="ws-section"><span className="ws-eyebrow">Already decided</span>
+      {failed.map((c) => <FailedConcern key={c.id} concern={c} refresh={refresh} onBusy={onBusy} />)}
+      {rest.length > 0 && <section className="ws-section"><span className="ws-eyebrow">In progress and history</span>
         <ul className="ws-rows">{rest.map((c) => <li key={c.id}>
           <div><strong>{c.request.title}</strong><small>{words(c.status)} · {when(c.updated_at)}</small></div>
           {c.decision && <p><b>You chose:</b> {c.decision.instruction}</p>}
           {c.resolution && <p><b>Outcome:</b> {c.resolution.summary}</p>}
-        </li>)}</ul></section>}
+      </li>)}</ul></section>}
+      {data?.has_more && <p className="ws-note">Showing the first 100 decisions. More decisions exist in your workspace.</p>}
     </Status>
   </>;
+}
+
+function FailedConcern({ concern, refresh, onBusy }: { concern: Concern; refresh: () => void; onBusy: (id: string, busy: boolean) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const guard = useRef(createSubmissionGuard());
+  const retry = () => guard.current.run(async () => {
+    setBusy(true); setError(""); onBusy(concern.id, true);
+    try { await backend.regenerateCard(concern.id); refresh(); }
+    catch (reason) { setError((reason as Error).message); }
+    finally { setBusy(false); onBusy(concern.id, false); }
+  });
+  return <div className="ws-warning"><p>Could not prepare options for &ldquo;{concern.request.title}&rdquo;.</p><button type="button" className="ws-link" disabled={busy} onClick={() => void retry()}>{busy ? "Preparing options…" : "Try again"}</button>{error && <p role="status">{error}</p>}</div>;
 }
 
 /* ---------------------------------------------------------------- Cases */
@@ -125,46 +155,55 @@ export function Cases({ active }: { active: boolean }) {
 
 /* ---------------------------------------------------------------- Evidence */
 
-export function Evidence({ active }: { active: boolean }) {
+export function Evidence({ active, embedded = false, onMotion }: RelicSectionProps) {
+  const [offset, setOffset] = useState(0);
   const datasets = useBackend(backend.datasets, active, 15000);
-  const sources = useBackend(() => backend.sources(50), active, 8000);
+  const sources = useBackend(async () => ({ offset, page: await backend.sources(30, offset) }), active, 8000);
   const [text, setText] = useState("");
   const [result, setResult] = useState<EvidenceSearch | null>(null);
-  const [detail, setDetail] = useState<SourceDetail | null>(null);
+  const [sourceId, setSourceId] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [searching, setSearching] = useState(false);
   const [problem, setProblem] = useState("");
+  const searchRequest = useRef(0);
+  const searchGuard = useRef(createSubmissionGuard());
+  const page = sources.data?.offset === offset ? sources.data.page : null;
   const rows = useMemo(() => (datasets.data?.datasets ?? []).map((d) => ({ dataset: d.dataset, records: d.record_count })).sort((a, b) => b.records - a.records).slice(0, 12), [datasets.data]);
+  useEffect(() => () => { searchRequest.current += 1; }, [active]);
+  useEffect(() => { onMotion?.({ busy: active && searching, selectedIndex }); }, [active, searching, selectedIndex, onMotion]);
 
   async function search(event: FormEvent) {
     event.preventDefault();
-    if (!text.trim()) return;
-    setProblem("");
-    try { setResult(await backend.searchEvidence(text.trim())); } catch (reason) { setProblem((reason as Error).message); }
+    if (!active || !text.trim() || text.trim().length > 2000) return;
+    await searchGuard.current.run(async () => {
+      const request = ++searchRequest.current;
+      setSearching(true); setProblem(""); setResult(null);
+      try { const next = await backend.searchEvidence(text.trim()); if (request === searchRequest.current) setResult(next); }
+      catch (reason) { if (request === searchRequest.current) setProblem((reason as Error).message); }
+      finally { setSearching(false); }
+    });
   }
-  const open = (id: string) => void backend.source(id).then(setDetail).catch((reason) => setProblem((reason as Error).message));
+  const open = (id: string, index: number) => { setSourceId(id); setSelectedIndex(index); };
 
   return <>
-    <Heading eyebrow="Evidence" title={<>Every claim traces to a <em>source</em>.</>} note="Originals are stored unchanged. Search returns the stored text with its location, never a paraphrase." />
+    {embedded ? <p className="ws-note">Search the stored text or open an original source.</p> : <Heading eyebrow="Evidence" title={<>Every claim traces to a <em>source</em>.</>} note="Originals are stored unchanged. Search returns the stored text with its location, never a paraphrase." />}
     <form className="ws-inline ws-inline--search" onSubmit={search}>
-      <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Search the evidence, for example: credit memo duplicate" aria-label="Search evidence" />
-      <button type="submit" disabled={!text.trim()}>Search</button>
+      <input value={text} maxLength={2000} onChange={(e) => setText(e.target.value)} placeholder="Search invoices, documents, and records" aria-label="Search evidence" />
+      <button type="submit" disabled={searching || !text.trim()}>{searching ? "Searching…" : "Search"}</button>
     </form>
-    {problem && <p className="ws-warning">{problem}</p>}
+    {problem && <p className="ws-warning" role="status">{problem}</p>}
     {result && <section className="ws-section">
-      <span className="ws-eyebrow">{result.hits.length} passage{result.hits.length === 1 ? "" : "s"} · {result.mode} search</span>
+      <div className="ws-source-actions"><span className="ws-eyebrow">{result.hits.length} passage{result.hits.length === 1 ? "" : "s"} · {result.mode} search</span><button type="button" className="ws-link" onClick={() => setResult(null)}>Clear results</button></div>
       {!result.coverage_complete && <p className="ws-warning">{result.unindexed_sources} source{result.unindexed_sources === 1 ? " is" : "s are"} not indexed yet, so this is not the whole picture.</p>}
-      <ul className="ws-rows">{result.hits.map((hit) => <li key={hit.id} data-pointable={`source:${hit.source_id}`} data-pointable-label={`${hit.filename} ${hit.locator}`} data-pointable-data={JSON.stringify({ dataset: hit.dataset })}>
-        <div><button type="button" className="ws-link" onClick={() => open(hit.source_id)}>{hit.filename}</button><small>{hit.locator}{hit.dataset ? ` · ${hit.dataset}` : ""}</small></div>
+      {!result.hits.length && <p className="ws-note">No matching passages in the searchable sources.</p>}
+      <ul className="ws-rows">{result.hits.map((hit, index) => <li key={hit.id} data-pointable={`source:${hit.source_id}`} data-pointable-label={`${hit.filename} ${hit.locator}`} data-pointable-data={JSON.stringify({ dataset: hit.dataset })}>
+        <div><button type="button" className="ws-link" aria-pressed={sourceId === hit.source_id} onClick={() => open(hit.source_id, index)}>{hit.filename}</button><small>{hit.locator}{hit.dataset ? ` · ${hit.dataset}` : ""}</small></div>
         <p className="ws-mono">{hit.content.slice(0, 320)}{hit.content.length > 320 ? "…" : ""}</p>
       </li>)}</ul>
     </section>}
-    {detail && <section className="ws-section ws-section--detail">
-      <span className="ws-eyebrow">{detail.source.filename} · version {detail.source.version} · {detail.source.sha256.slice(0, 12)}</span>
-      <button type="button" className="ws-link" onClick={() => setDetail(null)}>Close</button>
-      <ul className="ws-rows ws-rows--tight">{detail.chunks.map((chunk) => <li key={chunk.id}><div><small>{chunk.locator}</small></div><p className="ws-mono">{chunk.content}</p></li>)}</ul>
-      {detail.has_more && <p className="ws-note">Showing the first {detail.chunks.length} passages.</p>}
-    </section>}
+    {sourceId && <SourceReader key={sourceId} sourceId={sourceId} active={active} close={() => setSourceId(null)} />}
     <div className="ws-grid">
-      <section className="ws-section" data-pointable="chart:records-by-dataset" data-pointable-label="Records by dataset chart" data-pointable-data={JSON.stringify({ datasets: rows.map((r) => r.dataset) })}>
+      {!embedded && <section className="ws-section" data-pointable="chart:records-by-dataset" data-pointable-label="Records by dataset chart" data-pointable-data={JSON.stringify({ datasets: rows.map((r) => r.dataset) })}>
         <span className="ws-eyebrow">Records by dataset</span>
         <Status error={datasets.error} empty={datasets.data && !rows.length && "No datasets imported."}>
           {rows.length > 0 && <div className="ws-chart" style={{ height: rows.length * 26 + 40 }}>
@@ -176,18 +215,41 @@ export function Evidence({ active }: { active: boolean }) {
             </BarChart>
           </div>}
         </Status>
-      </section>
-      <section className="ws-section">
+      </section>}
+      <section className="ws-section ws-source-index">
         <span className="ws-eyebrow">Sources</span>
-        <Status error={sources.error} empty={sources.data && !sources.data.sources.length && "No sources yet. Upload a file or connect an account."}>
-          <ul className="ws-rows ws-rows--tight">{sources.data?.sources.map((s) => <li key={s.id} data-pointable={`source:${s.id}`} data-pointable-label={s.filename} data-pointable-data={JSON.stringify({ dataset: s.dataset, records: s.record_count })}>
-            <div><button type="button" className="ws-link" onClick={() => open(s.id)}>{s.filename}</button>
-              <small>{s.dataset ?? "document"}{s.record_count ? ` · ${s.record_count.toLocaleString("en-US")} records` : ""} · {s.index_status === "ready" ? "searchable" : s.index_status === "failed" ? `indexing failed${s.index_error ? `: ${s.index_error}` : ""}` : "indexing"}</small></div>
+        {!page && !sources.error && <p className="ws-note" role="status">Opening your sources…</p>}
+        <Status error={sources.error} empty={page && !page.sources.length && (offset ? "No more sources on this page." : "No sources yet. Files imported during onboarding and records from connected accounts appear here.")}>
+          <ul className="ws-rows ws-rows--tight">{page?.sources.map((s, index) => <li key={s.id} data-pointable={`source:${s.id}`} data-pointable-label={s.filename} data-pointable-data={JSON.stringify({ dataset: s.dataset, records: s.record_count })}>
+            <div><button type="button" className="ws-link" aria-pressed={sourceId === s.id} onClick={() => open(s.id, offset + index)}>{s.filename}</button>
+              <small>{s.dataset ?? "document"}{s.record_count !== null ? ` · ${s.record_count.toLocaleString("en-US")} records` : ""} · {s.index_status === "ready" ? "searchable" : s.index_status === "failed" ? `indexing failed${s.index_error ? `: ${s.index_error}` : ""}` : "indexing"}</small></div>
           </li>)}</ul>
         </Status>
+        {(offset > 0 || page?.has_more) && <div className="ws-source-actions"><button type="button" className="ws-link" disabled={offset === 0} onClick={() => { setOffset(Math.max(0, offset - 30)); sources.refresh(); }}>Previous sources</button><span className="ws-note">{page?.sources.length ? `${offset + 1} to ${offset + page.sources.length}` : ""}</span><button type="button" className="ws-link" disabled={!page?.has_more} onClick={() => { setOffset(page?.next_offset ?? offset + 30); sources.refresh(); }}>Next sources</button></div>}
+        {sources.error && <button type="button" className="ws-link" onClick={sources.refresh}>Try again</button>}
       </section>
     </div>
   </>;
+}
+
+function SourceReader({ sourceId, active, close }: { sourceId: string; active: boolean; close: () => void }) {
+  const [offset, setOffset] = useState(0);
+  const source = useBackend(async () => ({ offset, detail: await backend.source(sourceId, offset, 10) }), active, 15000);
+  const detail = source.data?.offset === offset ? source.data.detail : null;
+  return <section className="ws-section ws-source-reader" aria-label="Selected source">
+    <div className="ws-source-actions"><span className="ws-eyebrow">Source evidence</span><button type="button" className="ws-link" onClick={close}>Close source</button></div>
+    {source.error && <p className="ws-warning" role="status">{source.error}</p>}
+    {!detail && !source.error && <p className="ws-note" role="status">Opening the source…</p>}
+    {detail && <>
+      <h3>{detail.source.filename}</h3>
+      <div className="ws-source-actions"><span className="ws-note">Version {detail.source.version} · {when(detail.source.created_at)}</span><OriginalSourceDownload sourceId={sourceId} filename={detail.source.filename} /></div>
+      <p className="ws-note">Original extracted text, with its source location.</p>
+      <ul className="ws-rows ws-rows--tight">{detail.chunks.map(chunk => <li key={chunk.id}><div><small>{chunk.locator}</small></div><p className="ws-mono">{chunk.content}</p></li>)}</ul>
+      {!detail.chunks.length && <p className="ws-note">No extracted passages are available. Download the original to read it.</p>}
+      {(offset > 0 || detail.has_more) && <div className="ws-source-actions"><button type="button" className="ws-link" disabled={!offset} onClick={() => { setOffset(Math.max(0, offset - 10)); source.refresh(); }}>Previous passages</button><button type="button" className="ws-link" disabled={!detail.has_more} onClick={() => { setOffset(detail.next_offset ?? offset + 10); source.refresh(); }}>Next passages</button></div>}
+    </>}
+    {source.error && <button type="button" className="ws-link" onClick={source.refresh}>Try again</button>}
+  </section>;
 }
 
 /* ---------------------------------------------------------------- Activity */

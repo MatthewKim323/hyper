@@ -1,0 +1,84 @@
+.surface {
+  --relic-ink: #352d29;
+  --relic-muted: #584a43;
+  --relic-line: rgb(70 45 35 / 18%);
+  --relic-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--relic-ink);
+  color-scheme: light;
+  width: 100%;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.surface :where(button, input) { color: inherit; font: inherit; }
+.surface button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.surface button:disabled { cursor: default; opacity: .4; }
+.surface :is(button, input, summary):focus-visible { outline: 1px solid var(--relic-ink); outline-offset: 5px; }
+.surface p { margin: 12px 0; max-width: 70ch; }
+.surface small,
+.surface time { color: var(--relic-muted); font-size: 11px; line-height: 1.6; }
+.surface :global(.ws-note),
+.note { color: var(--relic-muted); font-size: 14px; line-height: 1.7; }
+.surface :global(.ws-note) { margin-top: 0; }
+.surface :global(.ws-eyebrow) { color: var(--relic-muted); font: 11px/1.6 var(--relic-mono); letter-spacing: 0; text-transform: none; }
+.surface :global(.ws-warning) { margin: 18px 0; padding: 0 0 0 14px; border-left: 1px solid #8a5c4a; color: #795148; background: transparent; font-size: 14px; line-height: 1.7; }
+.surface :global(.ws-empty) { padding: 22px 0; margin: 0; border: 0; border-radius: 0; color: var(--relic-muted); background: transparent; }
+.surface :global(.ws-link) { border: 0; border-radius: 0; padding: 0; color: var(--relic-ink); background: transparent; text-align: left; font-size: 13px; text-decoration-thickness: 1px; text-decoration-color: var(--relic-line); text-underline-offset: 4px; }
+.surface :global(.ws-link[aria-pressed="true"]) { text-decoration-color: currentColor; }
+.surface :global(.ws-stack) { gap: 28px; }
+.surface :global(.ws-grid) { display: block; }
+.surface :global(.ws-section) { margin-top: 26px; padding: 22px 0; border-top: 1px solid var(--relic-line); }
+.surface :global(.ws-source-actions) { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.surface :global(.ws-source-actions .ws-note) { font: 11px/1.6 var(--relic-mono); margin: 0; }
+.surface :global(.ws-source-reader h3) { margin: 20px 0 14px; font-size: 25px; font-weight: 400; line-height: 1.2; letter-spacing: -.03em; }
+.surface :global(.ws-source-reader .ws-rows) { margin-bottom: 22px; }
+.surface :global(.ws-source-index .ws-rows li > div) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 42%); gap: 20px; }
+.surface :global(.ws-source-index .ws-rows small) { text-align: right; }
+.surface :global(.ws-rows) { margin: 14px 0 0; }
+.surface :global(.ws-rows li) { padding: 16px 0; border-color: var(--relic-line); }
+.surface :global(.ws-rows li > div) { align-items: start; flex-wrap: wrap; gap: 6px 20px; }
+.surface :global(.ws-rows small) { font: 11px/1.65 var(--relic-mono); }
+.surface :global(.ws-rows p) { font-size: 14px; line-height: 1.7; }
+.surface :global(.ws-mono) { font: 12px/1.8 var(--relic-mono) !important; color: var(--relic-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.surface :global(.ws-card) { padding: 26px 0 0; border: 0; border-top: 1px solid var(--relic-line); border-radius: 0; background: transparent; box-shadow: none; }
+.surface :global(.ws-card header),
+.surface :global(.ws-card footer) { color: var(--relic-muted); align-items: baseline; }
+.surface :global(.ws-card footer) { border-color: var(--relic-line); margin-top: 22px; padding-top: 14px; font: 11px/1.65 var(--relic-mono); }
+.surface :global(.ws-card h3) { margin: 18px 0 12px; font-size: 26px; font-weight: 400; line-height: 1.2; letter-spacing: -.03em; }
+.surface :global(.ws-chip) { color: var(--relic-muted); font: 11px/1.6 var(--relic-mono); text-transform: none; letter-spacing: 0; }
+.surface :global(.ws-chip i) { width: 4px; height: 4px; border-radius: 50%; }
+.surface :global(.ws-options) { gap: 0; margin: 24px 0; }
+.surface :global(.ws-options li + li) { border-top: 1px solid var(--relic-line); }
+.surface :global(.ws-options button) { gap: 7px; padding: 17px 0; border: 0; border-radius: 0; color: var(--relic-ink); background: transparent; transform: none; box-shadow: none; transition: opacity 150ms ease; }
+.surface :global(.ws-options button::before) { display: none; }
+.surface :global(.ws-options button:hover:not(:disabled)) { background: transparent; opacity: .72; }
+.surface :global(.ws-options button:active:not(:disabled)) { transform: none; }
+.surface :global(.ws-options strong) { font-size: 15px; font-weight: 500; }
+.surface :global(.ws-options span) { font-size: 14px; line-height: 1.65; }
+.surface :global(.ws-options em) { color: #795148; font-size: 12px; line-height: 1.6; }
+.surface :global(.ws-inline) { align-items: baseline; gap: 20px; padding-bottom: 9px; border-bottom: 1px solid var(--relic-line); }
+.surface :global(.ws-inline--search) { margin: 28px 0; }
+.surface :global(.ws-inline input) { min-height: 42px; padding: 8px 0; border: 0; border-radius: 0; background: transparent; color: var(--relic-ink); font-size: 14px; box-shadow: none; }
+.surface :global(.ws-inline input::placeholder) { color: var(--relic-muted); opacity: 1; }
+.surface :global(.ws-inline button) { min-height: 42px; padding: 8px 0; border: 0; border-radius: 0; background: transparent; color: var(--relic-ink); font-size: 13px; }
+
+.empty { max-width: 480px; padding: 25px 0 45px; }
+.empty h3 { margin: 0 0 18px; font-size: 30px; font-weight: 400; line-height: 1.18; letter-spacing: -.035em; }
+.empty p { color: var(--relic-muted); }
+.empty button { margin-top: 16px; padding: 8px 0; border: 0; border-radius: 0; background: transparent; color: var(--relic-ink); text-decoration: underline; text-underline-offset: 5px; }
+
+@media (max-width: 600px) {
+  .surface :global(.ws-source-index .ws-rows li > div) { display: flex; flex-direction: column; gap: 5px; }
+  .surface :global(.ws-source-index .ws-rows small) { text-align: left; }
+  .surface :global(.ws-card h3),
+  .surface :global(.ws-source-reader h3) { font-size: 24px; }
+  .surface :global(.ws-inline) { gap: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface :global(.ws-options button) { transition-duration: 0s; }
+}

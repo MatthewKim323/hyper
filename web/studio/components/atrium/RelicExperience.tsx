@@ -4,19 +4,22 @@ import { useEffect, useRef, useState } from "react";
 import AccountsFolio from "./workspaces/AccountsFolio";
 import BenchmarkLandscape from "./workspaces/BenchmarkLandscape";
 import IdentityPrism from "./workspaces/IdentityPrism";
+import EvidenceArchive from "./workspaces/EvidenceArchive";
+import ApprovalsReview from "./workspaces/ApprovalsReview";
+import TrainingTimeline from "./workspaces/TrainingTimeline";
 import type { AtriumStation } from "./configuration";
+import { isRelicExperience, RELIC_EXPERIENCES } from "./experience-config";
 import type { FocusFrame } from "./scene";
 import styles from "./RelicExperience.module.css";
 
 export type RelicMotionState = { busy?: boolean; selectedIndex?: number; values?: readonly (number | null)[] };
 export type ExperienceHandle = (frame: FocusFrame) => void;
-export const EXPERIENCE_SECTIONS = new Set(["cases", "identity", "benchmarks"]);
+export { EXPERIENCE_SECTIONS } from "./experience-config";
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
 
 export default function RelicExperience({ station, register, onMotion, onClose, still, fallback }: {
   station: AtriumStation | null;
   register: (handle: ExperienceHandle | null) => void;
-  frameBounds: () => DOMRect | undefined;
   onMotion: (state: RelicMotionState) => void;
   onClose: () => void;
   still: boolean;
@@ -60,20 +63,23 @@ export default function RelicExperience({ station, register, onMotion, onClose, 
   }, [register, shown?.id]);
 
   const section = shown?.section;
-  if (!shown || !section) return null;
-  return <section ref={root} className={styles.experience} data-kind={section} data-fallback={fallback || undefined} data-closing={!active || undefined}
+  if (!shown || !isRelicExperience(section)) return null;
+  return <section ref={root} className={styles.experience} data-kind={section} data-layout={RELIC_EXPERIENCES[section].layout} data-fallback={fallback || undefined} data-closing={!active || undefined}
     aria-label={`${shown.label} workspace`} inert={!active} aria-hidden={!active || undefined}
-    style={fallback ? { opacity: 1, visibility: "visible" } : undefined}
+    style={fallback ? { opacity: 1, visibility: "visible", pointerEvents: active ? "auto" : "none" } : undefined}
     onPointerDown={event => event.stopPropagation()} onWheel={event => event.stopPropagation()}
     onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); } }}>
     <header className={styles.heading}>
-      <div><span>{section === "cases" ? "SOURCE RECORDS" : section === "identity" ? "YOUR WORKSPACE" : "FRAMEWORK PERFORMANCE"}</span><h2 ref={heading} tabIndex={-1}>{shown.label}</h2></div>
+      <div><span>{RELIC_EXPERIENCES[section].eyebrow}</span><h2 ref={heading} tabIndex={-1}>{shown.label}</h2></div>
       <button type="button" onClick={onClose} aria-label={`Close ${shown.label}`}><span aria-hidden="true">[</span> Close <span aria-hidden="true">]</span></button>
     </header>
     <div className={styles.content}>
       {section === "cases" && <AccountsFolio active={active} onMotion={onMotion} />}
       {section === "identity" && <IdentityPrism active={active} onMotion={onMotion} />}
       {section === "benchmarks" && <BenchmarkLandscape active={active} onMotion={onMotion} />}
+      {section === "evidence" && <EvidenceArchive active={active} onMotion={onMotion} />}
+      {section === "review" && <ApprovalsReview active={active} onMotion={onMotion} />}
+      {section === "timeline" && <TrainingTimeline active={active} onMotion={onMotion} />}
     </div>
     <footer className={styles.footer}><span>Esc to return to the atrium</span></footer>
   </section>;

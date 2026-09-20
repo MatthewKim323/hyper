@@ -13,7 +13,7 @@ const cents = (value: number, currency: string) => {
 };
 const words = (value: string) => value.replaceAll("_", " ").toLowerCase();
 
-function ProposalCard({ proposal, onDecided }: { proposal: PayableProposal; onDecided: () => void }) {
+function ProposalCard({ proposal, onDecided, onBusy }: { proposal: PayableProposal; onDecided: () => void; onBusy?: (id: string, busy: boolean) => void }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const sending = useRef(false);
@@ -26,6 +26,7 @@ function ProposalCard({ proposal, onDecided }: { proposal: PayableProposal; onDe
     if (sending.current) return;
     sending.current = true;
     setBusy(true);
+    onBusy?.(`proposal:${proposal.proposal_id}`, true);
     setNote(null);
     try {
       await backend.decideProposal(proposal.proposal_id, proposal.hash, decision);
@@ -37,6 +38,7 @@ function ProposalCard({ proposal, onDecided }: { proposal: PayableProposal; onDe
     } finally {
       sending.current = false;
       setBusy(false);
+      onBusy?.(`proposal:${proposal.proposal_id}`, false);
       onDecided();
     }
   }
@@ -66,7 +68,7 @@ function ProposalCard({ proposal, onDecided }: { proposal: PayableProposal; onDe
 }
 
 /** Payables the engine has prepared. Shown in Review: this is the approval that actually moves money. */
-export function PayableApprovals({ active }: { active: boolean }) {
+export function PayableApprovals({ active, onBusy }: { active: boolean; onBusy?: (id: string, busy: boolean) => void }) {
   const { data, refresh } = useBackend(backend.payableProposals, active, 6000);
   const proposals = data?.proposals ?? [];
   const waiting = proposals.filter(proposal => proposal.approval?.status === "PENDING" && proposal.status === "DRAFT");
@@ -74,7 +76,7 @@ export function PayableApprovals({ active }: { active: boolean }) {
   if (!proposals.length) return null;
   return <section className="ws-section" data-pointable="group:payable-approvals" data-pointable-label="Payables ready for approval">
     <span className="ws-eyebrow">Payables ready for approval</span>
-    <div className="ws-stack">{waiting.map(proposal => <ProposalCard key={proposal.proposal_id} proposal={proposal} onDecided={refresh} />)}</div>
+    <div className="ws-stack">{waiting.map(proposal => <ProposalCard key={proposal.proposal_id} proposal={proposal} onDecided={refresh} onBusy={onBusy} />)}</div>
     {!waiting.length && <p className="ws-empty">No payable is waiting for approval.</p>}
     {decided.length > 0 && <ul className="ws-rows ws-rows--tight">{decided.map(proposal => <li key={proposal.proposal_id}>
       <div><strong>{proposal.payload.invoice_id} · {cents(proposal.payload.net_payable_cents, proposal.payload.currency)}</strong><small>{words(proposal.approval!.status)}{proposal.approval!.decided_at ? ` · ${new Date(proposal.approval!.decided_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}` : ""}</small></div>

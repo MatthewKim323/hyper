@@ -3,7 +3,9 @@
 //   setBackendTokenProvider(() => clerk.session?.getToken() ?? null)
 // Requests go through the existing same-origin rewrite (/api/onboarding/* -> backend root).
 // Nothing here is pushed from the server. Use `poll` for anything that changes.
+import { SKILL_ATTESTATION } from "./types";
 import type {
+  SkillDetail, SkillSummary,
   AccountingRecord, EngineCase, PayableProposal,
   AgentCase, AgentTask, Artifact, Concern, ConcernStatus, Controller, Dataset, EvidenceSearch, FinancialAggregate,
   FinancialQuery, Simulation, SimulationEvent, Source, SourceDetail, Workspace, Connection, ConnectionItem, ProviderInfo,
@@ -82,6 +84,14 @@ export const backend = {
   payableProposals: () => call<{ proposals: PayableProposal[] }>("/accounting/proposals"),
   decideProposal: (proposal_id: string, proposal_hash: string, decision: "APPROVED" | "REJECTED") =>
     post<{ status: string }>("/accounting/approvals", { proposal_id, proposal_hash, decision }),
+
+  // Learned skills. Activation and retirement are owner only; the attestation is the owner's own statement.
+  skills: () => call<{ skills: SkillSummary[]; has_more: boolean }>(`/skills${query({ include_inactive: "true", limit: 30 })}`),
+  skill: (id: string) => call<SkillDetail>(`/skills/${encodeURIComponent(id)}`),
+  skillResource: (id: string, path: string) => call<{ path: string; content: string }>(`/skills/${encodeURIComponent(id)}/resource${query({ path })}`),
+  activateSkill: (skill: { id: string; package_hash: string }, run_id: string) =>
+    post<SkillSummary>(`/skills/${encodeURIComponent(skill.id)}/activate`, { skill_id: skill.id, package_hash: skill.package_hash, run_id, attestation: SKILL_ATTESTATION }),
+  retireSkill: (id: string, reason: string) => post<{ status: string }>(`/skills/${encodeURIComponent(id)}/retire`, { skill_id: id, reason }),
 
   // Activity.
   simulations: () => call<{ simulations: Simulation[]; has_more: boolean }>("/simulations"),

@@ -200,6 +200,31 @@ def seed_accounting() -> None:
     svc.execute("prepare_payable_proposal", {"case_id": case_id, "based_on_revision": revision})
     print("seeded accounting: INV-1042 with a payable proposal awaiting owner approval")
 
+def seed_skills() -> None:
+    """One drafted skill with a passing agent-reported run, waiting for an owner's review, so the
+    Training Arena has something real to open. Same shape as backend/tests/test_learned_skills.py."""
+    from app.learned_skills import Draft, Run, Skills
+
+    store = main.store
+    oid = store.workspace(DEV_USER)["id"]
+    data = data_for(oid)
+    evidence = data.ingest("DEV_FIXTURE-accrual-run.txt", b"DEV_FIXTURE execution log: pytest tests/test_calc.py ... 2 passed. 40 units at 1000.00 = 40000.00, matches the contract schedule.")["id"]
+    skills = Skills(store, oid, objects=OBJECTS, search=SEARCH)
+    saved = skills.save(Draft(
+        name="fixed-rate-service-accrual",
+        description="Calculate month-end accruals for confirmed fixed-rate services",
+        instructions="Read the contract rate and the confirmed delivery up to the cutoff. Run scripts/calculate.py, then tests/test_calc.py, before preparing an accrual. Escalate anything unconfirmed; never post a journal.",
+        applicability="Confirmed whole-unit service delivery in USD with approved account mappings.",
+        limitations="No FX, taxes, capitalization or unconfirmed service. No automatic ledger posting.",
+        source_ids=[evidence],
+        resources={"scripts/calculate.py": "def amount(qty, price_cents):\n    return qty * price_cents\n",
+                   "tests/test_calc.py": "from calculate import amount\n\ndef test_forty_units():\n    assert amount(40, 100000) == 4000000\n"},
+    ))
+    skills.record(Run(skill_id=saved["id"], request_key="DEV_FIXTURE-run-1", package_hash=saved["package_hash"], outcome="passed",
+                      summary="Executed the saved calculation against the contract schedule and an independent hand total.",
+                      evidence_source_ids=[evidence], checks=["40 units at 1000.00 equals 40000.00", "Result matches the independent hand total"], duration_ms=1840))
+    print("seeded skills: one draft with a passing reported run, awaiting owner review")
+
 def seed() -> None:
     from app.ingestion_worker import run_once as index_once
 
@@ -262,5 +287,6 @@ if __name__ == "__main__":
 
     seed()
     seed_accounting()
+    seed_skills()
     print(f"dev backend on http://127.0.0.1:{PORT}  token: {DEV_TOKEN}", flush=True)
     uvicorn.run(main.app, host="127.0.0.1", port=PORT, log_level="warning")

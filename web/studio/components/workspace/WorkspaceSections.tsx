@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { openSignIn } from "@/lib/backend/auth";
-import { Activity, Evidence, OverviewStrip, Review } from "./sections";
+import { Activity, OverviewStrip } from "./sections";
 import { useAuth } from "./useBackend";
 
 const EXIT_MS = 420;
-const SCREENS = { evidence: Evidence, activity: Activity, review: Review } as const;
+const SCREENS = { activity: Activity } as const;
 type Screen = keyof typeof SCREENS;
 
 export default function WorkspaceSections() {
@@ -28,7 +28,7 @@ export default function WorkspaceSections() {
       setShown(previous => previous ? { ...previous, leaving: true } : null);
       exit = window.setTimeout(() => setShown(null), EXIT_MS);
     };
-    // The section pills are inert until onboarding hands off, so mirror that here.
+    // Workspace access starts when onboarding hands off to the atrium.
     const sync = () => setUnlocked(document.documentElement.dataset.onboarding === "complete");
     const observer = new MutationObserver(sync);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-onboarding"] });
