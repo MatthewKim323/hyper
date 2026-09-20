@@ -1,11 +1,11 @@
 {
  "schema_version": 1,
  "display_mode": "LIVE",
- "generated_at": 1789912890508,
+ "generated_at": 1789914738706,
  "bucket_ms": 600000,
  "rolling_cases": 20,
  "commit": {
-  "sha": "cd6cf1e",
+  "sha": "e683316",
   "dirty": true
  },
  "valid_since": 1789885421544,
@@ -2545,6 +2545,292 @@
       "auto_agent"
      ],
      "lessons_at_start": 200
+    },
+    {
+     "at": 1789913400000,
+     "valid": true,
+     "not_shown_warning": 0,
+     "machine_timeouts": 0,
+     "bucket": {
+      "n": 4,
+      "correct": 4,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 0,
+      "median_seconds": 199.6,
+      "median_seconds_released": 199.6,
+      "requests_per_case": 0.75,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.75,
+      "median_usd_per_case": 0.0322,
+      "median_tokens_per_case": 34496,
+      "costed_cases": 4,
+      "top_tier": 7
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 11,
+      "median_seconds": 103.9,
+      "median_seconds_released": 89.5,
+      "requests_per_case": 1.3,
+      "repeated_requests": 2,
+      "sessions_per_case": 1.9,
+      "median_usd_per_case": 0.0281,
+      "median_tokens_per_case": 25494,
+      "costed_cases": 20,
+      "top_tier": 7
+     },
+     "adversary_level_at_spawn": 7,
+     "cumulative": {
+      "n": 312,
+      "correct": 307,
+      "accuracy": 0.984,
+      "wrong_releases": 3,
+      "timeouts": 2
+     },
+     "level": 7,
+     "by_tier": {
+      "7": {
+       "n": 1,
+       "correct": 1
+      },
+      "3": {
+       "n": 2,
+       "correct": 2
+      },
+      "6": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "2f1de2b"
+     ],
+     "worker_kinds": [
+      "auto_agent"
+     ],
+     "lessons_at_start": 200
+    },
+    {
+     "at": 1789914000000,
+     "valid": true,
+     "not_shown_warning": 0,
+     "machine_timeouts": 0,
+     "bucket": {
+      "n": 7,
+      "correct": 7,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 4,
+      "median_seconds": 94.1,
+      "median_seconds_released": 60.3,
+      "requests_per_case": 0.71,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.14,
+      "median_usd_per_case": 0.0177,
+      "median_tokens_per_case": 17733,
+      "costed_cases": 7,
+      "top_tier": 7
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 10,
+      "median_seconds": 109.0,
+      "median_seconds_released": 132.5,
+      "requests_per_case": 1.1,
+      "repeated_requests": 1,
+      "sessions_per_case": 1.65,
+      "median_usd_per_case": 0.0227,
+      "median_tokens_per_case": 20686,
+      "costed_cases": 20,
+      "top_tier": 7
+     },
+     "adversary_level_at_spawn": 7,
+     "cumulative": {
+      "n": 319,
+      "correct": 314,
+      "accuracy": 0.984,
+      "wrong_releases": 3,
+      "timeouts": 2
+     },
+     "level": 7,
+     "by_tier": {
+      "7": {
+       "n": 5,
+       "correct": 5
+      },
+      "6": {
+       "n": 1,
+       "correct": 1
+      },
+      "4": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "2f1de2b",
+      "bfb8426"
+     ],
+     "worker_kinds": [
+      "auto_agent"
+     ],
+     "lessons_at_start": 200
+    },
+    {
+     "at": 1789914600000,
+     "valid": true,
+     "not_shown_warning": 0,
+     "machine_timeouts": 0,
+     "bucket": {
+      "n": 15,
+      "correct": 15,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 8,
+      "median_seconds": 110.8,
+      "median_seconds_released": 150.2,
+      "requests_per_case": 1.13,
+      "repeated_requests": 3,
+      "sessions_per_case": 1.87,
+      "median_usd_per_case": 0.0278,
+      "median_tokens_per_case": 26069,
+      "costed_cases": 15,
+      "top_tier": 7
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 11,
+      "median_seconds": 111.5,
+      "median_seconds_released": 150.2,
+      "requests_per_case": 1.05,
+      "repeated_requests": 3,
+      "sessions_per_case": 1.7,
+      "median_usd_per_case": 0.0246,
+      "median_tokens_per_case": 21919,
+      "costed_cases": 20,
+      "top_tier": 7
+     },
+     "adversary_level_at_spawn": 7,
+     "cumulative": {
+      "n": 334,
+      "correct": 329,
+      "accuracy": 0.985,
+      "wrong_releases": 3,
+      "timeouts": 2
+     },
+     "level": 7,
+     "by_tier": {
+      "7": {
+       "n": 13,
+       "correct": 13
+      },
+      "6": {
+       "n": 1,
+       "correct": 1
+      },
+      "5": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "6cb391a",
+      "bfb8426"
+     ],
+     "worker_kinds": [
+      "auto_agent"
+     ],
+     "lessons_at_start": 200
+    },
+    {
+     "at": 1789915200000,
+     "valid": true,
+     "not_shown_warning": 0,
+     "machine_timeouts": 0,
+     "bucket": {
+      "n": 4,
+      "correct": 4,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 4,
+      "median_seconds": 105.8,
+      "median_seconds_released": null,
+      "requests_per_case": 1.25,
+      "repeated_requests": 0,
+      "sessions_per_case": 2.0,
+      "median_usd_per_case": 0.0248,
+      "median_tokens_per_case": 19949,
+      "costed_cases": 4,
+      "top_tier": 7
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 13,
+      "median_seconds": 110.4,
+      "median_seconds_released": 150.2,
+      "requests_per_case": 1.2,
+      "repeated_requests": 3,
+      "sessions_per_case": 1.9,
+      "median_usd_per_case": 0.0268,
+      "median_tokens_per_case": 21989,
+      "costed_cases": 20,
+      "top_tier": 7
+     },
+     "adversary_level_at_spawn": 7,
+     "cumulative": {
+      "n": 338,
+      "correct": 333,
+      "accuracy": 0.985,
+      "wrong_releases": 3,
+      "timeouts": 2
+     },
+     "level": 7,
+     "by_tier": {
+      "7": {
+       "n": 4,
+       "correct": 4
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "6cb391a"
+     ],
+     "worker_kinds": [
+      "auto_agent"
+     ],
+     "lessons_at_start": 200
     }
    ]
   },
@@ -4950,50 +5236,58 @@
      "not_shown_warning": 0,
      "machine_timeouts": 0,
      "bucket": {
-      "n": 1,
-      "correct": 1,
+      "n": 5,
+      "correct": 5,
       "accuracy": null,
       "wrong_releases": 0,
       "timeouts": 0,
       "correct_holds": 0,
-      "median_seconds": 63.9,
-      "median_seconds_released": 63.9,
-      "requests_per_case": 0.0,
+      "median_seconds": 100.4,
+      "median_seconds_released": 100.4,
+      "requests_per_case": 0.4,
       "repeated_requests": 0,
-      "sessions_per_case": 1.0,
-      "median_usd_per_case": 0.0149,
-      "median_tokens_per_case": 13986,
-      "costed_cases": 1,
+      "sessions_per_case": 1.6,
+      "median_usd_per_case": 0.0289,
+      "median_tokens_per_case": 27284,
+      "costed_cases": 5,
       "top_tier": 7
      },
      "rolling": {
       "n": 20,
-      "correct": 11,
-      "accuracy": 0.55,
-      "wrong_releases": 9,
+      "correct": 12,
+      "accuracy": 0.6,
+      "wrong_releases": 8,
       "timeouts": 0,
-      "correct_holds": 4,
-      "median_seconds": 97.1,
-      "median_seconds_released": 67.4,
-      "requests_per_case": 0.55,
+      "correct_holds": 3,
+      "median_seconds": 99.9,
+      "median_seconds_released": 99.6,
+      "requests_per_case": 0.6,
       "repeated_requests": 0,
-      "sessions_per_case": 1.45,
-      "median_usd_per_case": 0.0151,
-      "median_tokens_per_case": 13959,
+      "sessions_per_case": 1.55,
+      "median_usd_per_case": 0.0167,
+      "median_tokens_per_case": 16218,
       "costed_cases": 20,
       "top_tier": 7
      },
      "adversary_level_at_spawn": 7,
      "cumulative": {
-      "n": 306,
-      "correct": 215,
-      "accuracy": 0.703,
+      "n": 310,
+      "correct": 219,
+      "accuracy": 0.706,
       "wrong_releases": 90,
       "timeouts": 1
      },
-     "level": 1,
+     "level": 3,
      "by_tier": {
       "7": {
+       "n": 2,
+       "correct": 2
+      },
+      "3": {
+       "n": 2,
+       "correct": 2
+      },
+      "6": {
        "n": 1,
        "correct": 1
       }
@@ -5002,7 +5296,222 @@
       "gpt-5.6-terra"
      ],
      "worker_commits": [
-      "1764744"
+      "1764744",
+      "2f1de2b"
+     ],
+     "worker_kinds": [
+      "auto_agent"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789914000000,
+     "valid": true,
+     "not_shown_warning": 0,
+     "machine_timeouts": 0,
+     "bucket": {
+      "n": 8,
+      "correct": 7,
+      "accuracy": null,
+      "wrong_releases": 1,
+      "timeouts": 0,
+      "correct_holds": 3,
+      "median_seconds": 170.5,
+      "median_seconds_released": 156.8,
+      "requests_per_case": 0.38,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.14,
+      "median_usd_per_case": 0.0109,
+      "median_tokens_per_case": 8966,
+      "costed_cases": 8,
+      "top_tier": 7
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 15,
+      "accuracy": 0.75,
+      "wrong_releases": 5,
+      "timeouts": 0,
+      "correct_holds": 4,
+      "median_seconds": 120.4,
+      "median_seconds_released": 136.3,
+      "requests_per_case": 0.5,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.42,
+      "median_usd_per_case": 0.0149,
+      "median_tokens_per_case": 13886,
+      "costed_cases": 20,
+      "top_tier": 7
+     },
+     "adversary_level_at_spawn": 7,
+     "cumulative": {
+      "n": 318,
+      "correct": 226,
+      "accuracy": 0.711,
+      "wrong_releases": 91,
+      "timeouts": 1
+     },
+     "level": 4,
+     "by_tier": {
+      "7": {
+       "n": 6,
+       "correct": 5
+      },
+      "6": {
+       "n": 1,
+       "correct": 1
+      },
+      "4": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "2f1de2b",
+      "bfb8426"
+     ],
+     "worker_kinds": [
+      "auto_agent",
+      "unknown"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789914600000,
+     "valid": true,
+     "not_shown_warning": 0,
+     "machine_timeouts": 0,
+     "bucket": {
+      "n": 14,
+      "correct": 11,
+      "accuracy": null,
+      "wrong_releases": 3,
+      "timeouts": 0,
+      "correct_holds": 5,
+      "median_seconds": 102.1,
+      "median_seconds_released": 102.0,
+      "requests_per_case": 0.43,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.21,
+      "median_usd_per_case": 0.0147,
+      "median_tokens_per_case": 13732,
+      "costed_cases": 14,
+      "top_tier": 7
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 17,
+      "accuracy": 0.85,
+      "wrong_releases": 3,
+      "timeouts": 0,
+      "correct_holds": 8,
+      "median_seconds": 121.2,
+      "median_seconds_released": 109.8,
+      "requests_per_case": 0.45,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.2,
+      "median_usd_per_case": 0.0144,
+      "median_tokens_per_case": 13718,
+      "costed_cases": 20,
+      "top_tier": 7
+     },
+     "adversary_level_at_spawn": 7,
+     "cumulative": {
+      "n": 332,
+      "correct": 237,
+      "accuracy": 0.714,
+      "wrong_releases": 94,
+      "timeouts": 1
+     },
+     "level": 3,
+     "by_tier": {
+      "7": {
+       "n": 12,
+       "correct": 9
+      },
+      "6": {
+       "n": 1,
+       "correct": 1
+      },
+      "5": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "6cb391a",
+      "bfb8426"
+     ],
+     "worker_kinds": [
+      "auto_agent"
+     ],
+     "lessons_at_start": 0
+    },
+    {
+     "at": 1789915200000,
+     "valid": true,
+     "not_shown_warning": 0,
+     "machine_timeouts": 0,
+     "bucket": {
+      "n": 4,
+      "correct": 1,
+      "accuracy": null,
+      "wrong_releases": 3,
+      "timeouts": 0,
+      "correct_holds": 1,
+      "median_seconds": 88.4,
+      "median_seconds_released": null,
+      "requests_per_case": 0.25,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.0,
+      "median_usd_per_case": 0.0151,
+      "median_tokens_per_case": 13729,
+      "costed_cases": 4,
+      "top_tier": 7
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 14,
+      "accuracy": 0.7,
+      "wrong_releases": 6,
+      "timeouts": 0,
+      "correct_holds": 7,
+      "median_seconds": 99.1,
+      "median_seconds_released": 104.9,
+      "requests_per_case": 0.4,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.2,
+      "median_usd_per_case": 0.0147,
+      "median_tokens_per_case": 13732,
+      "costed_cases": 20,
+      "top_tier": 7
+     },
+     "adversary_level_at_spawn": 7,
+     "cumulative": {
+      "n": 336,
+      "correct": 238,
+      "accuracy": 0.708,
+      "wrong_releases": 97,
+      "timeouts": 1
+     },
+     "level": 1,
+     "by_tier": {
+      "7": {
+       "n": 4,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "6cb391a"
      ],
      "worker_kinds": [
       "auto_agent"
@@ -5942,30 +6451,114 @@
     },
     {
      "at": 1789913400000,
-     "pairs": 302,
+     "pairs": 306,
      "with_memory": {
-      "n": 302,
-      "correct": 297,
-      "accuracy": 0.983,
+      "n": 306,
+      "correct": 301,
+      "accuracy": 0.984,
       "wrong_releases": 3,
       "timeouts": 2,
-      "median_seconds_released": 45.7,
-      "requests_per_case": 1.61,
-      "sessions_per_case": 2.08,
+      "median_seconds_released": 48.2,
+      "requests_per_case": 1.59,
+      "sessions_per_case": 2.07,
       "median_usd_per_case": 0.029,
-      "costed_cases": 226
+      "costed_cases": 230
      },
      "without_memory": {
-      "n": 302,
-      "correct": 215,
-      "accuracy": 0.712,
+      "n": 306,
+      "correct": 219,
+      "accuracy": 0.716,
       "wrong_releases": 86,
       "timeouts": 1,
-      "median_seconds_released": 55.5,
-      "requests_per_case": 1.05,
+      "median_seconds_released": 56.4,
+      "requests_per_case": 1.04,
       "sessions_per_case": 1.77,
-      "median_usd_per_case": 0.0177,
-      "costed_cases": 225
+      "median_usd_per_case": 0.018,
+      "costed_cases": 229
+     }
+    },
+    {
+     "at": 1789914000000,
+     "pairs": 313,
+     "with_memory": {
+      "n": 313,
+      "correct": 308,
+      "accuracy": 0.984,
+      "wrong_releases": 3,
+      "timeouts": 2,
+      "median_seconds_released": 49.8,
+      "requests_per_case": 1.58,
+      "sessions_per_case": 2.05,
+      "median_usd_per_case": 0.0286,
+      "costed_cases": 237
+     },
+     "without_memory": {
+      "n": 313,
+      "correct": 225,
+      "accuracy": 0.719,
+      "wrong_releases": 87,
+      "timeouts": 1,
+      "median_seconds_released": 58.6,
+      "requests_per_case": 1.03,
+      "sessions_per_case": 1.76,
+      "median_usd_per_case": 0.0171,
+      "costed_cases": 236
+     }
+    },
+    {
+     "at": 1789914600000,
+     "pairs": 328,
+     "with_memory": {
+      "n": 328,
+      "correct": 323,
+      "accuracy": 0.985,
+      "wrong_releases": 3,
+      "timeouts": 2,
+      "median_seconds_released": 52.1,
+      "requests_per_case": 1.55,
+      "sessions_per_case": 2.04,
+      "median_usd_per_case": 0.0285,
+      "costed_cases": 252
+     },
+     "without_memory": {
+      "n": 328,
+      "correct": 237,
+      "accuracy": 0.723,
+      "wrong_releases": 90,
+      "timeouts": 1,
+      "median_seconds_released": 60.9,
+      "requests_per_case": 1.0,
+      "sessions_per_case": 1.74,
+      "median_usd_per_case": 0.0158,
+      "costed_cases": 251
+     }
+    },
+    {
+     "at": 1789915200000,
+     "pairs": 332,
+     "with_memory": {
+      "n": 332,
+      "correct": 327,
+      "accuracy": 0.985,
+      "wrong_releases": 3,
+      "timeouts": 2,
+      "median_seconds_released": 52.1,
+      "requests_per_case": 1.55,
+      "sessions_per_case": 2.04,
+      "median_usd_per_case": 0.0283,
+      "costed_cases": 256
+     },
+     "without_memory": {
+      "n": 332,
+      "correct": 238,
+      "accuracy": 0.717,
+      "wrong_releases": 93,
+      "timeouts": 1,
+      "median_seconds_released": 60.9,
+      "requests_per_case": 0.99,
+      "sessions_per_case": 1.73,
+      "median_usd_per_case": 0.0157,
+      "costed_cases": 255
      }
     }
    ]
@@ -6794,30 +7387,114 @@
     },
     {
      "at": 1789913400000,
-     "pairs": 191,
+     "pairs": 193,
      "with_memory": {
-      "n": 191,
-      "correct": 186,
+      "n": 193,
+      "correct": 188,
       "accuracy": 0.974,
       "wrong_releases": 3,
       "timeouts": 2,
-      "median_seconds_released": 57.1,
-      "requests_per_case": 1.46,
+      "median_seconds_released": 57.2,
+      "requests_per_case": 1.45,
       "sessions_per_case": 2.08,
       "median_usd_per_case": 0.028,
-      "costed_cases": 191
+      "costed_cases": 193
      },
      "without_memory": {
-      "n": 191,
-      "correct": 105,
-      "accuracy": 0.55,
+      "n": 193,
+      "correct": 107,
+      "accuracy": 0.554,
       "wrong_releases": 86,
       "timeouts": 0,
       "median_seconds_released": 61.5,
-      "requests_per_case": 0.69,
-      "sessions_per_case": 1.61,
+      "requests_per_case": 0.68,
+      "sessions_per_case": 1.6,
       "median_usd_per_case": 0.016,
-      "costed_cases": 191
+      "costed_cases": 193
+     }
+    },
+    {
+     "at": 1789914000000,
+     "pairs": 199,
+     "with_memory": {
+      "n": 199,
+      "correct": 194,
+      "accuracy": 0.975,
+      "wrong_releases": 3,
+      "timeouts": 2,
+      "median_seconds_released": 57.3,
+      "requests_per_case": 1.42,
+      "sessions_per_case": 2.05,
+      "median_usd_per_case": 0.0274,
+      "costed_cases": 199
+     },
+     "without_memory": {
+      "n": 199,
+      "correct": 112,
+      "accuracy": 0.563,
+      "wrong_releases": 87,
+      "timeouts": 0,
+      "median_seconds_released": 63.9,
+      "requests_per_case": 0.67,
+      "sessions_per_case": 1.59,
+      "median_usd_per_case": 0.0156,
+      "costed_cases": 199
+     }
+    },
+    {
+     "at": 1789914600000,
+     "pairs": 214,
+     "with_memory": {
+      "n": 214,
+      "correct": 209,
+      "accuracy": 0.977,
+      "wrong_releases": 3,
+      "timeouts": 2,
+      "median_seconds_released": 59.5,
+      "requests_per_case": 1.4,
+      "sessions_per_case": 2.03,
+      "median_usd_per_case": 0.0275,
+      "costed_cases": 214
+     },
+     "without_memory": {
+      "n": 214,
+      "correct": 124,
+      "accuracy": 0.579,
+      "wrong_releases": 90,
+      "timeouts": 0,
+      "median_seconds_released": 66.1,
+      "requests_per_case": 0.65,
+      "sessions_per_case": 1.57,
+      "median_usd_per_case": 0.0155,
+      "costed_cases": 214
+     }
+    },
+    {
+     "at": 1789915200000,
+     "pairs": 218,
+     "with_memory": {
+      "n": 218,
+      "correct": 213,
+      "accuracy": 0.977,
+      "wrong_releases": 3,
+      "timeouts": 2,
+      "median_seconds_released": 59.5,
+      "requests_per_case": 1.4,
+      "sessions_per_case": 2.03,
+      "median_usd_per_case": 0.0274,
+      "costed_cases": 218
+     },
+     "without_memory": {
+      "n": 218,
+      "correct": 125,
+      "accuracy": 0.573,
+      "wrong_releases": 93,
+      "timeouts": 0,
+      "median_seconds_released": 66.1,
+      "requests_per_case": 0.65,
+      "sessions_per_case": 1.56,
+      "median_usd_per_case": 0.0153,
+      "costed_cases": 218
      }
     }
    ]
@@ -9705,21 +10382,99 @@
      "not_shown_warning": 0,
      "machine_timeouts": 0,
      "bucket": {
-      "n": 1,
-      "correct": 1,
+      "n": 8,
+      "correct": 8,
       "accuracy": null,
       "wrong_releases": 0,
       "timeouts": 0,
-      "correct_holds": 0,
-      "median_seconds": 64.4,
-      "median_seconds_released": 64.4,
-      "requests_per_case": 1.0,
+      "correct_holds": 4,
+      "median_seconds": 120.3,
+      "median_seconds_released": 157.2,
+      "requests_per_case": 1.25,
+      "repeated_requests": 1,
+      "sessions_per_case": 1.75,
+      "median_usd_per_case": 0.0247,
+      "median_tokens_per_case": 20814,
+      "costed_cases": 8,
+      "top_tier": 7
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 10,
+      "median_seconds": 99.9,
+      "median_seconds_released": 83.8,
+      "requests_per_case": 1.7,
+      "repeated_requests": 1,
+      "sessions_per_case": 2.1,
+      "median_usd_per_case": 0.0288,
+      "median_tokens_per_case": 27416,
+      "costed_cases": 20,
+      "top_tier": 7
+     },
+     "adversary_level_at_spawn": 7,
+     "cumulative": {
+      "n": 262,
+      "correct": 249,
+      "accuracy": 0.95,
+      "wrong_releases": 5,
+      "timeouts": 8
+     },
+     "level": 7,
+     "by_tier": {
+      "6": {
+       "n": 1,
+       "correct": 1
+      },
+      "7": {
+       "n": 5,
+       "correct": 5
+      },
+      "1": {
+       "n": 1,
+       "correct": 1
+      },
+      "5": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "1764744",
+      "2f1de2b"
+     ],
+     "worker_kinds": [
+      "auto_agent"
+     ],
+     "lessons_at_start": 200
+    },
+    {
+     "at": 1789914000000,
+     "valid": true,
+     "not_shown_warning": 0,
+     "machine_timeouts": 0,
+     "bucket": {
+      "n": 7,
+      "correct": 7,
+      "accuracy": null,
+      "wrong_releases": 0,
+      "timeouts": 0,
+      "correct_holds": 5,
+      "median_seconds": 108.6,
+      "median_seconds_released": 73.2,
+      "requests_per_case": 1.43,
       "repeated_requests": 0,
-      "sessions_per_case": 2.0,
-      "median_usd_per_case": 0.0263,
-      "median_tokens_per_case": 27272,
-      "costed_cases": 1,
-      "top_tier": 6
+      "sessions_per_case": 1.67,
+      "median_usd_per_case": 0.0268,
+      "median_tokens_per_case": 22775,
+      "costed_cases": 7,
+      "top_tier": 7
      },
      "rolling": {
       "n": 20,
@@ -9728,26 +10483,105 @@
       "wrong_releases": 0,
       "timeouts": 0,
       "correct_holds": 11,
-      "median_seconds": 99.9,
-      "median_seconds_released": 84.2,
-      "requests_per_case": 1.8,
-      "repeated_requests": 0,
-      "sessions_per_case": 2.15,
-      "median_usd_per_case": 0.0299,
-      "median_tokens_per_case": 29823,
+      "median_seconds": 107.4,
+      "median_seconds_released": 83.3,
+      "requests_per_case": 1.3,
+      "repeated_requests": 1,
+      "sessions_per_case": 1.84,
+      "median_usd_per_case": 0.0269,
+      "median_tokens_per_case": 21823,
       "costed_cases": 20,
       "top_tier": 7
      },
      "adversary_level_at_spawn": 7,
      "cumulative": {
-      "n": 255,
-      "correct": 242,
-      "accuracy": 0.949,
+      "n": 269,
+      "correct": 256,
+      "accuracy": 0.952,
       "wrong_releases": 5,
       "timeouts": 8
      },
      "level": 7,
      "by_tier": {
+      "7": {
+       "n": 4,
+       "correct": 4
+      },
+      "6": {
+       "n": 2,
+       "correct": 2
+      },
+      "5": {
+       "n": 1,
+       "correct": 1
+      }
+     },
+     "models": [
+      "gpt-5.6-terra"
+     ],
+     "worker_commits": [
+      "2f1de2b",
+      "bfb8426"
+     ],
+     "worker_kinds": [
+      "auto_agent",
+      "unknown"
+     ],
+     "lessons_at_start": 200
+    },
+    {
+     "at": 1789914600000,
+     "valid": true,
+     "not_shown_warning": 0,
+     "machine_timeouts": 0,
+     "bucket": {
+      "n": 9,
+      "correct": 8,
+      "accuracy": null,
+      "wrong_releases": 1,
+      "timeouts": 0,
+      "correct_holds": 5,
+      "median_seconds": 108.6,
+      "median_seconds_released": 108.6,
+      "requests_per_case": 1.11,
+      "repeated_requests": 0,
+      "sessions_per_case": 1.67,
+      "median_usd_per_case": 0.0275,
+      "median_tokens_per_case": 22278,
+      "costed_cases": 9,
+      "top_tier": 7
+     },
+     "rolling": {
+      "n": 20,
+      "correct": 19,
+      "accuracy": 0.95,
+      "wrong_releases": 1,
+      "timeouts": 0,
+      "correct_holds": 13,
+      "median_seconds": 108.6,
+      "median_seconds_released": 107.5,
+      "requests_per_case": 1.25,
+      "repeated_requests": 1,
+      "sessions_per_case": 1.68,
+      "median_usd_per_case": 0.0255,
+      "median_tokens_per_case": 20814,
+      "costed_cases": 20,
+      "top_tier": 7
+     },
+     "adversary_level_at_spawn": 7,
+     "cumulative": {
+      "n": 278,
+      "correct": 264,
+      "accuracy": 0.95,
+      "wrong_releases": 6,
+      "timeouts": 8
+     },
+     "level": 6,
+     "by_tier": {
+      "7": {
+       "n": 8,
+       "correct": 7
+      },
       "6": {
        "n": 1,
        "correct": 1
@@ -9757,7 +10591,8 @@
       "gpt-5.6-terra"
      ],
      "worker_commits": [
-      "1764744"
+      "6cb391a",
+      "bfb8426"
      ],
      "worker_kinds": [
       "auto_agent"
@@ -10623,6 +11458,54 @@
       "sha": "cd6cf1e",
       "dirty": true
      }
+    },
+    {
+     "at": 1789913458321,
+     "skills": {},
+     "lessons": 315,
+     "adversary": {
+      "enabled": true,
+      "spawned": 319,
+      "interval_seconds": 69
+     },
+     "open_cases": 1,
+     "usd_per_hour_all_workers": 2.926,
+     "commit": {
+      "sha": "bfb8426",
+      "dirty": true
+     }
+    },
+    {
+     "at": 1789914169449,
+     "skills": {},
+     "lessons": 322,
+     "adversary": {
+      "enabled": true,
+      "spawned": 330,
+      "interval_seconds": 20
+     },
+     "open_cases": 3,
+     "usd_per_hour_all_workers": 3.857,
+     "commit": {
+      "sha": "6cb391a",
+      "dirty": true
+     }
+    },
+    {
+     "at": 1789914738352,
+     "skills": {},
+     "lessons": 338,
+     "adversary": {
+      "enabled": true,
+      "spawned": 344,
+      "interval_seconds": 26
+     },
+     "open_cases": 2,
+     "usd_per_hour_all_workers": 5.139,
+     "commit": {
+      "sha": "e683316",
+      "dirty": true
+     }
     }
    ]
   },
@@ -11187,6 +12070,60 @@
       "sha": "cd6cf1e",
       "dirty": true
      }
+    },
+    {
+     "at": 1789913458436,
+     "skills": {
+      "draft": 2
+     },
+     "lessons": 285,
+     "adversary": {
+      "enabled": true,
+      "spawned": 284,
+      "interval_seconds": 45
+     },
+     "open_cases": 1,
+     "usd_per_hour_all_workers": 2.926,
+     "commit": {
+      "sha": "bfb8426",
+      "dirty": true
+     }
+    },
+    {
+     "at": 1789914169616,
+     "skills": {
+      "draft": 2
+     },
+     "lessons": 291,
+     "adversary": {
+      "enabled": true,
+      "spawned": 294,
+      "interval_seconds": 45
+     },
+     "open_cases": 2,
+     "usd_per_hour_all_workers": 3.857,
+     "commit": {
+      "sha": "6cb391a",
+      "dirty": true
+     }
+    },
+    {
+     "at": 1789914738457,
+     "skills": {
+      "draft": 2
+     },
+     "lessons": 4,
+     "adversary": {
+      "enabled": false,
+      "spawned": 296,
+      "interval_seconds": 45
+     },
+     "open_cases": 0,
+     "usd_per_hour_all_workers": 5.139,
+     "commit": {
+      "sha": "e683316",
+      "dirty": true
+     }
     }
    ]
   },
@@ -11512,6 +12449,28 @@
       "sha": "cd6cf1e",
       "dirty": true
      }
+    },
+    {
+     "at": 1789913538228,
+     "failed": 0,
+     "passed": 482,
+     "seconds": 79.7,
+     "skipped": 11,
+     "commit": {
+      "sha": "bfb8426",
+      "dirty": true
+     }
+    },
+    {
+     "at": 1789914233330,
+     "failed": 0,
+     "passed": 482,
+     "seconds": 63.6,
+     "skipped": 11,
+     "commit": {
+      "sha": "8ba47d4",
+      "dirty": true
+     }
     }
    ]
   },
@@ -11694,6 +12653,52 @@
      "commit": {
       "sha": "5cbcd2b",
       "code": "11ba6be",
+      "dirty": false,
+      "embedding": "hyper-elser",
+      "questions": {
+       "name": 52,
+       "linked": 60,
+       "identifier": 60
+      }
+     }
+    },
+    {
+     "at": 1789913400981,
+     "hybrid": {
+      "mrr@10": 0.734,
+      "ndcg@10": 0.619,
+      "recall@5": 0.589,
+      "recall@10": 0.598,
+      "latency_p50_ms": 413,
+      "linked_recall@10": 0.248
+     },
+     "keyword": {
+      "mrr@10": 0.668,
+      "ndcg@10": 0.544,
+      "recall@5": 0.517,
+      "recall@10": 0.546,
+      "latency_p50_ms": 493,
+      "linked_recall@10": 0.252
+     },
+     "hybrid+graph": {
+      "mrr@10": 0.971,
+      "ndcg@10": 0.906,
+      "recall@5": 0.825,
+      "recall@10": 0.937,
+      "latency_p50_ms": 371,
+      "linked_recall@10": 0.861
+     },
+     "keyword+graph": {
+      "mrr@10": 0.946,
+      "ndcg@10": 0.892,
+      "recall@5": 0.819,
+      "recall@10": 0.93,
+      "latency_p50_ms": 446,
+      "linked_recall@10": 0.852
+     },
+     "commit": {
+      "sha": "e96b4d5",
+      "code": "2f1de2b",
       "dirty": false,
       "embedding": "hyper-elser",
       "questions": {
