@@ -19,7 +19,15 @@ import { useCfoCommentary } from "./useCfoCommentary";
 import { useCfoDecision } from "./useCfoDecision";
 import { parseDecisionChoice } from "@/lib/command/cfo-decisions";
 
-const SECTIONS = new Set(["overview", "cases", "evidence", "activity", "review", "timeline", "benchmarks"]);
+// Mirrors dashboard.SECTIONS on the backend. "identity" is a real station the router already
+// routes to; leaving it out here silently dropped every request to open Access.
+const SECTIONS = new Set(["overview", "cases", "evidence", "activity", "identity", "review", "timeline", "benchmarks"]);
+// Tools whose result asks the browser to open one item, the way clicking it would. The backend has
+// already resolved the ID against the organization, so a result that arrives here is real.
+const OPEN_TOOLS: Record<string, "source" | "case"> = {
+  open_source_document: "source",
+  open_payable_case: "case",
+};
 const CHART_TOOLS = new Set(["compose_financial_artifact", "get_financial_artifact"]);
 // How far back the pointer trail is read. People point before they speak, usually by one to two seconds.
 const LOOKBACK_MS = 2500;
@@ -145,6 +153,16 @@ function CommandSession({ scope }: { scope: string }) {
         const result = event.result;
         if (event.name === "navigate_section" && result && typeof result === "object" && "section" in result && SECTIONS.has(String(result.section)))
           window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: String(result.section) } }));
+        const opening = OPEN_TOOLS[event.name];
+        if (opening && result && typeof result === "object" && "opened" in result && result.opened) {
+          const section = String((result as { section?: unknown }).section ?? "");
+          const id = String((result as Record<string, unknown>)[opening === "source" ? "source_id" : "case_id"] ?? "");
+          // The section has to be showing before the item inside it can be selected.
+          if (id && SECTIONS.has(section)) {
+            window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section } }));
+            window.dispatchEvent(new CustomEvent("hyper:open-item", { detail: { kind: opening, id, section } }));
+          }
+        }
         if (CHART_TOOLS.has(event.name)) {
           const card = readArtifactCard(result);
           if (card) setCards((previous) => [card, ...previous.filter((c) => c.id !== card.id)].slice(0, 3));

@@ -213,6 +213,17 @@ export function Evidence({ active, embedded = false, onMotion }: RelicSectionPro
   }
   const open = (id: string, index: number) => { setSourceId(id); setSelectedIndex(index); };
 
+  // The voice agent can open a document by ID, which is the same thing clicking its filename does.
+  // The backend resolved the ID against this organization before the event was dispatched.
+  useEffect(() => {
+    const openItem = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind?: string; id?: string }>).detail;
+      if (detail?.kind === "source" && detail.id) { setSourceId(detail.id); setSelectedIndex(0); }
+    };
+    window.addEventListener("hyper:open-item", openItem);
+    return () => window.removeEventListener("hyper:open-item", openItem);
+  }, []);
+
   return <>
     {!embedded && <Heading eyebrow="Evidence" title={<>Every claim traces to a <em>source</em>.</>} />}
     <SourceUpload onUploaded={() => { sources.refresh(); datasets.refresh(); }} />

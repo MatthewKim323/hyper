@@ -4,7 +4,7 @@ import ActivityOrb from "@/components/ui/ActivityOrb";
 
 // The deterministic AP engine, surfaced. Every amount here is computed by code from owner-verified
 // records. The approval button sends the exact hash on screen, so what was read is what gets approved.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { backend, BackendError } from "@/lib/backend/client";
 import type { EngineCase, PayableProposal } from "@/lib/backend/types";
 import { ChecksRing, PayableFunnel, RouteBars, VolumeArea } from "./charts";
@@ -76,6 +76,16 @@ export function PayableApprovals({ active, onBusy }: { active: boolean; onBusy?:
   const { data, refresh } = useBackend(backend.payableProposals, active, POLL_MS);
   const [chosen, setChosen] = useState<string | null>(null);
   const [all, setAll] = useState(false);
+  // The voice agent can open a case by ID, the same as clicking its row. Registered before the
+  // empty-list early return below, so the hook order never changes between renders.
+  useEffect(() => {
+    const openItem = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind?: string; id?: string }>).detail;
+      if (detail?.kind === "case" && detail.id) setChosen(detail.id);
+    };
+    window.addEventListener("hyper:open-item", openItem);
+    return () => window.removeEventListener("hyper:open-item", openItem);
+  }, []);
   const proposals = data?.proposals ?? [];
   const waiting = proposals.filter(proposal => proposal.approval?.status === "PENDING" && proposal.status === "DRAFT");
   const approved = proposals.filter(proposal => proposal.approval?.status === "APPROVED");
