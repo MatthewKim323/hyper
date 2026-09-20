@@ -5,13 +5,13 @@
   width: min(480px, calc(100vw - 40px));
   transform: translateX(-50%);
   color: #292524;
-  pointer-events: auto;
+  pointer-events: none;
   -webkit-user-select: text;
   user-select: text;
 }
 
 .dock[hidden] { display: none; }
-.beam { width: 100%; border-radius: 28px; }
+.beam { width: 100%; border-radius: 28px; pointer-events: auto; }
 .glass {
   position: relative;
   max-height: calc(100dvh - 56px);
@@ -25,22 +25,30 @@
   -webkit-backdrop-filter: saturate(1.25) blur(3px);
 }
 
-.transcript {
-  max-height: min(160px, 22dvh);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 20px 22px 17px;
+.caption {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 20px);
+  width: min(560px, calc(100vw - 48px));
+  transform: translateX(-50%);
   margin: 0;
   color: #292524;
-  font-size: 15px;
+  text-align: center;
+  font-size: clamp(16px, 1.4vw, 20px);
   line-height: 1.5;
   letter-spacing: -.012em;
+  text-shadow: 0 1px 12px rgb(255 253 250 / 90%);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  scrollbar-width: thin;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 350ms ease-in-out, visibility 0s;
+  animation: caption-in 250ms ease-in-out;
 }
-
-.dock[data-error="true"] .transcript { color: #7f2e28; }
+.caption[data-visible="false"] { opacity: 0; visibility: hidden; transition: opacity 350ms ease-in-out, visibility 0s 350ms; }
+.caption[data-error="true"] { color: #7f2e28; font-size: 14px; }
+.caption:has(+ .caption[data-visible="true"]) { visibility: hidden; }
+@keyframes caption-in { from { opacity: 0; } }
 .composer {
   display: flex;
   align-items: center;
@@ -48,7 +56,6 @@
   min-height: 60px;
   padding: 8px 10px 8px 22px;
 }
-.transcript + .composer { border-top: 1px solid rgb(57 42 37 / 10%); }
 .input {
   width: 100%;
   flex: 1;
@@ -97,7 +104,7 @@
   .dock { bottom: max(16px, env(safe-area-inset-bottom)); width: calc(100vw - 28px); }
   .input { font-size: 16px; }
   .composer { padding-left: 18px; }
-  .transcript { padding: 16px 18px 14px; max-height: 18dvh; font-size: 14px; }
+  .caption { bottom: calc(100% + 16px); }
 }
 
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
@@ -106,5 +113,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .microphone, .send { transition: none; }
+  .microphone, .send, .caption, .caption[data-visible="false"] { transition: none; animation: none; }
 }

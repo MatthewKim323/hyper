@@ -9,7 +9,6 @@ import { WORLD_PATH } from "@/lib/engine/router/routes";
 import { getAudioContext } from "voice-glow";
 import ArtifactCard from "./ArtifactCard";
 import WorldVoiceBox from "./WorldVoiceBox";
-import CfoPanel from "./CfoPanel";
 import { useAuth } from "@/components/workspace/useBackend";
 import { readArtifactCard, type ArtifactCardModel } from "@/lib/command/artifact";
 import { PointerContext } from "@/lib/command/pointer-context";
@@ -18,7 +17,6 @@ import { bindWorldVoice, type WorldVoiceBinding } from "@/lib/command/world-voic
 import { createDialogue, reduceDialogueEvent } from "@/lib/onboarding/dialogue";
 import { useCfoCommentary } from "./useCfoCommentary";
 import { useCfoDecision } from "./useCfoDecision";
-import { CfoCommentarySurface, CfoDecisionCard } from "./CfoCommentarySurface";
 import { parseDecisionChoice } from "@/lib/command/cfo-decisions";
 
 const SECTIONS = new Set(["overview", "cases", "evidence", "activity", "review", "timeline", "benchmarks"]);
@@ -56,14 +54,11 @@ export default function CommandLayer() {
 
 function CommandSession({ scope }: { scope: string }) {
   const [agentOpen, setAgentOpen] = useState(false);
-  const [cfoOpen, setCfoOpen] = useState(false);
-  const [cfoInstant, setCfoInstant] = useState(false);
   const [connection, setConnection] = useState<VoiceConnection>("idle");
   const [listening, setListening] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [microphoneStream, setMicrophoneStream] = useState<MediaStream | null>(null);
   const [processing, setProcessing] = useState(false);
-  const [activity, setActivity] = useState("composing");
   const [sending, setSending] = useState(false);
   const pendingSend = useRef(false);
   const [status, setStatus] = useState("");
@@ -85,9 +80,9 @@ function CommandSession({ scope }: { scope: string }) {
   const decision = useCfoDecision(!!scope, userSpeaking);
   const commentary = useCfoCommentary(scope, getClient, !!decision.concern && ["awaiting_response", "needs_input", "card_failed"].includes(decision.concern.status));
   const { interrupt: interruptCommentary, conversation: setCommentaryConversation } = commentary;
+  const { retryAudio } = commentary;
   const { context: activeDecisionContext, submit: submitDecision, acceptEvent: acceptDecisionEvent } = decision;
   const { setDecisionCues } = commentary;
-  const { enableAudio } = commentary;
   useEffect(() => {
     const key = activeDecisionContext ? `${activeDecisionContext.concernId}:${activeDecisionContext.cardRevision}:${activeDecisionContext.cardHash}` : "";
     setDecisionCues(key, activeDecisionContext ? decision.concern?.decision_cues ?? [] : []);
@@ -104,7 +99,7 @@ function CommandSession({ scope }: { scope: string }) {
     const visual = bindWorldVoice();
     voiceVisual.current = visual;
     const session = new OnboardingVoiceClient({
-      onPresentation: (p) => { setStatus(p.status ?? ""); setProcessing(p.processing ?? false); setActivity(p.orbState ?? "composing"); visual.publish({ presentation: p }); },
+      onPresentation: (p) => { setStatus(p.status ?? ""); setProcessing(p.processing ?? false); visual.publish({ presentation: p }); },
       onConnection: (next) => {
         setConnection(next);
         visual.publish({ connection: next });
@@ -176,17 +171,6 @@ function CommandSession({ scope }: { scope: string }) {
   }, [setCommentaryConversation, acceptDecisionEvent]);
 
   useEffect(() => {
-    const open = (event: Event) => {
-      // The orb is an explicit playback gesture, even when entry autoplay was blocked.
-      if (!cfoOpen) void enableAudio();
-      setCfoInstant(!!(event as CustomEvent<{ keyboard?: boolean }>).detail?.keyboard);
-      setCfoOpen(value => !value);
-    };
-    window.addEventListener("hyper:cfo-toggle", open);
-    return () => window.removeEventListener("hyper:cfo-toggle", open);
-  }, [cfoOpen, enableAudio]);
-
-  useEffect(() => {
     if (!microphoneStream) return;
     const tracks = microphoneStream.getAudioTracks();
     const ended = () => {
@@ -243,7 +227,7 @@ function CommandSession({ scope }: { scope: string }) {
       if (await submitDecision(choice, "text")) setDraft(current => current.trim() === text ? "" : current);
       return;
     }
-    if (!commentary.leader) { setError("CFO audio is active in another tab. Return to that tab to talk."); return; }
+    if (!commentary.leader) { retryAudio(); setError("Voice isn't ready in this tab. Try again."); return; }
     setCommentaryConversation(true); setConversationActive(true);
     pendingSend.current = true;
     setSending(true);
@@ -268,12 +252,12 @@ function CommandSession({ scope }: { scope: string }) {
       pendingSend.current = false;
       if (client.current === session) setSending(false);
     }
-  }, [draft, sharePointer, interruptCommentary, activeDecisionContext, submitDecision, commentary.leader, setCommentaryConversation]);
+  }, [draft, sharePointer, interruptCommentary, activeDecisionContext, submitDecision, commentary.leader, retryAudio, setCommentaryConversation]);
 
   const toggle = useCallback(async () => {
     interruptCommentary();
     setAgentOpen(true);
-    if (!commentary.leader) { setError("CFO audio is active in another tab. Return to that tab to talk."); return; }
+    if (!commentary.leader) { retryAudio(); setError("Voice isn't ready in this tab. Try again."); return; }
     const session = client.current;
     if (!session) return;
     void voiceVisual.current?.resumeAudio();
@@ -324,7 +308,13 @@ function CommandSession({ scope }: { scope: string }) {
     } finally {
       if (request === micRequest.current) { startingMic.current = false; setRequesting(false); }
     }
-  }, [interruptCommentary, commentary.leader]);
+  }, [interruptCommentary, commentary.leader, retryAudio]);
+
+  useEffect(() => {
+    const speak = () => { void toggle(); };
+    window.addEventListener("hyper:cfo-toggle", speak);
+    return () => window.removeEventListener("hyper:cfo-toggle", speak);
+  }, [toggle]);
 
   const closeAgent = useCallback(() => {
     interruptCommentary();
@@ -345,7 +335,6 @@ function CommandSession({ scope }: { scope: string }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented) return;
-      if (event.key === "Escape" && cfoOpen) return;
       if (event.key === "Escape" && agentOpen) { event.preventDefault(); closeAgent(); return; }
       if (event.key.toLowerCase() !== "v" || event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
       if ((event.target as HTMLElement | null)?.closest("input, textarea, select, [contenteditable]")) return;
@@ -355,12 +344,10 @@ function CommandSession({ scope }: { scope: string }) {
     return () => {
       window.removeEventListener("keydown", onKey);
     };
-  }, [agentOpen, cfoOpen, closeAgent, toggle]);
+  }, [agentOpen, closeAgent, toggle]);
 
   return (
     <div className="cmd" data-agent-open="true" data-listening={listening} data-connection={connection}>
-      <CfoPanel open={cfoOpen} instant={cfoInstant} onOpenChange={setCfoOpen} commentaryHistory={commentary.history}
-        activity={error || connection === "error" ? "error" : connection === "connecting" ? "connecting" : connection === "connected" ? activity : "composing"} />
       <div className="cmd-cards" aria-live="polite">
         {cards.map((card) => <ArtifactCard key={card.id} card={card} onDismiss={() => setCards((previous) => previous.filter((c) => c.id !== card.id))} />)}
       </div>
@@ -371,18 +358,17 @@ function CommandSession({ scope }: { scope: string }) {
         processing={processing}
         sending={sending}
         transcript=""
-        dialogue={conversationActive || !commentary.caption ? dialogue : undefined}
+        dialogue={dialogue}
+        commentary={commentary.caption}
+        speakingConversation={conversationActive}
         status={requesting && !microphoneStream ? "Waiting for microphone permission..." : status}
-        error={error}
+        error={error || commentary.error || decision.error}
         draft={draft}
         visible
         onDraft={setDraft}
         onSend={() => { void submit(); }}
         onMicrophone={() => { void toggle(); }}
-      >
-        {decision.concern && <CfoDecisionCard key={decision.concern.id} concern={decision.concern} busy={decision.busy} error={decision.error} message={decision.message} job={decision.job} frozen={userSpeaking} onSubmit={(choice, input) => { interruptCommentary(); return decision.submit(choice, input); }} onDismiss={decision.dismiss} onRetrySuggestions={() => { interruptCommentary(); return decision.retrySuggestions(); }} />}
-        <CfoCommentarySurface mode={commentary.mode} caption={commentary.caption} history={commentary.history} error={commentary.error} needsAudio={commentary.needsAudio} leader={commentary.leader} connected={commentary.connected} speakingConversation={conversationActive} onMode={commentary.setMode} onEnableAudio={() => { void commentary.enableAudio(); }} />
-      </WorldVoiceBox>
+      />
     </div>
   );
 }

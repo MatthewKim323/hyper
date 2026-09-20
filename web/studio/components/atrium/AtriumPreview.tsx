@@ -431,7 +431,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
       <div ref={plane} className={styles.plane} style={planeStyle}>
         <canvas ref={canvas} className={styles.water} aria-hidden="true" />
         {!failed && !focus && atHome && agentBounds && <button
-          ref={agentButton} type="button" className={styles.agent} data-cursor="hide" data-cfo-trigger="" aria-label="Open CFO" aria-haspopup="dialog" aria-controls="hyper-cfo-panel" title="CFO · agent activity"
+          ref={agentButton} type="button" className={styles.agent} data-cursor="hide" data-cfo-trigger="" aria-label="Talk to your CFO" title="Talk to your CFO"
           style={{ left: `${agentBounds.left * 100}%`, top: `${agentBounds.top * 100}%`, width: `${agentBounds.width * 100}%`, height: `${agentBounds.height * 100}%` }}
           onPointerEnter={hoverAgent}
           onPointerMove={hoverAgent}

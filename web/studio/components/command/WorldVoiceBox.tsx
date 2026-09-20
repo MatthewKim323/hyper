@@ -1,10 +1,10 @@
 "use client";
 
-import { useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import { VoiceBeam } from "voice-glow";
 import styles from "./WorldVoiceBox.module.css";
-import DialogueCaptions from "@/components/onboarding/DialogueCaptions";
-import type { DialogueState } from "@/lib/onboarding/dialogue";
+import { dialogueTurns, type DialogueState } from "@/lib/onboarding/dialogue";
+import type { NarrationRecord } from "@/lib/command/cfo-commentary";
 
 const pausedSnapshot = () => document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches;
 const subscribePaused = (update: () => void) => {
@@ -18,7 +18,6 @@ const subscribePaused = (update: () => void) => {
 };
 
 type Props = {
-  children?: ReactNode;
   stream: MediaStream | null;
   listening: boolean;
   requesting: boolean;
@@ -26,6 +25,8 @@ type Props = {
   sending: boolean;
   transcript: string;
   dialogue?: DialogueState;
+  commentary?: NarrationRecord | null;
+  speakingConversation?: boolean;
   status: string;
   error: string;
   draft: string;
@@ -36,9 +37,13 @@ type Props = {
 };
 
 /** The world session owns capture and transport. This surface only observes its mic. */
-export default function WorldVoiceBox({ children, stream, listening, requesting, processing, sending, transcript, dialogue, status, error, draft, visible, onDraft, onSend, onMicrophone }: Props) {
+export default function WorldVoiceBox({ stream, listening, requesting, processing, sending, transcript, dialogue, commentary, speakingConversation = false, status, error, draft, visible, onDraft, onSend, onMicrophone }: Props) {
   const paused = useSyncExternalStore(subscribePaused, pausedSnapshot, () => true);
-  const line = error || (!dialogue?.entries.length ? transcript || (listening || requesting || processing ? status : "") : "");
+  const turn = dialogue ? dialogueTurns(dialogue.entries).at(-1) : undefined;
+  const narration = !speakingConversation ? commentary : null;
+  const line = narration?.event.narration.text || (turn?.role === "assistant" ? turn.text : transcript);
+  const captionKey = narration?.event.id || turn?.id || "preview";
+  const holding = narration ? narration.status === "playing" : speakingConversation;
   const microphoneLabel = requesting ? "Cancel microphone request" : listening ? "Stop listening" : "Speak to your CFO";
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -58,6 +63,8 @@ export default function WorldVoiceBox({ children, stream, listening, requesting,
       onClick={event => event.stopPropagation()}
       onWheel={event => event.stopPropagation()}
     >
+      {line && <FadingCaption key={captionKey} text={line} holding={holding} />}
+      {error && <FadingCaption key={`error:${error}`} text={error} error />}
       <VoiceBeam
         className={styles.beam}
         stream={stream}
@@ -73,9 +80,6 @@ export default function WorldVoiceBox({ children, stream, listening, requesting,
         release={.55}
       >
         <div className={styles.glass}>
-          {children}
-          {dialogue && <DialogueCaptions dialogue={dialogue} agentLabel="CFO" compact paused={paused || !visible} />}
-          {line && <p className={styles.transcript} role={error ? "alert" : "status"}>{line}</p>}
           <form className={styles.composer} onSubmit={submit} aria-busy={sending}>
             <input
               className={styles.input}
@@ -83,7 +87,7 @@ export default function WorldVoiceBox({ children, stream, listening, requesting,
               aria-label="Message your CFO"
               value={draft}
               onChange={event => onDraft(event.target.value)}
-              placeholder={listening ? "Listening, or type here..." : "Ask your CFO..."}
+              placeholder={requesting ? "Starting microphone..." : listening ? "Listening..." : processing ? status || "Thinking..." : "Ask your CFO..."}
               autoComplete="off"
               enterKeyHint="send"
               maxLength={2000}
@@ -116,4 +120,20 @@ export default function WorldVoiceBox({ children, stream, listening, requesting,
       </VoiceBeam>
     </section>
   );
+}
+
+/** Keep live speech readable, then clear the scene without moving the composer. */
+function FadingCaption({ text, holding = false, error = false }: { text: string; holding?: boolean; error?: boolean }) {
+  const [expired, setExpired] = useState("");
+  const version = `${holding}:${text}`;
+  const shown = expired !== version;
+  useEffect(() => {
+    if (holding) return;
+    // Text-only updates get enough time to read; spoken lines linger briefly after playback.
+    const delay = Math.max(4500, Math.min(10000, text.split(/\s+/).length * 220));
+    const timer = window.setTimeout(() => setExpired(version), delay);
+    return () => window.clearTimeout(timer);
+  }, [holding, text, version]);
+  return <p className={styles.caption} data-visible={shown} data-error={error || undefined}
+    role={error ? "alert" : "status"} aria-live={error ? "assertive" : "polite"} aria-atomic="true" aria-hidden={!shown}>{text}</p>;
 }
