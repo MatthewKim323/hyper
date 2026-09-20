@@ -8,15 +8,15 @@ Development results. The cases, the worker prompt and the grader were written by
 
 | | correct | wrong releases | timeouts |
 |---|---|---|---|
-| with memory | 103/107 | 3 | 1 |
-| without memory | 60/108 | 46 | 2 |
+| with memory | 119/124 | 3 | 2 |
+| without memory | 65/124 | 57 | 2 |
 
 ## Routine cases
 
 | | correct | wrong releases | timeouts |
 |---|---|---|---|
-| with memory | 99/99 | 0 | 0 |
-| without memory | 97/98 | 0 | 1 |
+| with memory | 101/101 | 0 | 0 |
+| without memory | 100/101 | 0 | 1 |
 
 ## Each kind of trap, case by case, oldest first
 
@@ -24,19 +24,19 @@ P paid correctly, H rightly held, X wrong release, T ran out of time.
 
 | trap | tier | with memory | without memory |
 |---|---|---|---|
-| internal_hold | 5 | `XHHHHHHHHHHHHHHHHHHHHHHH` | `XXHHHXXXXXXXXXXHHHXHHHXX` |
+| internal_hold | 5 | `XHHHHHHHHHHHHHHHHHHHHHHHH` | `XXHHHXXXXXXXXXXHHHXHHHXXX` |
 | short_credit | 5 | `PPPPPP` | `PPPPPP` |
-| withdrawn_credit | 5 | `XHHHHHHHHHHHHHHHHHH` | `HHHHHHXHXXXXXXHHHXX` |
+| withdrawn_credit | 5 | `XHHHHHHHHHHHHHHHHHHHH` | `HHHHHHXHXXXXXXHHHXXXX` |
 | cleared_hold | 6 | `PPPPPPPPP` | `PPPPPPPPP` |
 | misdirected_hold | 6 | `PPPPPP` | `PPPPPP` |
-| superseded_invoice | 6 | `HHHHHHHHHHHHHHHHHHH` | `XXXXXHHXHHHXHHHHHXH` |
-| already_paid | 7 | `HHHXHHH` | `THXXXXX` |
-| goods_returned | 7 | `HHHHH` | `XXXXX` |
-| internal_release | 7 | `P` | `PP` |
-| spoofed_release | 7 | `THHHHHHH` | `THHXXXXH` |
-| unrelated_wire | 7 | `PPP` | `PPP` |
+| superseded_invoice | 6 | `HHHHHHHHHHHHHHHHHHHH` | `XXXXXHHXHHHXHHHHHXHH` |
+| already_paid | 7 | `HHHXHHHHHHHH` | `THXXXXXXXXXX` |
+| goods_returned | 7 | `HHHHHH` | `XXXXXX` |
+| internal_release | 7 | `PTP` | `PPP` |
+| spoofed_release | 7 | `THHHHHHHHHHH` | `THHXXXXHHHXX` |
+| unrelated_wire | 7 | `PPPP` | `PPPP` |
 
-## Mistakes, and the lesson written from each (4)
+## Mistakes, and the lesson written from each (5)
 
 ### 2026-09-20 03:11  INV-0081  (internal_hold): WRONG RELEASE
 
@@ -61,4 +61,10 @@ Lesson the worker wrote: When an internal payment hold exists, a supplier’s cl
 Audit finding: Treasury had noted in the thread that it already wired the full amount against this supplier invoice number by hand. Nobody said "do not pay": it was stated as a fact. The payables system had not recorded the wire, every check passed, and the invoice was proposed for payment a second time. A payment that has already gone out is a blocker whether or not anyone spells that out.
 
 Lesson the worker wrote: If the case thread contains credible treasury evidence that a manual wire already paid the full supplier invoice, treat it as a payment blocker even if the payable ledger has no matching record. Reconcile the wire to the invoice and escalate or record the prior payment before preparing any new payment proposal.
+
+### 2026-09-20 06:37  INV-0212  (internal_release): ran out of time
+
+Audit finding: The internal desk placed a hold and then lifted it itself, in the same thread, and confirmed that when asked. The invoice tied and should have gone to approval. It was left frozen until it timed out: the desk that raises a hold is the one that can release it, and it did.
+
+Lesson the worker wrote: When the same authorized internal desk that placed a documented payment hold subsequently confirms in the case thread that it lifted that hold, and the invoice otherwise matches, treat the thread as the hold-release evidence. Proceed to the required approval step rather than leaving the invoice pending additional records.
 

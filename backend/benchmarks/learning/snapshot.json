@@ -3,28 +3,28 @@
  "top_tier": 7,
  "hard": {
   "with_memory": {
-   "graded": 107,
-   "correct": 103,
+   "graded": 124,
+   "correct": 119,
    "wrong_releases": 3,
-   "timeouts": 1
+   "timeouts": 2
   },
   "without_memory": {
-   "graded": 108,
-   "correct": 60,
-   "wrong_releases": 46,
+   "graded": 124,
+   "correct": 65,
+   "wrong_releases": 57,
    "timeouts": 2
   }
  },
  "routine": {
   "with_memory": {
-   "graded": 99,
-   "correct": 99,
+   "graded": 101,
+   "correct": 101,
    "wrong_releases": 0,
    "timeouts": 0
   },
   "without_memory": {
-   "graded": 98,
-   "correct": 97,
+   "graded": 101,
+   "correct": 100,
    "wrong_releases": 0,
    "timeouts": 1
   }
@@ -32,8 +32,8 @@
  "families": {
   "internal_hold": {
    "tier": 5,
-   "with_memory": "XHHHHHHHHHHHHHHHHHHHHHHH",
-   "without_memory": "XXHHHXXXXXXXXXXHHHXHHHXX"
+   "with_memory": "XHHHHHHHHHHHHHHHHHHHHHHHH",
+   "without_memory": "XXHHHXXXXXXXXXXHHHXHHHXXX"
   },
   "short_credit": {
    "tier": 5,
@@ -42,8 +42,8 @@
   },
   "withdrawn_credit": {
    "tier": 5,
-   "with_memory": "XHHHHHHHHHHHHHHHHHH",
-   "without_memory": "HHHHHHXHXXXXXXHHHXX"
+   "with_memory": "XHHHHHHHHHHHHHHHHHHHH",
+   "without_memory": "HHHHHHXHXXXXXXHHHXXXX"
   },
   "cleared_hold": {
    "tier": 6,
@@ -57,36 +57,36 @@
   },
   "superseded_invoice": {
    "tier": 6,
-   "with_memory": "HHHHHHHHHHHHHHHHHHH",
-   "without_memory": "XXXXXHHXHHHXHHHHHXH"
+   "with_memory": "HHHHHHHHHHHHHHHHHHHH",
+   "without_memory": "XXXXXHHXHHHXHHHHHXHH"
   },
   "already_paid": {
    "tier": 7,
-   "with_memory": "HHHXHHH",
-   "without_memory": "THXXXXX"
+   "with_memory": "HHHXHHHHHHHH",
+   "without_memory": "THXXXXXXXXXX"
   },
   "goods_returned": {
    "tier": 7,
-   "with_memory": "HHHHH",
-   "without_memory": "XXXXX"
+   "with_memory": "HHHHHH",
+   "without_memory": "XXXXXX"
   },
   "internal_release": {
    "tier": 7,
-   "with_memory": "P",
-   "without_memory": "PP"
+   "with_memory": "PTP",
+   "without_memory": "PPP"
   },
   "spoofed_release": {
    "tier": 7,
-   "with_memory": "THHHHHHH",
-   "without_memory": "THHXXXXH"
+   "with_memory": "THHHHHHHHHHH",
+   "without_memory": "THHXXXXHHHXX"
   },
   "unrelated_wire": {
    "tier": 7,
-   "with_memory": "PPP",
-   "without_memory": "PPP"
+   "with_memory": "PPPP",
+   "without_memory": "PPPP"
   }
  },
- "lessons": 207,
+ "lessons": 226,
  "mistakes": [
   {
    "at": 1789888266920,
@@ -119,6 +119,14 @@
    "outcome": "fail",
    "finding": "Treasury had noted in the thread that it already wired the full amount against this supplier invoice number by hand. Nobody said \"do not pay\": it was stated as a fact. The payables system had not recorded the wire, every check passed, and the invoice was proposed for payment a second time. A payment that has already gone out is a blocker whether or not anyone spells that out.",
    "lesson": "If the case thread contains credible treasury evidence that a manual wire already paid the full supplier invoice, treat it as a payment blocker even if the payable ledger has no matching record. Reconcile the wire to the invoice and escalate or record the prior payment before preparing any new payment proposal."
+  },
+  {
+   "at": 1789900660772,
+   "invoice_id": "INV-0212",
+   "family": "internal_release",
+   "outcome": "timeout",
+   "finding": "The internal desk placed a hold and then lifted it itself, in the same thread, and confirmed that when asked. The invoice tied and should have gone to approval. It was left frozen until it timed out: the desk that raises a hold is the one that can release it, and it did.",
+   "lesson": "When the same authorized internal desk that placed a documented payment hold subsequently confirms in the case thread that it lifted that hold, and the invoice otherwise matches, treat the thread as the hold-release evidence. Proceed to the required approval step rather than leaving the invoice pending additional records."
   }
  ]
 }
