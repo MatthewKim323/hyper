@@ -20,6 +20,20 @@ export interface VoiceClientCallbacks {
 
 /** "world" is the persistent dashboard agent: one saved conversation per member, no readiness gate. */
 export type VoiceClientMode = "onboarding" | "world";
+export type CfoIntroductionResult = "started" | "already-introduced" | "needs-gesture" | "conversation-active" | "unavailable";
+
+// Entry can unlock output before the world voice client mounts. The mounted client adopts this
+// same context, so the eventual provider audio remains tied to the user's entry gesture.
+let worldPlaybackContext: AudioContext | null = null;
+
+/** Call directly from Enter/Skip or an explicit voice gesture. No microphone or network access. */
+export async function primeWorldVoicePlayback(): Promise<boolean> {
+  try {
+    if (!worldPlaybackContext || worldPlaybackContext.state === "closed") worldPlaybackContext = new AudioContext();
+    if (worldPlaybackContext.state === "suspended") await worldPlaybackContext.resume();
+    return worldPlaybackContext.state === "running";
+  } catch { return false; }
+}
 
 export interface VoiceProtocolState {
   generation: number;
@@ -177,6 +191,11 @@ export class OnboardingVoiceClient {
   private suppressAudioUntilInterrupt = false;
   private unacknowledged: { id: string; text: string } | null = null;
   private pendingText = new Map<string, { resolve: (acknowledged: boolean) => void; timer: ReturnType<typeof setTimeout> }>();
+  private introductionId: string | null = null;
+  private introductionResult: CfoIntroductionResult | null = null;
+  private pendingIntroduction: { id: string; resolve: (result: CfoIntroductionResult) => void; timer: ReturnType<typeof setTimeout> } | null = null;
+  private introducing: Promise<CfoIntroductionResult> | null = null;
+  private userTurnStarted = false;
 
   private mode: VoiceClientMode;
 
@@ -412,7 +431,10 @@ export class OnboardingVoiceClient {
     if (this.disposed) return;
     try {
       if (!this.context) {
-        this.context = new AudioContext();
+        if (this.mode === "world") {
+          if (!worldPlaybackContext || worldPlaybackContext.state === "closed") worldPlaybackContext = new AudioContext();
+          this.context = worldPlaybackContext;
+        } else this.context = new AudioContext();
         this.context.onstatechange = () => this.publish();
       }
       if (this.context.state === "suspended") await this.context.resume();
@@ -421,10 +443,44 @@ export class OnboardingVoiceClient {
     }
   }
 
+  /** A provider greeting, not a synthetic user message. Never enables microphone capture. */
+  introduceWorldCfo(entryId?: string): Promise<CfoIntroductionResult> {
+    if (this.mode !== "world" || this.disposed) return Promise.resolve("unavailable");
+    if (this.introductionResult) return Promise.resolve(this.introductionResult);
+    if (this.userTurnStarted) return Promise.resolve("conversation-active");
+    if (this.introducing) return this.introducing;
+    // Do not queue inaudible speech under an autoplay lock. The next entry/orb gesture can retry.
+    if (!this.context && worldPlaybackContext?.state === "running") {
+      this.context = worldPlaybackContext;
+      this.context.onstatechange = () => this.publish();
+    }
+    if (this.context?.state !== "running") return Promise.resolve("needs-gesture");
+    this.introductionId ??= entryId || crypto.randomUUID();
+    this.introducing = (async () => {
+      try {
+        await this.connect();
+        if (this.disposed || !this.authenticated || this.socket?.readyState !== WebSocket.OPEN) return "unavailable";
+        if (this.userTurnStarted) return "conversation-active";
+        const id = this.introductionId!;
+        return await new Promise<CfoIntroductionResult>(resolve => {
+          const timer = setTimeout(() => {
+            this.pendingIntroduction = null;
+            resolve("unavailable");
+          }, 20000);
+          this.pendingIntroduction = { id, resolve, timer };
+          this.send({ type: "agent.introduce", id });
+        });
+      } catch { return "unavailable"; }
+      finally { this.introducing = null; }
+    })();
+    return this.introducing;
+  }
+
   async sendText(text: string): Promise<boolean> {
     const value = text.trim();
     if (!value || this.disposed) return false;
     if (value.length > 16000) { this.callbacks.onError("Keep your message under 16,000 characters."); return false; }
+    this.userTurnStarted = true;
     // This begins in the submit gesture, before any connection awaits.
     void this.primePlayback();
     try {
@@ -459,6 +515,7 @@ export class OnboardingVoiceClient {
     this.stopCapture();
     this.voiceReady = false;
     if (!stream) { this.send({ type: "voice.stop" }); return; }
+    this.userTurnStarted = true;
     try {
       await this.connect();
       if (this.disposed || this.microphone !== stream) return;
@@ -565,6 +622,11 @@ export class OnboardingVoiceClient {
     if (this.suppressAudioUntilInterrupt && (event.type === "audio" || event.type === "audio.done")) return;
     this.protocol = reduceVoiceEvent(this.protocol, event);
     this.callbacks.onEvent?.(event);
+    if (event.type === "agent.introduction" && event.id === this.pendingIntroduction?.id
+      && (event.status === "started" || event.status === "already-introduced" || event.status === "conversation-active")) {
+      this.introductionResult = event.status;
+      this.finishIntroduction(event.status);
+    }
     if (event.type === "transcript" && event.role === "user" && typeof event.id === "string" && this.protocol.seen.has(event.id)) {
       const pending = this.pendingText.get(event.id);
       if (pending) {
@@ -606,11 +668,19 @@ export class OnboardingVoiceClient {
   }
 
   private finishPendingText(acknowledged: boolean) {
+    this.finishIntroduction("unavailable");
     for (const pending of this.pendingText.values()) {
       clearTimeout(pending.timer);
       pending.resolve(acknowledged);
     }
     this.pendingText.clear();
+  }
+
+  private finishIntroduction(result: CfoIntroductionResult) {
+    if (!this.pendingIntroduction) return;
+    clearTimeout(this.pendingIntroduction.timer);
+    this.pendingIntroduction.resolve(result);
+    this.pendingIntroduction = null;
   }
 
   /** Suspend a hidden interface without forgetting the saved conversation. */
@@ -652,6 +722,7 @@ export class OnboardingVoiceClient {
     if (this.context) {
       this.context.onstatechange = null;
       void this.context.close().catch(() => {});
+      if (worldPlaybackContext === this.context) worldPlaybackContext = null;
     }
     this.context = null;
   }

@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import { PCMResampler } from "../../public/audio/onboarding-pcm-worklet.js";
-import { canCompleteVoice, createVoiceProtocol, decodePCM16, OnboardingVoiceClient, reduceVoiceEvent, voicePresentation } from "./voice-client";
+import { canCompleteVoice, createVoiceProtocol, decodePCM16, OnboardingVoiceClient, primeWorldVoicePlayback, reduceVoiceEvent, voicePresentation } from "./voice-client";
 
 test("reconnect restores history, deduplicates IDs, and displays only the current turn", () => {
   let state = reduceVoiceEvent(createVoiceProtocol(), {
@@ -455,4 +455,93 @@ test("an error before session authentication settles immediately without retryin
     assert.deepEqual(h.delays(), []);
     assert.equal(h.sockets[0].readyState, 3);
   });
+});
+
+test("world introduction waits for output unlock, uses provider audio, and never starts a user turn or microphone", async () => {
+  const keys = ["fetch", "sessionStorage", "location", "WebSocket", "AudioContext", "navigator"];
+  const originals = new Map(keys.map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  const sockets: Socket[] = [];
+  const sources: { stopped: boolean; onended: (() => void) | null }[] = [];
+  const streams: (MediaStream | null)[] = [];
+  const presentations: { transcript?: string; orbState?: string }[] = [];
+  const storage = new Map<string, string>();
+  const playbackStream = {} as MediaStream;
+  let outputAllowed = false;
+  let contextCount = 0;
+  class Socket {
+    static OPEN = 1;
+    readyState = 0;
+    sent: Record<string, unknown>[] = [];
+    onopen: (() => void) | null = null;
+    onmessage: ((message: { data: string }) => void) | null = null;
+    onclose: (() => void) | null = null;
+    constructor() { sockets.push(this); queueMicrotask(() => { this.readyState = 1; this.onopen?.(); }); }
+    send(raw: string) {
+      const message = JSON.parse(raw); this.sent.push(message);
+      if (message.token) queueMicrotask(() => this.emit({ type: "session", session: { transcript: [], readiness: { status: "not_applicable" } } }));
+      if (message.type === "agent.introduce") queueMicrotask(() => this.emit({ type: "agent.introduction", id: message.id, status: "started" }));
+    }
+    emit(event: Record<string, unknown>) { this.onmessage?.({ data: JSON.stringify(event) }); }
+    close() { this.readyState = 3; }
+  }
+  class OutputContext {
+    state = "suspended";
+    currentTime = 0;
+    destination = {};
+    onstatechange: (() => void) | null = null;
+    constructor() { contextCount++; }
+    async resume() { if (outputAllowed) this.state = "running"; }
+    async close() { this.state = "closed"; }
+    createMediaStreamSource() { assert.fail("Greeting must not capture microphone input"); }
+    createMediaStreamDestination() { return { context: this, stream: playbackStream }; }
+    createBuffer(_channels: number, count: number, rate: number) { return { duration: count / rate, copyToChannel() {} }; }
+    createBufferSource() {
+      const source = { stopped: false, onended: null as (() => void) | null, buffer: null as unknown, connect() {}, disconnect() {}, start() {}, stop() { this.stopped = true; } };
+      sources.push(source); return source;
+    }
+  }
+  const callbacks = { onConnection() {}, onPresentation: (value: { transcript?: string; orbState?: string }) => presentations.push(value), onError() {}, onComplete() { assert.fail("CFO greeting cannot complete onboarding"); }, onPlaybackStream: (stream: MediaStream | null) => streams.push(stream) };
+  const client = new OnboardingVoiceClient(callbacks, "world");
+  try {
+    const globals = {
+      navigator: { onLine: true, mediaDevices: { getUserMedia() { assert.fail("Greeting must not request microphone permission"); } } },
+      location: { href: "http://localhost:3888/projects", protocol: "http:" },
+      sessionStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) },
+      WebSocket: Socket,
+      AudioContext: OutputContext,
+      fetch: async () => new Response(JSON.stringify({ session: { id: "world-session" }, token: "test-capability" })),
+    };
+    for (const [key, value] of Object.entries(globals)) Object.defineProperty(globalThis, key, { configurable: true, value });
+    assert.equal(await client.introduceWorldCfo("entry-1"), "needs-gesture");
+    assert.equal(contextCount, 0);
+    assert.equal(sockets.length, 0);
+    assert.equal(await primeWorldVoicePlayback(), false);
+    assert.equal(await client.introduceWorldCfo("entry-1"), "needs-gesture");
+    outputAllowed = true;
+    assert.equal(await primeWorldVoicePlayback(), true);
+    const first = client.introduceWorldCfo("entry-1");
+    assert.equal(client.introduceWorldCfo("entry-1"), first);
+    assert.equal(await first, "started");
+    assert.equal(contextCount, 1);
+    assert.deepEqual(sockets[0].sent, [{ token: "test-capability" }, { type: "agent.introduce", id: "entry-1" }]);
+    assert.equal(sources.length, 0);
+    sockets[0].emit({ type: "transcript", id: "greeting", sequence: 1, role: "assistant", text: "I'm your CFO.", generation: 0 });
+    assert.equal(presentations.at(-1)?.transcript, "I'm your CFO.");
+    sockets[0].emit({ type: "audio", sample_rate: 24000, pcm: "AAAAAA==", generation: 0 });
+    assert.equal(sources.length, 1);
+    assert.equal(streams.at(-1), playbackStream);
+    assert.equal(presentations.at(-1)?.orbState, "weaving");
+    sources[0].onended?.();
+    assert.equal(streams.at(-1), null);
+    client.disconnect();
+    assert.equal(await client.introduceWorldCfo("entry-1"), "started");
+    assert.equal(sockets.length, 1);
+    assert.ok(sockets[0].sent.every(message => message.token || message.type === "agent.introduce" || message.type === "voice.stop"));
+  } finally {
+    client.dispose();
+    for (const [key, descriptor] of originals) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+      else Reflect.deleteProperty(globalThis, key);
+    }
+  }
 });

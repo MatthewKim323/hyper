@@ -8,10 +8,13 @@ import { usePathname } from "next/navigation";
 import { getAudioContext } from "voice-glow";
 import ArtifactCard from "./ArtifactCard";
 import WorldVoiceBox from "./WorldVoiceBox";
+import CfoPanel from "./CfoPanel";
+import { useAuth } from "@/components/workspace/useBackend";
 import { readArtifactCard, type ArtifactCardModel } from "@/lib/command/artifact";
 import { PointerContext } from "@/lib/command/pointer-context";
-import { OnboardingVoiceClient, type VoiceConnection } from "@/lib/onboarding/voice-client";
+import { OnboardingVoiceClient, primeWorldVoicePlayback, type VoiceConnection } from "@/lib/onboarding/voice-client";
 import { bindWorldVoice, type WorldVoiceBinding } from "@/lib/command/world-voice";
+import { createDialogue, reduceDialogueEvent } from "@/lib/onboarding/dialogue";
 
 const SECTIONS = new Set(["overview", "cases", "evidence", "activity", "review", "timeline", "benchmarks"]);
 const CHART_TOOLS = new Set(["compose_financial_artifact", "get_financial_artifact"]);
@@ -21,19 +24,38 @@ const POINTER_EVERY_MS = 450;
 
 const subscribeOnboarding = (update: () => void) => {
   const observer = new MutationObserver(update);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-onboarding"] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-onboarding", "data-handoff", "data-atrium-ready"] });
+  observer.observe(document.body, { attributes: true, attributeFilter: ["data-workspace-ready"] });
   return () => observer.disconnect();
 };
-const onboardingDone = () => document.documentElement.dataset.onboarding === "complete";
+const onboardingDone = () => document.documentElement.dataset.onboarding === "complete"
+  && document.documentElement.dataset.atriumReady === "true"
+  && document.body.dataset.workspaceReady === "true"
+  && !["covering", "revealing"].includes(document.documentElement.dataset.handoff ?? "");
 
 export default function CommandLayer() {
   const pathname = usePathname();
+  const auth = useAuth();
   const ready = useSyncExternalStore(subscribeOnboarding, onboardingDone, () => false);
-  return pathname === "/projects" && ready ? <CommandSession /> : null;
+  useEffect(() => {
+    // Entry gestures unlock output only. No microphone or provider request starts here.
+    const prime = (event: MouseEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('.js-view-projects-btn a[href="/projects"], .hyper-onboarding__skip, .hyper-onboarding__orb, .hyper-onboarding__composer button[type="submit"]')) return;
+      void primeWorldVoicePlayback().catch(() => {});
+    };
+    document.addEventListener("click", prime, true);
+    return () => document.removeEventListener("click", prime, true);
+  }, []);
+  return pathname === "/projects" && ready ? <CommandSession key={auth.scope || "signed-out"} allowGreeting={auth.ready && auth.signedIn} /> : null;
 }
 
-function CommandSession() {
+function CommandSession({ allowGreeting }: { allowGreeting: boolean }) {
   const [agentOpen, setAgentOpen] = useState(false);
+  const [cfoOpen, setCfoOpen] = useState(false);
+  const [cfoInstant, setCfoInstant] = useState(false);
+  const [needsIntroduction, setNeedsIntroduction] = useState(false);
+  const [entryId] = useState(() => crypto.randomUUID());
+  const introduction = useRef({ pending: false, done: false });
   const [connection, setConnection] = useState<VoiceConnection>("idle");
   const [listening, setListening] = useState(false);
   const [requesting, setRequesting] = useState(false);
@@ -42,7 +64,7 @@ function CommandSession() {
   const [sending, setSending] = useState(false);
   const pendingSend = useRef(false);
   const [status, setStatus] = useState("");
-  const [transcript, setTranscript] = useState("");
+  const [dialogue, setDialogue] = useState(() => createDialogue());
   const [error, setError] = useState("");
   const [cards, setCards] = useState<ArtifactCardModel[]>([]);
   const client = useRef<OnboardingVoiceClient | null>(null);
@@ -83,7 +105,7 @@ function CommandSession() {
       onPlaybackStream: (stream) => visual.publish({ playbackStream: stream }),
       onComplete: () => {},
       onEvent: (event) => {
-        if (event.type === "transcript" && typeof event.text === "string") setTranscript(event.text);
+        setDialogue(previous => reduceDialogueEvent(previous, event));
         if (event.type !== "tool.result" || typeof event.name !== "string") return;
         const result = event.result;
         if (event.name === "navigate_section" && result && typeof result === "object" && "section" in result && SECTIONS.has(String(result.section)))
@@ -96,7 +118,7 @@ function CommandSession() {
       },
     }, "world");
     client.current = session;
-    // An orb, microphone or text gesture starts the session. Mounting stays quiet.
+    // World entry may speak an introduction; capture still needs a microphone gesture.
     return () => {
       // Invalidate any permission prompt that resolves after this session leaves.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,6 +134,42 @@ function CommandSession() {
       pointer.current = null;
     };
   }, []);
+
+  const introduce = useCallback(async () => {
+    const session = client.current;
+    if (!allowGreeting || !session || introduction.current.pending || introduction.current.done) return;
+    introduction.current.pending = true;
+    try {
+      const result = await session.introduceWorldCfo(entryId);
+      if (client.current !== session) return;
+      const done = ["started", "already-introduced", "conversation-active"].includes(result);
+      introduction.current.done = done;
+      setNeedsIntroduction(!done);
+    } catch {
+      if (client.current === session) setNeedsIntroduction(true);
+    } finally { introduction.current.pending = false; }
+  }, [allowGreeting, entryId]);
+
+  useEffect(() => {
+    void introduce();
+    const visible = () => { if (!document.hidden) void introduce(); };
+    document.addEventListener("visibilitychange", visible);
+    return () => document.removeEventListener("visibilitychange", visible);
+  }, [introduce]);
+
+  const hearIntroduction = useCallback(() => {
+    void primeWorldVoicePlayback().then(() => introduce()).catch(() => {});
+  }, [introduce]);
+
+  useEffect(() => {
+    const open = (event: Event) => {
+      setCfoInstant(!!(event as CustomEvent<{ keyboard?: boolean }>).detail?.keyboard);
+      setCfoOpen(value => !value);
+      hearIntroduction();
+    };
+    window.addEventListener("hyper:cfo-toggle", open);
+    return () => window.removeEventListener("hyper:cfo-toggle", open);
+  }, [hearIntroduction]);
 
   useEffect(() => {
     if (!microphoneStream) return;
@@ -172,7 +230,6 @@ function CommandSession() {
     void voiceVisual.current?.resumeAudio();
     voiceVisual.current?.publish({ error: null });
     setError("");
-    setTranscript(text);
     try {
       await session.connect();
       if (client.current !== session) return;
@@ -255,29 +312,28 @@ function CommandSession() {
     voiceVisual.current?.publish({ connection: "disconnected", error: null, microphoneStream: null, playbackStream: null, presentation: { orbState: "composing" } });
     setListening(false);
     setError("");
-    setTranscript("");
     setAgentOpen(false);
-    document.querySelector<HTMLButtonElement>('button[aria-label="Talk to Hyper"]')?.focus({ preventScroll: true });
+    document.querySelector<HTMLButtonElement>("[data-cfo-trigger]")?.focus({ preventScroll: true });
   }, []);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.key === "Escape" && cfoOpen) return;
       if (event.key === "Escape" && agentOpen) { event.preventDefault(); closeAgent(); return; }
       if (event.key.toLowerCase() !== "v" || event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
       if ((event.target as HTMLElement | null)?.closest("input, textarea, select, [contenteditable]")) return;
       void toggle();
     };
     window.addEventListener("keydown", onKey);
-    const onOrb = () => { void toggle(); };
-    window.addEventListener("hyper:agent-toggle", onOrb);
     return () => {
       window.removeEventListener("keydown", onKey);
-      window.removeEventListener("hyper:agent-toggle", onOrb);
     };
-  }, [agentOpen, closeAgent, toggle]);
+  }, [agentOpen, cfoOpen, closeAgent, toggle]);
 
   return (
     <div className="cmd" data-agent-open="true" data-listening={listening} data-connection={connection}>
+      <CfoPanel open={cfoOpen} instant={cfoInstant} onOpenChange={setCfoOpen} needsIntroduction={needsIntroduction} onIntroduce={hearIntroduction} />
       <div className="cmd-cards" aria-live="polite">
         {cards.map((card) => <ArtifactCard key={card.id} card={card} onDismiss={() => setCards((previous) => previous.filter((c) => c.id !== card.id))} />)}
       </div>
@@ -287,7 +343,8 @@ function CommandSession() {
         requesting={requesting}
         processing={processing}
         sending={sending}
-        transcript={transcript}
+        transcript=""
+        dialogue={dialogue}
         status={requesting && !microphoneStream ? "Waiting for microphone permission..." : status}
         error={error}
         draft={draft}

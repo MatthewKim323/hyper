@@ -34,3 +34,13 @@ The current bundled snapshot has no recorded runs. Source definitions and test c
 Use **Export** to download the timeline JSON. Attach real recording data using the [timeline schema](lib/timeline/README.md), then **Import** it. Imports append immutable snapshots, scenario definitions, and recordings, reject conflicts, and persist in this browser. They do not execute agent code, switch a running backend, retrain models, or alter financial records.
 
 Run data and repository-discovery checks with `bun test lib/timeline/`.
+
+## CFO and conversation
+
+The center orb is the CFO. After the world arrives, it introduces itself through the existing Deepgram voice connection. Entering the world unlocks output audio without requesting a microphone. If the browser blocks playback, clicking the orb or **Hear from your CFO** starts the introduction. Reconnects do not repeat an introduction for the same world entry.
+
+Click the orb to open transparent activity panels: one small card per agent on the left and a compact CFO journal on the right, keeping the orb visible between them. This reads the authenticated `/agents/swarm` snapshot and SSE stream, showing actual delegated tasks, workflow events, and available Devin session messages. Selecting an agent filters the journal; task locations link to the corresponding configured relic. No sessions or unavailable provider messages remain explicit empty states. Devin's public message feed does not expose raw terminal/tool traces. The panel handles token refresh, access removal, reconnects, and bounded history without starting agent work.
+
+The bottom composer accepts text or microphone input. Onboarding and the world share conversation captions: agent turns are charcoal, user turns muted blue, and new turns push older dialogue upward through a fade. Partial speech updates its existing caption; server IDs prevent duplicate turns when history reconnects. Reduced motion disables the positional animation.
+
+Development-only previews: `/dev/cfo` shows the real read-only activity panel in the atrium; `/dev/dialogue` exercises the caption stack with explicitly labeled sample conversation. Neither preview starts voice capture or provider work.
