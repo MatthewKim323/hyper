@@ -6,6 +6,14 @@ description: "Vercel for the frontend, Railway for the API, workers and evaluato
 Two platforms. Vercel serves `web/studio`; Railway runs everything Python or Node that
 needs a long-lived process. The hand tracker needs no host at all.
 
+## Live
+
+| Service | URL |
+| --- | --- |
+| Frontend | `https://hyper.stephenhung.me` |
+| API | `https://api-production-0bd10.up.railway.app` |
+| Railway project | `hyper` (6 services) |
+
 ## Topology
 
 | Service | Platform | What it is |
@@ -56,13 +64,20 @@ domain and never connects. Onboarding then reports that the service is unavailab
 ## Backend
 
 ```sh
-railway init
-railway add --database postgres
-railway up
+railway init --name hyper
+railway add -d postgres
+railway add -s api
+railway up --service api --ci
 ```
 
-`railway.toml` points the default service at `backend/Dockerfile` with `/health` as its
-healthcheck. Add each worker as another service from the same image, setting only
+<Warning>
+`railway up` does **not** read the repository's `railway.toml` for a service created this
+way: it runs railpack auto-detect, which scans the repo root, finds no single app and
+fails. Set the builder on the service itself — the Dockerfile path, healthcheck and
+restart policy — through the dashboard or the Railway MCP, then deploy.
+</Warning>
+
+The API service uses `backend/Dockerfile` with `/health` as its healthcheck. Add each worker as another service from the same image, setting only
 `START_MODULE`; a crashed worker then cannot take the API down.
 
 Environment variables on the API service:

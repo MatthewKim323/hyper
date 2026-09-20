@@ -20,3 +20,4 @@ assets/blender/hyper-atrium/review.png
 .dev/
 .next-dev-backend/
 public/mediapipe/
+.vercel
