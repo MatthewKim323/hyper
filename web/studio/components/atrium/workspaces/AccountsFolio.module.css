@@ -1,9 +1,9 @@
 .root,
 .empty {
-  --folio-ink: #352d29;
-  --folio-muted: #70645e;
-  --folio-line: rgb(70 45 35 / 20%);
-  --folio-font: "Neue Montreal", Arial, sans-serif;
+  --folio-ink: var(--ink);
+  --folio-muted: var(--muted);
+  --folio-line: var(--line);
+  --folio-font: var(--font);
   color: var(--folio-ink);
   font-size: 14px;
   line-height: 1.65;

@@ -64,7 +64,7 @@ export default function RelicExperience({ station, register, onMotion, onClose, 
 
   const section = shown?.section;
   if (!shown || !isRelicExperience(section)) return null;
-  return <section ref={root} className={styles.experience} data-kind={section} data-layout={RELIC_EXPERIENCES[section].layout} data-fallback={fallback || undefined} data-closing={!active || undefined}
+  return <section ref={root} className={`${styles.experience} relic-scope`} data-kind={section} data-layout={RELIC_EXPERIENCES[section].layout} data-fallback={fallback || undefined} data-closing={!active || undefined}
     aria-label={`${shown.label} workspace`} inert={!active} aria-hidden={!active || undefined}
     style={fallback ? { opacity: 1, visibility: "visible", pointerEvents: active ? "auto" : "none" } : undefined}
     onPointerDown={event => event.stopPropagation()} onWheel={event => event.stopPropagation()}

@@ -12,6 +12,7 @@ import "./styles/command.css";
 import "./styles/benchmarks-tw.css";
 import "./styles/benchmarks.css";
 import "./styles/workspace.css";
+import "./styles/relic.css";
 import Shell, { ShellPost } from "@/components/Shell";
 import EngineRoot from "@/components/EngineRoot";
 import WorkspaceSections from "@/components/workspace/WorkspaceSections";

@@ -7,14 +7,14 @@
   color: #352d29; visibility: hidden; opacity: 0; pointer-events: none; user-select: text;
 }
 .experience[data-layout=side] { left: 54vw; top: 16dvh; width: min(40vw, 560px); height: min(72dvh, calc(84dvh - var(--cmd-clear, 104px))); }
-.experience[data-layout=landscape] { width: min(1040px, 88vw); left: max(6vw, calc((100vw - 1040px) / 2)); top: 40dvh; height: min(53dvh, calc(60dvh - var(--cmd-clear, 104px))); }
+.experience[data-layout=landscape] { width: min(1040px, 88vw); left: max(6vw, calc((100vw - 1040px) / 2)); top: 30dvh; height: min(66dvh, calc(72dvh - var(--cmd-clear, 104px))); }
 .heading { display: flex; flex: none; align-items: start; justify-content: space-between; gap: 24px; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid #e2d8d0; }
 .heading h2 { color: #352d29; font: 400 clamp(24px, 2.5vw, 36px)/1.15 Arial, sans-serif; letter-spacing: -.045em; margin: 0; outline: none; }
 .heading button { flex: none; padding: 8px 0 8px 12px; border: 0; background: none; color: #57453a; font: 12px/1.5 Arial, sans-serif; cursor: pointer; }
 .heading button > span { display: inline-block; color: #8a7465; margin: 0 5px; }
 .heading button:hover { color: #201813; }
 .heading button:focus-visible { outline: 1px solid #756356; outline-offset: 5px; }
-.content { min-height: 0; flex: 1; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #b8a69a transparent; padding: 0 9px 24px 0; opacity: var(--reveal); transform: translateY(var(--reveal-y)); mask-image: linear-gradient(#000 calc(100% - 14px), transparent); }
+.content { min-height: 0; flex: 1; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #b8a69a transparent; padding: 0 0 24px; scrollbar-gutter: stable; opacity: var(--reveal); transform: translateY(var(--reveal-y)); mask-image: linear-gradient(#000 calc(100% - 14px), transparent); }
 .footer { display: flex; flex: none; justify-content: flex-end; padding-top: 9px; font: 10px/1.5 Arial, sans-serif; color: #78695f; }
 .experience[data-closing] { pointer-events: none !important; }
 .experience[data-closing] .content, .experience[data-closing] .heading, .experience[data-closing] .footer { opacity: 0; transition: opacity 150ms ease-out; }

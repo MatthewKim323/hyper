@@ -1,8 +1,4 @@
 .timeline {
-  --ink: #352d29;
-  --muted: #584a43;
-  --line: rgb(70 45 35 / 18%);
-  --font: "Neue Montreal", Arial, sans-serif;
   width: 100%;
   min-width: 0;
   color: var(--ink);

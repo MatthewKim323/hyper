@@ -1,0 +1,195 @@
+/* Relic panel design tokens.
+ *
+ * Every workspace that opens beside a relic used to declare its own ink, muted, line and spacing,
+ * copied between modules and then nudged: three values for --muted, two for --line, 31 distinct
+ * spacing numbers in one file. Nothing snapped to a grid, so nothing grouped visually.
+ *
+ * These are defined on the panel itself, so a module can drop its private copy and inherit. A
+ * section that still needs a one-off overrides a token rather than hard-coding a pixel value.
+ */
+.relic-scope {
+  --ink: #352d29;
+  --muted: #6b5f59;
+  --line: rgb(70 45 35 / 18%);
+  --line-strong: rgb(70 45 35 / 30%);
+  --paper: #faf6f2;
+  --raised: rgb(255 255 255 / 62%);
+  --accent: #795148;
+  --font: "Neue Montreal", Arial, sans-serif;
+
+  /* Spacing: a 4px grid. Everything picks from these seven, nothing in between. */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+
+  /* Type: five steps. The old scale jumped 15px -> 24px with nothing between, so every card was
+     either small print or a headline. --t4 is that missing middle. */
+  --t1: 11px;  /* meta: timestamps, units */
+  --t2: 12px;  /* labels and eyebrows */
+  --t3: 14px;  /* body */
+  --t4: 17px;  /* card title */
+  --t5: 24px;  /* section title, the largest thing inside a panel */
+}
+
+/* One label treatment. The same role was rendering anywhere from 12px to 42px depending on which
+   section you opened: h3, h4, span.label and span.ws-eyebrow all meant "name of a sub-area". */
+.relic-scope .relic-label,
+.relic-scope :is(.ws-eyebrow, .relic-section > h3, .relic-section > h4) {
+  display: block;
+  margin: 0 0 var(--s3);
+  color: var(--muted);
+  font: 400 var(--t2) / 1.5 var(--font);
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+/* A real container, so a group of values reads as one object instead of text between hairlines.
+   The panel is paper, so a card is a slightly raised sheet on it — not another bordered box. */
+.relic-scope .relic-card {
+  padding: var(--s4);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--raised);
+}
+.relic-scope .relic-card + .relic-card { margin-top: var(--s3); }
+.relic-scope .relic-card > h3,
+.relic-scope .relic-card > h4 {
+  margin: 0 0 var(--s2);
+  color: var(--ink);
+  font: 400 var(--t4) / 1.3 var(--font);
+  letter-spacing: -0.01em;
+}
+.relic-scope .relic-card p { margin: 0 0 var(--s2); font-size: var(--t3); }
+.relic-scope .relic-card > :last-child { margin-bottom: 0; }
+
+/* Sections stack on one rhythm. The first one sits flush: the shell already drew a rule under the
+   panel heading, and a second divider immediately below it reads as a mistake. */
+.relic-scope .relic-section {
+  margin-top: var(--s5);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--line);
+}
+.relic-scope .relic-section:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* Rows: one divider weight, one padding. */
+.relic-scope .relic-rows { margin: 0; padding: 0; list-style: none; }
+.relic-scope .relic-rows > li { padding: var(--s3) 0; border-top: 1px solid var(--line); }
+.relic-scope .relic-rows > li:first-child { border-top: 0; padding-top: 0; }
+
+/* Dense numeric columns. Tabular figures so digits line up down the column. */
+.relic-scope .relic-kv {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s2) var(--s4);
+  align-items: baseline;
+  font-size: var(--t3);
+  font-variant-numeric: tabular-nums;
+}
+.relic-scope .relic-kv dt { color: var(--muted); margin: 0; }
+.relic-scope .relic-kv dd { margin: 0; text-align: right; }
+
+.relic-scope :is(small, time) { color: var(--muted); font-size: var(--t1); line-height: 1.6; }
+
+/* Reconcile the shared ws-* system inside a relic panel.
+ *
+ * These rules used to live in RelicDataWorkspace.module.css scoped to .surface, so only `evidence`
+ * and `review` got them. `cases` imports the same accounting components with no overrides at all,
+ * and `timeline` wrapped LearnedSkills in "workspace-embedded" — a class defined in no stylesheet.
+ * Both rendered raw workspace.css (rem scale, pill buttons, #cfc6bf borders) directly beside a
+ * module using the px scale, which is the visible seam down the middle of those two panels.
+ *
+ * Scoped to the panel instead, so every section is reconciled by default and the full-page
+ * workspace (Activity) keeps its own look.
+ */
+.relic-scope :is(.ws-section, .workspace-embedded > .ws-section) {
+  margin-top: var(--s5);
+  padding: var(--s5) 0 0;
+  border-top: 1px solid var(--line);
+}
+.relic-scope :is(.ws-section, .relic-section):first-child,
+.relic-scope .surface > :first-child > .ws-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.relic-scope .ws-grid { display: block; }
+.relic-scope .ws-stack { gap: var(--s5); }
+.relic-scope .ws-rows { margin: var(--s3) 0 0; }
+.relic-scope .ws-rows li { padding: var(--s3) 0; border-color: var(--line); }
+.relic-scope .ws-rows li > div { align-items: start; flex-wrap: wrap; gap: var(--s1) var(--s4); }
+.relic-scope .ws-rows small { font: var(--t2) / 1.6 var(--font); }
+.relic-scope .ws-rows p { font-size: var(--t3); line-height: 1.7; }
+
+/* A card is a card everywhere. It was stripped to a bare top border here, which is what left the
+   panels reading as text between hairlines with nothing grouping a record together. */
+.relic-scope .ws-card {
+  padding: var(--s4);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--raised);
+  box-shadow: none;
+}
+.relic-scope .ws-card + .ws-card { margin-top: var(--s3); }
+.relic-scope .ws-card h3 {
+  margin: 0 0 var(--s2);
+  font: 400 var(--t4) / 1.3 var(--font);
+  letter-spacing: -0.01em;
+}
+.relic-scope .ws-card header,
+.relic-scope .ws-card footer { color: var(--muted); align-items: baseline; }
+.relic-scope .ws-card footer {
+  margin-top: var(--s3);
+  padding-top: var(--s3);
+  border-color: var(--line);
+  font: var(--t2) / 1.6 var(--font);
+}
+
+/* Controls: one flat treatment. Pill buttons survived only where an override was missing, so the
+   same button was a filled pill in `cases` and a plain link in `review`. */
+.relic-scope :is(.ws-inline, .ws-actions) input,
+.relic-scope :is(.ws-inline, .ws-actions) button {
+  min-height: 38px;
+  padding: var(--s2) 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--t3);
+  box-shadow: none;
+}
+.relic-scope .ws-inline {
+  align-items: baseline;
+  gap: var(--s4);
+  padding-bottom: var(--s2);
+  border-bottom: 1px solid var(--line);
+}
+.relic-scope .ws-empty {
+  padding: var(--s5) 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--muted);
+  background: transparent;
+}
+.relic-scope .ws-warning {
+  margin: var(--s4) 0;
+  padding: 0 0 0 var(--s3);
+  border: 0;
+  border-left: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  font-size: var(--t3);
+  line-height: 1.7;
+}
+
+/* LearnedSkills is a full-page workspace component embedded in the timeline panel. It carried a
+   "workspace-embedded" class that no stylesheet defined, so it rendered at page scale inside a
+   panel. Give the hook a meaning rather than leaving a dead class in the markup. */
+.relic-scope .workspace-embedded > .ws-section:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.relic-scope .workspace-embedded :is(h2, h3) { font: 400 var(--t4) / 1.3 var(--font); letter-spacing: -0.01em; }
+.relic-scope .workspace-embedded .ws-skill-md,
+.relic-scope .workspace-embedded .ws-skill-file { max-height: 14rem; }
