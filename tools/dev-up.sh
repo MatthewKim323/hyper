@@ -28,4 +28,8 @@ start api 8000 uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
 start ingestion-worker "" uv run python -m app.ingestion_worker
 start artifact-worker "" uv run python -m app.artifact_worker
 start simulator-worker "" uv run python -m app.simulator_worker
+start connector-worker "" uv run python -m app.connectors.worker
+start counterparty-worker "" uv run python -m app.counterparty_worker
+# The unattended AP worker. It spends model tokens whenever the sandbox has open exceptions.
+start auto-agent "" uv run python -m app.auto_agent
 echo "frontend: cd web/studio && bun run dev   (http://localhost:3888)"

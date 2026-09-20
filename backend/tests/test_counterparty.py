@@ -135,3 +135,27 @@ def test_adversary_spawns_on_schedule_and_raises_difficulty(world):
     assert len(svc.list()['scenarios']) == 1                                # interval respected
     rows = [{'outcome': 'pass'}] * 3
     assert Counterparties.level(rows) == 2 and Counterparties.level(rows + [{'outcome': 'fail'}]) == 1
+
+
+def test_worker_sessions_resume_on_replies_and_learn_after_grading(world):
+    """A scripted model stands in for the provider: the loop, resumption and lesson plumbing are what is under test."""
+    from app import auto_agent
+    store, oid, factory, svc = world
+    inv = svc.spawn('price_only', 'owner', seed=5)['invoice_id']
+    script = iter([
+        [('open_payable_case', {'invoice_id': inv})],
+        [('request_supplier_document', {'invoice_id': inv, 'request': 'price_correction', 'message': 'Price exceeds agreement, please correct.', 'request_key': 'k1'})],
+        'STATUS: WAITING asked the supplier for a price credit',
+    ])
+    def llm(payload):
+        step = next(script)
+        if isinstance(step, str): return {'choices': [{'message': {'role': 'assistant', 'content': step}}]}
+        return {'choices': [{'message': {'role': 'assistant', 'content': '', 'tool_calls': [
+            {'id': f'c{i}', 'type': 'function', 'function': {'name': n, 'arguments': json.dumps(a)}} for i, (n, a) in enumerate(step)]}}]}
+    assert auto_agent.run_once(store, factory, llm) == 1
+    agent = svc.list()['scenarios'][0]['agent']
+    assert agent['status'] == 'WAITING' and [t.get('tool') for t in agent['trace'][:2]] == ['open_payable_case', 'request_supplier_document']
+    assert auto_agent.run_once(store, factory, llm) == 0                 # nothing new arrived, so no second session and no model call
+    flush(store, factory)
+    script = iter(['STATUS: HOLD nothing further'])
+    assert auto_agent.run_once(store, factory, llm) == 1                 # the reply woke it up
