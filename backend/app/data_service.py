@@ -39,10 +39,17 @@ class FinancialQuery(StrictModel):
             raise ValueError('group_by requires an aggregate')
         return self
 
+# A simulated counterparty's reply is real evidence about its own case and nothing at all about the company's books.
+SANDBOX_PREFIX='counterparty/'
+
+def origin_of(source_key):
+    return 'sandbox' if str(source_key).startswith(SANDBOX_PREFIX) else 'company'
+
 class EvidenceQuery(StrictModel):
     query: str = Field(min_length=1,max_length=2000)
     dataset: str | None = Field(default=None,pattern=NAME)
     documents_only: bool = False
+    origin: Literal['company','sandbox'] | None = None
     limit: int = Field(default=8,ge=1,le=20)
     @model_validator(mode='after')
     def one_scope(self):
@@ -237,6 +244,9 @@ class DataService:
             cond=[sources.c.organization_id==self.oid,sources.c.active.is_(True)]
             if args.dataset:cond.append(sources.c.dataset==args.dataset)
             if args.documents_only:cond.append(sources.c.dataset.is_(None))
+            if args.origin:
+                like=sources.c.source_key.like(SANDBOX_PREFIX+'%')
+                cond.append(like if args.origin=='sandbox' else ~like)
             # A source skipped on purpose is not evidence waiting to be indexed, so it does not make coverage incomplete.
             all_sources=db.execute(select(sources.c.id,sources.c.index_status).where(*cond,sources.c.index_status!='skipped')).mappings().all()
         ready=[s['id'] for s in all_sources if s['index_status']=='ready']
@@ -270,7 +280,7 @@ class DataService:
         # Superseded chunks were dropped above; over-fetching keeps the page full.
         result=result[:args.limit]
         mentioned=graph.chunk_entities([r['id'] for r in result])
-        result=[{**r,'entities':[e for e in mentioned[r['id']] if not e.startswith('identifier:')][:20]} for r in result]
+        result=[{**r,'origin':origin_of(r['source_key']),'entities':[e for e in mentioned[r['id']] if not e.startswith('identifier:')][:20]} for r in result]
         return {'mode':mode,'hits':result,'unindexed_sources':pending,'coverage_complete':pending==0,
             'query_entities':[{k:n[k] for k in ('id','type','label','recorded')} for n in graph.describe([n for n in named if not n.startswith('identifier:')])]}
 

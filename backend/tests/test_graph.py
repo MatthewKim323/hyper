@@ -19,8 +19,10 @@ class GraphSearch:
         for r in rows:self.docs[r['id']]=dict(r)
     def search(self,oid,ids,query,limit,entities=(),related=None):
         self.calls.append({'entities':list(entities),'related':dict(related or {})})
-        return [{'_source':{'chunk_id':k},'_score':1} for k,r in self.docs.items()
-                if r['organization_id']==oid and set(r['entity_ids'])&(set(entities)|set(related or {}))][:limit]
+        # Stands in for the boosts: a chunk naming an entity from the question outranks one merely related to it.
+        found=[(0 if set(r['entity_ids'])&set(entities) else 1,k) for k,r in self.docs.items()
+               if r['organization_id']==oid and r['source_id'] in ids and set(r['entity_ids'])&(set(entities)|set(related or {}))]
+        return [{'_source':{'chunk_id':k},'_score':1} for _,k in sorted(found,key=lambda x:x[0])][:limit]
 
 DATA={
     'vendors':[{'vendor_id':'VEN-001','name':'Northstar Cloud','contact':'ap@northstar.example','approved_recipient':'REMIT-1'},
@@ -183,3 +185,13 @@ def test_the_reranker_judges_text_and_the_graph_votes_after(monkeypatch):
     assert graph['standard']['query']['bool']['filter']==[{'term':{'organization_id':'org-1'}},{'terms':{'source_id':['s1']}}]
     es.search('org-1',['s1'],'granite',5)
     assert list(captured['retriever'])==['text_similarity_reranker']
+
+def test_company_and_sandbox_evidence_are_separable_but_neither_is_hidden(world):
+    store,svc,search,_,note=world
+    fake=svc.ingest('reply.txt',b'Supplier reply about VEN-002 for the disputed invoice.',source_key='counterparty/scn_1/SUPPLIER/0')
+    while run_once(store,search):pass
+    everything=svc.search_evidence(EvidenceQuery(query='VEN-002'))
+    assert {h['origin'] for h in everything['hits']}=={'company','sandbox'}
+    assert [h['id'] for h in svc.search_evidence(EvidenceQuery(query='VEN-002',origin='sandbox'))['hits']]==[fake['id']+':0']
+    books=svc.search_evidence(EvidenceQuery(query='VEN-002',origin='company'))
+    assert fake['id']+':0' not in [h['id'] for h in books['hits']] and books['coverage_complete'] is True
