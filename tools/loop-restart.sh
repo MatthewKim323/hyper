@@ -14,7 +14,7 @@ cd "$ROOT/backend"; mkdir -p var
 # (dotenv never overrides), and has billed the wrong account before.
 unset OPENAI_API_KEY AI_GATEWAY_API_KEY
 PAIRS="${LOOP_PAIRS:-hyper-lab:hyper-lab-control}"; WORKERS="${LOOP_WORKERS:-2}"; MODEL="${LOOP_MODEL:-gpt-5.6-terra}"
-for name in app.counterparty_worker "app.devin_exceptions\$" app.auto_agent app.spend_guard app.bench_timeline; do pkill -f "python -m $name" 2>/dev/null || true; done
+for name in app.counterparty_worker "app.devin_exceptions\$" app.auto_agent app.spend_guard app.bench_timeline app.learning_log; do pkill -f "python -m $name" 2>/dev/null || true; done
 sleep 1
 COUNTERPARTY_TIMEOUT_MS="${COUNTERPARTY_TIMEOUT_MS:-600000}" nohup uv run python -m app.counterparty_worker > var/counterparty-worker.log 2>&1 &
 DEVIN_EXCEPTION_TASKS=false DEVIN_CONTROL_PAIRS="$PAIRS" nohup uv run python -m app.devin_exceptions > var/devin-exceptions.log 2>&1 &
@@ -23,5 +23,8 @@ k=0; while [ $k -lt "$WORKERS" ]; do
   k=$((k+1)); done
 nohup uv run python -m app.spend_guard --cap "${SPEND_CAP:-4.5}" ${SPEND_GUARD_ORGS:-hyper-lab} > var/spend-guard.log 2>&1 &
 nohup uv run python -m app.bench_timeline hyper-lab demo-meridian --every 300 > var/bench-timeline.log 2>&1 &
+# Copies the worker's lessons and the with/without-memory score into backend/benchmarks/learning/ and commits
+# and pushes that, and only that, when there is something new: the agent's learning shows up in git history.
+nohup uv run python -m app.learning_log "${PAIRS%%:*}" --control "${PAIRS##*:}" --every "${LEARNING_LOG_EVERY:-1800}" > var/learning-log.log 2>&1 &
 sleep 4
-echo "sandbox, mirror, $WORKERS x $MODEL, spend guard and timeline restarted on $(git -C "$ROOT" rev-parse --short HEAD)"
+echo "sandbox, mirror, $WORKERS x $MODEL, spend guard, timeline and learning log restarted on $(git -C "$ROOT" rev-parse --short HEAD)"

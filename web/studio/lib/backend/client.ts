@@ -5,6 +5,7 @@
 // Nothing here is pushed from the server. Use `poll` for anything that changes.
 import { SKILL_ATTESTATION } from "./types";
 import type { LoopTimeline } from "@/lib/benchmarks/loop-timeline";
+import type { HandoffPacket } from "./handoff";
 import type {
   SkillDetail, SkillSummary,
   AccountingRecord, EngineCase, PayableProposal,
@@ -90,6 +91,10 @@ export const backend = {
   payableProposals: () => call<{ proposals: PayableProposal[] }>("/accounting/proposals"),
   decideProposal: (proposal_id: string, proposal_hash: string, decision: "APPROVED" | "REJECTED") =>
     post<{ status: string }>("/accounting/approvals", { proposal_id, proposal_hash, decision }),
+
+  // After AP: what an approved payable hands to payments, the ledger, close and forecasting.
+  handoff: (proposalId: string) => call<HandoffPacket>(`/accounting/proposals/${encodeURIComponent(proposalId)}/handoff`),
+  recognisePayable: (proposalId: string, proposal_hash: string) => post<{ committed: boolean; replayed: boolean; econ_id: string }>(`/accounting/proposals/${encodeURIComponent(proposalId)}/commit`, { proposal_hash }),
 
   // Learned skills. Activation and retirement are owner only; the attestation is the owner's own statement.
   skills: () => call<{ skills: SkillSummary[]; has_more: boolean }>(`/skills${query({ include_inactive: "true", limit: 30 })}`),

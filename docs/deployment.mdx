@@ -6,6 +6,14 @@ description: "Vercel for the frontend, Railway for the API, workers and evaluato
 Two platforms. Vercel serves `web/studio`; Railway runs everything Python or Node that
 needs a long-lived process. The hand tracker needs no host at all.
 
+## Live
+
+| Service | URL |
+| --- | --- |
+| Frontend | `https://hyper.stephenhung.me` |
+| API | `https://api-production-0bd10.up.railway.app` |
+| Railway project | `hyper` (6 services) |
+
 ## Topology
 
 | Service | Platform | What it is |
@@ -56,13 +64,20 @@ domain and never connects. Onboarding then reports that the service is unavailab
 ## Backend
 
 ```sh
-railway init
-railway add --database postgres
-railway up
+railway init --name hyper
+railway add -d postgres
+railway add -s api
+railway up --service api --ci
 ```
 
-`railway.toml` points the default service at `backend/Dockerfile` with `/health` as its
-healthcheck. Add each worker as another service from the same image, setting only
+<Warning>
+`railway up` does **not** read the repository's `railway.toml` for a service created this
+way: it runs railpack auto-detect, which scans the repo root, finds no single app and
+fails. Set the builder on the service itself — the Dockerfile path, healthcheck and
+restart policy — through the dashboard or the Railway MCP, then deploy.
+</Warning>
+
+The API service uses `backend/Dockerfile` with `/health` as its healthcheck. Add each worker as another service from the same image, setting only
 `START_MODULE`; a crashed worker then cannot take the API down.
 
 Environment variables on the API service:
@@ -105,6 +120,63 @@ vercel alias set <deployment-url> hyper.stephenhung.me
 
 Then add the same origin to the backend's `ALLOWED_ORIGINS` and `CLERK_AUTHORIZED_PARTIES`,
 and to the authorized origins in the Clerk dashboard.
+
+## Docs
+
+The docs are hosted by Mintlify and reverse-proxied at `/docs` by the Next rewrite in
+`web/studio/next.config.ts`.
+
+<Warning>
+Do **not** add Mintlify's CNAME for this domain. It sends every path to them, which would
+take the product offline. The apex already serves the app; only `/docs` is proxied.
+</Warning>
+
+Mintlify's domain validation needs two TXT records, which live on the Vercel-managed zone:
+
+```sh
+vercel dns add stephenhung.me _acme-challenge.hyper TXT "<acme token>"
+vercel dns add stephenhung.me _cf-custom-hostname.hyper TXT "<hostname id>"
+```
+
+The existing CAA on the apex already allows `pki.goog` and `letsencrypt.org`, which covers
+the issuers Mintlify's edge uses, so it needs no change. A zone with a stricter CAA would
+have to add one before a certificate could be issued.
+
+## Clerk production
+
+The app runs on a development Clerk instance. Those have strict usage limits and are
+permissive about origins, so a real deployment wants a production one.
+
+Creating it is interactive and cannot be scripted — the CLI says so itself:
+
+```sh
+clerk deploy          # interactive; needs a human terminal
+clerk deploy status   # read-only, safe to run anywhere
+```
+
+The DNS it needs is already in place, pre-created on the Vercel zone and resolving:
+
+| Record | Target |
+| --- | --- |
+| `clerk.hyper` | `frontend-api.clerk.services` |
+| `accounts.hyper` | `accounts.clerk.services` |
+| `clkmail.hyper` | `mail.<id>.clerk.services` |
+| `clk._domainkey.hyper` | `dkim1.<id>.clerk.services` |
+| `clk2._domainkey.hyper` | `dkim2.<id>.clerk.services` |
+
+After `clerk deploy` completes, the keys change and four places need the new values:
+
+| Where | Variable |
+| --- | --- |
+| Vercel | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (now `pk_live_`) |
+| Railway `api` | `CLERK_PUBLISHABLE_KEY`, `CLERK_ISSUER` (`https://clerk.hyper.stephenhung.me`) |
+| Railway workers | the same two |
+| Clerk | `allowed_origins`, via `clerk api -X PATCH /instance` |
+
+<Warning>
+Existing development users do not carry over, and the session you are testing with stops
+working. Do this when you can sign in again, not minutes before a demo.
+</Warning>
 
 ## Checks
 

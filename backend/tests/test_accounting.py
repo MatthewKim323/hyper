@@ -157,3 +157,61 @@ def test_case_and_proposal_listings_for_the_workspace(setup,monkeypatch):
     assert svc.list_proposals()['proposals'][0]['approval']['status']=='APPROVED'
     # Another organization sees none of it.
     assert Accounting(store,b.oid).list_cases()=={'cases':[]} and Accounting(store,b.oid).list_proposals()=={'proposals':[]}
+
+def ready_proposal(data,svc):
+    cid=initial(data)
+    deliver(data,hero.cancellation_record());deliver(data,hero.supplier_ack())
+    deliver(data,hero.price_credit());deliver(data,hero.quantity_credit())
+    for credit in ('CM-201','CM-202'):svc.execute('inspect_payable_credit',{'case_id':cid,'credit_id':credit})
+    return proposal(svc,cid)['proposal']
+
+def test_handoff_packet_for_the_teams_after_ap(setup):
+    from app import handoff
+    store,a,b,_,_=setup;data=a.data;svc=Accounting(store,a.oid)
+    prop=ready_proposal(data,svc)
+    before=handoff.packet(store,a.oid,prop['proposal_id'])
+    # Prepared but not approved: nothing downstream may act on it yet.
+    assert before['ready'] is False and before['state']=='pending' and before['boundary']=='prepared_not_posted'
+    svc.approve(Approval(proposal_id=prop['proposal_id'],proposal_hash=prop['hash'],decision='APPROVED'),'alice')
+    pack=handoff.packet(store,a.oid,prop['proposal_id'])
+    assert pack['ready'] is True and pack['state']=='approved' and pack['hash']==prop['hash']
+    # Payments: who, where, how much. IDs are the original ones, never tenant-namespaced.
+    assert pack['payment']['amount_cents']==8_000_000 and pack['payment']['invoice_id']=='INV-1042'
+    assert pack['payment']['remit_account_ref'] and pack['payment']['remit_verified'] is True and ':' not in pack['payment']['vendor_id']
+    # Ledger: a balanced entry for exactly the approved amount.
+    assert pack['ledger']['balanced'] is True and pack['ledger']['econ_id'] is None
+    assert sum(e['debit_cents'] for e in pack['ledger']['entries'])==8_000_000
+    # Close: what was wrong, what fixed it, who signed, and the evidence behind it.
+    assert pack['close']['approval']['decided_by']=='human:alice' and pack['close']['approval']['proposal_hash']==prop['hash']
+    assert {c['credit_id'] for c in pack['close']['credits_applied']}=={'CM-201','CM-202'} and pack['close']['evidence']
+    assert all(c['ok'] for c in pack['close']['checks'])
+    # Forecast: the cash that actually leaves, and what the resolution saved against the bill.
+    assert pack['forecast']['cash_out_cents']==8_000_000 and pack['forecast']['billed_cents']==12_000_000 and pack['forecast']['avoided_cents']==4_000_000
+    assert pack['forecast']['expected_date'] is None and pack['forecast']['basis']=='no_payment_terms_on_file'
+    # Another organization cannot read it.
+    with pytest.raises(LookupError):handoff.packet(store,b.oid,prop['proposal_id'])
+
+def test_payment_date_uses_vendor_terms_when_on_file(setup):
+    from app import handoff
+    store,a,_,_,_=setup;data=a.data;svc=Accounting(store,a.oid)
+    prop=ready_proposal(data,svc)
+    svc.approve(Approval(proposal_id=prop['proposal_id'],proposal_hash=prop['hash'],decision='APPROVED'),'alice')
+    vendor=handoff.packet(store,a.oid,prop['proposal_id'])['payment']['vendor_id']
+    data.ingest('vendors.json',json.dumps([{'vendor_id':vendor,'name':'Listed vendor','terms_days':30}]).encode(),dataset='vendors')
+    pack=handoff.packet(store,a.oid,prop['proposal_id'])
+    assert pack['payment']['terms_days']==30 and pack['payment']['due_date'] and pack['forecast']['expected_date']==pack['payment']['due_date']
+    assert pack['forecast']['basis']=='invoice_date_plus_vendor_terms'
+
+def test_owner_commit_is_idempotent_and_moves_no_cash(setup):
+    from app import handoff
+    store,a,_,_,_=setup;data=a.data;svc=Accounting(store,a.oid)
+    prop=ready_proposal(data,svc)
+    with pytest.raises(Exception):handoff.commit(store,a.oid,prop['proposal_id'],prop['hash'],'alice')  # not approved yet
+    svc.approve(Approval(proposal_id=prop['proposal_id'],proposal_hash=prop['hash'],decision='APPROVED'),'alice')
+    with pytest.raises(ValueError):handoff.commit(store,a.oid,prop['proposal_id'],'wrong','alice')
+    first=handoff.commit(store,a.oid,prop['proposal_id'],prop['hash'],'alice')
+    again=handoff.commit(store,a.oid,prop['proposal_id'],prop['hash'],'alice')
+    assert first['committed'] and not first['replayed'] and again['replayed'] and again['econ_id']==first['econ_id']
+    pack=handoff.packet(store,a.oid,prop['proposal_id'])
+    assert pack['state']=='committed' and pack['ready'] and pack['ledger']['econ_id']==first['econ_id'] and pack['payment_status']=='PAYMENT_READY'
+    with store.engine.connect() as db:assert [e['type'] for e in db.execute(select(ledger.economic_events)).mappings()]==['AP_RECOGNITION']

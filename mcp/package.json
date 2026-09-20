@@ -1,0 +1,11 @@
+{
+  "name": "@hyper/mcp",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Investigate your accounts-payable data from Claude Code, Codex or any MCP client.",
+  "type": "module",
+  "bin": { "hyper-mcp": "server.mjs" },
+  "files": ["server.mjs", "README.md"],
+  "engines": { "node": ">=20" },
+  "dependencies": { "@modelcontextprotocol/sdk": "^1.0.0" }
+}

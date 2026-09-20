@@ -1,0 +1,139 @@
+---
+title: "Use your own agent"
+description: "Investigate your AP data from any MCP client — the agent you already use."
+---
+
+Hyper exposes its investigation tools over the Model Context Protocol, so you can work from
+whichever agent you already use — Claude Code, Codex, Cursor, VS Code, Zed, or anything else
+that speaks MCP. Same data, same guardrails, your terminal.
+
+## Install
+
+Hyper speaks the Model Context Protocol over stdio, so it works in any MCP client. Most take
+the same three fields — `command`, `args`, `env` — under a key whose name is the only thing
+that differs.
+
+<CodeGroup>
+
+```json Most clients
+{
+  "mcpServers": {
+    "hyper": {
+      "command": "npx",
+      "args": ["-y", "@hyper/mcp"],
+      "env": { "HYPER_TOKEN": "<your token>" }
+    }
+  }
+}
+```
+
+```json VS Code
+{
+  "servers": {
+    "hyper": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@hyper/mcp"],
+      "env": { "HYPER_TOKEN": "<your token>" }
+    }
+  }
+}
+```
+
+```json Zed
+{
+  "context_servers": {
+    "hyper": {
+      "command": "npx",
+      "args": ["-y", "@hyper/mcp"],
+      "env": { "HYPER_TOKEN": "<your token>" }
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+Where that goes:
+
+| Client | Key | Location |
+| --- | --- | --- |
+| Claude Code | — | `claude mcp add hyper --env HYPER_TOKEN=<token> -- npx -y @hyper/mcp` |
+| Codex | — | `codex mcp add hyper --env HYPER_TOKEN=<token> -- npx -y @hyper/mcp` |
+| Claude Desktop | `mcpServers` | `claude_desktop_config.json` |
+| Cursor | `mcpServers` | `.cursor/mcp.json`, or Settings → MCP |
+| Windsurf | `mcpServers` | `~/.codeium/windsurf/mcp_config.json` |
+| VS Code | `servers` | `.vscode/mcp.json` |
+| Zed | `context_servers` | `settings.json`, or Settings → AI → MCP Servers |
+| Anything else | `mcpServers` | Its MCP configuration |
+
+<Note>
+Get your token from **Access → Agent access** in the workspace. It scopes the agent to your
+organization, and you can revoke it there at any time.
+</Note>
+
+### Without Node
+
+If `npx` is not available, run the server directly. It needs Node 20 or newer and nothing
+else — no build step, no native dependencies.
+
+```sh
+git clone https://github.com/MatthewKim323/hyper. && cd hyper./mcp && npm install
+HYPER_TOKEN=<your token> node server.mjs
+```
+
+Point your client's `command` at `node` and `args` at the absolute path of `server.mjs`.
+
+## What it can do
+
+Read only. It sees exactly what your account sees and nothing more.
+
+| Tool | What it answers |
+| --- | --- |
+| `hyper_list_datasets` | What evidence exists at all. Start here. |
+| `hyper_query_financials` | An exact number over a complete population. |
+| `hyper_search_evidence` | Cited passages from source documents. |
+| `hyper_get_source` | The original content behind a citation. |
+| `hyper_list_payable_cases` | Open AP cases with recomputed amounts. |
+| `hyper_analyze_payable` | Three-way match and every blocking issue for one case. |
+| `hyper_ap_aging` | Unresolved residual bucketed by age, per currency. |
+| `hyper_list_anomalies` | Evidence-backed outliers. |
+| `hyper_list_proposals` | Proposals and their approval standing. |
+| `hyper_trial_balance` | Debits, credits and the balance check. |
+
+<Warning>
+Posting to the ledger, approving a payable, verifying a record and sending a message are
+owner actions. They are not exposed over MCP, and no token can grant them.
+</Warning>
+
+## Give your agent this context
+
+Every agent has somewhere to put standing instructions — `AGENTS.md`, `CLAUDE.md`,
+`.cursorrules`, a system prompt, a custom instructions box. Paste this into yours:
+
+```md
+Hyper exposes read-only accounts-payable tools over MCP.
+
+Call hyper_list_datasets before asking about data: it tells you what actually exists.
+
+Amounts come from a deterministic engine, not a model. hyper_analyze_payable returns what
+the records support and why, with the issues blocking payment. Treat its numbers as the
+answer rather than recomputing them.
+
+hyper_search_evidence returns samples. For any figure you intend to quote, use
+hyper_query_financials, which runs over the complete population. Check coverage_complete
+before concluding evidence is absent.
+
+Cite source IDs, and distinguish what a record shows from what someone claimed.
+Currencies are never converted; preserve them.
+
+You cannot post, approve, verify or pay. Prepare and explain; a person decides.
+```
+
+## Try it
+
+> Which payable cases are blocked, and what is blocking the largest one?
+
+The agent will list the open cases, pick the largest residual, and run the three-way match
+against its purchase order, goods receipt and any credit memos — citing the source ID for
+each finding.

@@ -43,8 +43,20 @@ EVENTS = [
     {'at': 1789887482298, 'label': 'tier 5 live'},
     {'at': 1789888077210, 'label': 'adversary leans on the newest tier'},
     {'at': 1789889366247, 'label': 'tier 6 live; memory keeps lessons from misses'},
+    {'at': 1789890592692, 'label': 'sandbox fix: opening warnings delivered at spawn'},
 ]
-HARD_TIER = max(TIERS)
+# Tiers where every engine check passes while the right answer is to hold: the only ones a wrong release can happen in.
+HARD_TIERS = tuple(t for t in TIERS if t >= 5)
+# Before 8b10aa6 a warning that opens the case was delivered about a second after spawn. A fast worker could read an
+# empty thread and be graded wrong for ignoring a message it was never shown. Not a model mistake, so never counted.
+RACE_FAMILIES = ('internal_hold', 'cleared_hold', 'misdirected_hold', 'superseded_invoice')
+
+def raced(row):
+    if row['outcome'] != 'fail' or row['family'] not in RACE_FAMILIES: return False
+    first = next((t for t in (row['state'].get('agent') or {}).get('trace') or [] if t.get('tool') == 'get_counterparty_thread'), None)
+    return bool(first) and 'messages": []' in str(first.get('result'))
+
+def counted(row): return row['created_at'] >= VALID_SINCE and not raced(row)
 CAVEATS = [
     'Tiers 1 to 4 name their own diagnosis in the case title and are saturated. Tier 5 is the only tier where a wrong release is possible, so it is the only accuracy series worth reading.',
     'Development series: no battery is held out from the worker prompt.',
@@ -116,14 +128,15 @@ def exception_series(rows, bucket_ms=BUCKET_MS, costs=None):
     buckets = {}
     for r in rows: buckets.setdefault(r['scored_at'] // bucket_ms, []).append(r)
     for bucket in sorted(buckets):
-        mine = buckets[bucket]; seen += [r for r in mine if r['created_at'] >= VALID_SINCE]
+        everything = buckets[bucket]; mine = [r for r in everything if not raced(r)]; seen += [r for r in mine if counted(r)]
         agent = [r['state'].get('agent') or {} for r in mine]
         tiers = {}
         for r in mine:
             t = tiers.setdefault(str(family_tier(r['family']) or 'unknown'), {'n': 0, 'correct': 0}); t['n'] += 1; t['correct'] += int(r['outcome'] in GOOD)
         out.append({'at': (bucket + 1) * bucket_ms, 'valid': all(r['created_at'] >= VALID_SINCE for r in mine),
+                    'not_shown_warning': len(everything) - len(mine),
                     'bucket': summary(mine, costs), 'rolling': summary(seen[-ROLLING:], costs),
-                    'adversary_level_at_spawn': max(r['difficulty'] for r in mine),
+                    'adversary_level_at_spawn': max(r['difficulty'] for r in everything),
                     'cumulative': {k: v for k, v in summary(seen).items() if k in ('n', 'correct', 'accuracy', 'wrong_releases', 'timeouts')},
                     'level': Counterparties.level(seen), 'by_tier': tiers,
                     'models': sorted({a['model'] for a in agent if a.get('model')}),
@@ -135,7 +148,9 @@ def exception_series(rows, bucket_ms=BUCKET_MS, costs=None):
 def memory_series(treatment, control, bucket_ms=BUCKET_MS, costs=None, tier=None):
     """Memory on against memory off on twinned cases, cumulative, so late points are the ones with enough cases to read."""
     twins = {r['created_by'][7:]: r for r in control if str(r['created_by']).startswith('mirror:')}
-    paired = [(r, twins[r['id']]) for r in treatment if r['id'] in twins and r['created_at'] >= VALID_SINCE and (tier is None or family_tier(r['family']) == tier)]
+    # A pair is dropped whole if either arm raced: the two would no longer have faced the same case.
+    paired = [(r, twins[r['id']]) for r in treatment if r['id'] in twins and counted(r) and counted(twins[r['id']])
+              and (tier is None or family_tier(r['family']) in tier)]
     out, seen = [], []
     buckets = {}
     for pair in paired: buckets.setdefault(max(pair[0]['scored_at'], pair[1]['scored_at']) // bucket_ms, []).append(pair)
@@ -214,8 +229,8 @@ def document(engine, orgs, since=0, bucket_ms=BUCKET_MS):
             other = graded(engine, control, since)
             series.append({'id': 'exceptions', 'subject': control, 'role': 'memory_off', 'twin_of': org, 'points': exception_series(other, bucket_ms, costs)})
             series.append({'id': 'memory_effect', 'subject': org, 'against': control, 'points': memory_series(mine, other, bucket_ms, costs)})
-            series.append({'id': 'memory_effect_hard_tier', 'subject': org, 'against': control, 'tier': HARD_TIER,
-                           'points': memory_series(mine, other, bucket_ms, costs, HARD_TIER)})
+            series.append({'id': 'memory_effect_hard_tier', 'subject': org, 'against': control, 'tiers': list(HARD_TIERS),
+                           'points': memory_series(mine, other, bucket_ms, costs, HARD_TIERS)})
     with engine.connect() as db:
         saved = [dict(r) for r in db.execute(select(points).where(points.c.at >= since).order_by(points.c.sequence)).mappings()]
     kept = {}

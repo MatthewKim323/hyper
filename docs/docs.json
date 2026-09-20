@@ -2,14 +2,26 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Hyper",
-  "colors": { "primary": "#8a6f68", "light": "#e8d8d7", "dark": "#212121" },
+  "colors": {
+    "primary": "#8a6f68",
+    "light": "#e8d8d7",
+    "dark": "#8f7168"
+  },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
         "tab": "Guides",
         "groups": [
-          { "group": "Getting started", "pages": ["index", "architecture", "deployment"] }
+          {
+            "group": "Getting started",
+            "pages": [
+              "index",
+              "architecture",
+              "mcp",
+              "deployment"
+            ]
+          }
         ]
       },
       {
@@ -17,29 +29,57 @@
         "groups": [
           {
             "group": "Core",
-            "pages": ["api/onboarding", "api/data", "api/connectors", "api/storage"]
+            "pages": [
+              "api/onboarding",
+              "api/data",
+              "api/connectors",
+              "api/storage"
+            ]
           },
           {
             "group": "Accounting engine",
-            "pages": ["api/accounting", "api/posting", "api/anomalies", "api/adapters", "api/settlement", "api/accrual"]
+            "pages": [
+              "api/accounting",
+              "api/posting",
+              "api/anomalies",
+              "api/adapters",
+              "api/settlement",
+              "api/accrual"
+            ]
           },
           {
             "group": "Agents",
-            "pages": ["api/agents", "api/concerns", "api/artifacts", "api/skills", "api/world-agent"]
+            "pages": [
+              "api/agents",
+              "api/concerns",
+              "api/artifacts",
+              "api/skills",
+              "api/world-agent"
+            ]
           }
         ]
       }
     ],
     "global": {
       "anchors": [
-        { "anchor": "GitHub", "icon": "github", "href": "https://github.com/MatthewKim323/hyper." }
+        {
+          "anchor": "GitHub",
+          "icon": "github",
+          "href": "https://github.com/MatthewKim323/hyper."
+        }
       ]
     }
   },
   "navbar": {
-    "primary": { "type": "button", "label": "Open Hyper", "href": "https://hyper.stephenhung.me" }
+    "primary": {
+      "type": "button",
+      "label": "Open Hyper",
+      "href": "https://hyper.stephenhung.me"
+    }
   },
   "footer": {
-    "socials": { "github": "https://github.com/MatthewKim323/hyper." }
+    "socials": {
+      "github": "https://github.com/MatthewKim323/hyper."
+    }
   }
 }
