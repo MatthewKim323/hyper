@@ -204,6 +204,15 @@ def write_lesson(svc, scenario, model, llm=complete):
     if text.strip(): svc.add_lesson(scenario['id'], scenario['family'], text.strip())
 
 
+def owns(scenario_id):
+    """AUTO_AGENT_SHARD="k/N" gives this process a fixed slice of the cases, so several workers run side
+    by side without ever sharing an invoice. There is no claim to race on: ownership is arithmetic."""
+    shard = os.getenv('AUTO_AGENT_SHARD', '')
+    if '/' not in shard: return True
+    k, n = (int(x) for x in shard.split('/', 1))
+    return int(scenario_id[-8:], 16) % n == k
+
+
 def run_once(store, data_factory=None, llm=None):
     data_factory = data_factory or (lambda oid: DataService(store, oid))
     model = provider()[2]
@@ -211,6 +220,7 @@ def run_once(store, data_factory=None, llm=None):
         open_rows = [dict(r) for r in db.execute(select(scenarios).where(scenarios.c.status == 'open').order_by(scenarios.c.created_at)).mappings()]
         unlearned = [dict(r) for r in db.execute(select(scenarios).where(scenarios.c.status == 'scored').order_by(scenarios.c.scored_at.desc()).limit(20)).mappings()
                      if not r['state'].get('agent', {}).get('lesson_written')]
+    open_rows, unlearned = [r for r in open_rows if owns(r['id'])], [r for r in unlearned if owns(r['id'])]
     work = 0
     for row in open_rows:
         agent = row['state'].get('agent', {})

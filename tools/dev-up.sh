@@ -40,7 +40,12 @@ start counterparty-worker "" uv run python -m app.counterparty_worker
 #                                     gpt-6-astra is roughly fifty times that.
 export DEVIN_CONTROL_PAIRS="${DEVIN_CONTROL_PAIRS-demo-meridian:demo-meridian-control}"
 if [ "${EXCEPTION_WORKER:-devin}" = "openai" ]; then
-  AUTO_AGENT_MODEL="${AUTO_AGENT_MODEL:-gpt-5.6-terra}" start auto-agent "" uv run python -m app.auto_agent
+  # Several workers, each owning a fixed slice of the cases (AUTO_AGENT_SHARD), so none ever share an invoice.
+  WORKERS="${AUTO_AGENT_WORKERS:-4}"
+  if pgrep -f "app.auto_agent" >/dev/null 2>&1; then echo "auto-agent: already running"; else
+    k=0; while [ $k -lt $WORKERS ]; do
+      AUTO_AGENT_SHARD="$k/$WORKERS" AUTO_AGENT_MODEL="${AUTO_AGENT_MODEL:-gpt-5.6-terra}" nohup uv run python -m app.auto_agent > "var/auto-agent-$k.log" 2>&1 &
+      k=$((k+1)); done; echo "auto-agent: started $WORKERS workers (backend/var/auto-agent-N.log)"; fi
   DEVIN_EXCEPTION_TASKS=false start devin-exceptions "" uv run python -m app.devin_exceptions  # mirroring only
 else start devin-exceptions "" uv run python -m app.devin_exceptions; fi
 echo "frontend: cd web/studio && bun run dev   (http://localhost:3888)"

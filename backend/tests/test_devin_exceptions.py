@@ -114,3 +114,16 @@ def test_cases_from_before_the_pair_existed_are_not_mirrored(world, monkeypatch)
     from app.database import counterparty_scenarios
     with store.engine.connect() as db:
         assert len(db.execute(select(counterparty_scenarios.c.id).where(counterparty_scenarios.c.organization_id == 'baseline')).all()) == 1
+
+
+def test_sharded_workers_split_every_case_and_never_share_one(monkeypatch):
+    from app import auto_agent
+    ids = [f'scn_{i:032x}' for i in range(200)] + ['scn_5c938ee7e1824966', 'scn_cc888c03c3c849f7']
+    owners = {}
+    for k in range(4):
+        monkeypatch.setenv('AUTO_AGENT_SHARD', f'{k}/4')
+        for sid in ids:
+            if auto_agent.owns(sid): owners.setdefault(sid, []).append(k)
+    assert set(owners) == set(ids) and all(len(v) == 1 for v in owners.values())
+    monkeypatch.delenv('AUTO_AGENT_SHARD')
+    assert all(auto_agent.owns(sid) for sid in ids), 'unsharded, one worker owns everything'
