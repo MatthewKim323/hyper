@@ -4,6 +4,8 @@ Status: planned, not implemented. Reviewed September 20, 2026 against the curren
 
 Confirmed product decision: **continuous demo commentary**. The CFO explains each meaningful workflow transition, handoff, result, blocker, and human decision. Quiet mode is secondary. Ordinary polling, repeated tool calls, and provider reasoning are not things to read aloud.
 
+Confirmed interaction addition: escalations offer **three Jev-reviewed actions**, plus a custom typed or spoken instruction. The CFO records the user's choice, carries it through the authorized execution path, and narrates the actual result. Section 18 specifies this loop.
+
 ## 1. The experience
 
 The central CFO speaks in short, composed sentences while actual work progresses. She names the item, explains who or what is handling it, and gives the purpose or consequence. The same words appear as clean captions, synchronized to playback. The relevant relic remains visible; its existing warm attention glow turns on only when the workflow needs the user.
@@ -408,3 +410,105 @@ Settled: continuous demo mode; existing CFO voice; streamed REST TTS for determi
 Implementation spikes that must produce evidence before release: configured Deepgram key access to direct Aura REST, actual PCM format/stream latency, Voice Agent conversation text/audio pairing, supported browser output timing, and the availability of real Devin/Elastic dispatches. Failure of any spike is reported as a concrete limitation; fixtures cannot be presented as live proof.
 
 Review outcome: backend, frontend/audio, and current Deepgram contracts reviewed independently. A second draft challenge identified and resolved greeting/STT startup, recipient text scoping, complete lease fencing and expiry, nonblocking TTS cancellation, and snapshot-to-live replay races. The plan addresses the event-ordering race, missing AP telemetry, closed-panel subscription, caption clipping, premature captions, stale audio, backlog, and cross-tab duplication. Runtime behavior has not been changed by this planning pass.
+
+## 18. Escalations: three choices, custom response, actual execution
+
+### The interaction
+
+The CFO identifies the anomaly, explains why it needs a decision, and presents exactly three distinct actions beside the current caption. Each has a short title, a concrete next step, and a brief tradeoff. Evidence is available on demand. Use three clean numbered action rows in the existing CFO voice surface, not three new floating windows or navigation. Keep the central orb and existing warm attention glow.
+
+Illustrative price-mismatch decision, only when supported by the case evidence:
+
+> "This invoice's price differs from the purchase order. We can check the contract, review prior approved invoices, or keep the case on hold for procurement review."
+
+1. **Check the contract.** Compare the billed rate with the current signed agreement. Best when the purchase order may be outdated.
+2. **Review prior invoices.** Investigate whether an approved exception explains the rate. Past treatment is evidence, not permission to repeat it.
+3. **Keep it on hold.** Prepare a procurement review with the discrepancy and supporting documents. It remains unresolved until someone verifies the terms.
+
+These are examples, not fixed options for every anomaly. The user can click an action, say "go with option two", or type/say a custom instruction such as "compare the amended contract first, then prepare a review if it still differs." A clear authorized instruction starts without another routine confirmation. The CFO acknowledges the recorded choice, explains the next step, and reports execution milestones and the supported outcome.
+
+Do not auto-select an option. While this decision is foregrounded, pause routine spoken commentary so it cannot bury the choices; continue retaining workflow events and keep urgent unrelated blockers discoverable. After the answer is accepted, resume with a short relevant update. Only one decision owns numbered voice references at a time. Other pending concerns remain available without silently changing what "option two" means. Closing or deferring a decision never resolves it or permits blocked work to proceed.
+
+### Reuse what exists
+
+| Existing implementation | What it already does | Required addition |
+| --- | --- | --- |
+| `backend/evaluator/concerns.mjs` | `CONCERN_MODEL` drafts exactly three options; `typesafe-ai/jev` reviews groundedness, distinctness, and authority, each requiring probability at least 0.85 | Version the evaluated card and evidence snapshot; bind the displayed and spoken options to that version |
+| `backend/app/concerns.py` | Strict three-option schema, custom text, persistent decision, queued/resolving states, leased claim and completion | Revision-aware and idempotent user response, refreshed decisions after new evidence, complete execution events |
+| `backend/app/concern_api.py` | Authenticated workspace-scoped response route | Explicit responder capability, expected revision, stable command ID, accepted execution receipt |
+| `web/studio/components/workspace/sections.tsx` | Review already displays three buttons, typed custom response, and outcome history | Extract a shared decision presenter; integrate with the live CFO surface and voice context |
+| `backend/app/devin_worker.py` | Coordinator is instructed to continue on `concern.responded`, claim concerns, delegate work, and resolve with citations | Prove the configured consumer actually picks up the decision; correlate concern, decision, task, and result |
+
+Jev currently evaluates proposed options; it is not the option-writing model. Preserve that division and describe the choices as Jev-reviewed. Its model scores are not calibrated probabilities that an action is financially correct, and they never grant execution authority. Keep evaluator details in inspection views instead of making them the main decision copy.
+
+### Decision identity and user intent
+
+Add an immutable `cardRevision` and hash of the evaluated card/evidence set. Store a monotonic `decisionRevision` separately from timestamps. The active UI context contains the concern ID, card revision/hash, fixed ordered option IDs, and a context generation. Bind a microphone turn to that context when it begins; a new alert must not retarget an in-progress utterance.
+
+All three input routes converge on one authenticated user command:
+
+```ts
+type ConcernDecisionCommand = {
+  commandId: string;
+  concernId: string;
+  expectedDecisionRevision: number;
+  cardRevision: number;
+  cardHash: string;
+  input: "click" | "text" | "voice";
+  choice:
+    | { optionId: "option_1" | "option_2" | "option_3" }
+    | { optionId: "custom"; instruction: string };
+  userTurnId?: string;
+};
+```
+
+The server derives user/workspace identity from the authenticated session. Load the option's action from the stored card, never from a browser-supplied action string. For custom responses, persist the original committed text and the normalized execution objective separately so interpretation cannot quietly replace what the user requested. The generated objective is not new authority.
+
+Process only a committed user speech turn, never an interim transcript, assistant echo, narration text, or a statement inside a source document. Conversational questions such as "what would option two do?" explain the choice and do not submit it. Negation, conflicting choices, a stale context, or an unclear target produce one focused clarification. A clear final "do option two" can submit directly. Spoken financial amounts or recipients that remain uncertain must be clarified before a consequential operation. Voice is an input method under the current session, not proof of identity or an extra permission level.
+
+Use a narrowly scoped conversation command handler bound to the real user turn. Do not add an unrestricted `respond_concern` tool to autonomous workers or let a model invent a user ID/approval. A parsed intent must pass the same server checks as a button click. Dedupe a voice tool retry and a UI retry by the same command/turn identity.
+
+### Accept, execute, report
+
+```text
+anomaly + cited evidence
+  -> card generation -> Jev review -> versioned three-option decision
+  -> user choice/custom instruction -> authorized atomic acceptance
+  -> concern.responded + durable execution reference
+  -> configured worker claim -> investigation / supported action
+  -> result evidence -> resolved, needs input, or failed
+  -> CFO outcome caption and speech
+```
+
+Acceptance must atomically check current concern state, card/decision revision, relevant evidence freshness, and the user's response capability, then persist the decision, exactly one durable resolution job, and event. One concurrent response wins. A retry of the same command returns the same accepted result; reuse with different contents conflicts. A stale choice stays unsubmitted and refreshes the decision. Return a decision ID, queued status, and durable work reference. "Saved" or a successful HTTP response is not proof that execution started.
+
+Selecting a response currently commissions investigation and preparation only. Execute those authorized steps through the existing tools and worker immediately after acceptance. For any action needing an existing domain approval, prepare that approval with its exact target and scope; reuse valid existing authorization where applicable. A generated `requires_approval: false` cannot bypass server policy. Payment, posting, and external contact still require their actual domain capability and authorization, not a concern-card flag. Say "I've queued the review" on queue acceptance, "the investigation has started" on worker claim, and "resolved" only after persisted supporting results.
+
+The unattended AP loop and Devin concern coordinator are separate execution paths today. The coordinator is off by default, the Astra AP loop has no concern tools, and ordinary Devin workers cannot claim/resolve concerns under their current allowlist. Add a durable resolution dispatcher that consumes accepted decision jobs independently of the voice connection, reusing scoped investigation tasks for longer work. Persist the binding among decision, job, worker task, operation, and result. Do not assume that emitting `concern.responded` alone guarantees execution.
+
+Demonstrate a real configured resolution consumer before claiming click-to-execution works. If it is paused, unavailable, or lacks an action capability, show the saved decision as waiting with the concrete reason. Do not silently start a new provider, relaunch duplicate work, or pretend a background worker picked it up. Closing the browser must not strand an accepted job. Duplicate deliveries and reclaimed leases resume the same decision using stable operation keys, persisted intent/receipts, and reconciliation of unknown external outcomes.
+
+Restrict claim, renewal, and completion to the assigned scoped executor. Current concern HTTP claim/resolve endpoints only require workspace membership; tighten this before presenting their results as executed actions. Bind leases to decision/job and executor identity, fence stale workers at every mutating operation, and keep user selection separate from executor authority.
+
+A cited self-report is insufficient proof that the selected operation happened. Require structured completion criteria and receipts: executed operation IDs, current evidence versions/hashes, resulting task/artifact/proposal IDs, deterministic domain outcomes where available, and remaining blockers or approvals. An investigation can finish while payment is still unexecuted. Narrate that distinction and keep unknown outcomes unconfirmed until reconciled. Never let a model-written summary alone mark a financial effect complete.
+
+When the worker needs more input, create a new decision revision with the new evidence and three newly reviewed options. Do not reuse the old option mapping unchanged. Preserve prior decisions and outcomes in history. If Jev or drafting fails, keep the anomaly visible with a retry and custom-response path; do not fabricate approved choices or discard the concern. A custom instruction still goes through ordinary validation and authority checks, even when suggestion generation is unavailable.
+
+Publish committed transitions for card readiness, response acceptance, execution claim, blocked input, resolution, and failure into the workflow journal. Preserve the existing `concern.responded` consumer event and make its identity stable. Link every narration to the concern and decision revision so stale suggestions or an old completion cannot overwrite a newer decision.
+
+### Additional build and release gates
+
+Extend phases 2 and 3 with versioned concern events, Jev-reviewed decision payloads, and the durable resolution dispatcher; extend phase 6 with the shared decision UI, voice intent binding, and execution receipts. This decision loop is part of the initial CFO demo, not a later decorative feature.
+
+- Exactly three distinct reviewed options are shown and spoken from the same card revision, with optional typed/voice custom response.
+- Click, typed directive, and committed voice choice produce equivalent authorized commands. Questions, negation, interim transcripts, and assistant speech never submit.
+- Two open concerns, an alert arriving mid-speech, and regenerated options cannot misdirect numbered choices.
+- Simultaneous clicks/voice, retry after lost response, and worker redelivery create one accepted decision and one logical execution.
+- Stale revisions, changed evidence, expired membership, and missing capabilities fail before execution without losing the user's draft.
+- A paused or missing consumer stays visibly queued. A worker crash resumes safely; an expired claimant cannot report completion.
+- A member cannot forge executor completion. A disconnected browser does not stop the job; stale workers cannot mutate its domain records; a resolution without required operation receipts remains unverified.
+- Jev failure preserves the concern and custom input. Invalid options are never presented as reviewed.
+- A real sandbox run demonstrates escalation, all three suggestions, one selected choice, actual worker progress, and a cited outcome. A second run demonstrates custom voice/text input and a follow-up decision after new evidence.
+- Captions cover the escalation, available actions, accepted instruction, and actual outcome. Routine commentary cannot replace a pending decision or speak a superseded option list.
+
+This section extends the implementation plan. It does not claim the live CFO decision loop has been implemented or exercised.
