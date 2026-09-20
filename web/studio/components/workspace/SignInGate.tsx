@@ -4,13 +4,15 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { getAuthState, openSignIn, signOut } from "@/lib/backend/auth";
 import { store as storeRaw } from "@/lib/engine/core/store";
+import { ONBOARDING_PATH, WORLD_PATH } from "@/lib/engine/router/routes";
 import { useAuth } from "./useBackend";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const store: any = storeRaw;
+const PROTECTED = new Set<string>([ONBOARDING_PATH, WORLD_PATH]);
 const isWorkspaceLink = (target: EventTarget | null) => {
   const link = target instanceof Element ? target.closest<HTMLAnchorElement>("a[href]") : null;
-  return !!link && new URL(link.href, location.href).pathname.replace(/\/+$/, "") === "/projects";
+  return !!link && PROTECTED.has(new URL(link.href, location.href).pathname.replace(/\/+$/, ""));
 };
 
 /**
@@ -40,9 +42,9 @@ export default function SignInGate() {
 
   useEffect(() => {
     if (auth.signedIn && !wasSignedIn.current) {
-      // The voice session's owner reconnects on "online"; reuse that after a sign-in on /projects.
+      // The voice session's owner reconnects on "online"; reuse that after a sign-in on a product route.
       window.dispatchEvent(new Event("online"));
-      if (wantsWorkspace.current && pathname !== "/projects") store.Highway?.redirect?.("/projects", "toProjectMenu");
+      if (wantsWorkspace.current && !PROTECTED.has(pathname)) store.Highway?.redirect?.(ONBOARDING_PATH, "toProjectMenu");
       wantsWorkspace.current = false;
     }
     wasSignedIn.current = auth.signedIn;
@@ -50,9 +52,9 @@ export default function SignInGate() {
 
   useEffect(() => {
     // A signed-out visit straight to the workspace goes back to the main page.
-    if (auth.mode === "clerk" && auth.ready && !auth.signedIn && pathname === "/projects") location.replace("/");
+    if (auth.mode === "clerk" && auth.ready && !auth.signedIn && PROTECTED.has(pathname)) location.replace("/");
   }, [auth.mode, auth.ready, auth.signedIn, pathname]);
 
-  if (pathname !== "/projects" || auth.mode !== "clerk" || !auth.signedIn) return null;
+  if (!PROTECTED.has(pathname) || auth.mode !== "clerk" || !auth.signedIn) return null;
   return <button type="button" className="ws-account" onClick={() => void signOut().then(() => location.replace("/"))}>Sign out</button>;
 }

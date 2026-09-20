@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// ProjectMenu: the /projects/ scene. Fogged hall of arches, floor tiles, god rays,
+// ProjectMenu: the scene behind /onboarding and /world. Fogged hall of arches, floor tiles, god rays,
 // flocking butterflies and the WebGL project card grid (wheel / drag scroll, hover, click, filters).
 import {
   AdditiveBlending,

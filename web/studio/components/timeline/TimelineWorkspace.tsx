@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { usePathname } from "next/navigation";
+import { WORLD_PATH } from "@/lib/engine/router/routes";
 import VersionCarousel from "./VersionCarousel";
 import { initialTimeline, importTimelineJson, exportTimelineJson, mergeTimeline, TIMELINE_LIMITS } from "@/lib/timeline/registry";
 import { compareVersions, latestCaseRun } from "@/lib/timeline/compare";
@@ -52,7 +53,7 @@ export default function TimelineWorkspace() {
   const [refreshing, setRefreshing] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const visible = active && pathname === "/projects";
+  const visible = active && pathname === WORLD_PATH;
   const versions = document.versions;
   const selected = versions.find(version => version.id === selectedId) ?? versions[0];
   const baseline = versions.find(version => version.id === baselineId) ?? versions[0];

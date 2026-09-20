@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import { WORLD_PATH } from "@/lib/engine/router/routes";
 import { REAL_URL, SAMPLE_URL, fetchBenchmarks, formatMetric, latestCompleted, subjectRuns, systemOf } from "@/lib/benchmarks/load";
 import type { BenchmarksDocument, Layer } from "@/lib/benchmarks/types";
 import {
@@ -26,7 +27,7 @@ export default function BenchmarksWorkspace() {
   // The layout sample is a development aid. It is only reachable outside production or with ?benchSample=1.
   const [sampleAllowed] = useState(() => process.env.NODE_ENV !== "production"
     || (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("benchSample")));
-  const visible = active && pathname === "/projects";
+  const visible = active && pathname === WORLD_PATH;
 
   useEffect(() => {
     const onSection = (event: Event) => setActive((event as CustomEvent<{ section: string }>).detail?.section === "benchmarks");

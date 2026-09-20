@@ -5,7 +5,7 @@ export function PersistentContent() {
     <div className="d-none">
 
       <div className="js-view-projects-btn" style={{ visibility: "hidden" }}>
-        <a href="/projects" title="enter" className="btn btn--regular btn--fill btn--light js-manager-ignore js-btn" data-btn="fill" data-cursor="hide">
+        <a href="/onboarding" title="enter" className="btn btn--regular btn--fill btn--light js-manager-ignore js-btn" data-btn="fill" data-cursor="hide">
           <span className="btn__inner js-btn-inner">
             <span className="btn__content js-btn-content">
               <span className="d-flex flex-row items-end">

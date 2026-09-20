@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Welcome | Hyper",
-  description: "Meet your Hyper onboarding agent and explore your workspace.",
+  title: "World | Hyper",
+  description: "Your Hyper workspace: cases, evidence, review and activity.",
 };
 
-// The empty gallery keeps the ProjectMenu scene and its entrance transition.
-export default function ProjectsPage() {
+// The 3D atrium and the workspace sections that open from it.
+export default function WorldPage() {
   return (
     <main
       {...{ asscroll: "" }}

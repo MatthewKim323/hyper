@@ -44,7 +44,7 @@ export default function NotFound() {
             </div>
             <div className="w-1/2@md d-flex@md justify-end">
               <Btn href="/" title="Back to the homepage" className="btn btn--regular btn--fill btn--light mr-1 js-btn" />
-              <Btn href="/projects" title="View our work" className="btn btn--regular btn--fill btn--light js-btn" />
+              <Btn href="/world" title="Go to your world" className="btn btn--regular btn--fill btn--light js-btn" />
             </div>
           </div>
         </div>
