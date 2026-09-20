@@ -67,14 +67,25 @@ def main():
     parser.add_argument('--per-family',type=int,default=60)
     parser.add_argument('--seed',type=int,default=20260919)
     parser.add_argument('--skip',default='',help='Comma-separated datasets to leave out (usage_daily is 65k rows)')
+    parser.add_argument('--target',choices=['local','cloud'],default='local',help='cloud reads ELASTIC_CLOUD_URL and ELASTIC_CLOUD_API_KEY')
+    parser.add_argument('--embedding',default=None,help='Inference endpoint for semantic_text, e.g. .jina-embeddings-v5-text-small. Default: ELASTIC_INFERENCE_ID')
+    parser.add_argument('--rerank',default='',help='Rerank endpoint, e.g. .jina-reranker-v3.5. Adds reranked modes')
+    parser.add_argument('--label',default='',help='Names this configuration: its own index, database and result file')
     parser.add_argument('--reuse',action='store_true',help='Keep the database and index from the last run; only ask the questions again')
     parser.add_argument('--out',default=str(Path(__file__).resolve().parents[1]/'benchmarks/retrieval.json'))
     args=parser.parse_args()
     load_dotenv(Path(__file__).resolve().parents[1]/'.env')
-    os.environ['ELASTICSEARCH_INDEX']='hyper-bench-retrieval-v1'
-    os.environ['ELASTIC_RERANK_INFERENCE_ID']=os.getenv('BENCH_RERANK_INFERENCE_ID','')
+    name='retrieval'+('-'+args.label if args.label else '')
+    os.environ['ELASTICSEARCH_INDEX']='hyper-bench-'+name+'-v1'
+    os.environ['ELASTIC_RERANK_INFERENCE_ID']=''
+    if args.target=='cloud':
+        os.environ['ELASTICSEARCH_URL']=os.environ['ELASTIC_CLOUD_URL'];os.environ['ELASTICSEARCH_API_KEY']=os.environ['ELASTIC_CLOUD_API_KEY']
+    if args.embedding is not None:
+        # A dense endpoint embeds documents and queries alike, so there is no separate query endpoint.
+        os.environ['ELASTIC_INFERENCE_ID']=args.embedding;os.environ['ELASTIC_SEARCH_INFERENCE_ID']=''
+    if args.label and args.out.endswith('benchmarks/retrieval.json'):args.out=args.out.replace('retrieval.json',name+'.json')
     search=ElasticSearch()
-    database=Path(__file__).resolve().parents[1]/'var/bench/retrieval.sqlite'
+    database=Path(__file__).resolve().parents[1]/('var/bench/'+name+'.sqlite')
     if not (args.reuse and database.exists()):
         try:search.request('DELETE',search.index)
         except Exception:pass
@@ -99,10 +110,12 @@ def main():
     inference=search.inference_id
     modes={'keyword':('',False),'keyword+graph':('',True)}
     if inference:modes.update({'hybrid':(inference,False),'hybrid+graph':(inference,True)})
+    if args.rerank:modes.update({k+'+rerank':v for k,v in list(modes.items()) if k in ('hybrid','hybrid+graph')})
     asked=questions(documents,args.seed,args.per_family)
     results={}
     for mode,(inference_id,graph_aware) in modes.items():
         search.inference_id,search.graph_aware=inference_id,graph_aware
+        search.rerank_id=args.rerank if mode.endswith('+rerank') else ''
         totals=defaultdict(lambda:defaultdict(list));latency=[]
         for q in asked:
             began=time.perf_counter()
@@ -117,8 +130,8 @@ def main():
     report={'corpus':{'documents':len(documents),'structured_rows':sum(v['rows'] for k,v in schema.items() if k not in args.skip.split(',')),
             'graph':{k:shape[k] for k in ('nodes','edges','mentions')},'ingest_index_seconds':built},
         'questions':{f:sum(1 for q in asked if q['family']==f) for f in ('identifier','name','linked')},
-        'seed':args.seed,'scope':'documents_only, top 10','embedding':inference or None,
-        'rerank':os.environ['ELASTIC_RERANK_INFERENCE_ID'] or None,'results':results,
+        'seed':args.seed,'scope':'documents_only, top 10','target':args.target,'label':args.label or 'local-elser','embedding':inference or None,
+        'rerank':args.rerank or None,'results':results,
         'limits':['Documents are synthetic drafts that usually repeat their identifiers, which flatters every lexical mode.',
             'Questions are templated, so this measures entity and relationship recall, not paraphrase understanding.',
             'Relevance is document-level and binary, from authoring metadata.']}
