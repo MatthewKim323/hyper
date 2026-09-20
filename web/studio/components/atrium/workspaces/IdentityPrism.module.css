@@ -86,11 +86,24 @@
 }
 
 /* Sources: one tile per connector. */
-.sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 24px 0 12px; padding: 0; list-style: none; }
-.source { padding: 16px 18px; border: 1px solid var(--line); border-radius: 0; background: #fffdfa; transition: border-color 200ms var(--ease-out, ease-out), background 200ms var(--ease-out, ease-out); }
-.source[data-live] { border-color: rgb(70 45 35 / 45%); background: #fffdfa; }
-.source h4 { margin: 0; font-size: 15px; font-weight: 500; }
-.source p { margin: 6px 0; font-size: 13px; line-height: 1.5; }
 .credentials { display: grid; gap: 8px; margin-top: 10px; }
 .credentials input, .credentials select { min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgb(255 255 255 / 70%); font: inherit; font-size: 13px; color: inherit; }
 @media (prefers-reduced-motion: reduce) { .source { transition: none; } }
+.sources { margin: 22px 0 12px; padding: 0 20px; list-style: none; border: 1px solid var(--line); border-radius: 14px; background: #fffdfa; }
+.source { border-bottom: 1px solid var(--line); }
+.source:last-child { border-bottom: 0; }
+.sourceRow { display: flex; align-items: center; gap: 16px; padding: 18px 0; }
+.logo { display: grid; flex: 0 0 40px; width: 40px; height: 40px; place-items: center; border-radius: 10px; background: rgb(70 45 35 / 6%); }
+.logo img { display: block; width: 22px; height: 22px; }
+.sourceText { min-width: 0; flex: 1; }
+.sourceText h4 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 15px; font-weight: 500; line-height: 1.35; }
+.sourceText p { margin: 2px 0 0; overflow: hidden; color: var(--muted); font-size: 13px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+.sourceActions { display: flex; flex-shrink: 0; align-items: center; gap: 18px; }
+.connect { padding: 9px 14px; border: 0; border-radius: 9px; background: rgb(70 45 35 / 8%); color: var(--muted); font: inherit; font-size: 13.5px; line-height: 1.2; white-space: nowrap; cursor: pointer; transition: background 160ms, color 160ms; }
+.connect[data-primary] { background: #352d29; color: #fffdfa; }
+.connect:disabled { opacity: .55; cursor: default; }
+.connect:focus-visible { outline: 1px solid #352d29; outline-offset: 3px; }
+.source .credentials { padding: 0 0 20px 56px; }
+@media (hover: hover) and (pointer: fine) { .connect:not(:disabled):hover { background: rgb(70 45 35 / 14%); color: #17110e; } .connect[data-primary]:not(:disabled):hover { background: #17110e; color: #fffdfa; } }
+@media (max-width: 560px) { .sources { padding: 0 14px; } .sourceRow { flex-wrap: wrap; gap: 12px; } .sourceActions { flex-basis: 100%; justify-content: flex-end; } .sourceText p { white-space: normal; } .source .credentials { padding-left: 0; } }
+@media (prefers-reduced-motion: reduce) { .connect { transition: none; } }

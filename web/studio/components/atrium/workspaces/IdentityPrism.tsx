@@ -58,23 +58,28 @@ function SourceTile({ source, info, connection, onChanged }: { source: typeof SO
       setForm(false);
     });
   };
+  const state = busy ? "Updating" : connection ? STATUS[connection.status] ?? connection.status : unavailable ? "Unavailable" : "";
   return <li className={styles.source} data-live={live || undefined}>
-    <div className={styles.row}><h4>{source.name}</h4><ActivityOrb status={busy ? "working" : connection?.status ?? "disconnected"} label={busy ? "Updating source" : connection ? STATUS[connection.status] ?? connection.status : unavailable ? "Unavailable" : "Not connected"} /></div>
-    <p>Read only</p>
-    {connection?.last_synced_at ? <p className={styles.note}>Last read {when(connection.last_synced_at)}</p> : live && <p className={styles.note}>Starting…</p>}
-    {connection?.error && <p className={styles.note} role="status">{connection.error}</p>}
+    <div className={styles.sourceRow}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <span className={styles.logo} aria-hidden="true"><img src={`/connectors/${source.id}.svg`} alt="" width={22} height={22} /></span>
+      <div className={styles.sourceText}>
+        <h4>{source.name}{live && <ActivityOrb status={busy ? "working" : connection!.status} label={state} />}</h4>
+        <p>{connection?.error ?? (live ? (connection?.last_synced_at ? `Last read ${when(connection.last_synced_at)}` : "Starting…") : note || source.reads)}</p>
+      </div>
+      {!form && <div className={styles.sourceActions}>
+        {live ? <><button type="button" className={styles.textButton} disabled={busy} onClick={() => void run(() => backend.disconnect(connection!.id))}>Disconnect</button>
+          <button type="button" className={styles.connect} disabled={busy} onClick={() => void run(() => backend.syncConnection(connection!.id))}>{busy ? "Reading…" : "Read now"}</button></>
+          : <button type="button" className={styles.connect} data-primary={!unavailable || undefined} disabled={busy || unavailable} onClick={connect}>{busy ? "Opening…" : unavailable ? "Unavailable" : connection ? "Reconnect" : "Connect"} <span aria-hidden="true">↗</span></button>}
+      </div>}
+    </div>
     {form && <form className={styles.credentials} onSubmit={submitRamp}>
       <input name="client_id" required autoComplete="off" placeholder="Client ID" aria-label="Ramp client ID" />
       <input name="client_secret" required type="password" autoComplete="off" placeholder="Client secret" aria-label="Ramp client secret" />
       <select name="environment" aria-label="Ramp environment" defaultValue="sandbox"><option value="sandbox">Sandbox</option><option value="production">Production</option></select>
       <div className={styles.actions}><button type="submit" className={styles.action} disabled={busy}>{busy ? "Connecting…" : "Connect Ramp"}</button><button type="button" className={styles.textButton} onClick={() => setForm(false)}>Cancel</button></div>
+      {note && <p className={styles.note} role="status">{note}</p>}
     </form>}
-    {!form && <div className={styles.actions}>
-      {live ? <><button type="button" className={styles.action} disabled={busy} onClick={() => void run(() => backend.syncConnection(connection!.id))}>{busy ? "Reading…" : "Read now"}</button>
-        <button type="button" className={styles.textButton} disabled={busy} onClick={() => void run(() => backend.disconnect(connection!.id))}>Disconnect</button></>
-        : <button type="button" className={styles.action} disabled={busy || unavailable} onClick={connect}>{busy ? "Opening…" : connection ? "Reconnect" : "Connect"}</button>}
-    </div>}
-    {note && <p className={styles.note} role="status">{note}</p>}
   </li>;
 }
 
