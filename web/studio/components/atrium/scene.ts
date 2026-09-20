@@ -33,7 +33,7 @@ export type StationBounds = { station: AtriumStation; depth: number; left: numbe
 /** Where the focused relic and its orbit slots land on the frame, 0 to 1, plus how far the camera has committed. */
 export type FocusFrame = { progress: number; center: { x: number; y: number }; slots: { x: number; y: number }[]; reach: number };
 export type AgentBounds = { left: number; top: number; width: number; height: number };
-export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; setRelicMotion(id: string | null, state: RelicMotionState): void; setRelicActivity(id: string, state: RelicActivity): void; /** Fly in on one relic, or home with null. `visibleShare` is how much of the frame width is on screen. */ setFocus(id: string | null, visibleShare?: number): void; /** Called every frame while a relic is in focus or the camera is still returning. */ setFocusListener(listener: ((frame: FocusFrame) => void) | null): void; dispose(): void };
+export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setAgentInteraction(state: { hovered: boolean; pressed?: boolean }): void; setPointer(x: number, y: number): void; setRelicMotion(id: string | null, state: RelicMotionState): void; setRelicActivity(id: string, state: RelicActivity): void; /** Fly in on one relic, or home with null. `visibleShare` is how much of the frame width is on screen. */ setFocus(id: string | null, visibleShare?: number): void; /** Called every frame while a relic is in focus or the camera is still returning. */ setFocusListener(listener: ((frame: FocusFrame) => void) | null): void; dispose(): void };
 
 export function isAtriumManifest(value: unknown): value is AtriumManifest {
   if (!value || typeof value !== "object") return false;
@@ -127,6 +127,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   let room: Object3D | null = null;
   let agentPearl: Mesh | null = null;
   let agentAura: AgentAura | null = null;
+  let agentInteraction = { hovered: false, pressed: false };
   let disposed = false;
   let ready = false;
   let paused = false;
@@ -271,6 +272,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     if (disposed) return;
     if (agentPearl && onAgentBounds) {
       const box = new Box3().setFromObject(agentPearl);
+      box.expandByScalar(box.getSize(new Vector3()).length() * .055);
       const points: Vector3[] = [];
       for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) points.push(new Vector3(x, y, z).project(camera));
       const left = Math.min(...points.map(point => (point.x + 1) / 2));
@@ -494,6 +496,11 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       if (paused) { animateRelics(0, true); render(); }
     },
     setPressed(id) { pressed = id; if (paused) render(); },
+    setAgentInteraction(state) {
+      agentInteraction = { hovered: state.hovered, pressed: !!state.pressed };
+      agentAura?.setInteraction(agentInteraction);
+      if (paused) { agentAura?.update(elapsed, 0, getWorldVoiceVisual(), true); render(); }
+    },
     setFocusListener(listener) { focusListener = listener; },
     setRelicMotion(id, state) {
       const instance = instances.find(entry => entry.station.id === id);
@@ -507,6 +514,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     },
     setFocus(id, visibleShare = 1) {
       focusShare = visibleShare;
+      if (id) { agentInteraction = { hovered: false, pressed: false }; agentAura?.setInteraction(agentInteraction); }
       if (focusedStation !== id) {
         const previous = instances.find(entry => entry.station.id === focusedStation);
         if (previous) previous.motion = { ...previous.motion, busy: false };
@@ -535,7 +543,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const point = basin && basin.x * basin.x + basin.z * basin.z < 4.36 * 4.36 ? basin : raycaster.ray.intersectPlane(poolPlane, poolHit);
       if (!point || point.x < -25 || point.x > 25 || point.z < -35 || point.z > 28 || point.distanceToSquared(lastSplash) < .0225) return;
       // Avoid making ripples through the navigation relic or the stone rim.
-      if (hovered || point.x * point.x + point.z * point.z >= 4.36 * 4.36 && point.x * point.x + point.z * point.z <= 4.95 * 4.95) return;
+      if (hovered || agentInteraction.hovered || agentInteraction.pressed || point.x * point.x + point.z * point.z >= 4.36 * 4.36 && point.x * point.x + point.z * point.z <= 4.95 * 4.95) return;
       water.splash(point.x, point.z, .28);
       lastSplash.copy(point);
     },
@@ -590,13 +598,14 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       if (object instanceof Mesh && /floating pearl marble sphere/.test(name)) agentPearl = object;
       if (/delicate orbital ring|suspended satellite/.test(name)) orbitParts.push(object);
       if (/floating pearl marble sphere|floating mineral|floating pearl light/.test(name)) {
-        floating.push({ object, position: object.position.clone(), rotation: new Vector3(object.rotation.x, object.rotation.y, object.rotation.z), phase: /marble sphere|lower pole/.test(name) ? 0 : floating.length * 1.73, amplitude: /marble sphere|lower pole/.test(name) ? .1 : .12 });
+        floating.push({ object, position: object.position.clone(), rotation: new Vector3(object.rotation.x, object.rotation.y, object.rotation.z), phase: /marble sphere|lower pole/.test(name) ? 0 : floating.length * 1.73, amplitude: /marble sphere|lower pole/.test(name) ? .18 : .12 });
       }
     });
     scene.updateMatrixWorld(true);
     orbitParts.forEach(object => orbit.attach(object));
     if (agentPearl) {
       agentAura = createAgentAura(agentPearl);
+      agentAura.setInteraction(agentInteraction);
       scene.add(agentAura.group);
       agentAura.update(0, 0, getWorldVoiceVisual());
     }

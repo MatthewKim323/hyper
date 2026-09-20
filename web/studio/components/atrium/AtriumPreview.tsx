@@ -20,6 +20,12 @@ const subscribeMotion = (update: () => void) => {
 const staticSnapshot = () => true;
 const fineHover = (event: ReactPointerEvent) => event.pointerType !== "touch" && matchMedia("(hover: hover) and (pointer: fine)").matches;
 const clampPointer = (value: number) => Math.max(-1, Math.min(1, value));
+const withinAgent = (element: HTMLButtonElement, x: number, y: number) => {
+  const rect = element.getBoundingClientRect();
+  const dx = (x - rect.left) / rect.width * 2 - 1;
+  const dy = (y - rect.top) / rect.height * 2 - 1;
+  return dx * dx + dy * dy <= 1;
+};
 
 // Sections that open beside their relic instead of covering the room.
 const FOCUS_SECTIONS = new Set([...EXPERIENCE_SECTIONS, "activity"]);
@@ -40,6 +46,18 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
   const scroller = useRef<HTMLDivElement>(null);
   const plane = useRef<HTMLDivElement>(null);
   const renderer = useRef<AtriumRenderer | null>(null);
+  const agentButton = useRef<HTMLButtonElement>(null);
+  const agentInteraction = useRef({ hovered: false, focused: false, pressed: false, pointerId: null as number | null });
+  const publishAgentInteraction = useCallback(() => {
+    const interaction = agentInteraction.current;
+    renderer.current?.setAgentInteraction({ hovered: interaction.hovered || interaction.focused, pressed: interaction.pressed });
+  }, []);
+  const resetAgentInteraction = useCallback(() => {
+    const pointerId = agentInteraction.current.pointerId;
+    agentInteraction.current = { hovered: false, focused: false, pressed: false, pointerId: null };
+    if (pointerId !== null && agentButton.current?.hasPointerCapture(pointerId)) agentButton.current.releasePointerCapture(pointerId);
+    publishAgentInteraction();
+  }, [publishAgentInteraction]);
   const orbit = useRef<OrbitHandle | null>(null);
   const experience = useRef<ExperienceHandle | null>(null);
   const lastFocusFrame = useRef<FocusFrame | null>(null);
@@ -82,6 +100,21 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
   const closeExperience = useCallback(() => {
     goHome();
   }, []);
+
+  useEffect(() => {
+    if (warm || focus || !atHome || failed) resetAgentInteraction();
+  }, [warm, focus, atHome, failed, resetAgentInteraction]);
+
+  useEffect(() => {
+    const hidden = () => { if (document.hidden) resetAgentInteraction(); };
+    window.addEventListener("blur", resetAgentInteraction);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      window.removeEventListener("blur", resetAgentInteraction);
+      document.removeEventListener("visibilitychange", hidden);
+      resetAgentInteraction();
+    };
+  }, [resetAgentInteraction]);
 
   useEffect(() => {
     if (focus) { lastStation.current = focus; return; }
@@ -164,6 +197,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
       setFocus(selected);
       renderer.current?.setHover(null);
       renderer.current?.setPressed(null);
+      resetAgentInteraction();
     };
     const fail = () => {
       controller.abort();
@@ -190,6 +224,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
         instance = await createAtriumRenderer(element, value, next => { if (active) setBounds(next); }, controller.signal, next => { if (active) setAgentBounds(next); });
         if (!active || controller.signal.aborted) { instance.dispose(); return; }
         renderer.current = instance;
+        publishAgentInteraction();
         instance.setFocusListener(frame => {
           lastFocusFrame.current = frame; orbit.current?.(frame); experience.current?.(frame);
           if (!homeReady.current && frame.progress < .02 && document.body.dataset.workspaceSection === "overview") { homeReady.current = true; setAtHome(true); }
@@ -227,7 +262,7 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
       element?.removeEventListener("webglcontextlost", fail);
       window.removeEventListener("hyper:section-change", update);
     };
-  }, []);
+  }, [publishAgentInteraction, resetAgentInteraction]);
 
   useEffect(() => {
     const element = scroller.current;
@@ -277,6 +312,22 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
+  function hoverAgent(event: ReactPointerEvent<HTMLButtonElement>) {
+    const inside = withinAgent(event.currentTarget, event.clientX, event.clientY);
+    agentInteraction.current.hovered = fineHover(event) && inside;
+    if (agentInteraction.current.pointerId === event.pointerId) agentInteraction.current.pressed = inside;
+    publishAgentInteraction();
+  }
+
+  function releaseAgent(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (agentInteraction.current.pointerId !== event.pointerId) return;
+    agentInteraction.current.pointerId = null;
+    agentInteraction.current.pressed = false;
+    if (event.type === "pointerup") hoverAgent(event);
+    else { agentInteraction.current.hovered = false; publishAgentInteraction(); }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
   function releaseRoom(event: ReactPointerEvent<HTMLDivElement>) {
     if (drag.current?.pointerId !== event.pointerId) return;
     drag.current = null;
@@ -322,9 +373,40 @@ export default function AtriumPreview({ warm = false, live = true }: { warm?: bo
       <div ref={plane} className={styles.plane} style={planeStyle}>
         <canvas ref={canvas} className={styles.water} aria-hidden="true" />
         {!failed && !focus && atHome && agentBounds && <button
-          type="button" className={styles.agent} data-cursor="hide" aria-label="Talk to Hyper" title="Talk to Hyper (V)"
+          ref={agentButton} type="button" className={styles.agent} data-cursor="hide" aria-label="Talk to Hyper" title="Talk to Hyper (V)"
           style={{ left: `${agentBounds.left * 100}%`, top: `${agentBounds.top * 100}%`, width: `${agentBounds.width * 100}%`, height: `${agentBounds.height * 100}%` }}
-          onClick={event => { event.stopPropagation(); window.dispatchEvent(new Event("hyper:agent-toggle")); }}
+          onPointerEnter={hoverAgent}
+          onPointerMove={hoverAgent}
+          onPointerLeave={() => { agentInteraction.current.hovered = false; agentInteraction.current.pressed = false; publishAgentInteraction(); }}
+          onPointerDown={event => {
+            event.stopPropagation();
+            if (!event.isPrimary || event.button !== 0) return;
+            agentInteraction.current.pointerId = event.pointerId;
+            agentInteraction.current.pressed = true;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            publishAgentInteraction();
+          }}
+          onPointerUp={releaseAgent}
+          onPointerCancel={releaseAgent}
+          onLostPointerCapture={releaseAgent}
+          onFocus={event => { agentInteraction.current.focused = event.currentTarget.matches(":focus-visible"); publishAgentInteraction(); }}
+          onBlur={resetAgentInteraction}
+          onKeyDown={event => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            agentInteraction.current.focused = true;
+            agentInteraction.current.pressed = true;
+            publishAgentInteraction();
+          }}
+          onKeyUp={event => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            agentInteraction.current.pressed = false;
+            publishAgentInteraction();
+          }}
+          onClick={event => {
+            event.stopPropagation();
+            if (event.detail > 0 && !withinAgent(event.currentTarget, event.clientX, event.clientY)) return;
+            window.dispatchEvent(new Event("hyper:agent-toggle"));
+          }}
         />}
         {!failed && !warm && <RelicOrbit section={customFocus ? null : focusedStation?.section ?? null} register={registerOrbit} />}
         {focus && <button type="button" className={styles.leave} data-cursor="hide" aria-label="Back to the atrium" onClick={closeExperience} />}
