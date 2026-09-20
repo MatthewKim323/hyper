@@ -5,7 +5,7 @@
 // Nothing here is pushed from the server. Use `poll` for anything that changes.
 import type {
   AgentCase, AgentTask, Artifact, Concern, ConcernStatus, Controller, Dataset, EvidenceSearch, FinancialAggregate,
-  FinancialQuery, Simulation, SimulationEvent, Source, SourceDetail, Workspace,
+  FinancialQuery, Simulation, SimulationEvent, Source, SourceDetail, Workspace, Connection,
 } from "./types";
 
 const BASE = "/api/onboarding";
@@ -43,6 +43,7 @@ const query = (params: Record<string, string | number | undefined>) => {
 
 export const backend = {
   workspace: () => call<Workspace>("/me/workspace"),
+  connections: () => call<{ connections: Connection[]; has_more: boolean }>("/connections"),
 
   // Review. Claim and resolve exist on the API but are agent actions; they are deliberately absent here.
   concerns: (status?: ConcernStatus, limit = 50, offset = 0) => call<{ concerns: Concern[]; has_more: boolean }>(`/concerns${query({ status, limit, offset })}`),
@@ -80,8 +81,9 @@ export function poll<T>(fetcher: () => Promise<T>, onData: (data: T) => void, op
   const tick = async () => {
     if (stopped) return;
     if (typeof document !== "undefined" && document.hidden) { timer = setTimeout(tick, every); return; }
-    try { onData(await fetcher()); failures = 0; }
+    try { const data = await fetcher(); if (stopped) return; onData(data); failures = 0; }
     catch (error) {
+      if (stopped) return;
       failures++; options.onError?.(error as Error);
       if (error instanceof BackendError && error.needsSignIn) { stopped = true; return; }
     }

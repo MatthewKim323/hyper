@@ -4,13 +4,13 @@
 //   neither                                -> signed out; sections explain what is missing
 import { setBackendTokenProvider } from "./client";
 
-export type AuthState = { mode: "clerk" | "dev" | "unconfigured"; signedIn: boolean; ready: boolean };
+export type AuthState = { mode: "clerk" | "dev" | "unconfigured"; signedIn: boolean; ready: boolean; scope: string };
 type Listener = (state: AuthState) => void;
 
 const CLERK_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const DEV_TOKEN = process.env.NODE_ENV !== "production" ? process.env.NEXT_PUBLIC_BACKEND_DEV_TOKEN : undefined;
 
-let state: AuthState = { mode: CLERK_KEY ? "clerk" : DEV_TOKEN ? "dev" : "unconfigured", signedIn: !CLERK_KEY && !!DEV_TOKEN, ready: !CLERK_KEY };
+let state: AuthState = { mode: CLERK_KEY ? "clerk" : DEV_TOKEN ? "dev" : "unconfigured", signedIn: !CLERK_KEY && !!DEV_TOKEN, ready: !CLERK_KEY, scope: !CLERK_KEY && DEV_TOKEN ? "dev-local" : "" };
 const listeners = new Set<Listener>();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let clerk: any = null;
@@ -36,9 +36,10 @@ export function startAuth(): Promise<void> {
     const [{ Clerk }, { ui }] = await Promise.all([import("@clerk/clerk-js"), import("@clerk/ui")]);
     clerk = new Clerk(CLERK_KEY!);
     await clerk.load({ ui });
-    clerk.addListener(() => publish({ signedIn: !!clerk.session }));
-    publish({ ready: true, signedIn: !!clerk.session });
-  })().catch(() => { starting = null; publish({ ready: true, signedIn: false }); });
+    const sync = () => publish({ ready: true, signedIn: !!clerk.session, scope: clerk.session ? [clerk.session.id, clerk.user?.id, clerk.organization?.id ?? "personal"].join(":") : "" });
+    clerk.addListener(sync);
+    sync();
+  })().catch(() => { starting = null; publish({ ready: true, signedIn: false, scope: "" }); });
   return starting;
 }
 

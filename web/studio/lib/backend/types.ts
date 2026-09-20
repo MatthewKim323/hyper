@@ -7,6 +7,11 @@ export type Workspace = {
   next_step: "onboarding" | "workspace";
 };
 
+export type Connection = {
+  id: string; provider: string; label: string; status: string;
+  created_at: number; last_synced_at: number | null; error: string | null;
+};
+
 export type ConcernStatus =
   | "draft" | "generating" | "card_failed" | "awaiting_response" | "queued" | "resolving" | "resolved" | "needs_input" | "failed";
 export type ConcernOption = { id: "option_1" | "option_2" | "option_3"; title: string; action: string; tradeoff: string; requires_approval: boolean };
