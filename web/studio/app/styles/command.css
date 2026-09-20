@@ -213,16 +213,11 @@
 body[data-atrium-focus]:not([data-atrium-focus=""]) .cmd-cards {
   right: auto;
   left: 22px;
-  bottom: 78px;
+  bottom: var(--cmd-clear);
 }
 
-@media (min-width: 810px) {
-  body[data-atrium-focus]:not([data-atrium-focus=""]) .cmd-agent {
-    left: 22px;
-    transform: none;
-    max-width: calc(53vw - 44px);
-  }
-}
+/* The dock never moves: it stays bottom center, and panels end above it (see --cmd-clear). */
+:root { --cmd-clear: 104px; }
 
 /* The dock belongs to the world: it settles in after the room lands and leaves with it, instead of
    riding a route transition onto the landing. */

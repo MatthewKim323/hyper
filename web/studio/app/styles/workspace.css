@@ -1,7 +1,7 @@
 /* Workspace sections (Cases, Evidence, Activity, Review). Same paper and ink as Timeline and Benchmarks. */
 /* A workspace is a panel beside its relic, never a page: the camera flies in, the relic takes the
    left of the frame, and this glass panel settles into the right once the camera is most of the way there. */
-.workspace { position: fixed; inset: 5.75rem 1.5rem 1.5rem auto; width: min(47vw, 780px); z-index: 62; overflow: auto; overscroll-behavior: contain; color: #252321;
+.workspace { position: fixed; inset: 5.75rem 1.5rem var(--cmd-clear, 104px) auto; width: min(47vw, 780px); z-index: 62; overflow: auto; overscroll-behavior: contain; color: #252321;
   container-type: inline-size; border: 1px solid rgb(255 255 255 / 55%); border-radius: 1.5rem;
   background: linear-gradient(180deg, rgb(246 242 240 / 80%), rgb(246 242 240 / 93%) 45%); -webkit-backdrop-filter: blur(22px) saturate(1.15); backdrop-filter: blur(22px) saturate(1.15);
   box-shadow: 0 30px 80px rgb(60 40 30 / 22%), inset 0 1px 0 rgb(255 255 255 / 60%);
@@ -12,7 +12,7 @@
 @keyframes ws-panel-out { to { opacity: 0; transform: translate3d(2.5rem, 0, 0) scale(0.99); } }
 .ws-content { max-width: 1080px; margin: auto; padding: 1.25rem 2rem 4rem; }
 @container (max-width: 760px) { .ws-grid { grid-template-columns: 1fr !important; } }
-@media (max-width: 809.98px) { .workspace { inset: auto 0.5rem 0.5rem; width: auto; height: 62dvh; } }
+@media (max-width: 809.98px) { .workspace { inset: auto 0.5rem var(--cmd-clear, 104px); width: auto; height: 62dvh; } }
 @media (prefers-reduced-motion: reduce) { .workspace, .workspace[data-leaving] { animation-duration: 0.01s; animation-delay: 0s; } }
 .workspace button, .workspace input { font: inherit; color: inherit; }
 .workspace :focus-visible { outline: 2px solid #555044; outline-offset: 3px; }
