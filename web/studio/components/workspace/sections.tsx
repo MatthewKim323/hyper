@@ -90,9 +90,9 @@ export function Review({ active, embedded = false, onMotion }: RelicSectionProps
     {!embedded && <Heading eyebrow="Review" title={<>Decisions that need <em>your</em> authority.</>} />}
     <PayableApprovals active={active} onBusy={onBusy} />
     {!data && !error && <p className="ws-note" role="status">Loading…</p>}
-    <Status error={error} empty={data && !concerns.length && "Nothing waiting"}>
+    <Status error={error} empty={data && !concerns.length && "No agent questions waiting"}>
       {waiting.length > 0 && <div className="ws-stack">{waiting.map((c, index) => <div key={c.id} onFocusCapture={() => setSelectedIndex(index)} onClickCapture={() => setSelectedIndex(index)}><ConcernCard concern={c} onAnswered={refresh} onBusy={onBusy} /></div>)}</div>}
-      {data && !waiting.length && concerns.length > 0 && <p className="ws-empty">Nothing waiting</p>}
+      {data && !waiting.length && concerns.length > 0 && <p className="ws-empty">No agent questions waiting</p>}
       {failed.map((c) => <FailedConcern key={c.id} concern={c} refresh={refresh} onBusy={onBusy} />)}
       {rest.length > 0 && <section className="ws-section"><span className="ws-eyebrow">In progress and history</span>
         <ul className="ws-rows">{rest.map((c) => <li key={c.id}>

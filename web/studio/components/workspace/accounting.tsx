@@ -33,7 +33,7 @@ function ProposalCard({ proposal, onDecided, onBusy }: { proposal: PayablePropos
       setNote({ ok: true, text: decision === "APPROVED" ? "Approved" : "Rejected" });
     } catch (reason) {
       const status = reason instanceof BackendError ? reason.status : 0;
-      setNote({ ok: false, text: status === 403 ? "Owner only" : (reason as Error).message });
+      setNote({ ok: false, text: status === 403 ? "An organization owner must approve this proposal." : (reason as Error).message });
     } finally {
       sending.current = false;
       setBusy(false);
@@ -63,7 +63,7 @@ function ProposalCard({ proposal, onDecided, onBusy }: { proposal: PayablePropos
   </article>;
 }
 
-/** Payables the engine has prepared. Shown in Review: this is the approval that actually moves money. */
+/** Payables prepared for an owner's decision. Approval does not execute a payment. */
 export function PayableApprovals({ active, onBusy }: { active: boolean; onBusy?: (id: string, busy: boolean) => void }) {
   const { data, refresh } = useBackend(backend.payableProposals, active, 6000);
   const proposals = data?.proposals ?? [];
