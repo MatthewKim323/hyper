@@ -48,6 +48,15 @@
       "crystal-clear": 1
     }
   },
+  "marble_verified": {
+    "world_scale": 0.58,
+    "nodes": 44,
+    "channels": [
+      "color",
+      "roughness",
+      "microbump"
+    ]
+  },
   "side_aperture_verified": {
     "targets": [
       "pearl",

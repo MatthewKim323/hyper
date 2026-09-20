@@ -136,20 +136,60 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
         } else if (/limestone|travertine|stone floor/i.test(material.name)) {
           material.color.setRGB(.739, .562, .499);
           material.envMapIntensity = .28;
-          material.roughness = .46;
-          material.onBeforeCompile = shader => {
+          material.roughness = .40;
+          const previousDecoration = material.onBeforeCompile;
+          const previousKey = material.customProgramCacheKey();
+          material.onBeforeCompile = (shader, renderer) => {
+            previousDecoration.call(material, shader, renderer);
             shader.uniforms.uStoneTime = time;
             shader.uniforms.uStoneSunDirection = { value: sunDirection };
             shader.vertexShader = "varying vec3 vStonePosition;\n" + shader.vertexShader.replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvStonePosition=(modelMatrix*vec4(transformed,1.)).xyz;");
-            shader.fragmentShader = `varying vec3 vStonePosition; uniform float uStoneTime; uniform vec3 uStoneSunDirection; ${noise}\n` + shader.fragmentShader.replace("#include <color_fragment>", `
+            const stoneNoise = shader.fragmentShader.includes("float atriumHash(") ? "" : noise;
+            shader.fragmentShader = `varying vec3 vStonePosition; uniform float uStoneTime; uniform vec3 uStoneSunDirection; ${stoneNoise}\n` + shader.fragmentShader.replace("#include <color_fragment>", `
               #include <color_fragment>
-              float mineral = atriumCloud(vStonePosition*1.4);
-              float grain = atriumNoise(vStonePosition*95.);
-              diffuseColor.rgb *= .94 + mineral*.12 + (grain-.5)*.025;
+              // Mineral seams follow a warped diagonal through the stone.
+              // Sparse masking and secondary wisps avoid closed contour loops.
+              vec3 marblePoint=vStonePosition*.62;
+              vec3 marbleWarp=vec3(
+                atriumNoise(marblePoint*.65+vec3(4.1,1.7,9.2)),
+                atriumNoise(marblePoint*.65+vec3(11.3,5.2,2.8)),
+                atriumNoise(marblePoint*.65+vec3(2.6,13.4,6.7))
+              )-.5;
+              vec3 marbleFlow=marblePoint+marbleWarp*.8;
+              float marbleBase=atriumNoise(marbleFlow*vec3(.85,1.3,.72));
+              float marbleMineral=atriumNoise(marbleFlow*2.7+vec3(7.8,3.1,4.6));
+              float marbleField=dot(marbleFlow,vec3(.9,.32,.48))*3.1+(marbleMineral-.5)*2.;
+              float marbleDistance=abs(sin(marbleField));
+              float marbleAA=max(.001,fwidth(marbleField)*.65);
+              float marbleMask=smoothstep(.28,.61,marbleBase);
+              float marbleMain=(1.-smoothstep(.012,.055+marbleAA,marbleDistance))*marbleMask;
+              float marbleBranchField=marbleField+.24+(atriumNoise(marbleFlow*4.6+vec3(3.4,8.2,1.6))-.5)*.6;
+              float marbleBranchAA=max(.001,fwidth(marbleBranchField)*.65);
+              float marbleBranch=(1.-smoothstep(.006,.027+marbleBranchAA,abs(sin(marbleBranchField))))
+                *marbleMask*(1.-smoothstep(.18,.56,marbleDistance));
+              float marbleVein=max(marbleMain,marbleBranch*.42);
+              float marbleShoulder=(1.-smoothstep(.045,.27,marbleDistance))*marbleMask;
+
+              // Fine mineral detail fades below a pixel instead of sparkling in motion.
+              float marbleFootprint=max(length(dFdx(vStonePosition)),length(dFdy(vStonePosition)));
+              float marbleGrainWeight=1.-smoothstep(.5,1.8,marbleFootprint*72.);
+              float marbleGrain=mix(.5,atriumNoise(vStonePosition*72.),marbleGrainWeight);
+              diffuseColor.rgb*=1.+(marbleMineral-.5)*.09+(marbleBase-.5)*.065+(marbleGrain-.5)*.022;
+              diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.80,.77,.80),marbleShoulder*.20);
+              diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.48,.43,.50),marbleVein*.36);
+              float marbleHeight=(marbleGrain-.5)*.0007-marbleVein*.0004;
+            `).replace("#include <roughnessmap_fragment>", `
+              #include <roughnessmap_fragment>
+              roughnessFactor=clamp(.36+marbleMineral*.06+(marbleGrain-.5)*.025+marbleVein*.06,.34,.48);
             `).replace("#include <normal_fragment_maps>", `
               #include <normal_fragment_maps>
-              vec3 pores = vec3(atriumNoise(vStonePosition*44.),atriumNoise(vStonePosition*44.+17.),atriumNoise(vStonePosition*44.+33.))-.5;
-              normal=normalize(normal+mat3(viewMatrix)*pores*.035);
+              // Surface-gradient bump mapping, matching r143's bump-map normal
+              // convention. Height is in scene units, so it survives scaling.
+              vec3 marbleSigmaX=dFdx(-vViewPosition),marbleSigmaY=dFdy(-vViewPosition);
+              vec3 marbleR1=cross(marbleSigmaY,normal),marbleR2=cross(normal,marbleSigmaX);
+              float marbleDet=dot(marbleSigmaX,marbleR1)*faceDirection;
+              vec3 marbleGradient=sign(marbleDet)*(dFdx(marbleHeight)*marbleR1+dFdy(marbleHeight)*marbleR2);
+              if(abs(marbleDet)>.00000001) normal=normalize(abs(marbleDet)*normal-marbleGradient);
             `).replace("#include <output_fragment>", `
               float waterline = 1.-smoothstep(.18,1.25,vStonePosition.y);
               if(waterline>0.) {
@@ -161,7 +201,7 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
               #include <output_fragment>
             `);
           };
-          material.customProgramCacheKey = () => "hyper-live-limestone-v2";
+          material.customProgramCacheKey = () => previousKey + "|hyper-live-rose-marble-v4";
         } else if (/graduated rose quartz|luminous ivory pearl/.test(material.name)) {
           material.color.setRGB(.933, .787, .721);
           material.roughness = .23;

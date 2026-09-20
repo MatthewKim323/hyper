@@ -81,21 +81,74 @@ def _coords(material, generated=False):
 
 
 def _stone():
-    material, shader, _ = _material("Hyper | blush ivory honed limestone", (0.875, 0.775, 0.735), 0.46)
+    material, shader, _ = _material("Hyper | blush ivory honed limestone", (0.875, 0.775, 0.735), 0.405)
     links, nodes = material.node_tree.links, material.node_tree.nodes
     position, _ = _coords(material)
-    mineral = _noise(material, 0.9, position, 4)
-    links.new(_ramp(material, mineral.outputs["Fac"], ((0.825, 0.70, 0.66), (0.925, 0.835, 0.79))), shader.inputs["Base Color"])
-    pores = _noise(material, 165, position, 2)
+
+    def vector(operation, first, second):
+        node = nodes.new("ShaderNodeVectorMath")
+        node.operation = operation
+        links.new(first, node.inputs[0])
+        socket = node.inputs["Scale"] if operation == "SCALE" else node.inputs[1]
+        if isinstance(second, (float, int, tuple)):
+            socket.default_value = second
+        else:
+            links.new(second, socket)
+        return node.outputs["Vector"]
+
+    domain = vector("SCALE", position, 0.58)
+    warp_noise = _noise(material, 0.65, domain, 3)
+    warp_noise.label = "Meter-scale mineral folding"
+    warp = vector("SUBTRACT", warp_noise.outputs["Color"], (0.5, 0.5, 0.5))
+    folded = vector("ADD", domain, vector("SCALE", warp, 1.1))
+    axis = nodes.new("ShaderNodeVectorMath")
+    axis.operation = "DOT_PRODUCT"
+    links.new(position, axis.inputs[0])
+    axis.inputs[1].default_value = (0.68, 0.31, 0.94)
+    folds = _noise(material, 0.48, position, 2)
+    folds.label = "Slow geological folding, not closed noise contours"
+    splinter = _noise(material, 3.8, folded, 2)
+    phase = _math(material, "ADD", axis.outputs["Value"], _math(material,"MULTIPLY",folds.outputs["Fac"],3.2))
+    phase = _math(material, "ADD", phase, _math(material,"MULTIPLY",splinter.outputs["Fac"],0.18))
+    distance = _math(material,"ABSOLUTE",_math(material,"SINE",phase,0),0)
+    coverage = _range(material,warp_noise.outputs["Fac"],0.30,0.65,0.10,0.34)
+    primary = _math(material,"MULTIPLY",_range(material,distance,0.009,0.031,1,0),coverage)
+    shoulders = _range(material, distance, 0.020, 0.08, 0.07, 0)
+    branch_phase = _math(material,"ADD",_math(material,"MULTIPLY",phase,1.035),_math(material,"MULTIPLY",splinter.outputs["Fac"],0.64))
+    branch_distance = _math(material,"ABSOLUTE",_math(material,"SINE",branch_phase,0),0)
+    branches = _math(material,"MULTIPLY",_range(material,branch_distance,0.004,0.014,0.10,0),_range(material,distance,0.1,0.45,1,0))
+    veins = _math(material, "MAXIMUM", primary, branches)
+    mineral = _noise(material, 1.15, position, 3)
+    base = tuple(material.diffuse_color[:3])
+    body = nodes.new("ShaderNodeVectorMath")
+    body.operation = "SCALE"
+    body.inputs[0].default_value = base
+    links.new(_range(material, mineral.outputs["Fac"], 0.12, 0.88, 0.96, 1.04), body.inputs["Scale"])
+    shoulder_color = nodes.new("ShaderNodeMixRGB")
+    links.new(shoulders, shoulder_color.inputs[0])
+    links.new(body.outputs["Vector"], shoulder_color.inputs[1])
+    shoulder_color.inputs[2].default_value = tuple(a*b for a,b in zip(base,(0.80,0.77,0.80)))+(1,)
+    vein_color = nodes.new("ShaderNodeMixRGB")
+    links.new(veins, vein_color.inputs[0])
+    links.new(shoulder_color.outputs[0], vein_color.inputs[1])
+    vein_color.inputs[2].default_value = tuple(a*b for a,b in zip(base,(0.48,0.43,0.50)))+(1,)
+    links.new(vein_color.outputs[0], shader.inputs["Base Color"])
+    pores = _noise(material, 72, position, 3)
+    pores.label = "Fine honed mineral grain"
+    height = _math(material, "SUBTRACT", _math(material,"MULTIPLY",pores.outputs["Fac"],0.0007), _math(material,"MULTIPLY",veins,0.0012))
     bump = nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.22
-    bump.inputs["Distance"].default_value = 0.0055
-    links.new(pores.outputs["Fac"], bump.inputs["Height"])
+    bump.inputs["Strength"].default_value = 0.35
+    bump.inputs["Distance"].default_value = 1.0
+    links.new(height, bump.inputs["Height"])
     links.new(bump.outputs["Normal"], shader.inputs["Normal"])
-    links.new(_range(material, pores.outputs["Fac"], 0.1, 0.9, 0.37, 0.53), shader.inputs["Roughness"])
+    links.new(_math(material,"ADD",_range(material,pores.outputs["Fac"],0.1,0.9,0.34,0.45),_math(material,"MULTIPLY",veins,0.02)),shader.inputs["Roughness"])
     shader.inputs["Subsurface Weight"].default_value = 0.025
     shader.inputs["Subsurface Radius"].default_value = (0.085, 0.045, 0.025)
-    shader.inputs["Coat Weight"].default_value = 0
+    shader.inputs["Coat Weight"].default_value = 0.10
+    shader.inputs["Coat Roughness"].default_value = 0.30
+    material["runtime_surface"] = "marble"
+    material["marble_world_scale"] = 0.58
+    material["marble_character"] = "Honed ivory and rose-gray marble; sparse folded mineral seams and submillimeter grain"
     return material
 
 
@@ -215,7 +268,7 @@ def _haze(scene, room):
     density = _math(material, "MULTIPLY", density, _range(material, absolute_x, room["half_width"] - 2, room["half_width"], 1, 0))
     volume = nodes.new("ShaderNodeVolumePrincipled")
     volume.inputs["Color"].default_value = (0.97, 0.93, 0.90, 1)
-    volume.inputs["Anisotropy"].default_value = 0.52
+    volume.inputs["Anisotropy"].default_value = 0.15
     links.new(density, volume.inputs["Density"])
     output = nodes.new("ShaderNodeOutputMaterial")
     links.new(volume.outputs["Volume"], output.inputs["Volume"])
@@ -228,6 +281,34 @@ def _haze(scene, room):
     box.dimensions = (room["half_width"] * 2, depth, room["height"])
     box.data.materials.clear()
     box.data.materials.append(material)
+
+
+def apply_lighting_balance(scene):
+    """Apply the approved key/fill balance without changing other materials."""
+    room = _room(scene)
+    window_power = ((room["rear"] + 5) / 13.5) ** 2
+    powers = {
+        "Light | broad ivory sky fill": 1050,
+        "Light | warm diagonal sun": 1100 * window_power,
+        "Light | central window": 425 * window_power,
+        "Light | left lavender window": 280 * window_power,
+        "Light | right pearl window": 375 * window_power,
+    }
+    for name, energy in powers.items():
+        light = scene.objects.get(name)
+        if light and light.type == "LIGHT":
+            light.data.energy = energy
+    if scene.world and scene.world.use_nodes:
+        for node in scene.world.node_tree.nodes:
+            if node.type == "BACKGROUND":
+                node.inputs["Strength"].default_value = 0.15 if node.inputs["Strength"].default_value < 1 else 1.6
+    haze = bpy.data.materials.get("Air | fine sunlit haze")
+    if haze and haze.use_nodes:
+        for node in haze.node_tree.nodes:
+            if node.type == "PRINCIPLED_VOLUME":
+                node.inputs["Anisotropy"].default_value = 0.15
+    scene["hyper_key_fill_balance"] = "2026-09-19: measured warm key, half broad/window fill, reduced glossy sky, broad-angle air scattering"
+    return powers
 
 
 def apply(scene):
@@ -287,7 +368,8 @@ def apply(scene):
             elif node.type == "BACKGROUND":
                 # Preserve the existing procedural cloud environment and its
                 # separate camera/reflection background, with calmer fill light.
-                node.inputs["Strength"].default_value = 0.15 if node.inputs["Strength"].default_value < 1 else 3.2
+                node.inputs["Strength"].default_value = 0.15 if node.inputs["Strength"].default_value < 1 else 1.6
+    apply_lighting_balance(scene)
     scene.cycles.volume_bounces = max(scene.cycles.volume_bounces, 3)
     scene.cycles.transmission_bounces = max(scene.cycles.transmission_bounces, 10)
     scene.view_settings.exposure = -0.55

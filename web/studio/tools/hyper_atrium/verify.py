@@ -69,6 +69,12 @@ for name,point in {'pearl center':(0,1.5,3.16),'pearl left':(-1.2,1.5,3.16),'pea
 result={'blender':bpy.app.version_string,'station_templates':variants,'water_vertices':len(surface.data.vertices),'water_animation_verified':True,'camera':list(scene.camera.location),'resolution':[scene.render.resolution_x,scene.render.resolution_y],'packed_fonts':sum(1 for font in bpy.data.fonts if font.packed_file),'glb_assets_verified':10}
 result['aperture_sunlight_verified']=illumination
 result['uncovered_relics_verified']={'hidden_aperture_guides':len(covers),'cover_free_station_assets':10,'relic_meshes_by_template':exported_relics}
+marble=bpy.data.materials.get('Hyper | blush ivory honed limestone')
+if marble and marble.get('marble_world_scale'):
+    shader=next(node for node in marble.node_tree.nodes if node.type=='BSDF_PRINCIPLED')
+    assert all(shader.inputs[name].is_linked for name in ('Base Color','Roughness','Normal'))
+    assert marble.get('runtime_surface')=='marble'
+    result['marble_verified']={'world_scale':marble['marble_world_scale'],'nodes':len(marble.node_tree.nodes),'channels':['color','roughness','microbump']}
 side=json.loads(scene.get('atrium_side_light','null'))
 if side:
     baffle=bpy.data.objects[side['occluder']['name']].evaluated_get(bpy.context.evaluated_depsgraph_get())
@@ -77,6 +83,9 @@ if side:
     for aperture in side['apertures']:
         target=Vector(aperture['target'])
         assert not baffle.ray_cast(inverse @ target,(inverse.to_3x3() @ (source-target)).normalized(),distance=200)[0], aperture['name']
+        if scene.get('hyper_key_fill_balance') and aperture['name']!='pearl':
+            projected=world_to_camera_view(scene,scene.camera,target)
+            assert 0<projected.x<1 and 0<projected.y<1, aperture['name']+' target is outside the composition'
     projections=[world_to_camera_view(scene,scene.camera,baffle.matrix_world @ vertex.co) for vertex in baffle.data.vertices]
     assert all(point.x>1 for point in projections), 'Side baffle enters the reference camera frame'
     result['side_aperture_verified']={'targets':[a['name'] for a in side['apertures']],'off_camera':True,'blender_type':bpy.data.objects['Fidelity | warm side aperture'].data.type}

@@ -30,7 +30,8 @@ export function createAtriumSideLight(metadata?: AtriumSideLightMetadata) {
   const color = new Color().setRGB(...metadata.color);
   // r143's legacy lighting has no inverse-square attenuation with distance=0.
   // Calibrate the source's 240 kW key against the existing 3.1-intensity rear sun.
-  const power = Number.isFinite(metadata.power) ? Math.max(0, metadata.power) / 240000 : 1;
+  // Calibrate the live key to the source's corrected 720 kW clerestory.
+  const power = Number.isFinite(metadata.power) ? Math.max(0, metadata.power) / 720000 : 1;
   const angle = Number.isFinite(metadata.coneAngle) ? Math.min(Math.PI * .95, Math.max(.05, metadata.coneAngle)) / 2 : 28 * Math.PI / 180;
   const penumbra = Number.isFinite(metadata.coneBlend) ? Math.max(0, Math.min(1, metadata.coneBlend)) : .18;
   const light = new SpotLight(color, 4.2 * power, 0, angle, penumbra, 1);

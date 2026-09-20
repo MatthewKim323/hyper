@@ -57,6 +57,17 @@ def _frame(scene, collection, x, apertures, material):
     return obj
 
 
+def _visible_wall_target(scene, wall_y, screen_x, screen_y):
+    """Project a top-origin camera position onto the actual rear wall plane."""
+    camera = scene.camera
+    frame = camera.data.view_frame(scene=scene)
+    left, right = min(point.x for point in frame), max(point.x for point in frame)
+    bottom, top = min(point.y for point in frame), max(point.y for point in frame)
+    ray = camera.matrix_world.to_quaternion() @ Vector((left+(right-left)*screen_x, top-(top-bottom)*screen_y, frame[0].z))
+    origin = camera.matrix_world.translation
+    return origin + ray * ((wall_y-origin.y)/ray.y)
+
+
 def apply(scene):
     """Replace the broad right fill with aperture-shaped warm illumination."""
     bpy.context.view_layer.update()
@@ -72,8 +83,8 @@ def apply(scene):
     pearl_center = sum(_bounds(pearl), Vector()) * .5 if pearl else Vector((0, 1.5, 3.16))
     target_points = [
         ("pearl", pearl_center, 2.4, 1.65),
-        ("left wall", Vector((-high.x * .25, low.y - .3, 9.4)), 1.7, 1.8),
-        ("right wall", Vector((high.x * .52, low.y - .3, window_top - .7)), 4.0, 2.2),
+        ("left wall", _visible_wall_target(scene, low.y-.3, .15, .20), 1.7, 1.8),
+        ("right wall", _visible_wall_target(scene, low.y-.3, .66, .17), 4.0, 2.2),
     ]
     apertures = []
     for name, target, width, height in target_points:
@@ -105,7 +116,7 @@ def apply(scene):
     target = Vector((0, low.y * .45, 8))
     direction = (target - source).normalized()
     lamp.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
-    lamp.data.energy = 240000
+    lamp.data.energy = 720000
     lamp.data.color = (1.0, .79, .65)
     lamp.data.spot_size = math.radians(56)
     lamp.data.spot_blend = .18
