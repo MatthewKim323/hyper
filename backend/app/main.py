@@ -16,19 +16,29 @@ app = FastAPI(title='Hyper Onboarding')
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in os.getenv('ALLOWED_ORIGINS','http://127.0.0.1:8000,http://localhost:8000').split(',')], allow_methods=['GET','POST'], allow_headers=['Authorization','Content-Type'])
 active = set()
 
-# Connecting at import made the process die before /health could answer whenever Postgres
-# was not up yet, which reads as an opaque crash-loop in a deployment. The first attribute
-# access builds it instead; tests and modules that do `from .main import store` are
-# unaffected, and assigning main.store (as tests do) still overrides it.
-_store = None
+# Connecting at import made the process die before /health could answer whenever Postgres was
+# not up yet, which reads as an opaque crash-loop in a deployment. This proxy builds the Store
+# on first use instead. It has to be a real module attribute: a module-level __getattr__ only
+# runs for `main.store` from outside, never for the bare `store` this module's own functions
+# use, so those raised NameError on every request.
+class _LazyStore:
+    __slots__ = ('_store',)
 
-def __getattr__(name):
-    global _store
-    if name != 'store':
-        raise AttributeError(name)
-    if _store is None:
-        _store = Store()
-    return _store
+    def __init__(self):
+        object.__setattr__(self, '_store', None)
+
+    def _resolve(self):
+        if object.__getattribute__(self, '_store') is None:
+            object.__setattr__(self, '_store', Store())
+        return object.__getattribute__(self, '_store')
+
+    def __getattr__(self, name):
+        return getattr(self._resolve(), name)
+
+    def __setattr__(self, name, value):
+        setattr(self._resolve(), name, value)
+
+store = _LazyStore()
 
 class CreateSession(BaseModel):
     demo: bool = False

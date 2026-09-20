@@ -227,3 +227,18 @@ def test_agents_never_receive_posting_or_approval_authority():
     assert not [n for n in data_tools.DESCRIPTIONS if n.startswith(('post_','approve_','reverse_','commit_'))]
     assert 'post_accrual_journal' in posting.OWNER_ONLY
     assert 'post_accrual_journal' not in posting.TOOL_MODELS
+
+def test_routes_reach_the_store_without_monkeypatching(tmp_path, monkeypatch):
+    """Every other test patches main.store, which creates a real module attribute and so
+    hides a store that only resolves as one. Authenticate for real against the unpatched
+    module: the route body must reach `store` by bare name without raising NameError."""
+    import time as _time
+    from fastapi.testclient import TestClient
+    from app import main, auth
+    monkeypatch.setenv('DATABASE_PATH', str(tmp_path / 'lazy.sqlite'))
+    monkeypatch.setattr(auth, 'verify', lambda token: auth.Identity('lazy-user', int(_time.time()) + 300))
+    client = TestClient(main.app)
+    # 500 here means the route body blew up; NameError on a bare `store` is exactly that.
+    response = client.get('/me/workspace', headers={'Authorization': 'Bearer any'})
+    assert response.status_code == 200, response.text
+    assert response.json()['user_id'] == 'lazy-user'
