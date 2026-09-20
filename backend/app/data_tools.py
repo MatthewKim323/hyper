@@ -7,11 +7,12 @@ from .concerns import ConcernService, RaiseConcern, ConcernID, Finish, ListConce
 from .elastic_investigations import InvestigationService, Investigate, InvestigationID, ElasticCloud
 
 from .fast_artifacts import ComposeArtifact, compose
+from fastapi.encoders import jsonable_encoder
 
 TOOL_MODELS={'compose_financial_artifact':ComposeArtifact,'investigate_financial_evidence':Investigate,'get_evidence_investigation':InvestigationID,'renew_concern_claim':Renew,'create_financial_artifact':CreateArtifact,'get_financial_artifact':ArtifactID,'list_concerns':ListConcerns,'raise_concern':RaiseConcern,'get_concern':ConcernID,'claim_concern':ConcernID,'resolve_concern':Finish,'query_financials':FinancialQuery,'search_evidence':EvidenceQuery,'get_source':SourceQuery}
 DESCRIPTIONS={
     'compose_financial_artifact':'Quickly create and save a historical financial chart using one Jev presentation selection. Provide request_key, prompt, grouped aggregate query and unit. Returns artifact ID, status and FinancialArtifactCard json-render spec. No projections. Only status ready is renderable; retry failed with the same request_key.',
-    'investigate_financial_evidence':'Queue an Elastic Agent Builder investigation of an indexed source. Requires source_id, question and stable request_key. Returns an investigation ID, not an immediate finding.',
+    'investigate_financial_evidence':'Delegate a read-only evidence investigation to the Elastic search specialist (A2A when configured). Use for exploratory, multi-step retrieval rather than known-ID lookups or exact financial totals. Requires an indexed source. Requires source_id, question and stable request_key. Returns an investigation ID, not an immediate finding.',
     'get_evidence_investigation':'Read a saved Elastic investigation and its cited finding or concern ID. Only complete means processing finished; inspect concern status separately.',
     'renew_concern_claim':'Renew a still-valid concern resolution claim for 15 minutes using its claim token.',
     'create_financial_artifact':'Queue a saved json-render financial chart with Jev review. Supply a complete aggregate query, units and optional scenario projection months; returns artifact ID and pending status.',
@@ -28,6 +29,17 @@ DESCRIPTIONS={
     'get_source':'Read paginated original extracted source content using a source_id from another tool. Returns row/page citations and an authenticated download URL.',
 }
 
+from . import accounting, settlements, accruals, learned_skills
+TOOL_MODELS.update(learned_skills.TOOL_MODELS)
+DESCRIPTIONS.update(learned_skills.DESCRIPTIONS)
+TOOL_MODELS.update(accruals.TOOL_MODELS)
+DESCRIPTIONS.update(accruals.DESCRIPTIONS)
+TOOL_MODELS.update(settlements.TOOL_MODELS)
+DESCRIPTIONS.update(settlements.DESCRIPTIONS)
+TOOL_MODELS.update(accounting.TOOL_MODELS)
+DESCRIPTIONS.update(accounting.DESCRIPTIONS)
+DESCRIPTIONS['list_accounting_records'] = 'List owner-verified structured accounting records and their original IDs/source citations. Unverified raw uploads are not accounting authority.'
+
 def tool_definitions():
     result=[]
     for name,description in DESCRIPTIONS.items():
@@ -43,6 +55,17 @@ def tool_definitions():
     return result
 
 def execute(store, oid, name, args):
+    if name in learned_skills.TOOL_MODELS:
+        return learned_skills.Skills(store,oid).execute(name,args)
+    if name in accruals.TOOL_MODELS:
+        return accruals.Accruals(store,oid).execute(name,args)
+    if name in settlements.TOOL_MODELS:
+        return settlements.Settlements(store,oid).execute(name,args)
+    if name == 'list_accounting_records':
+        if args:raise ValueError('No arguments expected')
+        return jsonable_encoder(accounting.Accounting(store,oid).inventory())
+    if name in accounting.TOOL_MODELS:
+        return jsonable_encoder(accounting.Accounting(store,oid).execute(name,args))
     svc=DataService(store,oid,search=ElasticSearch())
     if name=='list_datasets':
         if args:raise ValueError('list_datasets takes no arguments')

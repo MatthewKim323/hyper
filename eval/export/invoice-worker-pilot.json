@@ -1,0 +1,37 @@
+{
+  "manifest": {
+    "benchmark": "Invoice Sandbox",
+    "revision": "b8cb58ff9747486e86c623e867b76fad5d8d075f",
+    "system_kind": "WORKER_BASELINE",
+    "harness": "Devin cloud",
+    "model": "provider-managed, not exposed",
+    "trials": 1,
+    "acu_limit": 5,
+    "prompt_sha256": "9804470b964c725cba4ab28d9463b6032102b2906a168bc4d6e2bb73cdaa5c52",
+    "workspace_files": 147,
+    "pdf_count": 112,
+    "input_sha256": "bdd0349f8f01e3a16329747a57e526709e6089f880434a6a998237394ceff172",
+    "scorer_sha256": "b4a9187f94fc12995883e0305631ac29931f9781eea4a8c543c807fe32eca2aa",
+    "limitations": [
+      "Single public fixture, not held-out or independent validation",
+      "No Hyperfinance Agent backend tools",
+      "No network enforcement; no-answer-key access is instruction-based",
+      "Native scorer measures net totals only, not trap-exclusion quality",
+      "License not identified; fixture retained locally, not redistributed"
+    ]
+  },
+  "metrics": {
+    "customers_scored": "18",
+    "customers_exact": "18",
+    "customer_accuracy": "1.0000",
+    "total_absolute_error_usd": "0.00",
+    "missing_customers": "0",
+    "unexpected_customers": "0"
+  },
+  "elapsed_seconds_to_collection": 227.6,
+  "session_id": "1d551bef3bc4406ebe16d7bfd2e76d92",
+  "usage": 0.0,
+  "submission_sha256": "bbb18c7a7b96e5ba9074c864171afaf6585ec88b1f9a1e3bd08cb7c7d6d7ef80",
+  "claims": "Local native-scorer worker baseline on a public fixture; not a leaderboard submission or full-system score.",
+  "usage_note": "Provider reported 0.0 ACU at collection; usage may lag. No zero-cost claim."
+}

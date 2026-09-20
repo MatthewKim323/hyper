@@ -1,0 +1,145 @@
+"""Evidence-backed AP analysis. Agents cannot promote evidence or approve proposals."""
+import hashlib
+import json
+import re
+from contextlib import contextmanager
+from typing import Literal
+from pydantic import Field
+from sqlalchemy import select, insert
+from mirror_resolve import store as ledger, casework, creditmemo, proposals
+from mirror_resolve.ingest import get_record
+from mirror_resolve.intake import receive_record
+from mirror_resolve.schemas import RECORD_TYPES
+from .database import organizations, sources, records, accounting_evidence
+from .data_service import StrictModel
+
+class PromoteRecord(StrictModel):
+    source_id: str
+    row_number: int = Field(ge=1)
+    record_type: Literal['VENDOR_MASTER','PURCHASE_ORDER','AGREEMENT','GOODS_RECEIPT','INVOICE','CHANGE_ORDER','CHANGE_ORDER_ACK','BACKORDER_NOTICE','CREDIT_MEMO']
+    attestation: Literal['I verified this structured record against its source']
+class OpenInvoice(StrictModel):
+    invoice_id: str = Field(min_length=1,max_length=200)
+class CaseID(StrictModel):
+    case_id: str
+class InspectCredit(CaseID):
+    credit_id: str
+class Propose(CaseID):
+    based_on_revision: int = Field(ge=1)
+class Approval(StrictModel):
+    proposal_id: str
+    proposal_hash: str
+    decision: Literal['APPROVED','REJECTED']
+
+TOOL_MODELS={'open_payable_case':OpenInvoice,'analyze_payable':CaseID,'inspect_payable_credit':InspectCredit,'prepare_payable_proposal':Propose}
+DESCRIPTIONS={
+    'open_payable_case':'Open or resume a deterministic AP case for an original invoice_id from owner-verified accounting records. Does not trust model-extracted records.',
+    'analyze_payable':'Recompute exact invoice/PO/receipt matching, verified credits, residual, blocking issues and evidence links. Never substitute a narrative for failed checks.',
+    'inspect_payable_credit':'Verify an original credit memo ID against an AP case using code-owned checks. Partial correction does not resolve other discrepancies.',
+    'prepare_payable_proposal':'Prepare a hash-bound payable proposal from current accounting evidence and revision. Runs deterministic validation; returns blockers or an approval packet. Does not approve, commit entries, or move money.',
+}
+
+class Accounting:
+    def __init__(self, store, oid):self.store,self.oid=store,oid
+    def internal_id(self,value):
+        return hashlib.sha256(self.oid.encode()).hexdigest()[:24]+':'+value
+    def namespace(self,value):
+        if isinstance(value,list):return [self.namespace(v) for v in value]
+        if isinstance(value,dict):return {k:self.internal_id(v) if isinstance(v,str) and (k.endswith('_id') or k=='amends') else self.namespace(v) for k,v in value.items()}
+        return value
+    def exact_integers(self,value):
+        # The ingestion layer stores top-level numeric fields as decimal strings.
+        if isinstance(value,list):return [self.exact_integers(v) for v in value]
+        if isinstance(value,dict):return {k:int(v) if isinstance(v,str) and (k.endswith('_cents') or k in ('qty','amendment_no')) and re.fullmatch(r'-?\d+',v) else self.exact_integers(v) for k,v in value.items()}
+        return value
+    @contextmanager
+    def transaction(self):
+        with self.store.engine.begin() as db:
+            if db.dialect.name=='sqlite':db.exec_driver_sql('BEGIN IMMEDIATE')
+            if not db.execute(select(organizations.c.id).where(organizations.c.id==self.oid).with_for_update()).scalar():raise LookupError('Organization not found')
+            yield db
+    def owned_case(self,db,cid):
+        row=db.execute(select(ledger.cases).where(ledger.cases.c.case_id==cid,ledger.cases.c.company_id==self.oid)).mappings().first()
+        if not row:raise LookupError('Accounting case not found')
+        return dict(row)
+    def current_evidence(self,db):
+        # Fail closed if a promoted document was withdrawn/replaced in the evidence corpus.
+        rows=db.execute(select(ledger.records.c.doc_id).where(ledger.records.c.company_id==self.oid,ledger.records.c.status=='ACTIVE',ledger.records.c.trust=='TRUSTED')).scalars().all()
+        for doc_id in rows:
+            active=db.execute(select(sources.c.active).join(accounting_evidence,accounting_evidence.c.source_id==sources.c.id).where(accounting_evidence.c.organization_id==self.oid,accounting_evidence.c.doc_id==doc_id)).scalars().all()
+            if not active or not any(active):raise ValueError('Accounting evidence is missing or superseded; an owner must verify its replacement before analysis')
+    def promote(self,args,actor):
+        with self.transaction() as db:
+            source=db.execute(select(sources).where(sources.c.id==args.source_id,sources.c.organization_id==self.oid,sources.c.active.is_(True))).mappings().first()
+            row=db.execute(select(records.c.payload).where(records.c.source_id==args.source_id,records.c.organization_id==self.oid,records.c.row_number==args.row_number)).scalar()
+            if not source or row is None:raise LookupError('Active structured source row not found')
+            previous=db.execute(select(accounting_evidence).where(accounting_evidence.c.organization_id==self.oid,accounting_evidence.c.source_id==args.source_id,accounting_evidence.c.row_number==args.row_number)).mappings().first()
+            if previous:
+                if previous['record_type']!=args.record_type:raise ValueError('Source row already promoted as another record type')
+                return dict(previous)
+            model,key=RECORD_TYPES[args.record_type]
+            clean=json.loads(model.model_validate_json(json.dumps(self.exact_integers(row)),strict=True).model_dump_json())
+            if clean.get('currency') and clean['currency'] not in {'USD','EUR','GBP'}:raise ValueError('This AP engine currently supports USD, EUR and GBP minor units only')
+            for field in ('lines','prices','basis'):
+                if field in clean:
+                    ids=[v['item_id'] for v in clean[field]]
+                    if not ids or len(set(ids))!=len(ids):raise ValueError('Nonempty unique item lines required; split/duplicate lines need explicit allocation')
+            namespaced=self.namespace(clean)
+            old=get_record(db,self.oid,namespaced[key])
+            if old and old['record_type']!=args.record_type:raise ValueError('Record ID already belongs to another type')
+            if old and args.record_type=='CREDIT_MEMO' and old['data']!=namespaced:raise ValueError('A credit memo cannot be overwritten; issue a new memo ID for review')
+            # The trust basis is an authenticated OWNER attestation, not a source label supplied by an LLM.
+            rec=receive_record(db,self.oid,args.record_type,namespaced,source_system='ERP',channel='OWNER_VERIFIED',actor=actor,source_msg_id=args.source_id+':'+str(args.row_number))
+            result=dict(organization_id=self.oid,source_id=args.source_id,row_number=args.row_number,record_type=args.record_type,
+                        original_record_id=clean[key],doc_id=rec['doc_id'],source_sha256=source['sha256'],verified_by=actor)
+            db.execute(insert(accounting_evidence).values(**result))
+            return result
+    def inventory(self):
+        with self.transaction() as db:
+            return {'records':[dict(r) for r in db.execute(select(accounting_evidence).where(accounting_evidence.c.organization_id==self.oid)).mappings()]}
+    def snapshot(self,db,cid):
+        self.owned_case(db,cid);self.current_evidence(db)
+        calculation=proposals.calculate_supported_payable(db,cid)
+        evaluation=casework.evaluate_case(db,cid)
+        doc_ids={ref['doc_id'] for ref in evaluation['match']['sources']}
+        doc_ids.update(credit['doc_id'] for credit in evaluation['verified_credits'])
+        return {'case':casework.get_case(db,cid),'calculation':calculation,'issues':casework.list_issues(db,cid),
+                'evidence':[dict(r) for r in db.execute(select(accounting_evidence).where(accounting_evidence.c.organization_id==self.oid,accounting_evidence.c.doc_id.in_(doc_ids))).mappings()],
+                'authority':'analysis_only','policy':'explicit_ap_rules_not_inferred_practice'}
+    def execute(self,name,args):
+        parsed=TOOL_MODELS[name].model_validate(args)
+        with self.transaction() as db:
+            self.current_evidence(db)
+            if name=='open_payable_case':
+                invoice=get_record(db,self.oid,self.internal_id(parsed.invoice_id))
+                if not invoice or invoice['record_type']!='INVOICE':raise LookupError('Verified invoice not found')
+                case=casework.open_case(db,self.oid,invoice['record_id'],actor='agent:accounting')
+                return self.snapshot(db,case['case_id'])
+            self.owned_case(db,parsed.case_id)
+            if name=='analyze_payable':return self.snapshot(db,parsed.case_id)
+            if name=='inspect_payable_credit':
+                credit=creditmemo.inspect_credit_memo(db,parsed.case_id,self.internal_id(parsed.credit_id),'agent:accounting')
+                return {'credit':credit,**self.snapshot(db,parsed.case_id)}
+            snapshot=self.snapshot(db,parsed.case_id)
+            if parsed.based_on_revision!=snapshot['case']['revision']:raise ValueError('Stale case revision; recompute before proposing')
+            prop=proposals.propose_payable_update(db,parsed.case_id,parsed.based_on_revision,actor='agent:accounting',evidence_refs=snapshot['evidence'])
+            review=proposals.record_review(db,prop['proposal_id'],reviewer='engine:deterministic_validator',verdict='PASS')
+            approval=proposals.request_controller_approval(db,prop['proposal_id'],actor='agent:accounting') if review['verdict']=='PASS' else None
+            return {'proposal':prop,'validation':review,'approval':approval,'committed':False}
+    def approve(self,args,user_id):
+        with self.transaction() as db:
+            prop=proposals.get_proposal(db,args.proposal_id)
+            self.owned_case(db,prop['case_id']);self.current_evidence(db)
+            if prop['hash']!=args.proposal_hash:raise ValueError('Proposal hash mismatch')
+            if any(not c['ok'] for c in proposals.validate_proposal(db,args.proposal_id)):raise ValueError('Proposal no longer passes accounting checks')
+            approval=proposals.request_controller_approval(db,args.proposal_id,actor='human:'+user_id)
+            return proposals.decide_approval(db,approval['approval_id'],decided_by='human:'+user_id,role='CONTROLLER',decision=args.decision,proposal_hash=args.proposal_hash)
+
+def invalidate_replaced_sources(db, oid, source_key, new_source_id):
+    """Raw source replacement revokes dependent drafts before anyone re-verifies it."""
+    docs=db.execute(select(accounting_evidence.c.doc_id).join(sources, sources.c.id==accounting_evidence.c.source_id).where(
+        accounting_evidence.c.organization_id==oid, sources.c.source_key==source_key, sources.c.id!=new_source_id)).scalars().all()
+    touched=set()
+    for rec in db.execute(select(ledger.records).where(ledger.records.c.company_id==oid,ledger.records.c.doc_id.in_(docs),ledger.records.c.status=='ACTIVE')).mappings():
+        touched.update(casework.affected_cases(db,oid,dict(rec)))
+    for cid in touched:casework.bump_revision(db,cid,'Backing source replaced; replacement requires owner verification',actor='engine:source_version')

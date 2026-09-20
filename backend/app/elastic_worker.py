@@ -1,4 +1,4 @@
-"""Run with python -m app.elastic_worker; dispatches bounded Elastic Workflows."""
+"""Run with python -m app.elastic_worker; dispatches bounded A2A or legacy Workflow investigations."""
 import argparse
 import logging
 import time

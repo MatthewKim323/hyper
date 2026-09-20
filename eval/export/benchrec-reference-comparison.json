@@ -1,0 +1,67 @@
+{
+  "kind": "LOCAL_RULES_BASELINE_AND_DEVELOPMENT_ABLATION",
+  "input_sha256": "2b1d2f734420d92c12b563d8f9a281608f9a50a8305369ac41913aa39b508bdf",
+  "code_sha256": "41402e1330aeeb256a23c661f92f2777ccb63a0de1d204ed5b0975b8230fb0e3",
+  "submission_sha256": {
+    "../eval/runs/remaining-20260919/benchrec/execution/submission.csv": "73dbdca504c1f6abb445ca6225d4462d7047ac2a8ba1fe3f1f20860ef3e0d779",
+    "../eval/runs/remaining-20260919/benchrec/private/MatcherByChatGPT_submission.csv": "ca74a5f846f681eb74b0476505d03b0ee2c8a7eb743f83ea990414d3f2fe7a8d"
+  },
+  "protocol": "Fixed rules with no gold-based tuning. Conservation gate developed after observing aggregate worker scores; not preregistered or held out. Rejects rather than invents assignments. Balance is necessary, not proof of identity.",
+  "policies": {
+    "unique-total": {
+      "rows": 32048,
+      "gold_matches": 31836,
+      "proposed": 14869,
+      "correct_matches": 14796,
+      "false_matches": 73,
+      "precision": 0.9950904566547851,
+      "recall": 0.4647568790049001,
+      "coverage": 0.46396030953569645,
+      "exact_row_accuracy": 0.46798552171742386
+    },
+    "reference-conserved": {
+      "rows": 32048,
+      "gold_matches": 31836,
+      "proposed": 2775,
+      "correct_matches": 2771,
+      "false_matches": 4,
+      "precision": 0.9985585585585586,
+      "recall": 0.08703982912426184,
+      "coverage": 0.08658886669995007,
+      "exact_row_accuracy": 0.09307913130304543
+    },
+    "raw:../eval/runs/remaining-20260919/benchrec/execution/submission.csv": {
+      "rows": 32048,
+      "gold_matches": 31836,
+      "proposed": 30306,
+      "correct_matches": 29042,
+      "false_matches": 1264,
+      "precision": 0.9582920873754373,
+      "recall": 0.91223771830632,
+      "coverage": 0.9456440339490764,
+      "exact_row_accuracy": 0.9125062406390414
+    },
+    "conservation-gated:../eval/runs/remaining-20260919/benchrec/execution/submission.csv": {
+      "rows": 32048,
+      "gold_matches": 31836,
+      "proposed": 28186,
+      "correct_matches": 27036,
+      "false_matches": 1150,
+      "precision": 0.9591996026396084,
+      "recall": 0.8492272898605352,
+      "coverage": 0.8794932601098352,
+      "exact_row_accuracy": 0.8499126310534199
+    },
+    "distributed-reference-unknown-model": {
+      "rows": 32048,
+      "gold_matches": 31836,
+      "proposed": 20800,
+      "correct_matches": 19802,
+      "false_matches": 998,
+      "precision": 0.9520192307692308,
+      "recall": 0.6220002512878502,
+      "coverage": 0.6490264603095357,
+      "exact_row_accuracy": 0.6245007488766849
+    }
+  }
+}

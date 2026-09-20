@@ -51,8 +51,27 @@ def match_invoice(conn: Connection, company_id: str, invoice_rec: dict) -> dict:
         missing.append("purchase order")
     else:
         sources.append(_ref(po))
+        if po['record_type'] != 'PURCHASE_ORDER' or po['data'].get('vendor_id') != inv['vendor_id'] or po['data'].get('currency') != inv['currency']:
+            missing.append('purchase order with matching vendor and currency')
+            po = None
 
     agreements = list_records(conn, company_id, "AGREEMENT")
+    if po and po['data'].get('agreement_id'):
+        base = po['data']['agreement_id']
+        related = {base}
+        # Follow explicit amendment links; unrelated supplier contracts are not authority.
+        for _ in agreements:
+            related.update(a['record_id'] for a in agreements if a['data'].get('amends') in related)
+        agreements = [a for a in agreements if a['record_id'] in related]
+        if not agreements:missing.append('purchase order agreement')
+    else:
+        agreements = []
+    if any(a['data']['currency'] != inv['currency'] for a in agreements):
+        missing.append('agreement with matching currency')
+    agreements = [a for a in agreements if a['data']['currency'] == inv['currency']]
+    others = list_records(conn, company_id, 'INVOICE', po_id=inv.get('po_id')) if po else []
+    if any(r['record_id'] != invoice_rec['record_id'] and r['data']['invoice_number'] != inv['invoice_number'] for r in others):
+        missing.append('explicit receipt allocation across multiple invoices for this purchase order')
     receipts = list_records(conn, company_id, "GOODS_RECEIPT", po_id=inv.get("po_id")) if po else []
     change_orders = list_records(conn, company_id, "CHANGE_ORDER", po_id=inv.get("po_id")) if po else []
     acks = {a["data"]["co_id"]: a for a in list_records(conn, company_id, "CHANGE_ORDER_ACK")
@@ -64,6 +83,11 @@ def match_invoice(conn: Connection, company_id: str, invoice_rec: dict) -> dict:
     for ln in inv["lines"]:
         item, billed, inv_price = ln["item_id"], ln["qty"], ln["unit_price_cents"]
         price_src = None
+        po_line = next((x for x in po['data']['lines'] if x['item_id']==item),None) if po else None
+        if po and (po_line is None or billed > po_line['qty']):
+            missing.append(f'purchase order authorization for billed quantity of {item}')
+        if sum(x['item_id'] == item for x in inv['lines']) != 1:
+            missing.append('unique invoice item lines or explicit line allocation')
         found = applicable_price(agreements, inv["vendor_id"], item, on)
         if found:
             contract_price, arec = found

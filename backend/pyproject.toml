@@ -17,9 +17,13 @@ dependencies = [
     "pypdf>=6,<7",
     "cryptography>=44,<47",
     "openpyxl>=3.1,<4",
+    "mirror-resolve",
 ]
 [dependency-groups]
 dev = ["pytest>=8", "pytest-asyncio>=0.24"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 pythonpath = ["."]
+
+[tool.uv.sources]
+mirror-resolve = { path = "../resolve", editable = true }

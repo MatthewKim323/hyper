@@ -89,6 +89,16 @@ def inspect_credit_memo(conn: Connection, case_id: str, credit_id: str, actor: s
             within &= b["qty"] <= l["unreceived_qty"] and b["unit_cents"] == min(l["invoice_unit_cents"], l["contract_unit_cents"])
     checks.append({"check": "basis_within_invoice_discrepancy", "ok": within,
                    "detail": "credited units and rates must not exceed the discrepancy on this invoice"})
+    used = {}
+    for other in casework.verified_credits(conn, case['company_id'], case['invoice_id'], states=('VERIFIED','ALLOCATED')):
+        if other['scope'] != memo['scope']:continue
+        prior = get_record(conn, case['company_id'], other['credit_id'])
+        for basis in prior['data']['basis']:
+            used[basis['item_id']] = used.get(basis['item_id'],0) + basis['qty'] * basis['unit_cents']
+    for basis in memo['basis']:
+        used[basis['item_id']] = used.get(basis['item_id'],0) + basis['qty'] * basis['unit_cents']
+    cap_key = 'price_variance_cents' if memo['scope']=='PRICE' else 'qty_variance_cents'
+    checks.append({'check':'cumulative_credit_within_discrepancy', 'ok':all(item in lines and amount <= lines[item][cap_key] for item,amount in used.items()), 'detail':'all verified credits must fit each item discrepancy'})
 
     if not applies:
         # An unrelated memo is not defective, it just is not evidence for this case.

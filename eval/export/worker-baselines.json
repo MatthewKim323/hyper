@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-19",
+  "system_kind": "WORKER_BASELINE",
+  "harness": "Devin cloud",
+  "model": "provider-managed, not exposed",
+  "trials_per_benchmark": 1,
+  "claims": "Isolated Devin worker baselines on public benchmark material; no Hyperfinance Agent backend tools; not leaderboard submissions or full-system scores.",
+  "benchmarks": [
+    {
+      "id": "benchrec",
+      "name": "BenchRec v3 (Kaggle, CC BY 4.0)",
+      "revision": "Kaggle version 3",
+      "grading": "custom exact-allocation metrics; no official scorer shipped",
+      "input_sha256": "cabaef8890852f8091298b85c8a8bdb983505cfefc8771710d315dac601f01d6",
+      "prompt_sha256": "0016b261d85a30f65f7f3c1b1c240a9f30b2094fae91f57aba97e06e4fbbe79a",
+      "acu_limit": 5,
+      "session_id": "797a47241d734ceaabd381e9e055345b",
+      "execution": "stdlib-only matcher executed locally in locked-down python:3.11-slim container",
+      "matcher_sha256": "decc57472e8c2c97044109e29bcd455ea146a2686d4d046d8f7ec0b0ee6ce819",
+      "submission_sha256": "73dbdca504c1f6abb445ca6225d4462d7047ac2a8ba1fe3f1f20860ef3e0d779",
+      "metrics": {
+        "rows": 32048,
+        "gold_matches": 31836,
+        "proposed": 30306,
+        "correct_matches": 29042,
+        "false_matches": 1264,
+        "precision": 0.9582920873754373,
+        "recall": 0.91223771830632,
+        "coverage": 0.9456440339490764,
+        "exact_row_accuracy": 0.9125062406390414
+      },
+      "limitations": [
+        "Single trial on a public dataset",
+        "Precision below the 99.8% prompt target",
+        "Measures the worker's matcher, not the settlement engine"
+      ]
+    },
+    {
+      "id": "dabstep",
+      "name": "DABstep development set",
+      "revision": "be54e258883ea46d6625d15a213838f4462c8b3b",
+      "grading": "pinned native question_scorer",
+      "input_sha256": "7bbd69b7a040bf288302fb0c965d1c0c803ba0254bf25dd10709de4a9047058d",
+      "prompt_sha256": "ebad07a3ff3713bbb69f353f07b1949b9f0fb170bee4e5469afb5c463b4db0ef",
+      "acu_limit": 5,
+      "session_id": "d98040b5a96948a388c014defd6f6908",
+      "metrics": {
+        "correct": 7,
+        "total": 10,
+        "hard_passed": 6,
+        "hard_total": 7,
+        "easy_passed": 1,
+        "easy_total": 3
+      },
+      "limitations": [
+        "Development split only; not the 450-task hidden default split",
+        "Single trial on public material"
+      ]
+    },
+    {
+      "id": "apex",
+      "name": "APEX Accounting public development set",
+      "revision": "bf5e8c99117b7ee763d79ad2c64563ac844d77d2",
+      "grading": "custom single-model rubric judgment (openai/gpt-4.1); not publisher grading",
+      "status": "provisional_judge_inconsistency_found",
+      "status_note": "At least one numerical-tolerance verdict contradicts its stated bounds; re-grade before making performance claims.",
+      "input_sha256": "794f017e932c2bbe025efe98bad14c3ecbf9d208b71089766c8a3cdedf08429a",
+      "prompt_sha256": "7991cd7e638ba0715393be80c8c4cf677574cf930f13bd760d73dc2ddb619300",
+      "acu_limit": 10,
+      "session_id": "5a70195aaa2b4b04b67bad71171a2e78",
+      "metrics": {
+        "criteria_passed": 71,
+        "criteria_total": 89,
+        "micro_pass_rate": 0.797752808988764,
+        "macro_task_mean": 0.7070833333333334,
+        "perfect_tasks": 3,
+        "total_tasks": 10
+      },
+      "limitations": [
+        "Single-model judge is not the publisher's expert grading",
+        "Session exhausted ACU cap before emitting output; answers retrieved by follow-up message",
+        "Single trial on public development tasks"
+      ]
+    }
+  ]
+}

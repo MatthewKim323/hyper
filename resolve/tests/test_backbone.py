@@ -247,3 +247,28 @@ def test_spoofed_memo_cannot_poison_the_real_one(conn):
     receive_record(conn, C, rtype, {**data, "amount_cents": 1}, source_system="EMAIL", channel="EMAIL", sender="x@example.com")
     receive_record(conn, C, rtype, data, **src)
     assert creditmemo.inspect_credit_memo(conn, cid, "CM-201", "a")["state"] == "VERIFIED"
+
+def test_stated_total_cannot_pass_deterministic_review(conn):
+    from mirror_resolve.ingest import get_record
+    cid=hero.seed_initial(conn)['case_id']
+    full_resolution(conn,cid)
+    invoice=get_record(conn,C,'INV-1042')['data']
+    invoice['total_cents']+=1
+    receive_record(conn,C,'INVOICE',invoice,source_system='ERP')
+    # Reverify against the new record, so the remaining failure is the stated total.
+    creditmemo.inspect_credit_memo(conn,cid,'CM-201','agent')
+    creditmemo.inspect_credit_memo(conn,cid,'CM-202','agent')
+    _,review=prepare(conn,cid)
+    assert review['verdict']=='FAIL'
+    assert any(c['check']=='invoice_total_ties' and not c['ok'] for c in review['checks'])
+
+
+def test_cumulative_duplicate_credit_is_rejected(conn):
+    cid=hero.seed_initial(conn)['case_id']
+    deliver(conn,hero.price_credit())
+    assert creditmemo.inspect_credit_memo(conn,cid,'CM-201','agent')['usable']
+    typ,data,src=hero.price_credit();data['cm_id']='CM-extra';data['memo_number']='DV-extra'
+    deliver(conn,(typ,data,src))
+    result=creditmemo.inspect_credit_memo(conn,cid,'CM-extra','agent')
+    assert not result['usable']
+    assert any(c['check']=='cumulative_credit_within_discrepancy' and not c['ok'] for c in result['checks'])

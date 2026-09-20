@@ -1,0 +1,564 @@
+{
+  "system_name": "Hyperfinance Agent",
+  "kind": "PUBLIC_DEVELOPMENT_COMPARISON",
+  "comparisons": {
+    "benchrec": {
+      "baseline": {
+        "trial": 1,
+        "variant": "original",
+        "run": "remaining-20260919",
+        "status": "running",
+        "status_detail": "waiting_for_user",
+        "complete": true,
+        "acu_limit": 5,
+        "reported_acus_consumed": 0.0,
+        "result": {
+          "benchmark": "BenchRec v3",
+          "grading": "custom exact-allocation metrics",
+          "metrics": {
+            "rows": 32048,
+            "gold_matches": 31836,
+            "proposed": 30306,
+            "correct_matches": 29042,
+            "false_matches": 1264,
+            "precision": 0.9582920873754373,
+            "recall": 0.91223771830632,
+            "coverage": 0.9456440339490764,
+            "exact_row_accuracy": 0.9125062406390414
+          },
+          "matcher_sha256": "decc57472e8c2c97044109e29bcd455ea146a2686d4d046d8f7ec0b0ee6ce819",
+          "submission_sha256": "73dbdca504c1f6abb445ca6225d4462d7047ac2a8ba1fe3f1f20860ef3e0d779",
+          "image": "python:3.11-slim@sha256:da047cb8f9d1d98e5c070f5300ba9f7274e33b8fc0e5be5ed88740aed1b95ba9"
+        },
+        "grading_pending": false
+      },
+      "trials": [
+        {
+          "trial": 1,
+          "variant": "verified-v2",
+          "run": "verified-v2-01",
+          "status": "running",
+          "status_detail": "waiting_for_user",
+          "complete": true,
+          "acu_limit": 5,
+          "reported_acus_consumed": 0.0,
+          "result": {
+            "benchmark": "BenchRec v3",
+            "grading": "custom exact-allocation metrics",
+            "metrics": {
+              "rows": 32048,
+              "gold_matches": 31836,
+              "proposed": 29271,
+              "correct_matches": 28196,
+              "false_matches": 1075,
+              "precision": 0.9632742304670151,
+              "recall": 0.8856640281442393,
+              "coverage": 0.9133487269096355,
+              "exact_row_accuracy": 0.8861083374937594
+            },
+            "matcher_sha256": "fa695d4190419443dcd80c2d218448c9dfd57f323a3b5708f9da5f30b76fbbc4",
+            "submission_sha256": "559378a98c1e47819597d52afad055cd02422421256f16b4de8721a9408c7466",
+            "image": "python:3.11-slim@sha256:da047cb8f9d1d98e5c070f5300ba9f7274e33b8fc0e5be5ed88740aed1b95ba9"
+          },
+          "grading_pending": false
+        },
+        {
+          "trial": 2,
+          "variant": "verified-v2",
+          "run": "verified-v2-02",
+          "status": "running",
+          "status_detail": "waiting_for_user",
+          "complete": true,
+          "acu_limit": 5,
+          "reported_acus_consumed": 0.0,
+          "result": {
+            "benchmark": "BenchRec v3",
+            "grading": "custom exact-allocation metrics",
+            "metrics": {
+              "rows": 32048,
+              "gold_matches": 31836,
+              "proposed": 28901,
+              "correct_matches": 27721,
+              "false_matches": 1180,
+              "precision": 0.9591709629424587,
+              "recall": 0.870743812036688,
+              "coverage": 0.9018035446829755,
+              "exact_row_accuracy": 0.8712556165751373
+            },
+            "matcher_sha256": "18e89736c9793ed0719a074d383b5f82feb3b8bfcbad70d0b5d3577d3657e326",
+            "submission_sha256": "6c43b61747d73889c326df965ea5bff91c02a81413f82d2717a24f933cbf936b",
+            "image": "python:3.11-slim@sha256:da047cb8f9d1d98e5c070f5300ba9f7274e33b8fc0e5be5ed88740aed1b95ba9"
+          },
+          "grading_pending": false
+        },
+        {
+          "trial": 3,
+          "variant": "verified-v2",
+          "run": "verified-v2-03",
+          "status": "running",
+          "status_detail": "waiting_for_user",
+          "complete": true,
+          "acu_limit": 5,
+          "reported_acus_consumed": 0.0,
+          "result": {
+            "benchmark": "BenchRec v3",
+            "grading": "custom exact-allocation metrics",
+            "metrics": {
+              "rows": 32048,
+              "gold_matches": 31836,
+              "proposed": 29878,
+              "correct_matches": 28819,
+              "false_matches": 1059,
+              "precision": 0.964555860499364,
+              "recall": 0.9052330694810906,
+              "coverage": 0.9322890664003994,
+              "exact_row_accuracy": 0.9054855217174239
+            },
+            "matcher_sha256": "78629d1d955988d3d9616f3919dc8b82635fb26cbfba1d19866540aa07f213dd",
+            "submission_sha256": "7be301c0fd45cc1ba76cd2fcab02f5d925b270a5dd6c179146707a5e08948275",
+            "image": "python:3.11-slim@sha256:da047cb8f9d1d98e5c070f5300ba9f7274e33b8fc0e5be5ed88740aed1b95ba9"
+          },
+          "grading_pending": false
+        }
+      ],
+      "attempted": 3,
+      "completed": 3,
+      "scored": 3,
+      "unscored": 0,
+      "terminal_incomplete": 0,
+      "metrics_completed": {
+        "precision": {
+          "mean": 0.9623336846362793,
+          "min": 0.9591709629424587,
+          "max": 0.964555860499364,
+          "defined_trials": 3
+        },
+        "recall": {
+          "mean": 0.887213636554006,
+          "min": 0.870743812036688,
+          "max": 0.9052330694810906,
+          "defined_trials": 3
+        },
+        "coverage": {
+          "mean": 0.9158137793310035,
+          "min": 0.9018035446829755,
+          "max": 0.9322890664003994,
+          "defined_trials": 3
+        },
+        "false_matches": {
+          "mean": 1104.6666666666667,
+          "min": 1059,
+          "max": 1180,
+          "defined_trials": 3
+        }
+      }
+    },
+    "dabstep": {
+      "baseline": {
+        "trial": 1,
+        "variant": "original",
+        "run": "remaining-20260919",
+        "status": "running",
+        "status_detail": "waiting_for_user",
+        "complete": true,
+        "acu_limit": 5,
+        "reported_acus_consumed": 0.0,
+        "result": {
+          "benchmark": "DABstep dev",
+          "grading": "pinned native question_scorer",
+          "correct": 7,
+          "total": 10,
+          "tasks": [
+            {
+              "task_id": "5",
+              "level": "easy",
+              "passed": true
+            },
+            {
+              "task_id": "49",
+              "level": "easy",
+              "passed": false
+            },
+            {
+              "task_id": "70",
+              "level": "easy",
+              "passed": false
+            },
+            {
+              "task_id": "1273",
+              "level": "hard",
+              "passed": true
+            },
+            {
+              "task_id": "1305",
+              "level": "hard",
+              "passed": true
+            },
+            {
+              "task_id": "1464",
+              "level": "hard",
+              "passed": true
+            },
+            {
+              "task_id": "1681",
+              "level": "hard",
+              "passed": true
+            },
+            {
+              "task_id": "1753",
+              "level": "hard",
+              "passed": true
+            },
+            {
+              "task_id": "1871",
+              "level": "hard",
+              "passed": true
+            },
+            {
+              "task_id": "2697",
+              "level": "hard",
+              "passed": false
+            }
+          ],
+          "scorer_sha256": "229c04ecaa249ccc5b555dee11c85fe93d073d41eee61b6c3584065ae33c9df3",
+          "output_sha256": "715e3b115334fc3f57ccfdc2b2c3fba8fa545811da59179c4822b08dbd352efd"
+        },
+        "grading_pending": false
+      },
+      "trials": [
+        {
+          "trial": 1,
+          "variant": "verified-v2",
+          "run": "verified-v2-01",
+          "status": "running",
+          "status_detail": "waiting_for_user",
+          "complete": true,
+          "acu_limit": 5,
+          "reported_acus_consumed": 0.0,
+          "result": {
+            "benchmark": "DABstep dev",
+            "grading": "pinned native question_scorer",
+            "correct": 7,
+            "total": 10,
+            "tasks": [
+              {
+                "task_id": "5",
+                "level": "easy",
+                "passed": true
+              },
+              {
+                "task_id": "49",
+                "level": "easy",
+                "passed": false
+              },
+              {
+                "task_id": "70",
+                "level": "easy",
+                "passed": false
+              },
+              {
+                "task_id": "1273",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1305",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1464",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1681",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1753",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1871",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "2697",
+                "level": "hard",
+                "passed": false
+              }
+            ],
+            "by_level": {
+              "easy": {
+                "correct": 1,
+                "total": 3
+              },
+              "hard": {
+                "correct": 6,
+                "total": 7
+              }
+            },
+            "scorer_sha256": "229c04ecaa249ccc5b555dee11c85fe93d073d41eee61b6c3584065ae33c9df3",
+            "output_sha256": "16af82b9eb631e885cb1412eab16b62b16b8b0ab56cf6625b7a43c3c63c18094"
+          },
+          "grading_pending": false
+        },
+        {
+          "trial": 2,
+          "variant": "verified-v2",
+          "run": "verified-v2-02",
+          "status": "running",
+          "status_detail": "waiting_for_user",
+          "complete": true,
+          "acu_limit": 5,
+          "reported_acus_consumed": 0.0,
+          "result": {
+            "benchmark": "DABstep dev",
+            "grading": "pinned native question_scorer",
+            "correct": 6,
+            "total": 10,
+            "tasks": [
+              {
+                "task_id": "5",
+                "level": "easy",
+                "passed": true
+              },
+              {
+                "task_id": "49",
+                "level": "easy",
+                "passed": false
+              },
+              {
+                "task_id": "70",
+                "level": "easy",
+                "passed": false
+              },
+              {
+                "task_id": "1273",
+                "level": "hard",
+                "passed": false
+              },
+              {
+                "task_id": "1305",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1464",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1681",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1753",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1871",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "2697",
+                "level": "hard",
+                "passed": false
+              }
+            ],
+            "by_level": {
+              "easy": {
+                "correct": 1,
+                "total": 3
+              },
+              "hard": {
+                "correct": 5,
+                "total": 7
+              }
+            },
+            "scorer_sha256": "229c04ecaa249ccc5b555dee11c85fe93d073d41eee61b6c3584065ae33c9df3",
+            "output_sha256": "4f37c04e5dca7e2e00bce9b55c18b12e704965a0934c2d12893d19239dafb5cf"
+          },
+          "grading_pending": false
+        },
+        {
+          "trial": 3,
+          "variant": "verified-v2",
+          "run": "verified-v2-03",
+          "status": "running",
+          "status_detail": "waiting_for_user",
+          "complete": true,
+          "acu_limit": 5,
+          "reported_acus_consumed": 0.0,
+          "result": {
+            "benchmark": "DABstep dev",
+            "grading": "pinned native question_scorer",
+            "correct": 7,
+            "total": 10,
+            "tasks": [
+              {
+                "task_id": "5",
+                "level": "easy",
+                "passed": true
+              },
+              {
+                "task_id": "49",
+                "level": "easy",
+                "passed": false
+              },
+              {
+                "task_id": "70",
+                "level": "easy",
+                "passed": false
+              },
+              {
+                "task_id": "1273",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1305",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1464",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1681",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1753",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "1871",
+                "level": "hard",
+                "passed": true
+              },
+              {
+                "task_id": "2697",
+                "level": "hard",
+                "passed": false
+              }
+            ],
+            "by_level": {
+              "easy": {
+                "correct": 1,
+                "total": 3
+              },
+              "hard": {
+                "correct": 6,
+                "total": 7
+              }
+            },
+            "scorer_sha256": "229c04ecaa249ccc5b555dee11c85fe93d073d41eee61b6c3584065ae33c9df3",
+            "output_sha256": "57f7aaf4e792dd0e04c12edf568a734d3b366778de16d6170482780f9b355cc9"
+          },
+          "grading_pending": false
+        }
+      ],
+      "attempted": 3,
+      "completed": 3,
+      "scored": 3,
+      "unscored": 0,
+      "terminal_incomplete": 0,
+      "mean_accuracy_completed": 0.6666666666666666,
+      "range_accuracy_completed": [
+        0.6,
+        0.7
+      ],
+      "completion_adjusted_lower_bound": 0.6666666666666666,
+      "per_task_pass_counts": {
+        "5": 3,
+        "49": 0,
+        "70": 0,
+        "1273": 2,
+        "1305": 3,
+        "1464": 3,
+        "1681": 3,
+        "1753": 3,
+        "1871": 3,
+        "2697": 0
+      }
+    },
+    "apex": {
+      "baseline": {
+        "trial": 1,
+        "variant": "original",
+        "run": "remaining-20260919",
+        "status": "running",
+        "status_detail": "waiting_for_user",
+        "complete": true,
+        "acu_limit": 10,
+        "reported_acus_consumed": 0.0,
+        "result": null,
+        "grading_pending": true
+      },
+      "trials": [
+        {
+          "trial": 1,
+          "variant": "verified-v2",
+          "run": "verified-v2-01",
+          "status": "suspended",
+          "status_detail": "usage_limit_exceeded",
+          "complete": false,
+          "acu_limit": 10,
+          "reported_acus_consumed": 0.0,
+          "result": null,
+          "grading_pending": false
+        },
+        {
+          "trial": 2,
+          "variant": "verified-v2",
+          "run": "verified-v2-02",
+          "status": "suspended",
+          "status_detail": "usage_limit_exceeded",
+          "complete": false,
+          "acu_limit": 10,
+          "reported_acus_consumed": 0.0,
+          "result": null,
+          "grading_pending": false
+        },
+        {
+          "trial": 3,
+          "variant": "verified-v2",
+          "run": "verified-v2-03",
+          "status": "suspended",
+          "status_detail": "usage_limit_exceeded",
+          "complete": false,
+          "acu_limit": 10,
+          "reported_acus_consumed": 0.0,
+          "result": null,
+          "grading_pending": false
+        }
+      ],
+      "attempted": 3,
+      "completed": 0,
+      "scored": 0,
+      "unscored": 3,
+      "terminal_incomplete": 3
+    }
+  },
+  "limitations": [
+    "Original baseline has one trial; candidate has three. No significance or held-out claim.",
+    "Provider-managed worker model is not pinned; prompt changes are not the only possible source of variation.",
+    "Repeated tasks are correlated, not additional independent test cases.",
+    "APEX uses only an explicitly selected common judge protocol; model grades remain provisional, not expert adjudication.",
+    "Missing results remain in the attempted denominator; zero reported usage is not a zero-cost claim.",
+    "No backend tools or learned skills used in either variant."
+  ],
+  "collection_errors": []
+}

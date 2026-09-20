@@ -138,6 +138,7 @@ def validate_proposal(conn: Connection, proposal_id: str) -> list[dict]:
     debit = sum(e["debit_cents"] for e in pl["accounting"])
     credit = sum(e["credit_cents"] for e in pl["accounting"])
     return [
+        {"check":"invoice_total_ties", "ok":casework.evaluate_case(conn,prop['case_id'])['match']['stated_total_cents']==calc['invoice_face_cents'], "detail":"stated invoice total must equal line arithmetic; unsupported taxes/fees need explicit modeling"},
         {"check": "proposal_is_current_draft", "ok": prop["status"] == "DRAFT", "detail": prop["status"]},
         {"check": "hash_intact", "ok": canonical_hash(pl) == prop["hash"], "detail": prop["hash"][:12]},
         {"check": "revision_current", "ok": prop["based_on_revision"] == case["revision"],

@@ -7,7 +7,38 @@ from sqlalchemy.dialects.postgresql import JSONB, insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 metadata = MetaData()
+accounting_evidence = Table('accounting_evidence', metadata,
+    Column('organization_id', Text, primary_key=True), Column('source_id', Text, primary_key=True),
+    Column('row_number', Integer, primary_key=True), Column('record_type', Text, nullable=False),
+    Column('original_record_id', Text, nullable=False), Column('doc_id', Text, nullable=False),
+    Column('source_sha256', Text, nullable=False), Column('verified_by', Text, nullable=False))
 json_type = JSON().with_variant(JSONB, 'postgresql')
+learned_skills = Table('learned_skills', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('name', Text, nullable=False), Column('version', Integer, nullable=False),
+    Column('description', Text, nullable=False), Column('status', Text, nullable=False),
+    Column('package_hash', Text, nullable=False), Column('object_key', Text, nullable=False),
+    Column('evidence', json_type, nullable=False), Column('created_at', BigInteger, nullable=False),
+    Column('activated_by', Text), Column('activation', json_type), UniqueConstraint('organization_id','name','version'))
+learned_skill_runs = Table('learned_skill_runs', metadata,
+    Column('sequence', Integer, primary_key=True, autoincrement=True), Column('id', Text, unique=True, nullable=False),
+    Column('organization_id', Text, nullable=False), Column('skill_id', Text, ForeignKey('learned_skills.id'), nullable=False),
+    Column('request_key', Text, nullable=False), Column('outcome', Text, nullable=False),
+    Column('report', json_type, nullable=False), Column('created_at', BigInteger, nullable=False),
+    UniqueConstraint('organization_id','request_key'))
+Index('learned_skill_discovery', learned_skills.c.organization_id, learned_skills.c.status)
+accrual_runs = Table('accrual_runs', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('result_hash', Text, nullable=False), Column('result', json_type, nullable=False),
+    Column('approved_by', Text), Column('approved_at', BigInteger), UniqueConstraint('organization_id','result_hash'))
+accrual_followups = Table('accrual_followups', metadata,
+    Column('sequence', Integer, primary_key=True, autoincrement=True),
+    Column('organization_id', Text, nullable=False), Column('accrual_id', Text, ForeignKey('accrual_runs.id'), nullable=False),
+    Column('result', json_type, nullable=False))
+settlement_runs = Table('settlement_runs', metadata,
+    Column('id', Text, primary_key=True), Column('organization_id', Text, nullable=False),
+    Column('result_hash', Text, nullable=False), Column('result', json_type, nullable=False),
+    Column('verified_by', Text), UniqueConstraint('organization_id','result_hash'))
 users = Table('users', metadata, Column('id', Text, primary_key=True))
 organizations = Table('organizations', metadata,
     Column('id', Text, primary_key=True), Column('name', Text, nullable=False),

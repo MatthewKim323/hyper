@@ -1,0 +1,25 @@
+[
+  {
+    "id": "delivery",
+    "packet": {
+      "obligation_id": "service-1",
+      "vendor_id": "vendor-1",
+      "complete_through": "2026-10-31",
+      "complete": true,
+      "receipts": [
+        {
+          "id": "receipt-1",
+          "delivered_on": "2026-09-20",
+          "quantity": 40,
+          "confirmed": true
+        },
+        {
+          "id": "receipt-future",
+          "delivered_on": "2026-10-01",
+          "quantity": 10,
+          "confirmed": true
+        }
+      ]
+    }
+  }
+]

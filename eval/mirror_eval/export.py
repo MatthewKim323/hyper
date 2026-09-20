@@ -15,6 +15,7 @@ from pathlib import Path
 from . import capabilities as caps
 from . import registry
 from .compare import build_comparison
+from .experiments import Experiment
 from .paths import EXPORT_ROOT, RUNS_ROOT, WEB_PUBLIC_DIR
 from .runner import build_run, git_commit, load_run, now_iso
 from .schema import (BenchmarksDocument, Capability, Claim, Comparison, Family, Measured, OutcomeCounts, Run,
@@ -42,8 +43,15 @@ def discover_runs(runs_root: Path = RUNS_ROOT) -> list[tuple[dict, list[dict]]]:
     runs_root = Path(runs_root)
     if not runs_root.exists():
         return []
-    loaded = [load_run(d) for d in sorted(runs_root.iterdir())
-              if d.name != COMPARISONS_DIRNAME and (d / "manifest.json").exists()]
+    loaded = []
+    for directory in sorted(runs_root.iterdir()):
+        if directory.name == COMPARISONS_DIRNAME or not (directory / "manifest.json").exists():
+            continue
+        manifest, records = load_run(directory)
+        if "system" not in manifest and "arms" in manifest and "tasks" in manifest:
+            Experiment.model_validate(manifest)
+            continue
+        loaded.append((manifest, records))
     loaded.sort(key=lambda mr: mr[0].get("started_at") or "")
     latest_oracle: dict[str, str] = {}
     for m, _ in loaded:

@@ -35,12 +35,13 @@ class Finding(StrictModel):
     evidence_chunk_ids: list[str] = Field(default_factory=list, max_length=12)
     policy_hypotheses: list[str] = Field(default_factory=list, max_length=5)
     unresolved_questions: list[str] = Field(default_factory=list, max_length=10)
+    search_scope: list[str] = Field(default_factory=list,max_length=10)
 
     @model_validator(mode='after')
     def cited(self):
         if self.outcome != 'insufficient_evidence' and not self.evidence_chunk_ids:
             raise ValueError('A conclusion requires cited evidence')
-        if any(len(s) > 600 for s in self.policy_hypotheses + self.unresolved_questions):
+        if any(len(s) > 600 for s in self.policy_hypotheses + self.unresolved_questions + self.search_scope):
             raise ValueError('Finding detail exceeds limit')
         return self
 
@@ -50,20 +51,23 @@ class ElasticCloud:
         self.url = os.getenv('ELASTIC_KIBANA_URL', '').rstrip('/')
         self.key = os.getenv('ELASTIC_KIBANA_API_KEY', '')
         self.workflow = os.getenv('ELASTIC_WORKFLOW_ID', '')
+        self.agent_id = os.getenv('ELASTIC_A2A_AGENT_ID','')
+        self.mode = os.getenv('ELASTIC_AGENT_TRANSPORT') or ('a2a' if self.agent_id else 'workflow')
         self.organization = os.getenv('ELASTIC_AGENT_ORGANIZATION_ID', '')
         space = os.getenv('ELASTIC_KIBANA_SPACE', '')
         self.prefix = '/s/' + quote(space, safe='') if space else ''
 
     def require(self, oid):
-        if not self.url.startswith('https://') or not self.key or not self.workflow:
-            raise ValueError('Configure Elastic HTTPS Kibana URL, API key and Workflow ID')
+        if self.mode not in ('a2a','workflow'):raise ValueError('Unknown Elastic agent transport')
+        if not self.url.startswith('https://') or not self.key or not (self.agent_id if self.mode=='a2a' else self.workflow):
+            raise ValueError('Configure Elastic HTTPS Kibana URL, API key and transport agent/workflow ID')
         if not self.organization or oid != self.organization:
             raise PermissionError('Elastic investigator is not provisioned for this organization')
 
     def request(self, method, path, **kwargs):
         if not self.url.startswith('https://') or not self.key:
             raise ValueError('Elastic Cloud credentials missing')
-        with httpx.Client(timeout=60, headers={'Authorization': 'ApiKey ' + self.key, 'kbn-xsrf': 'true'}) as client:
+        with httpx.Client(timeout=120, headers={'Authorization': 'ApiKey ' + self.key, 'kbn-xsrf': 'true'}) as client:
             result = client.request(method, self.url + self.prefix + path, **kwargs)
             result.raise_for_status()
             return result.json()
@@ -74,7 +78,13 @@ class ElasticCloud:
 
 
 def public(row):
-    return {k: v for k, v in dict(row).items() if k not in ('organization_id', 'claim_token', 'lease_until', 'context')}
+    result={k: v for k, v in dict(row).items() if k not in ('organization_id', 'claim_token', 'lease_until', 'context')}
+    context=row.get('context') or {}
+    cited=set((row.get('result') or {}).get('evidence_chunk_ids',[]))
+    result['citations']=[{k:e.get(k) for k in ('id','source_id','locator')} for e in context.get('evidence',[]) if e['id'] in cited]
+    result['retrieval_coverage_complete']=context.get('coverage_complete')
+    result['transport']=context.get('transport')
+    return result
 
 
 class InvestigationService:
@@ -118,6 +128,7 @@ class InvestigationService:
     def refresh(self, iid, cloud):
         row = self.get(iid)
         cloud.require(self.oid)
+        if row['execution_id'] and row['execution_id'].startswith('a2a:'):return row
         if row['execution_id'] and row['status'] == 'running':
             execution = cloud.request('GET', '/api/workflows/executions/' + quote(row['execution_id'], safe=''))
             if execution.get('status') in ('failed', 'cancelled', 'canceled', 'completed'):
@@ -147,7 +158,7 @@ class InvestigationService:
                 'prior_concerns': [{k:r.get(k) for k in ('id','status','request','resolution')}
                     for r in ConcernService(self.data).list(limit=5)['concerns']]}
 
-    def accept(self, iid, finding):
+    def accept(self, iid, finding, expand_current=False):
         # Only a previously dispatched run may receive a result; callbacks never choose an organization.
         with self.engine.begin() as db:
             q = select(runs).where(runs.c.id == iid, runs.c.organization_id == self.oid)
@@ -162,13 +173,18 @@ class InvestigationService:
                 raise Conflict('Investigation has not been dispatched')
             allowed = {r['id'] for r in (row['context'] or {}).get('evidence', [])}
             # Tools may surface historical documents, but only the vetted current bundle can support a decision.
-            if not set(finding.evidence_chunk_ids).issubset(allowed):
+            if not expand_current and not set(finding.evidence_chunk_ids).issubset(allowed):
                 raise ValueError('Finding cites evidence outside its authorized bundle')
             active = set(db.execute(select(chunks.c.id).select_from(chunks.join(sources)).where(
                 chunks.c.id.in_(finding.evidence_chunk_ids), chunks.c.organization_id == self.oid,
                 sources.c.organization_id == self.oid, sources.c.active.is_(True),
                 sources.c.index_status == 'ready')).scalars())
             if active != set(finding.evidence_chunk_ids): raise ValueError('Evidence is stale or unavailable')
+            if expand_current:
+                extra=set(finding.evidence_chunk_ids)-allowed
+                hydrated=[dict(r) for r in db.execute(select(chunks.c.id,chunks.c.source_id,chunks.c.locator,chunks.c.content).where(chunks.c.id.in_(extra),chunks.c.organization_id==self.oid)).mappings()]
+                context=dict(row['context']);context['evidence']=context['evidence']+hydrated
+                db.execute(update(runs).where(runs.c.id==iid).values(context=context))
             trigger = db.execute(select(sources.c.active).where(sources.c.id == row['source_id'],
                 sources.c.organization_id == self.oid)).scalar()
             if not trigger: raise ValueError('Triggering source was superseded')
@@ -229,7 +245,7 @@ def run_once(store, factory=None, cloud=None):
         row = dict(row)
         publishing = row['result'] is not None
         db.execute(update(runs).where(runs.c.id == row['id']).values(status='publishing' if publishing else 'dispatching',
-            claim_token=token, lease_until=now()+180000, updated_at=now()))
+            claim_token=token, lease_until=now()+300000, updated_at=now()))
     svc = InvestigationService(factory(row['organization_id']))
     owned = and_(runs.c.id == row['id'], runs.c.claim_token == token)
     dispatched = False
@@ -262,14 +278,26 @@ def run_once(store, factory=None, cloud=None):
                      {'investigation_id':row['id'],'concern_id':cid,'outcome':finding.outcome})
         else:
             bundle = svc.bundle(row)
+            bundle['transport']=getattr(cloud,'mode','workflow')
             with store.engine.begin() as db:
                 db.execute(update(runs).where(owned).values(context=bundle))
-            dispatched = True
-            execution = cloud.start({'investigation_id':row['id'], 'context':json.dumps(bundle,default=str)})
-            with store.engine.begin() as db:
-                # A fast callback can finish before the launch response arrives.
-                db.execute(update(runs).where(runs.c.id == row['id']).values(execution_id=execution))
-                db.execute(update(runs).where(owned).values(status='running', claim_token=None, lease_until=0))
+            inputs={'investigation_id':row['id'], 'context':json.dumps(bundle,default=str)}
+            if getattr(cloud,'mode','workflow')=='a2a':
+                from .elastic_a2a import ElasticA2A
+                adapter=ElasticA2A(cloud);adapter.prepare()
+                dispatched=True
+                finding,execution=adapter.investigate(inputs)
+                with store.engine.begin() as db:
+                    db.execute(update(runs).where(owned).values(execution_id=execution))
+                # The specialist can discover additional evidence; tenant/current checks remain backend-owned.
+                svc.accept(row['id'],finding,expand_current=True)
+            else:
+                dispatched = True
+                execution = cloud.start(inputs)
+                with store.engine.begin() as db:
+                    # A fast callback can finish before the launch response arrives.
+                    db.execute(update(runs).where(runs.c.id == row['id']).values(execution_id=execution))
+                    db.execute(update(runs).where(owned).values(status='running', claim_token=None, lease_until=0))
     except Exception as exc:
         with store.engine.begin() as db:
             db.execute(update(runs).where(owned).values(status='dispatch_unknown' if dispatched else 'failed',

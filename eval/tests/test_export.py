@@ -55,6 +55,17 @@ def test_real_export_with_no_runs_is_live_and_empty(tmp_path):
     assert len(doc.suites) == 10 and len(doc.claims) == 8
 
 
+def test_preparation_experiments_are_not_exported_as_payment_ready_runs(tmp_path):
+    from mirror_eval.experiments import Experiment, TaskSpec
+    experiment = Experiment(id='prep', model='test', prompt_version='p', tools_version='t', grader_version='g',
+                            tasks=[TaskSpec(id='case', family='ap', visible={})], arms=['baseline', 'backend'])
+    directory = tmp_path / 'prep'
+    directory.mkdir()
+    (directory / 'manifest.json').write_text(experiment.model_dump_json())
+    assert export.discover_runs(tmp_path) == []
+    assert export.build_document(tmp_path).runs == []
+
+
 def test_real_export_carries_oracle_as_oracle_and_never_leaks_truth(tmp_path):
     runs = tmp_path / "runs"
     for i in range(2):

@@ -278,3 +278,15 @@ app.include_router(orchestrator_router)
 
 from .elastic_api import router as elastic_router
 app.include_router(elastic_router)
+
+from .accounting_api import router as accounting_router
+app.include_router(accounting_router)
+
+from .settlement_api import router as settlement_router
+app.include_router(settlement_router)
+
+from .accrual_api import router as accrual_router
+app.include_router(accrual_router)
+
+from .skills_api import router as skills_router
+app.include_router(skills_router)
