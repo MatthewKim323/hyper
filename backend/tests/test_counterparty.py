@@ -460,3 +460,17 @@ def test_a_post_mortem_exists_only_where_the_ledger_cannot_explain_the_miss():
     for family in FAMILIES:
         facts = build(family, 1, random.Random(0))['facts']
         assert bool(facts['postmortem']) == (family in cp.TIERS[5])
+
+
+def test_the_adversary_leans_on_the_tier_the_worker_just_reached(world, monkeypatch):
+    store, oid, factory, svc = world
+    monkeypatch.setattr(Counterparties, 'scoreboard', lambda self: {'level': 5, 'families': []})
+    svc.control({'enabled': True, 'interval_seconds': 5, 'max_open': 12, 'seed': 1})
+    picked = []
+    for _ in range(12):
+        with store.engine.begin() as db: db.execute(update(cp.controls).values(next_spawn_at=0))
+        with store.engine.begin() as db: db.execute(update(counterparty_scenarios).values(status='scored', outcome='pass'))
+        picked.append(svc.adversary_tick()['id'])
+    with store.engine.connect() as db:
+        families = list(db.execute(select(counterparty_scenarios.c.family)).scalars())
+    assert sum(f in cp.TIERS[5] for f in families) >= 8, families

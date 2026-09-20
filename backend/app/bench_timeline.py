@@ -41,6 +41,7 @@ EVENTS = [
     {'at': 1789885593318, 'label': 'worker: gpt-5.6-terra'},
     {'at': 1789885984942, 'label': 'memory-off twin started (hyper-lab)'},
     {'at': 1789887482298, 'label': 'tier 5 live'},
+    {'at': 1789888077210, 'label': 'adversary leans on the newest tier'},
 ]
 HARD_TIER = 5
 CAVEATS = [

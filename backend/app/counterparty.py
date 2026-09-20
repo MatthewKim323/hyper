@@ -430,7 +430,10 @@ class Counterparties:
         rng = random.Random(row['seed'] + row['spawned'])
         pool = [f for tier in range(1, board['level'] + 1) for f in TIERS[tier]]
         weak = [f['family'] for f in board['families'] if f['correct'] < f['attempts']]
-        family = rng.choice(weak) if weak and rng.random() < .5 else rng.choice(pool)
+        # Lean on what the worker has failed, then on the tier it just reached: that is where the next
+        # miss is, and a uniform draw over every family spends most of its time on cases already mastered.
+        roll = rng.random()
+        family = rng.choice(weak) if weak and roll < .4 else rng.choice(TIERS[board['level']]) if roll < .85 else rng.choice(pool)
         spawned = self.spawn(family, 'adversary', seed=row['seed'] + row['spawned'], difficulty=board['level'])
         self.control({'next_spawn_at': now() + row['interval_seconds'] * 1000, 'spawned': row['spawned'] + 1})
         return spawned

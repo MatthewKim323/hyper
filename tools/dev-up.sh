@@ -32,6 +32,8 @@ start artifact-worker "" uv run python -m app.artifact_worker
 start simulator-worker "" uv run python -m app.simulator_worker
 start connector-worker "" uv run python -m app.connectors.worker
 start counterparty-worker "" uv run python -m app.counterparty_worker
+# Records the loop's results, spend, tests and retrieval every five minutes for the Benchmarks timeline.
+start bench-timeline "" uv run python -m app.bench_timeline hyper-lab demo-meridian --every 300
 # Who works the sandbox exceptions. Exactly one of these per machine: two workers on one invoice
 # double every request to the supplier.
 #   EXCEPTION_WORKER=devin (default)  queue each exception as a Devin task. Needs tools/devin-up.sh too.
