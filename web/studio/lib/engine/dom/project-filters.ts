@@ -10,9 +10,9 @@ import { ensureProjects } from "../scenes/project-menu/projects-data";
 const $ = (sel: string, ctx: ParentNode = document) => ctx.querySelector(sel) as HTMLElement;
 const $$ = (sel: string, ctx: ParentNode = document) => Array.from(ctx.querySelectorAll(sel)) as HTMLElement[];
 
-type SectionKey = "overview" | "cases" | "evidence" | "activity" | "review" | "timeline" | "benchmarks";
+type SectionKey = "overview" | "cases" | "evidence" | "activity" | "identity" | "review" | "timeline" | "benchmarks";
 // Sections that cover the scene with a DOM workspace, so the scene must not take pointer control.
-const OVERLAY_SECTIONS = new Set<SectionKey>(["cases", "evidence", "activity", "review", "timeline", "benchmarks"]);
+const OVERLAY_SECTIONS = new Set<SectionKey>(["cases", "evidence", "activity", "identity", "review", "timeline", "benchmarks"]);
 
 export class ProjectFilters {
   static get selector() {
@@ -94,7 +94,7 @@ export class ProjectFilters {
       chevron: $$(".js-project-filters\\:chevron"),
     };
     // These sections only select a shell state until workspace views are connected.
-    this.items = { overview: [], cases: [], evidence: [], activity: [], review: [], timeline: [], benchmarks: [] };
+    this.items = { overview: [], cases: [], evidence: [], activity: [], identity: [], review: [], timeline: [], benchmarks: [] };
     document.body.dataset.workspaceSection = this.selectedSection;
     window.addEventListener("hyper:navigate-section", this.handleNavigateSection);
     E.on("click", this.dom.filterBtn, this.handleFilterClick);

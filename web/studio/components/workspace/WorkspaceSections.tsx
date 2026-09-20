@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { openSignIn } from "@/lib/backend/auth";
-import { Activity, Cases, Evidence, OverviewStrip, Review } from "./sections";
+import { Activity, Evidence, OverviewStrip, Review } from "./sections";
 import { useAuth } from "./useBackend";
 
 const EXIT_MS = 420;
-const SCREENS = { cases: Cases, evidence: Evidence, activity: Activity, review: Review } as const;
+const SCREENS = { evidence: Evidence, activity: Activity, review: Review } as const;
 type Screen = keyof typeof SCREENS;
 
 export default function WorkspaceSections() {

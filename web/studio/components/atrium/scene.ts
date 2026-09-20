@@ -14,6 +14,7 @@ import { layoutAtriumStations } from "./layout";
 import { createFocusRig } from "./focus";
 import { createRelicParts } from "./relic-parts";
 import type { AtriumStation } from "./configuration";
+import type { RelicMotionState } from "./RelicExperience";
 
 export type AtriumManifest = {
   width: number; height: number;
@@ -28,7 +29,7 @@ export type StationBounds = { station: AtriumStation; depth: number; left: numbe
 /** Where the focused relic and its orbit slots land on the frame, 0 to 1, plus how far the camera has committed. */
 export type FocusFrame = { progress: number; center: { x: number; y: number }; slots: { x: number; y: number }[]; reach: number };
 export type AgentBounds = { left: number; top: number; width: number; height: number };
-export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; /** Fly in on one relic, or home with null. `visibleShare` is how much of the frame width is on screen. */ setFocus(id: string | null, visibleShare?: number): void; /** Called every frame while a relic is in focus or the camera is still returning. */ setFocusListener(listener: ((frame: FocusFrame) => void) | null): void; dispose(): void };
+export type AtriumRenderer = { setStations(stations: readonly AtriumStation[]): Promise<void>; setPaused(paused: boolean): void; setHover(id: string | null, x?: number, y?: number): void; setPressed(id: string | null): void; setPointer(x: number, y: number): void; setRelicMotion(id: string | null, state: RelicMotionState): void; /** Fly in on one relic, or home with null. `visibleShare` is how much of the frame width is on screen. */ setFocus(id: string | null, visibleShare?: number): void; /** Called every frame while a relic is in focus or the camera is still returning. */ setFocusListener(listener: ((frame: FocusFrame) => void) | null): void; dispose(): void };
 
 export function isAtriumManifest(value: unknown): value is AtriumManifest {
   if (!value || typeof value !== "object") return false;
@@ -145,13 +146,16 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const orbit = new Group();
   orbit.position.set(0, 3.07, -1.5);
   scene.add(orbit);
-  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; icon: Group; restPosition: Vector3; parts: ReturnType<typeof createRelicParts>; hover: { value: number }; velocity: number; phase: number };
+  type Instance = { station: AtriumStation; model: Object3D; scale: number; labelHeight: number; labelSize: number; arrowHeight: number; icon: Group; restPosition: Vector3; restBounds: Box3; parts: ReturnType<typeof createRelicParts>; hover: { value: number }; activity: { value: number }; velocity: number; phase: number; motion: RelicMotionState };
   let instances: Instance[] = [];
   let focusedStation: string | null = null;
+  let focusShare = 1;
   let focusListener: ((frame: FocusFrame) => void) | null = null;
   let focusSubject: { center: Vector3; reach: number } | null = null;
+  let lastFocusProgress = 0;
 
-  function prepareRelic(model: Object3D, hover: { value: number }) {
+  function prepareRelic(model: Object3D, hover: { value: number }, template: string) {
+    const activity = { value: 0 };
     const icon = new Group();
     icon.name = "Floating ethereal relic";
     const iconParts: Mesh[] = [];
@@ -176,21 +180,24 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
           material.onBeforeCompile = shader => {
             shader.uniforms.uRelicHover = hover;
             shader.uniforms.uRelicTime = sceneClock;
+            shader.uniforms.uRelicBusy = activity;
             shader.vertexShader = "varying vec3 vRelicWorld;\n" + shader.vertexShader.replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvRelicWorld=(modelMatrix*vec4(transformed,1.)).xyz;");
-            shader.fragmentShader = "varying vec3 vRelicWorld; uniform float uRelicHover; uniform float uRelicTime;\n" + shader.fragmentShader.replace("#include <output_fragment>", `
+            shader.fragmentShader = "varying vec3 vRelicWorld; uniform float uRelicHover; uniform float uRelicTime; uniform float uRelicBusy;\n" + shader.fragmentShader.replace("#include <output_fragment>", `
               float edge=pow(1.-abs(dot(normalize(normal),normalize(vViewPosition))),2.4);
               float shimmer=.94+.06*sin(uRelicTime*.7+vRelicWorld.x*.31);
               outgoingLight+=vec3(2.6,2.15,2.4)*shimmer*(.055+edge*(.8+uRelicHover*.65)+uRelicHover*.14);
+              float ribbon=pow(max(0.,sin(vRelicWorld.y*3.6-uRelicTime*2.1)),28.);
+              outgoingLight+=vec3(1.,.75,.51)*ribbon*uRelicBusy*.28;
               #include <output_fragment>
             `);
           };
-          material.customProgramCacheKey = () => "hyper-floating-relic-v1";
+          material.customProgramCacheKey = () => "hyper-floating-relic-v2";
         }
         return material;
       };
       object.material = Array.isArray(object.material) ? object.material.map(illuminate) : illuminate(object.material);
     });
-    return { icon, restPosition: center.clone(), parts: createRelicParts(icon) };
+    return { icon, activity, restPosition: center.clone(), restBounds: new Box3().setFromObject(icon), parts: createRelicParts(icon, template) };
   }
 
   function animateRelics(delta: number, still = false) {
@@ -206,9 +213,10 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
         }
       }
       const hover = Math.max(0, Math.min(1.06, instance.hover.value));
+      instance.activity.value = still ? 0 : instance.motion.busy ? 1 : 0;
       // The relic opens as the camera commits to it, and hints at it on hover.
-      instance.parts.update(instance.station.id === focusedStation ? 1 : target * .16, delta, elapsed, still);
-      const movement = still ? 0 : 1;
+      instance.parts.update(instance.station.id === focusedStation ? 1 : 0, delta, elapsed, still, { ...instance.motion, hover });
+      const movement = still ? 0 : 1 - instance.parts.open;
       const settle = still ? 1 : 1 - Math.exp(-delta * 16);
       const idleTurn = movement * Math.sin(elapsed * .24 + instance.phase) * .06;
       instance.icon.rotation.x += ((target ? -hoverPointer.y * .045 * hover * movement : 0) - instance.icon.rotation.x) * settle;
@@ -230,7 +238,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     orbit.rotation.z = still ? 0 : Math.sin(elapsed * .33) * .018;
     focusRig.update(delta, roomPointer, still);
     canvas.dataset.focusProgress = focusRig.progress.toFixed(3);
-    if (focusListener && focusSubject && (focusRig.focused || focusRig.progress > .002)) {
+    if (focusListener && focusSubject && (focusRig.focused || focusRig.progress > .002 || lastFocusProgress !== 0)) {
       // Orbit slots sit on the camera-facing plane through the relic, so cards hug it at any angle.
       const right = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
       const up = new Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
@@ -243,6 +251,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
         reach: Math.abs(edge.y - center.y),
         slots: ORBIT_SLOTS.map(([x, y]) => project(focusSubject!.center.clone().addScaledVector(right, x * focusSubject!.reach).addScaledVector(up, y * focusSubject!.reach))),
       });
+      lastFocusProgress = focusRig.progress;
     }
     pearlLight.intensity = pearlGlow * (1 + (still ? 0 : Math.sin(elapsed * .8) * .12));
   }
@@ -257,20 +266,27 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const top = Math.min(...points.map(point => (1 - point.y) / 2));
       onAgentBounds({ left, top, width: Math.max(...points.map(point => (point.x + 1) / 2)) - left, height: Math.max(...points.map(point => (1 - point.y) / 2)) - top });
     }
-    onBounds(instances.map(({ station, model, scale, labelHeight, labelSize, arrowHeight }) => {
-      const box = new Box3().setFromObject(model);
+    onBounds(instances.map(({ station, model, icon, scale, labelHeight, labelSize, arrowHeight }) => {
+      // Pedestals overlap in projection. Their broad geometry must never steal a neighboring
+      // relic's clicks: target the floating object plus its own label and arrow instead.
+      const box = new Box3().setFromObject(icon);
       const points = [];
       for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) points.push(new Vector3(x, y, z).project(camera));
-      const left = Math.max(0, Math.min(...points.map(point => (point.x + 1) / 2)));
-      const top = Math.max(0, Math.min(...points.map(point => (1 - point.y) / 2)));
-      const right = Math.min(1, Math.max(...points.map(point => (point.x + 1) / 2)));
-      const bottom = Math.min(1, Math.max(...points.map(point => (1 - point.y) / 2)));
       const label = new Vector3(model.position.x, labelHeight * scale, model.position.z + 0.15 * scale).project(camera);
       const arrow = new Vector3(model.position.x, arrowHeight * scale, model.position.z + 0.15 * scale).project(camera);
       const letter = new Vector3(model.position.x, (labelHeight + labelSize) * scale, model.position.z + 0.15 * scale).project(camera);
+      const fontWidth = Math.abs(letter.y - label.y) / 2 / ratio;
+      const font = Math.max(fontWidth, 11 / Math.max(1, canvas.parentElement?.clientWidth ?? 1280));
+      const lineLength = station.label === "Accounts Payable" ? 8 : Math.min(20, station.label.length);
+      const textHalf = Math.max(font * lineLength * .32, font * 1.15);
+      const labelX = (label.x + 1) / 2, labelY = (1 - label.y) / 2, arrowY = (1 - arrow.y) / 2;
+      const left = Math.max(0, Math.min(labelX - textHalf, ...points.map(point => (point.x + 1) / 2)));
+      const top = Math.max(0, Math.min(labelY - font * ratio, ...points.map(point => (1 - point.y) / 2)));
+      const right = Math.min(1, Math.max(labelX + textHalf, ...points.map(point => (point.x + 1) / 2)));
+      const bottom = Math.min(1, Math.max(arrowY + font * ratio * 1.05, ...points.map(point => (1 - point.y) / 2)));
       const width = Math.max(0.001, right - left);
       const height = Math.max(0.001, bottom - top);
-      return { station, depth: model.position.distanceTo(camera.position), left, top, width, height, labelLeft: ((label.x + 1) / 2 - left) / width, labelTop: ((1 - label.y) / 2 - top) / height, arrowTop: ((1 - arrow.y) / 2 - top) / height, fontWidth: Math.abs(letter.y - label.y) / 2 / ratio };
+      return { station, depth: model.position.distanceTo(camera.position), left, top, width, height, labelLeft: (labelX - left) / width, labelTop: (labelY - top) / height, arrowTop: (arrowY - top) / height, fontWidth };
     }));
   }
   function render(forceReflections = true) {
@@ -320,6 +336,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     renderer.setSize(width, height, false);
     pipeline.resize(Math.max(1, parent.clientWidth), Math.max(1, parent.clientHeight));
     water.resize(parent.clientWidth, parent.clientHeight);
+    if (focusedStation) api.setFocus(focusedStation, Math.min(1, window.innerWidth / width));
     bounds();
     render();
   }
@@ -358,7 +375,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     else render();
   }
   function sectionChanged() {
-    overlay = ["timeline", "benchmarks"].includes(document.body.dataset.workspaceSection ?? "overview");
+    overlay = document.body.dataset.workspaceSection === "timeline";
     resume();
   }
   const observer = new ResizeObserver(resize);
@@ -409,6 +426,8 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       const placements = layoutAtriumStations(stations);
       const models = await Promise.all(placements.map(placement => modelFor(placement.station.template)));
       if (disposed || update !== generation) return;
+      const previousMotion = new Map(instances.map(instance => [instance.station.id, instance.motion]));
+      instances.forEach(instance => instance.parts.dispose());
       stationsGroup.clear();
       instanceMaterials.forEach(material => material.dispose());
       instanceMaterials.clear();
@@ -418,9 +437,9 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
         model.scale.multiplyScalar(placement.scale);
         stationsGroup.add(model);
         const hover = { value: 0 };
-        const motion = prepareRelic(model, hover);
+        const motion = prepareRelic(model, hover, placement.station.template);
         const template = manifest.templates.find(template => template.id === placement.station.template);
-        return { station: placement.station, model, scale: placement.scale, hover, velocity: 0, phase: index * 1.67, ...motion, labelHeight: template?.labelHeight ?? 1.42, labelSize: template?.labelSize ?? .21, arrowHeight: template?.arrowHeight ?? .86 };
+        return { station: placement.station, model, scale: placement.scale, hover, velocity: 0, phase: index * 1.67, ...motion, motion: previousMotion.get(placement.station.id) ?? {}, labelHeight: template?.labelHeight ?? 1.42, labelSize: template?.labelSize ?? .21, arrowHeight: template?.arrowHeight ?? .86 };
       });
       scene.updateMatrixWorld(true);
       ethereal.setStations(instances.map(instance => {
@@ -429,6 +448,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
         return { relicCenter: relic.getCenter(new Vector3()).sub(instance.model.position), relicSize: relic.getSize(new Vector3()), id: instance.station.id, position: instance.model.position.clone(), width: (template?.width ?? 2.2) * instance.scale, height: (template?.height ?? 4) * instance.scale, baseHeight: .48 * instance.scale };
       }));
       scene.updateMatrixWorld(true);
+      if (focusedStation) api.setFocus(focusedStation, focusShare);
       bounds();
       render();
       const pearl = floating.find(item => /floating pearl marble sphere/.test(objectName(item.object)))?.object;
@@ -452,16 +472,35 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     },
     setPressed(id) { pressed = id; if (paused) render(); },
     setFocusListener(listener) { focusListener = listener; },
+    setRelicMotion(id, state) {
+      const instance = instances.find(entry => entry.station.id === id);
+      if (instance) instance.motion = state;
+      if (paused) { animateRelics(0, true); render(); }
+    },
     setFocus(id, visibleShare = 1) {
+      focusShare = visibleShare;
+      if (focusedStation !== id) {
+        const previous = instances.find(entry => entry.station.id === focusedStation);
+        if (previous) previous.motion = { ...previous.motion, busy: false };
+      }
       const instance = id ? instances.find(entry => entry.station.id === id) : null;
       focusedStation = instance ? instance.station.id : null;
-      if (!instance) { focusRig.aim(null); if (paused) { animateRoom(0, true); render(); } return; }
-      const box = new Box3().setFromObject(instance.icon);
+      if (!instance) { focusRig.aim(null); if (paused) { animateRelics(0, true); animateRoom(0, true); render(); } return; }
+      const box = instance.restBounds;
       const center = box.getCenter(new Vector3());
       // Frame the relic with room to breathe above its plinth, not just its own tight bounds.
       focusSubject = { center: center.clone(), reach: Math.max(box.getSize(new Vector3()).y, box.getSize(new Vector3()).x) * .5 };
-      focusRig.aim({ center, height: Math.max(box.getSize(new Vector3()).y * 2.05, 1.5 * instance.scale) }, visibleShare);
-      if (paused) { animateRoom(0, true); render(); }
+      const size = box.getSize(new Vector3());
+      const compact = window.innerWidth <= 900;
+      const visibleHeight = Math.min(1, window.innerHeight / Math.max(1, canvas.parentElement?.clientHeight ?? window.innerHeight));
+      const section = instance.station.section;
+      if (["cases", "identity", "benchmarks"].includes(section ?? "")) {
+        const landscape = section === "benchmarks";
+        focusRig.aim({ center, height: size.y, width: size.x * (landscape ? 2.25 : 1.5), fill: compact ? .14 : landscape ? .18 : .34,
+          x: compact || landscape ? 0 : section === "identity" ? -.52 : -.61,
+          y: (compact ? .74 : landscape ? .56 : .08) * visibleHeight, orbit: landscape ? .12 : section === "identity" ? -.04 : .035 }, visibleShare);
+      } else focusRig.aim({ center, height: Math.max(size.y * 2.05, 1.5 * instance.scale) }, visibleShare);
+      if (paused) { animateRelics(0, true); animateRoom(0, true); render(); }
     },
     setPointer(x, y) {
       if (paused || !Number.isFinite(x) || !Number.isFinite(y)) return;
@@ -487,6 +526,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       canvas.removeEventListener("webglcontextlost", api.dispose);
       signal?.removeEventListener("abort", api.dispose);
       canvas.dataset.ready = "false";
+      instances.forEach(instance => instance.parts.dispose());
       instanceMaterials.forEach(material => material.dispose());
       modelCache.forEach(pending => { void pending.then(disposeModel).catch(() => {}); });
       retiredCovers.forEach(disposeModel);

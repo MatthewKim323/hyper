@@ -9,6 +9,7 @@ export default function AtriumDevelopmentPage() {
     <style>{`
       body:has([data-atrium-dev]) :is(.js-loader, .naked-loader, .header, .footer, .menu, #gl, #p-cover) { display: none !important; }
       body:has([data-atrium-dev]), body:has([data-atrium-dev]) * { cursor: auto; }
+      body:has([data-atrium-dev])[data-atrium-focus]:not([data-atrium-focus=""]) .voice-motion-preview { display: none; }
     `}</style>
     <AtriumPreview />
     <VoiceMotionPreview />

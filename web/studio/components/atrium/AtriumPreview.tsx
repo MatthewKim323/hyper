@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { getAtriumStations, getDefaultAtriumStations, subscribeAtriumStations, type AtriumStation } from "./configuration";
-import type { AgentBounds, AtriumManifest, AtriumRenderer, StationBounds } from "./scene";
+import type { AgentBounds, AtriumManifest, AtriumRenderer, FocusFrame, StationBounds } from "./scene";
 import { store } from "@/lib/engine/core/store";
 import RelicOrbit, { type OrbitHandle } from "./RelicOrbit";
+import RelicExperience, { EXPERIENCE_SECTIONS, type ExperienceHandle, type RelicMotionState } from "./RelicExperience";
 import styles from "./AtriumPreview.module.css";
 
 const motionSnapshot = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -18,7 +19,7 @@ const fineHover = (event: ReactPointerEvent) => event.pointerType !== "touch" &&
 const clampPointer = (value: number) => Math.max(-1, Math.min(1, value));
 
 // Sections that open beside their relic instead of covering the room.
-const FOCUS_SECTIONS = new Set(["cases", "evidence", "activity", "review"]);
+const FOCUS_SECTIONS = new Set(["cases", "evidence", "activity", "identity", "review", "benchmarks"]);
 const goHome = () => window.dispatchEvent(new CustomEvent("hyper:navigate-section", { detail: { section: "overview" } }));
 
 function openStation(station: AtriumStation) {
@@ -37,7 +38,14 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
   const plane = useRef<HTMLDivElement>(null);
   const renderer = useRef<AtriumRenderer | null>(null);
   const orbit = useRef<OrbitHandle | null>(null);
+  const experience = useRef<ExperienceHandle | null>(null);
+  const lastFocusFrame = useRef<FocusFrame | null>(null);
   const registerOrbit = useCallback((handle: OrbitHandle | null) => { orbit.current = handle; }, []);
+  const registerExperience = useCallback((handle: ExperienceHandle | null) => {
+    experience.current = handle;
+    if (handle && lastFocusFrame.current) handle(lastFocusFrame.current);
+  }, []);
+  const frameBounds = useCallback(() => canvas.current?.getBoundingClientRect(), []);
   const drag = useRef<{ pointerId: number; x: number; scrollLeft: number } | null>(null);
   const stations = useSyncExternalStore(subscribeAtriumStations, getAtriumStations, getDefaultAtriumStations);
   const stationsRef = useRef(stations);
@@ -47,19 +55,50 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
   const [covered, setCovered] = useState(false);
   // The station whose workspace is open. The camera flies to it; nothing covers the room.
   const [focus, setFocus] = useState<string | null>(null);
+  const [atHome, setAtHome] = useState(true);
+  const homeReady = useRef(true);
   const [failed, setFailed] = useState(false);
   const reducedMotion = useSyncExternalStore(subscribeMotion, motionSnapshot, staticSnapshot);
   const motionRef = useRef(reducedMotion);
+  const onRelicMotion = useCallback((state: RelicMotionState) => { renderer.current?.setRelicMotion(focus, state); }, [focus]);
+  const focusedStation = stations.find(station => station.id === focus) ?? null;
+  const customFocus = focusedStation?.section && EXPERIENCE_SECTIONS.has(focusedStation.section) ? focusedStation : null;
+  const lastStation = useRef<string | null>(null);
+  const closeExperience = useCallback(() => {
+    goHome();
+  }, []);
+
+  useEffect(() => {
+    if (focus) { lastStation.current = focus; return; }
+    if (!atHome) return;
+    const id = lastStation.current;
+    if (!id) return;
+    const frame = requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(`[data-station-id="${id}"]`)?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(frame);
+  }, [focus, atHome]);
+
+  // This isolated development route has no gallery section controller.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development" || !document.querySelector("[data-atrium-dev]")) return;
+    const navigate = (event: Event) => {
+      const section = (event as CustomEvent<{ section: string }>).detail?.section;
+      if (!section || !["overview", ...FOCUS_SECTIONS, "timeline"].includes(section)) return;
+      document.body.dataset.workspaceSection = section;
+      window.dispatchEvent(new CustomEvent("hyper:section-change", { detail: { section } }));
+    };
+    window.addEventListener("hyper:navigate-section", navigate);
+    return () => window.removeEventListener("hyper:navigate-section", navigate);
+  }, []);
 
   useEffect(() => {
     const menu = store.ProjectMenu;
-    if (!menu || warm) return;
-    const previousControl = menu.allowControl;
-    const previousRendering = menu.renderPass?.enabled;
+    if (warm) return;
+    const previousControl = menu?.allowControl;
+    const previousRendering = menu?.renderPass?.enabled;
     let active = true;
     document.body.dataset.atriumActive = "true";
     const suspend = () => {
-      if (!active) return;
+      if (!active || !menu) return;
       menu.allowControl = false;
       if (menu.renderPass) menu.renderPass.enabled = false;
     };
@@ -71,7 +110,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
       active = false;
       delete document.body.dataset.atriumActive;
       window.removeEventListener("hyper:section-change", suspend);
-      if (store.ProjectMenu === menu) {
+      if (menu && store.ProjectMenu === menu) {
         menu.allowControl = previousControl;
         if (menu.renderPass && previousRendering !== undefined) menu.renderPass.enabled = previousRendering;
       }
@@ -101,7 +140,8 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     let instance: AtriumRenderer | null = null;
     const update = () => {
       const section = document.body.dataset.workspaceSection ?? "overview";
-      setCovered(["timeline", "benchmarks"].includes(section));
+      setCovered(section === "timeline");
+      if (FOCUS_SECTIONS.has(section)) { homeReady.current = false; setAtHome(false); }
       setFocus(FOCUS_SECTIONS.has(section) ? stationsRef.current.find(station => station.section === section)?.id ?? null : null);
       renderer.current?.setHover(null);
       renderer.current?.setPressed(null);
@@ -109,7 +149,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     const fail = () => {
       controller.abort();
       instance?.dispose();
-      renderer.current = null;
+      if (renderer.current === instance) renderer.current = null;
       if (active) { setBounds([]); setFailed(true); }
     };
     update();
@@ -131,16 +171,24 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
         instance = await createAtriumRenderer(element, value, next => { if (active) setBounds(next); }, controller.signal, next => { if (active) setAgentBounds(next); });
         if (!active || controller.signal.aborted) { instance.dispose(); return; }
         renderer.current = instance;
-        instance.setFocusListener(frame => orbit.current?.(frame));
+        instance.setFocusListener(frame => {
+          lastFocusFrame.current = frame; orbit.current?.(frame); experience.current?.(frame);
+          if (!homeReady.current && frame.progress < .02 && document.body.dataset.workspaceSection === "overview") { homeReady.current = true; setAtHome(true); }
+        });
         instance.setPaused(motionRef.current);
         await instance.setStations(stationsRef.current);
         if (active && !controller.signal.aborted && renderer.current === instance) {
+          const section = document.body.dataset.workspaceSection ?? "overview";
+          const selected = FOCUS_SECTIONS.has(section) ? stationsRef.current.find(station => station.section === section)?.id ?? null : null;
+          const share = scroller.current && plane.current ? Math.min(1, scroller.current.clientWidth / Math.max(1, plane.current.clientWidth)) : 1;
+          instance.setFocus(selected, share);
           setFailed(false);
           // The intro loader and the handoff both wait on this.
           document.documentElement.dataset.atriumReady = "true";
           window.dispatchEvent(new Event("hyper:atrium-ready"));
         }
       } catch (error) {
+        if (!active || controller.signal.aborted) return;
         if (process.env.NODE_ENV === "development") console.error("[atrium] Scene initialization failed", error);
         fail();
       }
@@ -168,11 +216,11 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     if (!focus) return;
     element?.scrollTo({ left: (element.scrollWidth - element.clientWidth) / 2, behavior: reducedMotion ? "auto" : "smooth" });
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !(event.target as HTMLElement | null)?.closest("input, textarea")) goHome();
+      if (event.key === "Escape" && !(event.target as HTMLElement | null)?.closest("input, textarea")) closeExperience();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [focus, reducedMotion, bounds.length]);
+  }, [focus, reducedMotion, bounds.length, stations, closeExperience]);
 
   useEffect(() => () => { delete document.body.dataset.atriumFocus; }, []);
 
@@ -250,16 +298,17 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
     >
       <div ref={plane} className={styles.plane} style={planeStyle}>
         <canvas ref={canvas} className={styles.water} aria-hidden="true" />
-        {!covered && !failed && agentBounds && <button
+        {!covered && !failed && !focus && atHome && agentBounds && <button
           type="button" className={styles.agent} data-cursor="hide" aria-label="Talk to Hyper" title="Talk to Hyper (V)"
           style={{ left: `${agentBounds.left * 100}%`, top: `${agentBounds.top * 100}%`, width: `${agentBounds.width * 100}%`, height: `${agentBounds.height * 100}%` }}
           onClick={event => { event.stopPropagation(); window.dispatchEvent(new Event("hyper:agent-toggle")); }}
         />}
-        {!covered && !failed && !warm && <RelicOrbit section={focus ? stations.find(station => station.id === focus)?.section ?? null : null} register={registerOrbit} />}
-        {focus && !covered && <button type="button" className={styles.leave} data-cursor="hide" aria-label="Back to the atrium" onClick={goHome} />}
-        {!covered && !failed && !focus && bounds.map(bound => <button
+        {!covered && !failed && !warm && <RelicOrbit section={customFocus ? null : focusedStation?.section ?? null} register={registerOrbit} />}
+        {focus && !covered && <button type="button" className={styles.leave} data-cursor="hide" aria-label="Back to the atrium" onClick={closeExperience} />}
+        {!covered && !failed && !focus && atHome && bounds.map(bound => <button
           type="button"
           key={bound.station.id}
+          data-station-id={bound.station.id}
           className={styles.hotspot}
           data-cursor="hide"
           aria-label={`Open ${bound.station.label}`}
@@ -287,6 +336,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
       </div>
       {!focus && <span className={styles.keyboardHint}>← → Explore the room</span>}
     </div>
+    {!warm && !covered && <RelicExperience station={customFocus} register={registerExperience} frameBounds={frameBounds} onMotion={onRelicMotion} onClose={closeExperience} still={reducedMotion} fallback={failed} />}
     {failed && !covered && !warm && <nav className={styles.fallback} aria-label="Workspace navigation">
       <span className={styles.fallbackNote} role="status">The 3D view is unavailable. Your workspaces are still here.</span>
       <div>{stations.map(station => <button type="button" key={station.id} data-cursor="hide" onClick={() => openStation(station)}>{station.label} <span aria-hidden="true">↗</span></button>)}</div>

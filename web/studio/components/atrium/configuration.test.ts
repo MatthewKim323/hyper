@@ -54,3 +54,17 @@ describe("onboarding station configuration", () => {
     }
   });
 });
+
+test("saved wallet activity destination migrates without redirecting custom activity stations", () => {
+  const restored = parseAtriumConfiguration({ stations: [
+    { id: "wallet-identity", label: "Wallet Identity", template: "wallet-identity", section: "activity" },
+    { id: "custom-activity", label: "Audit trail", template: "wallet-identity", section: "activity" },
+    { id: "separate-wallet", label: "Treasury", template: "crystal-clear", section: "identity" },
+  ] });
+  assert.ok(restored);
+  assert.equal(restored[0].section, "identity");
+  assert.equal(restored[1].section, "activity");
+  assert.equal(restored[2].section, "identity");
+  assert.deepEqual(restored.map(station => station.label), ["Wallet Identity", "Audit trail", "Treasury"]);
+  assert.deepEqual(parseAtriumConfiguration({ stations: restored }), restored, "migration is idempotent");
+});

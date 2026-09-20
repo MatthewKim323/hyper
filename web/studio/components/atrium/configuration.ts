@@ -2,18 +2,18 @@
 export const ATRIUM_STATIONS_EVENT = "hyper:workspace-stations";
 const STORAGE_KEY = "hyper.workspace.stations.v1";
 
-export type WorkspaceSection = "overview" | "cases" | "evidence" | "activity" | "review" | "timeline" | "benchmarks";
+export type WorkspaceSection = "overview" | "cases" | "evidence" | "activity" | "identity" | "review" | "timeline" | "benchmarks";
 export type AtriumStation = { id: string; label: string; template: string; section?: WorkspaceSection };
 export type AtriumStationConfiguration = { stations: readonly AtriumStation[] } | { count: number };
 export const DEFAULT_STATIONS: readonly AtriumStation[] = [
   { id: "accounts-payable", label: "Accounts Payable", template: "accounts-payable", section: "cases" },
-  { id: "wallet-identity", label: "Wallet Identity", template: "wallet-identity", section: "activity" },
+  { id: "wallet-identity", label: "Wallet Identity", template: "wallet-identity", section: "identity" },
   { id: "audit-evidence", label: "Audit & Evidence", template: "audit-evidence", section: "evidence" },
   { id: "training-arena", label: "Training Arena", template: "training-arena", section: "timeline" },
   { id: "approvals", label: "Approvals", template: "approvals", section: "review" },
   { id: "benchmarks", label: "Benchmarks", template: "crystal-stack", section: "benchmarks" },
 ];
-const SECTIONS = new Set(["overview", "cases", "evidence", "activity", "review", "timeline", "benchmarks"]);
+const SECTIONS = new Set(["overview", "cases", "evidence", "activity", "identity", "review", "timeline", "benchmarks"]);
 const listeners = new Set<() => void>();
 let current: readonly AtriumStation[] = DEFAULT_STATIONS;
 
@@ -36,7 +36,9 @@ export function parseAtriumConfiguration(value: unknown): readonly AtriumStation
     if (typeof item.template !== "string" || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(item.template)) return null;
     if (item.section !== undefined && !SECTIONS.has(item.section)) return null;
     ids.add(item.id);
-    stations.push({ id: item.id, label: item.label.trim(), template: item.template, ...(item.section ? { section: item.section } : {}) });
+    // Migrate the original wallet destination without changing custom activity stations.
+    const section = item.id === "wallet-identity" && item.template === "wallet-identity" && item.section === "activity" ? "identity" : item.section;
+    stations.push({ id: item.id, label: item.label.trim(), template: item.template, ...(section ? { section } : {}) });
   }
   return stations;
 }
