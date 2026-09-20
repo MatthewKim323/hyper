@@ -357,3 +357,19 @@ def test_a_supplier_that_asked_for_a_document_answers_once_it_exists(world):
     ask('request_supplier_document', 'quantity_correction', 'q3'); flush(store, factory)
     with store.engine.connect() as db:
         assert db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == scenario['id'])).scalar()['repeats'] == 1
+
+
+def test_a_delivered_document_is_named_by_its_id_whatever_order_storage_returns_fields_in(world):
+    """Postgres JSONB reorders keys. The thread must still name the credit memo the accounting tools know."""
+    store, oid, factory, svc = world
+    scenario = svc.spawn('price_only', 'owner', seed=4)
+    with store.engine.begin() as db:  # what a JSONB round trip does to the fact sheet
+        facts = db.execute(select(counterparty_scenarios.c.facts).where(counterparty_scenarios.c.id == scenario['id'])).scalar()
+        reorder = lambda v: {k: reorder(v[k]) for k in sorted(v, key=lambda k: (len(k), k))} if isinstance(v, dict) else [reorder(x) for x in v] if isinstance(v, list) else v
+        db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == scenario['id']).values(facts=reorder(facts)))
+    tool(store, oid, 'request_supplier_document', invoice_id=scenario['invoice_id'], request='price_correction', message='The unit price exceeds the agreement price.', request_key='r1')
+    flush(store, factory)
+    arrived = tool(store, oid, 'get_counterparty_thread', invoice_id=scenario['invoice_id'])['messages'][-1]
+    assert 'CM-' in json.dumps(arrived) and '"qty"' not in json.dumps(arrived.get('delivered', arrived))
+    for family in FAMILIES:
+        for kind, record in [tuple(r) for r in build(family, 1, random.Random(1))['facts']['opening']]: assert isinstance(cp.record_id(kind, record), str)

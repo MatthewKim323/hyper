@@ -158,6 +158,16 @@ TITLES = {'clean': '{inv} matches its order', 'price_only': '{inv} is priced abo
           'silent_supplier': '{inv} supplier is not answering', 'duplicate_credit': '{inv} credit memo may arrive twice', 'bank_change_attack': '{inv} comes with a bank change request'}
 
 
+# Which field names a record. Never "the first field": Postgres JSONB does not keep key order, so a
+# fact sheet that has been stored and read back lists its fields differently from the literal above.
+ID_FIELDS = {'VENDOR_MASTER': 'vendor_id', 'AGREEMENT': 'agreement_id', 'PURCHASE_ORDER': 'po_id', 'GOODS_RECEIPT': 'gr_id', 'INVOICE': 'invoice_id',
+             'CREDIT_MEMO': 'cm_id', 'CHANGE_ORDER': 'co_id', 'CHANGE_ORDER_ACK': 'ack_id', 'BACKORDER_NOTICE': 'notice_id'}
+
+
+def record_id(record_type, record):
+    return record[ID_FIELDS[record_type]]
+
+
 def say(text, *records, delay=1, needs=None):
     return {'text': text, 'records': [list(r) for r in records], 'delay': delay, 'needs': needs}
 
@@ -173,7 +183,7 @@ class Counterparties:
         source_ids, accounting = [], Accounting(self.store, self.oid)
         for index, (record_type, record) in enumerate(records):
             body = json.dumps([record]).encode()
-            source = self.data.ingest(f'{record_type}-{next(iter(record.values()))}.json', body, source_key=f'counterparty/{scenario["id"]}/{tag}/{index}', dataset=f"cp_{record_type.lower()}_{scenario['id'][-8:]}_{tag[-6:]}_{index}".replace('-', '_'))
+            source = self.data.ingest(f'{record_type}-{record_id(record_type, record)}.json', body, source_key=f'counterparty/{scenario["id"]}/{tag}/{index}', dataset=f"cp_{record_type.lower()}_{scenario['id'][-8:]}_{tag[-6:]}_{index}".replace('-', '_'))
             source_ids.append(source['id'])
             supplier_doc = record_type in ('CREDIT_MEMO', 'CHANGE_ORDER_ACK', 'BACKORDER_NOTICE')
             accounting.promote(PromoteRecord(source_id=source['id'], row_number=1, record_type=record_type, attestation=ATTESTATION),
@@ -287,7 +297,7 @@ class Counterparties:
                     db.execute(update(scenarios).where(scenarios.c.id == scenario['id']).values(state=state))
             with self.engine.begin() as db:
                 # Tell the reader exactly which records arrived, by the IDs the accounting tools expect.
-                arrived = [{'record_type': r[0], 'record_id': next(iter(r[1].values()))} for r in (reply or {}).get('records', [])] if reply else []
+                arrived = [{'record_type': r[0], 'record_id': record_id(r[0], r[1])} for r in (reply or {}).get('records', [])] if reply else []
                 db.execute(update(messages).where(messages.c.id == row['id']).values(status='delivered', body=body, source_ids=source_ids, payload={'delivered': arrived}))
                 emit(db, self.oid, 'message:' + row['id'], 'counterparty.replied', {'invoice_id': scenario['invoice_id'], 'party': row['party'], 'source_ids': source_ids})
             count += 1
