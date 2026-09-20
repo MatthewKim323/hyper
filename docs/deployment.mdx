@@ -142,6 +142,42 @@ The existing CAA on the apex already allows `pki.goog` and `letsencrypt.org`, wh
 the issuers Mintlify's edge uses, so it needs no change. A zone with a stricter CAA would
 have to add one before a certificate could be issued.
 
+## Clerk production
+
+The app runs on a development Clerk instance. Those have strict usage limits and are
+permissive about origins, so a real deployment wants a production one.
+
+Creating it is interactive and cannot be scripted — the CLI says so itself:
+
+```sh
+clerk deploy          # interactive; needs a human terminal
+clerk deploy status   # read-only, safe to run anywhere
+```
+
+The DNS it needs is already in place, pre-created on the Vercel zone and resolving:
+
+| Record | Target |
+| --- | --- |
+| `clerk.hyper` | `frontend-api.clerk.services` |
+| `accounts.hyper` | `accounts.clerk.services` |
+| `clkmail.hyper` | `mail.<id>.clerk.services` |
+| `clk._domainkey.hyper` | `dkim1.<id>.clerk.services` |
+| `clk2._domainkey.hyper` | `dkim2.<id>.clerk.services` |
+
+After `clerk deploy` completes, the keys change and four places need the new values:
+
+| Where | Variable |
+| --- | --- |
+| Vercel | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (now `pk_live_`) |
+| Railway `api` | `CLERK_PUBLISHABLE_KEY`, `CLERK_ISSUER` (`https://clerk.hyper.stephenhung.me`) |
+| Railway workers | the same two |
+| Clerk | `allowed_origins`, via `clerk api -X PATCH /instance` |
+
+<Warning>
+Existing development users do not carry over, and the session you are testing with stops
+working. Do this when you can sign in again, not minutes before a demo.
+</Warning>
+
 ## Checks
 
 ```sh
