@@ -28,6 +28,9 @@ pkill -f "app.counterparty_worker" 2>/dev/null || true
 COUNTERPARTY_TIMEOUT_MS="${COUNTERPARTY_TIMEOUT_MS:-2700000}" nohup uv run python -m app.counterparty_worker > var/counterparty-worker.log 2>&1 &
 AGENT_PUBLIC_BASE_URL="$URL" DEVIN_MAX_SESSIONS_PER_ORG="${DEVIN_MAX_SESSIONS_PER_ORG:-200}" \
   nohup uv run python -m app.devin_worker > var/devin-worker.log 2>&1 &
-pgrep -f "app.devin_exceptions" >/dev/null 2>&1 || nohup uv run python -m app.devin_exceptions > var/devin-exceptions.log 2>&1 &
+# Memory on against memory off: every exception the adversary sends the first organization is mirrored
+# into the second, whose tasks get no lessons and no skills. Set DEVIN_CONTROL_PAIRS="" to run without it.
+pkill -f "app.devin_exceptions" 2>/dev/null || true
+DEVIN_CONTROL_PAIRS="${DEVIN_CONTROL_PAIRS-demo-meridian:demo-meridian-control}" nohup uv run python -m app.devin_exceptions > var/devin-exceptions.log 2>&1 &
 echo "devin worker, exception bridge and counterparty worker started (logs in backend/var/)"
 echo "turn the loop on:  uv run --directory backend python -m app.devin_exceptions_ctl on demo-meridian"

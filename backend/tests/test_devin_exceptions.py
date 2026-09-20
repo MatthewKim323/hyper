@@ -16,10 +16,15 @@ class Objects:
 
 
 @pytest.fixture
-def world(tmp_path):
+def world(tmp_path, monkeypatch):
     store = Store(str(tmp_path / 'bridge.db'))
     oid = store.workspace('alice')['id']
-    return store, oid, Counterparties(DataService(store, oid, objects=Objects()))
+    objects = Objects()
+    factory = lambda o: DataService(store, o, objects=objects)
+    run = devin_exceptions.run_once
+    monkeypatch.setattr(devin_exceptions, 'run_once', lambda s: run(s, factory))
+    monkeypatch.delenv('DEVIN_CONTROL_PAIRS', raising=False)
+    return store, oid, Counterparties(factory(oid))
 
 
 def queued(store):
@@ -61,3 +66,51 @@ def test_scored_exceptions_are_left_alone(world):
     from sqlalchemy import update
     with store.engine.begin() as db: db.execute(update(counterparty_scenarios).values(status='scored', outcome='timeout'))
     assert devin_exceptions.run_once(store) == 0
+
+
+def grade(store, scenario_id, outcome, summary):
+    from app.database import counterparty_scenarios
+    from sqlalchemy import update
+    with store.engine.begin() as db:
+        db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == scenario_id).values(status='scored', outcome=outcome, scored_at=1))
+        db.execute(update(agent_tasks).values(status='complete', result={'outcome': 'complete', 'summary': summary, 'source_ids': []}))
+
+
+def test_a_graded_case_becomes_one_lesson_that_the_next_task_reads(world):
+    store, _, svc = world
+    first = svc.spawn('claim_without_memo', 'owner', seed=1)
+    devin_exceptions.run_once(store)
+    grade(store, first['id'], 'fail', 'Supplier said a credit exists so I prepared the proposal.')
+    devin_exceptions.run_once(store); devin_exceptions.run_once(store)
+    (lesson,) = svc.lessons()
+    assert 'graded WRONG' in lesson['lesson'] and 'Supplier said a credit exists' in lesson['lesson']
+    svc.spawn('clean', 'owner', seed=2)
+    devin_exceptions.run_once(store)
+    assert 'graded WRONG' in queued(store)[-1]['objective']
+
+
+def test_a_control_organization_mirrors_the_adversary_and_gets_no_memory(world, monkeypatch):
+    store, oid, svc = world
+    monkeypatch.setenv('DEVIN_CONTROL_PAIRS', oid + ':baseline')
+    svc.add_lesson('scn_old', 'clean', 'Always inspect every credit memo.')
+    svc.spawn('duplicate_credit', 'adversary', seed=5, difficulty=3)
+    devin_exceptions.run_once(store); devin_exceptions.run_once(store)
+    by_org = {t['organization_id']: t['objective'] for t in queued(store)}
+    assert set(by_org) == {oid, 'baseline'}
+    assert 'Always inspect every credit memo' in by_org[oid] and 'search_learned_skills for this kind' in by_org[oid]
+    assert 'Always inspect' not in by_org['baseline'] and 'runs without memory' in by_org['baseline']
+    from app.database import counterparty_scenarios
+    with store.engine.connect() as db:
+        twin = db.execute(select(counterparty_scenarios).where(counterparty_scenarios.c.organization_id == 'baseline')).mappings().all()
+    assert [(t['family'], t['difficulty']) for t in twin] == [('duplicate_credit', 3)], 'mirrored once, same family and tier'
+
+
+def test_cases_from_before_the_pair_existed_are_not_mirrored(world, monkeypatch):
+    store, oid, svc = world
+    for seed in range(3): svc.spawn('clean', 'adversary', seed=seed)
+    monkeypatch.setenv('DEVIN_CONTROL_PAIRS', oid + ':baseline')
+    monkeypatch.setattr(devin_exceptions, 'MAX_PENDING', 50)
+    devin_exceptions.run_once(store); devin_exceptions.run_once(store)
+    from app.database import counterparty_scenarios
+    with store.engine.connect() as db:
+        assert len(db.execute(select(counterparty_scenarios.c.id).where(counterparty_scenarios.c.organization_id == 'baseline')).all()) == 1
