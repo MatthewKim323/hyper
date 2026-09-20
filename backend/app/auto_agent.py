@@ -157,9 +157,26 @@ def session_llm():
     return Responses() if provider()[3] else complete
 
 
-def tool_specs():
+def escalates(store, oid):
+    """Whether a session in this company may bring a held invoice to the owner as a decision. Only where a person
+    is there to answer (AUTO_AGENT_CONCERN_ORGS), and only while few decisions are waiting: every one is a card the
+    CFO reads out, and a queue of thirty is a queue nobody answers."""
+    allowed = {x.strip() for x in os.getenv('AUTO_AGENT_CONCERN_ORGS', 'demo-meridian').split(',') if x.strip()}
+    if oid not in allowed: return False
+    from .database import concerns
+    with store.engine.connect() as db:
+        waiting = db.execute(select(func.count()).select_from(concerns).where(concerns.c.organization_id == oid,
+                             concerns.c.status.in_(['draft', 'awaiting_response', 'needs_input', 'card_failed']))).scalar()
+    return waiting < int(os.getenv('AUTO_AGENT_MAX_OPEN_CONCERNS', '3'))
+
+
+ESCALATE = """
+- You may call raise_concern, once per invoice, when you are leaving it on hold and what it needs next is a decision only the owner can make: a supplier who disputes and will not move, a payment that may already have gone out, goods going back, a credit taken back. Use request_key "hold:" followed by the invoice id, severity high, the source IDs you relied on, a title that names the invoice and the blocker, and a description that states what is established, what is not, and what you need decided. Do not raise one for a case that is only waiting for a reply, and never to ask permission for something the engine already allows."""
+
+
+def tool_specs(escalate=False):
     return [{'type': 'function', 'function': {'name': d['name'], 'description': d['description'], 'parameters': d['parameters']}}
-            for d in data_tools.tool_definitions() if d['name'] in TOOLS]
+            for d in data_tools.tool_definitions() if d['name'] in TOOLS or (escalate and d['name'] == 'raise_concern')]
 
 
 def brief(value, limit=7000):
@@ -178,7 +195,8 @@ def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None,
     """One bounded working session on one invoice. Returns the trace of observable actions."""
     svc = Counterparties(data_factory(oid))
     memory = svc.memory() if remembers(oid) else []
-    system = SYSTEM + ('\n\nLessons from your earlier graded cases. Apply them where they fit, they never override the engine:\n' + '\n'.join(('- (from a graded mistake) ' if m.get('from_a_miss') else '- ') + m['lesson'] for m in memory) if memory else '')
+    escalate = escalates(store, oid)
+    system = SYSTEM + (ESCALATE if escalate else '') + ('\n\nLessons from your earlier graded cases. Apply them where they fit, they never override the engine:\n' + '\n'.join(('- (from a graded mistake) ' if m.get('from_a_miss') else '- ') + m['lesson'] for m in memory) if memory else '')
     convo = [{'role': 'system', 'content': system},
              {'role': 'user', 'content': f'Blocked invoice {scenario["invoice_id"]}: {scenario["title"]}. Approved contacts: supplier portal and procurement.desk. '
                                           'Pick up from the current state: open or resume the case, read the thread, and move it forward.'}]
@@ -186,7 +204,7 @@ def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None,
     trace, status = [], 'WAITING'
     for _ in range(MAX_STEPS):
         if heartbeat: heartbeat()
-        reply = llm({'model': model, 'messages': convo, 'tools': tool_specs(), 'max_tokens': 1200})['choices'][0]['message']
+        reply = llm({'model': model, 'messages': convo, 'tools': tool_specs(escalate), 'max_tokens': 1200})['choices'][0]['message']
         convo.append({k: v for k, v in reply.items() if k in ('role', 'content', 'tool_calls')})
         calls = reply.get('tool_calls') or []
         if not calls:
@@ -209,7 +227,7 @@ def session(store, oid, scenario, data_factory, model, llm=None, heartbeat=None,
                         section='cases', simulated=True)
             try:
                 args = json.loads(call['function'].get('arguments') or '{}')
-                result = data_tools.execute(store, oid, name, args) if name in TOOLS else {'error': 'Tool not available'}
+                result = data_tools.execute(store, oid, name, args) if name in TOOLS or (escalate and name == 'raise_concern') else {'error': 'Tool not available'}
             except Exception as exc:  # the model must see its own mistakes to recover from them
                 args, result = call['function'].get('arguments'), {'error': str(exc)[:300]}
             trace.append({'at': now(), 'tool': name, 'args': brief(args, 240), 'result': brief(result, 240)})

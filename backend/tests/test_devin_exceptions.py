@@ -127,3 +127,21 @@ def test_sharded_workers_split_every_case_and_never_share_one(monkeypatch):
     assert set(owners) == set(ids) and all(len(v) == 1 for v in owners.values())
     monkeypatch.delenv('AUTO_AGENT_SHARD')
     assert all(auto_agent.owns(sid) for sid in ids), 'unsharded, one worker owns everything'
+
+
+def test_the_worker_may_bring_a_hold_to_the_owner_only_where_someone_is_there_and_the_queue_is_short(tmp_path, monkeypatch):
+    from app import auto_agent
+    from app.database import concerns
+    store = Store(str(tmp_path / 'escalate.db'))
+    oid = store.workspace('alice')['id']
+    names = lambda on: {t['function']['name'] for t in auto_agent.tool_specs(on)}
+    assert 'raise_concern' in names(True) and 'raise_concern' not in names(False)
+    monkeypatch.setenv('AUTO_AGENT_CONCERN_ORGS', 'somewhere-else')
+    assert not auto_agent.escalates(store, oid), 'a lab company has nobody to answer'
+    monkeypatch.setenv('AUTO_AGENT_CONCERN_ORGS', oid)
+    assert auto_agent.escalates(store, oid)
+    with store.engine.begin() as db:
+        for index in range(3):
+            db.execute(concerns.insert().values(id=f'c{index}', organization_id=oid, request_key=f'k{index}', request={}, status='awaiting_response',
+                       card_revision=0, decision_revision=0, evidence_snapshot=[], created_at=1, updated_at=1, lease_until=0))
+    assert not auto_agent.escalates(store, oid), 'three decisions already waiting is enough'
