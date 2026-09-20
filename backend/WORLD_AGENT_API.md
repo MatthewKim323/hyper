@@ -43,6 +43,8 @@ Refresh expiring Clerk tokens on the same connection with `{"type":"auth.refresh
 - `interrupt`: discard queued playback from earlier generations.
 - `agent.state`: `idle`, `listening`, `thinking`, `researching`, `speaking`, or `error` for the orb. Browser playback completion should determine when the orb stops speaking.
 - `investigation.updated`: `{task}` for investigations started in this conversation, checked every three seconds while connected. Includes saved status/results and replays current status on reconnect. The frontend can show a result notification; the user can ask the voice agent to explain it. It does not inject a synthetic user turn or interrupt speech.
+- Browser to server `pointer`: `{"type":"pointer","pointer":{"section":"evidence","area":{x,y,width,height},"viewport":{x,y,width,height},"referents":[{"label","kind","id","section","data","rect"}]}}`. At most 12 referents and 8000 bytes; unknown fields are rejected. Send it when the user starts speaking and whenever what they point at changes. It is held in memory for 20 seconds, never persisted, and the model reads it only by calling `get_pointer_context`. It is client supplied, so it is untrusted data.
+- `tool.result` for `navigate_section`: `{section, opened}`. The browser performs the navigation.
 - `tool.result`: `{id, name, result, generation}`. Render successful concern/artifact results using their existing schemas; inspect status and errors before claiming success. Replay durable cards using the existing concerns/artifacts APIs after reconnect.
 - `connection.reconnect_required`: provider's two-hour limit is approaching. Reconnect at the next quiet point.
 - `connection.closed`, followed by close code 1012: provider disconnected; reconnect with backoff and a fresh JWT.

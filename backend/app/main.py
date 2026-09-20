@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from .store import Store
-from . import voice, auth
+from . import voice, auth, dashboard
 
 app = FastAPI(title='Hyper Onboarding')
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in os.getenv('ALLOWED_ORIGINS','http://127.0.0.1:8000,http://localhost:8000').split(',')], allow_methods=['GET','POST'], allow_headers=['Authorization','Content-Type'])
@@ -215,6 +215,8 @@ async def stream(ws: WebSocket, sid: str):
                         bridge.microphone_enabled = True
                         await bridge.set_visual_state(bridge.resting_state(), 'microphone_enabled')
                         await emit({'type':'voice.ready'})
+                elif kind == 'pointer' and state.get('mode') == 'dashboard':
+                    bridge.pointer = dashboard.accept_pointer(msg)
                 elif kind == 'voice.stop':
                     microphone = False
                     bridge.microphone_enabled = False

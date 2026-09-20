@@ -60,6 +60,8 @@ class VoiceSession:
         self.last_audio = 0.0
         self.visual_state = None
         self.microphone_enabled = False
+        # Latest pointing context from the browser; held in memory only, never persisted.
+        self.pointer = None
         self.tasks = {}
         self.runners = []
         self.generation = 0
@@ -240,7 +242,7 @@ class VoiceSession:
                             self.state.setdefault('evidence', []).append({'tool':name,'arguments':args,'result':result})
                     elif self.state.get('mode') == 'dashboard' and name in dashboard.DESCRIPTIONS:
                         self.authorize()
-                        result = await asyncio.to_thread(dashboard.execute, self.store, self.state, name, args)
+                        result = await asyncio.to_thread(dashboard.execute, self.store, self.state, name, args, self.pointer)
                         self.authorize()
                         if name == 'start_investigation':
                             ids = self.state.setdefault('investigation_ids', [])
