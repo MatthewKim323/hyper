@@ -1,5 +1,6 @@
 import { getAuthState, getBackendToken } from "@/lib/backend/auth";
 import type { OnboardingPresentation } from "./interface";
+import { playNarrationPcm } from "../command/narration-player";
 
 export type VoiceConnection = "idle" | "connecting" | "connected" | "disconnected" | "error";
 type AgentState = "idle" | "listening" | "thinking" | "researching" | "speaking" | "ready" | "error";
@@ -203,6 +204,27 @@ export class OnboardingVoiceClient {
     this.callbacks = callbacks;
     this.mode = mode;
   }
+
+  /** Read-only narration shares the actual output and analyser, without opening a voice session. */
+  async playNarration(stream: ReadableStream<Uint8Array>, signal: AbortSignal, onStart: () => void, onProgress?: (samples: number) => void, deadlineMs?: number): Promise<number> {
+    if (this.mode !== "world" || this.disposed) throw new Error("World voice is unavailable.");
+    if (!this.context && worldPlaybackContext?.state === "running") {
+      this.context = worldPlaybackContext;
+      this.context.onstatechange = () => this.publish();
+    }
+    if (!this.context || this.context.state !== "running") throw new Error("Enable CFO audio to hear updates. Captions remain available.");
+    this.playbackTap ??= this.context.createMediaStreamDestination();
+    return playNarrationPcm({ context: this.context, stream, signal, tap: this.playbackTap,
+      onSource: source => { this.sources.add(source); this.publish(); },
+      onSourceEnded: source => { this.sources.delete(source); this.publish(); }, onStart, onProgress, deadlineMs });
+  }
+
+  hasQueuedAudio() { return this.sources.size > 0; }
+
+  playbackEnabled() { return (this.context ?? worldPlaybackContext)?.state === "running"; }
+
+  /** Bind numbered voice choices to the card the user is actually looking at. */
+  sendDecisionContext(context: unknown) { if (this.mode === "world" && this.authenticated) this.send({ type: "decision.context", context }); }
 
   /** Tell the dashboard agent what the user is pointing at. Read by its get_pointer_context tool. */
   sendPointer(pointer: unknown) {

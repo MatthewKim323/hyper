@@ -12,6 +12,8 @@ from mirror_resolve.ingest import get_record
 from mirror_resolve.intake import receive_record
 from mirror_resolve.schemas import RECORD_TYPES
 from .database import organizations, sources, records, accounting_evidence
+from .database import counterparty_scenarios
+from .workflow import emit as workflow_emit
 from .data_service import StrictModel
 
 class PromoteRecord(StrictModel):
@@ -123,6 +125,16 @@ class Accounting:
         if isinstance(value,list):return [self.display(v) for v in value]
         if isinstance(value,dict):return {k:self.display(v) for k,v in value.items()}
         return value[len(prefix):] if isinstance(value,str) and value.startswith(prefix) else value
+    def workflow_event(self, db, key, kind, cid, facts, actor='engine'):
+        case = self.owned_case(db, cid)
+        invoice = self.display(case['invoice_id'])
+        simulated = bool(db.execute(select(counterparty_scenarios.c.id).where(
+            counterparty_scenarios.c.organization_id == self.oid, counterparty_scenarios.c.invoice_id == invoice)).scalar())
+        return workflow_emit(db, self.oid, key, kind, workflow_id='invoice:' + invoice,
+            actor=actor, case_id=cid, entity_revision=case['revision'],
+            facts={'invoiceId': invoice, **facts}, section='review' if kind != 'evidence.verified' else 'evidence',
+            simulated=simulated)
+
     def list_cases(self,limit=50):
         """Every engine case for this organization with its recomputed position. Read only."""
         with self.transaction() as db:
@@ -199,12 +211,19 @@ class Accounting:
             if name=='analyze_payable':return self.snapshot(db,parsed.case_id)
             if name=='inspect_payable_credit':
                 credit=creditmemo.inspect_credit_memo(db,parsed.case_id,self.internal_id(parsed.credit_id),'agent:accounting')
-                return {'credit':credit,**self.snapshot(db,parsed.case_id)}
+                result = {'credit':credit,**self.snapshot(db,parsed.case_id)}
+                if credit.get('usable') and credit.get('state') in ('VERIFIED', 'ALLOCATED'):
+                    self.workflow_event(db, 'credit:' + parsed.case_id + ':' + parsed.credit_id + ':' + str(result['case']['revision']),
+                        'evidence.verified', parsed.case_id, {'sourceIds': sorted({e['source_id'] for e in result['evidence']})})
+                return result
             snapshot=self.snapshot(db,parsed.case_id)
             if parsed.based_on_revision!=snapshot['case']['revision']:raise ValueError('Stale case revision; recompute before proposing')
             prop=proposals.propose_payable_update(db,parsed.case_id,parsed.based_on_revision,actor='agent:accounting',evidence_refs=snapshot['evidence'])
             review=proposals.record_review(db,prop['proposal_id'],reviewer='engine:deterministic_validator',verdict='PASS')
             approval=proposals.request_controller_approval(db,prop['proposal_id'],actor='agent:accounting') if review['verdict']=='PASS' else None
+            if approval and approval['status'] == 'PENDING':
+                self.workflow_event(db, 'proposal:' + prop['proposal_id'], 'proposal.prepared', parsed.case_id,
+                    {'proposalId': prop['proposal_id'], 'proposalHash': prop['hash']})
             return {'proposal':prop,'validation':review,'approval':approval,'committed':False}
     def approve(self,args,user_id):
         with self.transaction() as db:
@@ -213,7 +232,11 @@ class Accounting:
             if prop['hash']!=args.proposal_hash:raise ValueError('Proposal hash mismatch')
             if any(not c['ok'] for c in proposals.validate_proposal(db,args.proposal_id)):raise ValueError('Proposal no longer passes accounting checks')
             approval=proposals.request_controller_approval(db,args.proposal_id,actor='human:'+user_id)
-            return proposals.decide_approval(db,approval['approval_id'],decided_by='human:'+user_id,role='CONTROLLER',decision=args.decision,proposal_hash=args.proposal_hash)
+            result = proposals.decide_approval(db,approval['approval_id'],decided_by='human:'+user_id,role='CONTROLLER',decision=args.decision,proposal_hash=args.proposal_hash)
+            self.workflow_event(db, 'approval:' + approval['approval_id'] + ':' + args.decision,
+                'approval.recorded', prop['case_id'], {'proposalId': prop['proposal_id'],
+                    'proposalHash': args.proposal_hash, 'decision': args.decision}, actor={'kind': 'human', 'id': user_id})
+            return result
 
 def invalidate_replaced_sources(db, oid, source_key, new_source_id):
     """Raw source replacement revokes dependent drafts before anyone re-verifies it."""

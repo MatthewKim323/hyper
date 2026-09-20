@@ -45,7 +45,7 @@ import httpx  # noqa: E402
 from fastapi import HTTPException  # noqa: E402
 
 from app import auth, data_api, main  # noqa: E402
-from app.concerns import ConcernService, Finish, RaiseConcern, Respond  # noqa: E402
+from app.concerns import ConcernService, RaiseConcern, Respond  # noqa: E402
 from app.data_service import DataService  # noqa: E402
 from app.orchestrator import AgentService, CaseState, Delegate, PutCase  # noqa: E402
 from app.simulator import CreateSimulation, SimulatorService, run_once as simulate_once  # noqa: E402
@@ -261,9 +261,15 @@ def seed() -> None:
         description="Same memo number on two deliveries.", severity="medium", source_ids=[sources["CASE-009"], sources["ap_credits"]]))
     concerns.respond(remit["id"], Respond(option_id="option_1"), DEV_USER)
     concerns.respond(dup["id"], Respond(option_id="option_1"), DEV_USER)
-    claim = concerns.claim(dup["id"])
-    concerns.finish(Finish(concern_id=dup["id"], claim_token=claim["claim_token"], outcome="resolved",
-        summary="DEV_FIXTURE resolution text. One allocation of CM-310 kept, second delivery recorded as a duplicate.", source_ids=[sources["CASE-009"]]))
+    # Presentation fixture only: this is deliberately not represented as real worker execution.
+    from sqlalchemy import update
+    from app.database import concerns as concern_rows, concern_jobs
+    duplicate = concerns.get(dup["id"])
+    fixture_result = {"summary": "DEV_FIXTURE resolution text. One allocation of CM-310 kept, second delivery recorded as a duplicate.",
+                      "source_ids": [sources["CASE-009"]], "fixture": True, "receipt_ids": []}
+    with store.engine.begin() as db:
+        db.execute(update(concern_rows).where(concern_rows.c.id == dup["id"]).values(status="resolved", resolution=fixture_result))
+        db.execute(update(concern_jobs).where(concern_jobs.c.id == duplicate["latest_job_id"]).values(status="completed", result=fixture_result))
 
     agents = AgentService(store, oid)
     case = agents.put_case(PutCase(case_key="ap/INV-1042", title="INV-1042: price and quantity exception", expected_version=0, state=CaseState(

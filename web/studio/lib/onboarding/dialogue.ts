@@ -7,6 +7,7 @@ export interface DialogueEntry {
   final: boolean;
   sequence: number | null;
   placeholder?: boolean;
+  turnId?: string;
 }
 
 export interface DialogueState {
@@ -35,6 +36,7 @@ function upsert(entries: DialogueEntry[], event: Record<string, unknown>, histor
   const text = event.text.trim().slice(0, 16000);
   const final = event.final !== false;
   const sequence = Number.isSafeInteger(event.sequence) && (event.sequence as number) > 0 ? event.sequence as number : null;
+  const turnId = typeof event.turnId === "string" ? event.turnId : typeof event.turn_id === "string" ? event.turn_id : generation(event.generation) ? `generation:${event.generation}` : undefined;
   const index = entries.findIndex(entry => entry.id === event.id && !entry.placeholder);
   const previous = entries[index];
   if (previous) {
@@ -42,12 +44,12 @@ function upsert(entries: DialogueEntry[], event: Record<string, unknown>, histor
     if (previous.role !== event.role || previous.final) return entries;
     if (previous.text === text && previous.final === final && (sequence === null || sequence === previous.sequence)) return entries;
     const next = entries.slice();
-    next[index] = { ...previous, text, final, sequence: sequence ?? previous.sequence };
+    next[index] = { ...previous, text, final, sequence: sequence ?? previous.sequence, turnId: turnId ?? previous.turnId };
     return next;
   }
   if (!history && sequence !== null && entries.some(entry => entry.sequence !== null && entry.sequence >= sequence)) return entries;
   const next = entries.filter(entry => !entry.placeholder);
-  next.push({ id: event.id, role: event.role, text, final, sequence });
+  next.push({ id: event.id, role: event.role, text, final, sequence, ...(turnId ? { turnId } : {}) });
   if (history) next.sort((a, b) => a.sequence !== null && b.sequence !== null ? a.sequence - b.sequence : 0);
   return next.slice(-LIMIT);
 }
@@ -77,7 +79,7 @@ export function dialogueTurns(entries: DialogueEntry[]): DialogueEntry[] {
   const turns: DialogueEntry[] = [];
   for (const entry of entries) {
     const latest = turns.at(-1);
-    if (latest && latest.role === entry.role && !entry.placeholder && !latest.placeholder) {
+    if (latest && latest.role === entry.role && latest.turnId === entry.turnId && !entry.placeholder && !latest.placeholder) {
       turns[turns.length - 1] = { ...latest, text: `${latest.text} ${entry.text}`, final: entry.final, sequence: entry.sequence };
     } else turns.push({ ...entry });
   }

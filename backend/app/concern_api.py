@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from . import auth
 from .data_api import service
-from .concerns import ConcernService, RaiseConcern, Respond, Finish, Conflict
+from .concerns import ConcernService, RaiseConcern, Respond, Finish, Conflict, DecisionCommand
 
 router = APIRouter(prefix='/concerns', tags=['concerns'])
 
@@ -19,6 +19,8 @@ def invoke(fn, *args):
     except LookupError as exc:
         if type(exc) is not LookupError: raise
         raise HTTPException(404, 'Concern or evidence not found') from None
+    except PermissionError as exc:
+        raise HTTPException(403, str(exc)) from None
     except Conflict as exc:
         raise HTTPException(409, str(exc)) from None
     except ValueError:
@@ -53,11 +55,23 @@ def respond(cid: str, body: Respond, identity=Depends(auth.current_user), svc=De
 
 @router.post('/{cid}/claim')
 def claim(cid: str, svc=Depends(concerns)):
-    return invoke(svc.claim, cid)
+    raise HTTPException(403, 'Concern execution is managed by the scoped resolution worker')
 
 
 @router.post('/{cid}/resolve')
 def resolve(cid: str, body: Finish, svc=Depends(concerns)):
     if body.concern_id != cid:
         raise HTTPException(422, 'Concern ID must match route')
-    return invoke(svc.finish, body)
+    raise HTTPException(403, 'Concern completion requires verified executor receipts')
+
+
+@router.post('/{cid}/decisions')
+def decide(cid: str, body: DecisionCommand, identity=Depends(auth.current_user), svc=Depends(concerns)):
+    if body.concernId != cid:
+        raise HTTPException(422, 'Concern ID must match route')
+    return invoke(svc.accept, body, identity.user_id)
+
+
+@router.get('/{cid}/jobs/{jid}')
+def job(cid: str, jid: str, svc=Depends(concerns)):
+    return invoke(svc.job, cid, jid)

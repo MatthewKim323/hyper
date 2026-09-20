@@ -1,19 +1,16 @@
 .viewport {
   position: relative;
-  height: clamp(148px, 19vh, 196px);
-  overflow: hidden;
-  mask-image: linear-gradient(to bottom, transparent, #000 28%, #000);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%, #000);
+  max-height: clamp(148px, 24dvh, 260px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   border-bottom: 1px solid rgb(36 29 35 / 10%);
   text-align: left;
   contain: layout paint;
 }
 
 .stack {
-  position: absolute;
-  bottom: 22px;
-  left: 28px;
-  right: 28px;
+  padding: 18px 28px 22px;
   display: flex;
   flex-direction: column;
   gap: 19px;
@@ -46,14 +43,14 @@
 }
 
 .compact {
-  height: clamp(130px, 17vh, 172px);
+  max-height: clamp(130px, 22dvh, 230px);
 }
 .compact .text { font-size: clamp(16px, 1.15vw, 19px); }
-.compact .stack { gap: 15px; bottom: 18px; left: 23px; right: 23px; }
+.compact .stack { gap: 15px; padding: 14px 23px 18px; }
 
 @media (max-width: 600px) {
-  .viewport { height: 148px; }
-  .stack { left: 22px; right: 22px; }
-  .compact { height: 128px; }
-  .compact .stack { left: 20px; right: 20px; }
+  .viewport { max-height: 30dvh; }
+  .stack { padding-left: 22px; padding-right: 22px; }
+  .compact { max-height: 26dvh; }
+  .compact .stack { padding-left: 20px; padding-right: 20px; }
 }

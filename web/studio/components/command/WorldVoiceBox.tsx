@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, type FormEvent } from "react";
+import { useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { VoiceBeam } from "voice-glow";
 import styles from "./WorldVoiceBox.module.css";
 import DialogueCaptions from "@/components/onboarding/DialogueCaptions";
@@ -18,6 +18,7 @@ const subscribePaused = (update: () => void) => {
 };
 
 type Props = {
+  children?: ReactNode;
   stream: MediaStream | null;
   listening: boolean;
   requesting: boolean;
@@ -35,7 +36,7 @@ type Props = {
 };
 
 /** The world session owns capture and transport. This surface only observes its mic. */
-export default function WorldVoiceBox({ stream, listening, requesting, processing, sending, transcript, dialogue, status, error, draft, visible, onDraft, onSend, onMicrophone }: Props) {
+export default function WorldVoiceBox({ children, stream, listening, requesting, processing, sending, transcript, dialogue, status, error, draft, visible, onDraft, onSend, onMicrophone }: Props) {
   const paused = useSyncExternalStore(subscribePaused, pausedSnapshot, () => true);
   const line = error || (!dialogue?.entries.length ? transcript || (listening || requesting || processing ? status : "") : "");
   const microphoneLabel = requesting ? "Cancel microphone request" : listening ? "Stop listening" : "Speak to your CFO";
@@ -72,6 +73,7 @@ export default function WorldVoiceBox({ stream, listening, requesting, processin
         release={.55}
       >
         <div className={styles.glass}>
+          {children}
           {dialogue && <DialogueCaptions dialogue={dialogue} agentLabel="CFO" compact paused={paused || !visible} />}
           {line && <p className={styles.transcript} role={error ? "alert" : "status"}>{line}</p>}
           <form className={styles.composer} onSubmit={submit} aria-busy={sending}>

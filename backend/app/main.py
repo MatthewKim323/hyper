@@ -197,12 +197,20 @@ async def stream(ws: WebSocket, sid: str):
         return
     started = False
     microphone = False
+    provider_lock = asyncio.Lock()
     async def watch_auth():
+        nonlocal started
         while True:
             await asyncio.sleep(1)
             if time.time() >= identity.expires_at or not store.member(identity.user_id, state['organization_id']):
                 await ws.close(code=1008)
                 return
+            if state.get('mode') == 'dashboard' and started and not microphone and not bridge.tasks and not bridge.speaking and time.monotonic() - bridge.last_interaction > 30:
+                async with provider_lock:
+                    if started and not microphone and not bridge.tasks and time.monotonic() - bridge.last_interaction > 30:
+                        await bridge.close()
+                        started = False
+                        await emit({'type': 'provider.idle', 'message': 'Conversation is saved.'})
     watcher = asyncio.create_task(watch_auth())
     async def watch_investigations():
         from .orchestrator import AgentService
@@ -269,18 +277,23 @@ async def stream(ws: WebSocket, sid: str):
                     await emit({'type':'agent.introduction', 'id':entry_id, 'status':status})
                 elif kind in ('text','voice.start'):
                     typed = TextInput.model_validate(msg) if kind == 'text' else None
-                    if not started:
-                        await bridge.start()
-                        started = True
-                    if kind == 'text':
-                        await bridge.inject(typed.text, typed.id)
-                    else:
-                        microphone = True
-                        bridge.microphone_enabled = True
-                        await bridge.set_visual_state(bridge.resting_state(), 'microphone_enabled')
-                        await emit({'type':'voice.ready'})
+                    async with provider_lock:
+                        bridge.last_interaction = time.monotonic()
+                        if not started:
+                            await bridge.start()
+                            started = True
+                        if kind == 'text':
+                            await bridge.inject(typed.text, typed.id)
+                        else:
+                            microphone = True
+                            bridge.microphone_enabled = True
+                            await bridge.set_visual_state(bridge.resting_state(), 'microphone_enabled')
+                            await emit({'type':'voice.ready'})
                 elif kind == 'pointer' and state.get('mode') == 'dashboard':
                     bridge.pointer = dashboard.accept_pointer(msg)
+                elif kind == 'decision.context' and state.get('mode') == 'dashboard':
+                    from .decision_intent import validate_context
+                    bridge.decision_context = validate_context(msg.get('context'))
                 elif kind == 'voice.stop':
                     microphone = False
                     bridge.microphone_enabled = False
@@ -334,6 +347,10 @@ async def validation_error(request: Request, exc: RequestValidationError):
 
 from .concern_api import router as concern_router
 app.include_router(concern_router)
+from .workflow_api import router as workflow_router
+app.include_router(workflow_router)
+from .cfo_audio import router as cfo_audio_router
+app.include_router(cfo_audio_router)
 
 from .artifact_api import router as artifact_router
 app.include_router(artifact_router)

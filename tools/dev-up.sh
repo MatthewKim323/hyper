@@ -35,6 +35,8 @@ start artifact-worker "" uv run python -m app.artifact_worker
 start simulator-worker "" uv run python -m app.simulator_worker
 start connector-worker "" uv run python -m app.connectors.worker
 start counterparty-worker "" uv run python -m app.counterparty_worker
+# Works only accepted CFO decisions using the configured model, never idle paid reasoning.
+start concern-worker "" uv run python -m app.concern_worker
 # Records the loop's results, spend, tests and retrieval every five minutes for the Benchmarks timeline.
 start bench-timeline "" uv run python -m app.bench_timeline hyper-lab demo-meridian --every 300
 # Who works the sandbox exceptions. Exactly one of these per machine: two workers on one invoice

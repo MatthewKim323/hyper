@@ -12,6 +12,7 @@ from .database import elastic_investigations as runs, sources, chunks, agent_eve
 from .data_service import StrictModel, EvidenceQuery, DataService
 from .concerns import ConcernService, RaiseConcern, Conflict
 from .retrieval import ElasticSearch
+from .workflow import emit as workflow_emit
 
 
 def now(): return int(time.time() * 1000)
@@ -101,6 +102,11 @@ class InvestigationService:
                 status='pending', created_at=now(), updated_at=now(), lease_until=0))
             row = db.execute(select(runs).where(runs.c.organization_id == self.oid,
                 runs.c.request_key == args.request_key)).mappings().one()
+            if row['source_id'] != args.source_id or row['question'] != args.question:
+                raise Conflict('Request key already used for a different investigation')
+            workflow_emit(db, self.oid, 'elastic:' + row['id'] + ':queued', 'handoff.queued',
+                workflow_id='investigation:' + row['id'], actor='cfo', recipient='elastic',
+                facts={'investigationId': row['id'], 'sourceIds': [args.source_id]}, section='evidence')
         if row['source_id'] != args.source_id or row['question'] != args.question:
             raise Conflict('Request key already used for a different investigation')
         return public(row)
@@ -271,11 +277,15 @@ def run_once(store, factory=None, cloud=None):
                     source_ids=list(dict.fromkeys(ids))))
                 cid = concern['id']
             with store.engine.begin() as db:
-                db.execute(update(runs).where(owned).values(status='complete', concern_id=cid,
-                    claim_token=None, lease_until=0, updated_at=now(), error=None))
+                saved = db.execute(update(runs).where(owned).values(status='complete', concern_id=cid,
+                    claim_token=None, lease_until=0, updated_at=now(), error=None)).rowcount
                 from .agent_events import emit
                 emit(db,svc.oid,'elastic:'+row['id'],'elastic.investigation.completed',
                      {'investigation_id':row['id'],'concern_id':cid,'outcome':finding.outcome})
+                if saved:
+                    workflow_emit(db, svc.oid, 'elastic:' + row['id'] + ':completed', 'execution.completed',
+                        workflow_id='investigation:' + row['id'], actor='elastic',
+                        facts={'investigationId': row['id'], 'sourceIds': list(dict.fromkeys(ids))}, section='evidence')
         else:
             bundle = svc.bundle(row)
             bundle['transport']=getattr(cloud,'mode','workflow')
@@ -289,6 +299,9 @@ def run_once(store, factory=None, cloud=None):
                 finding,execution=adapter.investigate(inputs)
                 with store.engine.begin() as db:
                     db.execute(update(runs).where(owned).values(execution_id=execution))
+                    workflow_emit(db, svc.oid, 'elastic:' + row['id'] + ':accepted', 'handoff.accepted',
+                        workflow_id='investigation:' + row['id'], actor='cfo', recipient='elastic',
+                        facts={'investigationId': row['id']}, section='evidence')
                 # The specialist can discover additional evidence; tenant/current checks remain backend-owned.
                 svc.accept(row['id'],finding,expand_current=True)
             else:
@@ -298,9 +311,17 @@ def run_once(store, factory=None, cloud=None):
                     # A fast callback can finish before the launch response arrives.
                     db.execute(update(runs).where(runs.c.id == row['id']).values(execution_id=execution))
                     db.execute(update(runs).where(owned).values(status='running', claim_token=None, lease_until=0))
+                    workflow_emit(db, svc.oid, 'elastic:' + row['id'] + ':accepted', 'handoff.accepted',
+                        workflow_id='investigation:' + row['id'], actor='cfo', recipient='elastic',
+                        facts={'investigationId': row['id']}, section='evidence')
     except Exception as exc:
         with store.engine.begin() as db:
-            db.execute(update(runs).where(owned).values(status='dispatch_unknown' if dispatched else 'failed',
+            saved = db.execute(update(runs).where(owned).values(status='dispatch_unknown' if dispatched else 'failed',
                 error=type(exc).__name__ + ': investigation failed; inspect configuration and retry',
-                claim_token=None, lease_until=0, updated_at=now()))
+                claim_token=None, lease_until=0, updated_at=now())).rowcount
+            if saved:
+                workflow_emit(db, svc.oid, 'elastic:' + row['id'] + ':failure:' + str(row['updated_at']),
+                    'dispatch.unknown' if dispatched else 'execution.failed',
+                    workflow_id='investigation:' + row['id'], actor='elastic', recipient='elastic',
+                    facts={'investigationId': row['id'], 'blockerCode': 'dispatch_unconfirmed' if dispatched else 'investigation_failed'}, section='evidence')
     return True

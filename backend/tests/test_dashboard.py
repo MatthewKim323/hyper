@@ -45,6 +45,7 @@ def test_dashboard_prompt_context_and_onboarding_isolation(client):
     names = {f['name'] for f in config['agent']['think']['functions']}
     assert 'update_context' not in names
     assert {'read_conversation_history','get_agent_activity','query_financials'} <= names
+    assert not {'claim_concern', 'renew_concern_claim', 'resolve_concern'} & names
     assert len(json.dumps(config['agent']['context']['messages'])) < 65000
     assert 'NOT onboarding' in config['agent']['think']['prompt']
     assert 'update_context' in {f['name'] for f in voice.settings(main.store.create('alice'))['agent']['think']['functions']}
