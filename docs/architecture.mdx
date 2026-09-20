@@ -1,0 +1,52 @@
+---
+title: "Architecture"
+description: "The five parts of the repository and how they connect."
+---
+
+## The parts
+
+| Directory | What it is |
+| --- | --- |
+| `backend/` | FastAPI. Voice onboarding, Clerk auth, the Postgres/S3/Elasticsearch data layer, connectors, concerns, artifacts, agent orchestration |
+| `web/studio/` | The Next app: landing, voice onboarding, the 3D atrium and the workspace sections |
+| `resolve/` | The deterministic AP exception engine: three-way match, credit lifecycle, hash-bound proposals, human-only approval |
+| `eval/` | A private grader over the AP fixtures, with statistics and a suite register |
+| `data/` | The Meridian synthetic company: datasets and fixtures with private expected outcomes |
+
+## Request path
+
+The browser talks to one origin. `web/studio` rewrites `/api/onboarding/*` to the backend,
+so the frontend never needs CORS for ordinary calls. The voice WebSocket is the exception:
+rewrites do not proxy sockets, so it connects directly and the backend checks its `Origin`
+against `ALLOWED_ORIGINS`.
+
+Every authenticated route takes a Clerk session JWT. The backend verifies signature,
+issuer, expiry and the authorized party, then checks organization membership. There is no
+development bypass; session IDs grant nothing on their own.
+
+## Onboarding, then the world
+
+Onboarding is a context interview, not the work. It fills a brief and hands off:
+only `company` and `facts` survive into a later session, and those are what the workspace
+agent reads. The workspace agent does the investigating.
+
+An independent evaluator decides when onboarding may finish, scoring five dimensions and
+requiring the brief's gate fields. Ready means ready for a read-only investigation.
+
+## Authority
+
+The engine, not the model, computes amounts and decides whether records satisfy the rules.
+Agents choose what to investigate and prepare proposals; the proposal is bound to a hash of
+the evidence it was built from, so a changed record invalidates it rather than silently
+re-scoring.
+
+Posting to the append-only ledger and approving a payable are owner actions. Posting is not
+an agent tool at all, and the worker tool allowlist is asserted in tests to contain no
+`post_`, `approve_`, `commit_` or `reverse_` verb.
+
+## Workers
+
+Everything asynchronous is a separate process, not a thread in the API: ingestion,
+artifacts, the simulator, connectors and the counterparty. They poll, they are idempotent,
+and each survives a database blip rather than ending the process. The API does not start
+them — a deployment runs them as their own services.

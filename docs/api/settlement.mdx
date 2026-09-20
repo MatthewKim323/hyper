@@ -1,0 +1,58 @@
+---
+title: "Settlements"
+description: "Single-payout reconciliation."
+---
+
+{/* Generated from backend/SETTLEMENT_API.md by docs/sync.py. Edit that file, not this one. */}
+
+The dashboard and Devin workers share `reconcile_settlement` and `get_settlement_reconciliation`. Clerk-authenticated HTTP clients use:
+
+- `POST /accounting/settlements` — `{ "processor_source_id": "…", "bank_source_id": "…" }`
+- `GET /accounting/settlements/{reconciliation_id}` — latest freshness and verification state.
+- `POST /accounting/settlements/{reconciliation_id}/verify` — organization owner only, body `{ "reconciliation_id": "…", "result_hash": "…", "attestation": "I verified the source reports, batch membership, and completeness" }`.
+
+Upload each report through `POST /sources` with `dataset=settlement_reports`, `id_field=id`, and a stable `source_key` per report. The JSON file must contain exactly one row: `[{"id":"unique-report-id","packet":{...}}]`. Reuse the same source_key when correcting a report. Replacements invalidate prior results on read/verification. Both source IDs must belong to the authenticated organization and remain active.
+
+Processor packet example (all amounts are integer minor units, never decimal strings):
+
+```json
+{
+  "batch_id": "batch-1",
+  "bank_account_id": "bank-1",
+  "bank_reference": "payout-1",
+  "currency": "USD",
+  "expected_arrival": "2026-09-19",
+  "complete": true,
+  "declared_count": 3,
+  "payout_minor": 87000,
+  "movements": [
+    {"id":"sale-1","kind":"sale","amount_minor":100000},
+    {"id":"refund-1","kind":"refund","amount_minor":10000},
+    {"id":"fee-1","kind":"fee","amount_minor":3000}
+  ]
+}
+```
+
+Bank packet example:
+
+```json
+{
+  "bank_account_id":"bank-1",
+  "currency":"USD",
+  "start":"2026-09-01",
+  "end":"2026-09-30",
+  "complete":true,
+  "deposits":[{"id":"bank-tx-1","reference":"payout-1","booked_on":"2026-09-19","amount_minor":87000}]
+}
+```
+
+Supported movement kinds: sale, refund, fee, chargeback, chargeback_reversal, reserve_hold, reserve_release. Supply separate fee movements; sale amounts must not already have those fees deducted. Reserve amounts describe cash withheld/released, not expenses or revenue. No generic adjustment field exists.
+
+Expected payout = sales + chargeback reversals + reserve releases − refunds − fees − chargebacks − reserve holds.
+Processor residual = expected payout − reported payout. Bank residual = uniquely referenced bank deposit − reported payout (null when ambiguous/missing or cross-currency). Matching amounts alone never establish a match.
+
+Results include signed residuals, category totals, issue codes, matched bank IDs, engine version, result hash and source/row/hash citations. States: `blocked`, `balanced_unverified`, `verified`, `stale`. Owner verification attests the source reports and completeness; it does not post a journal or authorize payment. A verified bank transaction cannot be allocated to another current verified run. Old verified_by remains visible on stale results for provenance; stale is never current verification.
+
+Agent flow: discover reports → call reconciliation → retrieve cited source evidence for issue codes → raise a concern if human evidence/decision is needed → rerun with corrected source versions. Never repair a residual by inventing an adjustment or changing membership. Missing/unsupported reports should produce a request for the normalized contract. This implementation does not automatically fetch provider reports or normalize arbitrary PDFs/CSVs.
+
+Review [research and scope](plans/settlement-reconciliation.md) for limitations.

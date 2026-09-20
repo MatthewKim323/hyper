@@ -1,0 +1,39 @@
+---
+title: "Anomaly scanner"
+description: "Evidence-backed outliers and escalation."
+---
+
+{/* Generated from backend/ANOMALY_API.md by docs/sync.py. Edit that file, not this one. */}
+
+Clerk authentication and organization isolation apply to every route. Detectors are
+deterministic scans over the organization's active financial records and settlement
+runs; they persist findings by stable fingerprint so repeat scans refresh rather
+than duplicate.
+
+| Route | Purpose |
+| --- | --- |
+| `POST /accounting/anomalies/scans` | Run detectors; persists a scan row and findings. |
+| `GET /accounting/anomalies/findings` | List findings; filter kind and status; paginated. |
+| `GET /accounting/anomalies/findings/{finding_id}` | Read one finding with evidence citations and linked concern ID. |
+| `POST /accounting/anomalies/findings/{finding_id}/dismiss` | Owner-only dismissal confirmation bound to the attestation. |
+
+Agent tools: `run_anomaly_scan`, `list_anomaly_findings`, `get_anomaly_finding`,
+`escalate_anomaly`, `propose_anomaly_dismissal`. Escalation creates a real concern
+card (request key `anomaly:<fingerprint>`, idempotent). Agent dismissal is a
+proposal only; it takes effect when an owner confirms through the dismiss route.
+
+Detectors and rules:
+
+| kind | Rule | Severity |
+| --- | --- | --- |
+| `duplicate_invoice` | Two records collide on vendor + invoice number, or vendor + amount + date | high |
+| `vendor_bank_change` | Same vendor id shows different bank detail values across records | high |
+| `price_variance` | Invoice unit price differs from its matched PO price by any nonzero minor amount | medium |
+| `unmatched_invoice` | Invoice carries a po_id with no PO record in the corpus | medium |
+| `settlement_residual` | A settlement run has a nonzero processor or bank residual and no verifier | medium |
+
+Each detector declares its required payload fields. Rows inside a detector's domain
+that are missing required fields are counted under `skipped_rows` with per-reason
+totals — never silently dropped, never guessed. Findings carry evidence citations
+(source ids and row locators) and are never auto-resolved; a dismissed fingerprint
+is reported under `suppressed` on later scans.

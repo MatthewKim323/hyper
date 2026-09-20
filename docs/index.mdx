@@ -1,0 +1,51 @@
+---
+title: "Hyper"
+description: "Blocked invoices, investigated and resolved."
+---
+
+Hyper is an accounts-payable exception system. A finance lead talks to an onboarding
+agent, lands in a 3D workspace, and an agent investigates blocked invoices against
+owner-verified records — citing evidence, and stopping at every point where a human
+must decide.
+
+## How the pieces fit
+
+<CardGroup cols={2}>
+  <Card title="Onboarding" icon="microphone">
+    A voice agent learns the organization: who they are, how they pay, what breaks.
+    It collects context and hands off — it does not do financial work.
+  </Card>
+  <Card title="The world" icon="cube">
+    A WebGL atrium where each relic opens a workspace section: cases, evidence,
+    review, activity, timeline, benchmarks.
+  </Card>
+  <Card title="Accounting engine" icon="calculator">
+    Deterministic three-way match, credit verification and hash-bound proposals.
+    Python calculates; the agent decides only what to investigate.
+  </Card>
+  <Card title="Evidence" icon="magnifying-glass">
+    Postgres for exact population queries, Elasticsearch for passages, a knowledge
+    graph for relationships. Every claim carries a source ID.
+  </Card>
+</CardGroup>
+
+## What an agent may and may not do
+
+Agents prepare and propose. People approve, post and pay.
+
+<Warning>
+Readiness means ready for a **read-only investigation**. It never authorizes sending a
+message, posting a journal entry, approving a payable, or moving money. Posting to the
+ledger is owner authority and is not exposed as an agent tool at all.
+</Warning>
+
+## Where to go next
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/architecture">
+    The five parts of the repository and how they connect.
+  </Card>
+  <Card title="Deployment" icon="rocket" href="/deployment">
+    Vercel for the frontend, Railway for the API, workers and evaluator.
+  </Card>
+</CardGroup>

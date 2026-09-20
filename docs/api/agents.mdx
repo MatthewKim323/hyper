@@ -1,0 +1,62 @@
+---
+title: "Agent orchestration"
+description: "Coordinator, workers and the tool bridge."
+---
+
+{/* Generated from backend/DEVIN_API.md by docs/sync.py. Edit that file, not this one. */}
+
+Default: Deepgram coordinates explicit dashboard requests; the durable dispatcher runs Devin investigation workers without a Devin coordinator. Implemented: transactionally recorded events, versioned case updates, idempotent task delegation, scoped machine credentials, two concurrent workers per organization, provider launch reconciliation, checkpoint recovery and activity polling. Uses Devin v3 organization APIs. Native child-session links are not assumed: parentage is represented by application organization/case/task records.
+
+## Start
+
+Set server-only `DEVIN_API_KEY` and `DEVIN_ORG_ID`; these identify the Devin account, not the customer's application organization. Set `AGENT_PUBLIC_BASE_URL` to this backend's externally reachable **HTTPS** URL. Configure a Devin service role with required API session permissions. Do not enable unrestricted native delegation for the agent if application launch budgets are intended to be exhaustive; native launches bypass the backend's task ledger. The dashboard uses `start_investigation`; worker credentials cannot delegate.
+
+Run:
+
+```sh
+uv run --directory backend python -m app.devin_worker
+```
+
+The worker loads `backend/.env`; `--once` processes one due organization and exits. Organization polling is every 30 seconds. No model loop is implemented in Python: the worker only manages sessions and delivery, while Devin executes investigations and chooses tools.
+
+With a logged-in user's bearer token:
+
+- `POST /agents/controller` with `{"enabled":true}` resumes that organization's dispatcher.
+- `POST /agents/controller` with `{"enabled":false}` pauses dispatch and disables its application machine credentials. This does not terminate already-running cloud sessions; stop those in Devin if immediate compute termination is needed.
+- `GET /agents/controller` returns saved session/checkpoint/status/error.
+- `GET /agents/cases` and `GET /agents/tasks` return the first 50 cases/tasks for the dashboard. Agent tools support pagination.
+
+`POST /agents/investigations` queues a read-only investigation with `request_key`, `title`, `objective`, and optional `source_ids`. First use initializes an enabled dispatcher; it never unpauses an existing paused organization. Case/task/event creation is atomic. Identical retries return the existing task; changed inputs under the same key return 409. `GET /agents/tasks/{task_id}` retrieves the organization-scoped result.
+
+The dispatcher launches up to two workers per organization and honors the existing cumulative session/ACU limits. No coordinator starts for source events or completed tasks. Background tasks survive browser disconnects. Automatic investigation of new data is not enabled by this change.
+
+`DEVIN_COORDINATOR_ENABLED=false` is the default. The legacy coordinator flow is available only with `true`: pending events launch/resume a coordinator, and checkpoint recovery applies. Existing coordinator application tokens are rejected when disabled; switching modes does not terminate existing cloud sessions. Stop those in Devin if necessary. Worker credentials are revoked on result or blocked session.
+
+## Agent access
+
+Each session receives its own `APP_AGENT_TOKEN` via Devin session secrets. Only a hash is stored by the application. The session prompt describes how to retrieve the credential and use:
+
+- `GET /agents/tool-definitions`: schemas available to that identity.
+- `POST /agents/tools`: `{"name":"list_events","arguments":{}}`.
+
+This is an authenticated HTTP tool bridge, not an MCP protocol endpoint. It works through Devin's shell/HTTP capabilities without sharing Clerk browser tokens. A dedicated MCP facade is deferred; the underlying shared tool dispatcher is implemented. Live session-secret availability and cloud connectivity must be checked in the credentialed smoke test.
+
+Coordinator tools: existing financial retrieval, concerns (including lease renewal), artifacts, plus `list_events`, `ack_events`, `list_cases`, `get_case`, `update_case`, `delegate_task`, `get_task`, `list_tasks`, `checkpoint`. Worker tools are restricted to organization evidence, its own case/task, concern/artifact creation, and `report_task_result`. Workers cannot delegate, change cases, respond as the user, claim unrelated concern work, or access other organizations. All agent sessions remain read-only with respect to financial execution.
+
+Case update requires `case_key`, `title`, `expected_version` (0 to create) and state with findings/unknowns/next_actions/source_ids/concern_ids. Updates are version-checked and appended to history. Delegation requires stable `request_key`, existing `case_id`, and `objective`. Result requires assigned `task_id`, outcome (`complete`, `needs_input`, `failed`), summary and source IDs. A failed/needs_input report may omit citations when no evidence is available; complete reports require at least one valid organization source. Agent-reported completion is evidence-linked, not an independently verified financial posting.
+
+## Events and recovery
+
+Source creation, source indexing, user concern responses, ready artifacts and task completion write durable events. Coordinator reads unacknowledged events and acknowledges them only after persisting case/task/checkpoint updates. Delivery is at least once; idempotency keys and version checks prevent ordinary repeated tasks and stale case writes. Full evidence is retrieved through tools instead of copied into wake messages. A source-created event can precede indexing; direct source/financial queries remain available and a later source-indexed event wakes the coordinator again.
+
+The dispatcher leases one organization at a time and creates at most two concurrently active worker tasks. Before each paid session creation it stores an attempt and unique provider tag. If creation times out, it searches for the exact tag before adopting the session; it never blindly recreates it. If no matching session becomes visible, status remains launch_uncertain and needs operator reconciliation. Attempt records do not store credentials.
+
+`DEVIN_SESSION_ACU_LIMIT` defaults to 5. `DEVIN_MAX_SESSIONS_PER_ORG` defaults to 10 cumulative launches, including replacements and uncertain attempts. These are conservative reservation limits, not measured dollar costs; adjust them deliberately after a live trial. Provider-enforced ACU behavior and account concurrency restrictions must be confirmed with the account. The app does not bypass approval or spending suspension.
+
+Limitations: no outbound lifecycle webhook dependency, no native child VM control, no MCP endpoint, no production deployment created, and no real payment/email/ledger execution. Pausing application access is not cloud-session termination. Terminal/blocked workers are surfaced for the coordinator to investigate; a follow-up can delegate a new explicitly scoped task. Structured provider completion alone never marks a business task complete.
+
+## Verification
+
+Automated tests use a fake Devin provider to verify session reuse, pause-based credential revocation, organization/case/task isolation, exact task completion permissions, duplicate task prevention, two-worker cap, launch budget, ambiguous create reconciliation and coordinator replacement from checkpoints. Live Devin has not been invoked without configured credentials.
+
+Required smoke test: launch a coordinator, read one source, delegate one worker, receive a cited concern, choose a response, produce an artifact/result, restart the dispatcher and verify no duplicate work. This remains a provider/environment validation step, not a claimed completed run.

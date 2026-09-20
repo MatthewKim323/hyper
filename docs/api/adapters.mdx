@@ -1,0 +1,39 @@
+---
+title: "Processor adapters"
+description: "Processor reports and bank statements."
+---
+
+{/* Generated from backend/ADAPTERS_API.md by docs/sync.py. Edit that file, not this one. */}
+
+Clerk authentication and organization isolation apply to every route. Adapters
+normalize raw processor exports and bank statement rows into the strict packets
+`reconcile_settlement` consumes. They reshape stored evidence only; they create no
+financial claims.
+
+| Route | Purpose |
+| --- | --- |
+| `POST /accounting/adapters/processor` | Map a Stripe or Adyen shaped source into a normalized settlement Batch packet. |
+| `POST /accounting/adapters/bank-statement` | Map generic bank rows into a normalized Statement packet. |
+| `GET /accounting/adapters/imports/{import_id}` | Read a persisted adapter import result. |
+
+Agent tools: `import_processor_report`, `import_bank_statement`, `get_adapter_import`.
+Each call writes a new packet source through normal ingestion (`normalized_packets`
+dataset, `{'id', 'packet'}` row shape) and returns its `output_source_id`, which
+feeds `reconcile_settlement` directly. Every unmapped or invalid row is reported in
+`dropped_rows` with row number and reason — nothing is silently skipped or guessed.
+
+`import_processor_report` takes `source_id`, `provider` (`stripe` or `adyen`),
+`bank_account_id`, `expected_arrival`, optional `payout_id`, and `request_key`.
+Movements are grouped by payout; a report with multiple payouts requires `payout_id`
+or fails listing candidates. Stripe types map charge, refund, fee, chargeback,
+chargeback reversal, and reserve hold/release onto settlement movement kinds; Adyen
+categories map equivalently, with fee-bearing fields becoming fee movements.
+`payout_minor` is net settlement (sales + reversals + releases minus refunds, fees,
+chargebacks and holds). Mixed currencies, duplicate ids, non-minor amounts and
+unknown types reject or drop the affected rows with named reasons.
+
+`import_bank_statement` takes `source_id`, `bank_account_id`, `start`, `end`,
+`complete`, and `request_key`. Rows outside the statement period drop as
+`OUTSIDE_PERIOD`; uniform currency is required. A call with zero valid movements or
+deposits fails without writing a packet, and `adapter_imports` rows persist only on
+success so a corrected call may reuse the request key.

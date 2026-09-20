@@ -1,0 +1,78 @@
+---
+title: "Concerns"
+description: "Human decision cards."
+---
+
+{/* Generated from backend/CONCERNS_API.md by docs/sync.py. Edit that file, not this one. */}
+
+An agent raises a concern with evidence. A generation model drafts three choices, and Jev evaluates grounding, distinctness and authorization scope through Vercel AI SDK. Only cards passing every dimension at 0.85 are published. The backend adds a fourth, custom-text choice. This is card data for the frontend to render, not an implemented dashboard component.
+
+## Configuration
+
+The evaluator process needs `AI_GATEWAY_API_KEY`, `CONCERN_MODEL` (a text-generation model identifier), and `EVALUATOR_SECRET`. FastAPI needs the same secret and `EVALUATOR_URL` (default http://127.0.0.1:8001). Jev is fixed to `typesafe-ai/jev`; it evaluates proposed cards rather than generating free-form text. Restart API and evaluator after installing this change. Store initialization creates the additive concerns table.
+
+## Routes
+
+All routes require existing Clerk authentication and organization membership. Scope is derived from membership, never a supplied organization ID.
+
+| Route | Purpose |
+|---|---|
+| `POST /concerns` | Raise concern; stable request key makes repeated identical requests idempotent |
+| `GET /concerns?status=queued&limit=50&offset=0` | Poll concerns or selected work; returns `has_more` |
+| `GET /concerns/{id}` | Card, decision, status and latest resolution |
+| `POST /concerns/{id}/card` | Retry failed card generation or recover generation after its two-minute lease expires |
+| `POST /concerns/{id}/respond` | Select one choice or custom text; atomically queues agent work |
+| `POST /concerns/{id}/claim` | Claim queued work or reclaim an expired resolving task; returns private claim token |
+| `POST /concerns/{id}/resolve` | Record result with evidence and live claim token |
+
+Raise:
+
+```json
+{
+  "request_key": "invoice-481-price-review",
+  "title": "Invoice exceeds the contract amount",
+  "description": "The invoice and contract disagree. Delivery evidence is also incomplete.",
+  "severity": "high",
+  "source_ids": ["source_id_from_get_source"]
+}
+```
+
+The response includes `id`, `status`, and, when successful, `card` with `summary`, exactly three `options` (`option_1` through `option_3`) containing `title`, `action`, `tradeoff`, and `requires_approval`, plus `custom_option: {id: "custom", title: "Something else", input_required: true}`. A saved concern can return `card_failed`; do not render it as a ready card. Source IDs are verified within the organization. Only the first three extracted source items per source are passed to the evaluator; the agent's description should summarize relevant evidence, and Jev must preserve uncertainty where support is absent.
+
+Respond with either:
+
+```json
+{"option_id":"option_2"}
+```
+
+or:
+
+```json
+{"option_id":"custom","custom_response":"Check receiving records before drafting a supplier request."}
+```
+
+The stored decision contains the authenticated user, exact instruction and selection time. A second competing response returns 409. `needs_input` permits another response, preserving previous decisions. Choice commissions investigation and preparation; it does not itself execute or authorize a payment, ledger posting or external message.
+
+Claim returns the concern, decision, `claim_token`, and `lease_seconds: 900`. Tokens are excluded from ordinary GET/list responses. Complete within 15 minutes; if expired, reclaim and reassess before reporting completion. Claims are mutually exclusive while valid. A recovering worker must inspect queued AND expired resolving work. External execution, if later added, must have its own idempotency controls.
+
+Resolve:
+
+```json
+{
+  "concern_id":"concern_...",
+  "claim_token":"token_from_claim",
+  "outcome":"resolved",
+  "summary":"Compared the receipt against the purchase order; prepared the correction for review.",
+  "source_ids":["supporting_source_id"]
+}
+```
+
+Outcomes: `resolved`, `needs_input`, `failed`. Resolutions are agent-reported and source-linked, not independently verified accounting outcomes. Evidence does not automatically demonstrate an external action happened.
+
+## Agent tools and execution
+
+Deepgram and code callers share `raise_concern`, `list_concerns`, `get_concern`, `claim_concern`, and `resolve_concern` through `app.data_tools`. Responding on the user's behalf is deliberately not an agent tool. The frontend calls `/respond` using the user's authenticated session.
+
+State flow: `draft → generating → awaiting_response → queued → resolving → resolved/needs_input/failed`. Generation failure becomes `card_failed` and can be retried. The concern survives evaluator failure.
+
+The API and tool loop are implemented. No autonomous Devin/resolver worker is wired to this queue yet: an agent caller must poll, claim, perform the investigation and submit its result. Selected work remains durably queued until that happens. Frontend rendering and live provider verification remain separate.

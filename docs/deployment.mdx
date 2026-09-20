@@ -1,0 +1,117 @@
+---
+title: "Deployment"
+description: "Vercel for the frontend, Railway for the API, workers and evaluator."
+---
+
+Two platforms. Vercel serves `web/studio`; Railway runs everything Python or Node that
+needs a long-lived process. The hand tracker needs no host at all.
+
+## Topology
+
+| Service | Platform | What it is |
+| --- | --- | --- |
+| `hyper.stephenhung.me` | Vercel | The Next app in `web/studio` |
+| `api` | Railway | `backend/Dockerfile`, serves `app.main` |
+| `evaluator` | Railway | `backend/evaluator/Dockerfile`, the Jev readiness service |
+| `ingestion-worker` | Railway | Same API image, `START_MODULE=app.ingestion_worker` |
+| `artifact-worker` | Railway | Same image, `START_MODULE=app.artifact_worker` |
+| `counterparty-worker` | Railway | Same image, `START_MODULE=app.counterparty_worker` |
+| Postgres | Railway | Managed |
+
+<Warning>
+The workers are not optional. Without `ingestion-worker` an uploaded source stays
+`index_status='pending'` forever and evidence search never sees it — the upload appears to
+succeed and the file is simply never indexed.
+</Warning>
+
+## The hand cursor
+
+It does not need hosting. MediaPipe runs entirely in the browser, and its ~30 MB of wasm
+and model files live in `web/studio/public/mediapipe`, which is gitignored and rebuilt by
+the `postinstall` script Vercel runs on every build. Nothing to deploy, nothing to pay for.
+
+## Frontend
+
+```sh
+cd web/studio
+vercel link
+vercel --prod
+```
+
+Set the project's **Root Directory** to `web/studio`. Environment variables:
+
+| Variable | Value |
+| --- | --- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | The key pairing with the backend's `CLERK_ISSUER` |
+| `NEXT_PUBLIC_ALWAYS_ONBOARD` | `0`, so completion is remembered |
+| `ONBOARDING_BACKEND_URL` | The Railway API URL, for the `/api/onboarding/*` rewrite |
+| `NEXT_PUBLIC_ONBOARDING_WS_URL` | `wss://` + the Railway API host |
+
+<Warning>
+`NEXT_PUBLIC_ONBOARDING_WS_URL` is required in production. The Next rewrite proxies HTTP
+only — it does not proxy WebSockets — so without it the voice socket resolves to the Vercel
+domain and never connects. Onboarding then reports that the service is unavailable.
+</Warning>
+
+## Backend
+
+```sh
+railway init
+railway add --database postgres
+railway up
+```
+
+`railway.toml` points the default service at `backend/Dockerfile` with `/health` as its
+healthcheck. Add each worker as another service from the same image, setting only
+`START_MODULE`; a crashed worker then cannot take the API down.
+
+Environment variables on the API service:
+
+| Variable | Notes |
+| --- | --- |
+| `DATABASE_URL` | From the Postgres plugin. Required — see below |
+| `CLERK_ISSUER` | Your Clerk Frontend API URL |
+| `CLERK_AUTHORIZED_PARTIES` | Must include `https://hyper.stephenhung.me` |
+| `ALLOWED_ORIGINS` | Must include `https://hyper.stephenhung.me` |
+| `DEEPGRAM_API_KEY` | The voice agent's entry point |
+| `AI_GATEWAY_API_KEY` | Jev, concern cards, artifacts |
+| `EVALUATOR_URL` | The evaluator service's private URL |
+| `EVALUATOR_SECRET` | Shared with the evaluator service |
+| `APP_ENV` | `production` |
+
+<Note>
+`ALLOWED_ORIGINS` is checked separately for WebSockets. An origin missing there closes
+every voice socket with code 1008 while ordinary HTTP keeps working, which is hard to
+diagnose from the browser.
+</Note>
+
+With `APP_ENV=production` or on Railway, a missing `DATABASE_URL` raises at startup
+instead of silently falling back to a local SQLite file that looks healthy and holds
+nothing.
+
+## Evaluator
+
+Its own service, because it is Node while the API image is Python. Onboarding can never
+report ready without it. Set `EVALUATOR_HOST=0.0.0.0` (the Dockerfile already does),
+`EVALUATOR_SECRET` to match the API, and `AI_GATEWAY_API_KEY`. Keep it on the private
+network: it holds the gateway key and trusts only that shared secret.
+
+## Domain
+
+```sh
+vercel domains add hyper.stephenhung.me
+vercel alias set <deployment-url> hyper.stephenhung.me
+```
+
+Then add the same origin to the backend's `ALLOWED_ORIGINS` and `CLERK_AUTHORIZED_PARTIES`,
+and to the authorized origins in the Clerk dashboard.
+
+## Checks
+
+```sh
+curl https://<api-host>/health              # {"status":"ok"}
+curl -I https://hyper.stephenhung.me/mediapipe/hand_landmarker.task   # 200, ~7.8 MB
+```
+
+Then sign in and confirm the voice orb connects — that exercises Clerk, the WebSocket
+origin list, Deepgram and the evaluator in one step.

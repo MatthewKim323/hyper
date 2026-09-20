@@ -1,0 +1,169 @@
+---
+title: "Connectors"
+description: "Read-only Gmail, Drive, Ramp and Plaid."
+---
+
+{/* Generated from backend/CONNECTORS.md by docs/sync.py. Edit that file, not this one. */}
+
+These adapters make actual provider API requests. They do not route through the simulator and do not fabricate provider results. They import observations and documents, never send supplier emails, approve bills, post accounting entries or move money.
+
+## Supported sources
+
+| Provider | Authorization | Imported data | Sync |
+|---|---|---|---|
+| Gmail | Google OAuth, offline refresh token | Message headers/body/thread IDs, attachments | Initial label-filtered scan, then Gmail history |
+| Google Drive | Google OAuth, offline refresh token | Downloadable files; Docs text; Sheets XLSX with all tabs; Slides PDF | Initial file scan, then Drive changes |
+| Ramp | Business-owned client ID/secret | Submitted bills including raw line items/credit references/payment metadata; card transactions | Full paginated polling, bills then transactions |
+| Plaid | Link public-token exchange | Bank transactions, additions/modifications/removals, pending-to-posted references | Transactions Sync cursor |
+
+Procurement vendors are not added without a specified system; CSV/JSON uploads remain supported. Ramp original invoice URLs remain in raw bill evidence; this version does not download arbitrary signed URLs or create a separate vendor-credit dataset. Structured Ramp line items remain in the original JSON, while top-level amounts and identifiers are queryable as financial rows.
+
+## Required configuration
+
+Use the existing Postgres/S3/Elasticsearch configuration from STORAGE.md, and Clerk configuration from API.md. Add to `backend/.env`:
+
+```dotenv
+CONNECTOR_ENCRYPTION_KEY=<persistent Fernet key from your secret manager>
+CONNECTOR_CALLBACK_BASE_URL=http://localhost:8000
+GOOGLE_CLIENT_ID=<Google web application client ID>
+GOOGLE_CLIENT_SECRET=<Google web application client secret>
+PLAID_CLIENT_ID=<Plaid client ID>
+PLAID_SECRET=<Plaid environment secret>
+PLAID_ENV=sandbox
+```
+
+Generate a Fernet key using `cryptography.fernet.Fernet.generate_key()` and store it securely. The server never generates a throwaway encryption key on startup. Keep it stable across API and worker processes and back it up: losing it makes stored credentials unreadable. Database credentials are encrypted with Fernet and bound to their connection ID; provider tokens never appear in connection responses or safe sync errors. Key rotation/re-encryption is not automated.
+
+For Google, enable Gmail API and Drive API in the project, configure an OAuth consent screen, add test users where applicable, and register these exact redirect URIs:
+
+```text
+http://localhost:8000/connections/oauth/gmail/callback
+http://localhost:8000/connections/oauth/drive/callback
+```
+
+Use your HTTPS callback base in deployment. Requested scopes are `gmail.readonly` and `drive.readonly` separately. These broad read scopes may require Google's app verification/security review for production distribution. Configuring client credentials alone does not grant access to a user's files or mail.
+
+For Ramp, an administrator creates a developer app with the client-credentials grant and `bills:read transactions:read`. Credentials are supplied to the authenticated connection endpoint and encrypted per organization. Sandbox uses a separate Ramp business and credentials. This is the business-owned integration flow; multi-customer partner OAuth is not implemented.
+
+For Plaid, use environment-matching credentials. The initial Link flow requests the Transactions product, English and US accounts. Production access/institution support depend on the Plaid account. The server never accepts a caller-controlled provider URL.
+
+## Processes
+
+From repository root:
+
+```sh
+uv run --directory backend uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log
+uv run --directory backend python -m app.connectors.worker
+uv run --directory backend python -m app.ingestion_worker
+```
+
+Disable/redact query-string access logging at the API and proxy so Google callback codes/state are not logged. Connector code does not log provider bodies or secrets. `python -m app.connectors.worker --once` processes at most one due page/update and exits for infrastructure cron. No cron is installed automatically.
+
+The connector worker fetches/normalizes; the existing ingestion worker indexes evidence. Both must run for current search results. SQL records and original downloads become available before search indexing completes.
+
+## Frontend connection flows
+
+All requests below, except Google's provider callback, require `Authorization: Bearer <Clerk session JWT>`. Organization scope is derived from the authenticated membership, not supplied in JSON. Existing organization members can manage shared connections, consistent with the current data API.
+
+### Google
+
+1. `POST /connections/google/gmail/authorize` or `/connections/google/drive/authorize`.
+2. Open the returned `authorization_url` in the browser and obtain Google consent.
+3. The provider callback exchanges the code, stores encrypted offline tokens and queues initial sync. It returns JSON with the connection's public status. Return to the app and poll the connection ID.
+
+Example body:
+
+```json
+{
+  "label": "Finance inbox",
+  "interval_seconds": 300,
+  "gmail_label_ids": ["INBOX"],
+  "drive_folder_id": null
+}
+```
+
+Gmail imports messages matching **all** specified label IDs (default inbox). For a custom finance label, supply its provider ID, not its display name. Drive's optional folder filter includes direct children, not recursive subfolders; null scans accessible files. Native Sheets export preserves all worksheets and formula expressions but does not calculate formulas. Message HTML is converted to plain text, never executed.
+
+OAuth uses a 10-minute one-use state bound to the initiating member/organization and PKCE. Callback checks membership again, rejects state replay and missing scopes, and requires offline access. No arbitrary redirect destination is accepted.
+
+### Ramp
+
+`POST /connections/ramp`:
+
+```json
+{
+  "label": "Company Ramp",
+  "client_id": "<business developer app client ID>",
+  "client_secret": "<business developer app client secret>",
+  "environment": "sandbox",
+  "interval_seconds": 300
+}
+```
+
+The endpoint obtains a real token before returning a connected status. Connection creation confirms authentication; sync status confirms resource permissions and imports. Access tokens are renewed automatically using the encrypted app credentials.
+
+### Plaid
+
+1. `POST /connections/plaid/link-token` with `{"label":"Operating bank","interval_seconds":300}`.
+2. Initialize the official Plaid Link frontend with the returned `link_token`.
+3. In Link's `onSuccess`, POST `/connections/plaid/exchange`:
+
+```json
+{"state":"<state returned with link token>","public_token":"<Link onSuccess public_token>"}
+```
+
+Both endpoints require the same authenticated initiating user and organization. State expires after 10 minutes. The permanent Plaid access token remains on the backend. A product frontend must mount Plaid Link; this change supplies the backend surface, not the teammate's connection UI. Plaid update-mode reauthorization is not implemented: disconnect and connect again if the Item requires reauthorization.
+
+## Control and retrieval API
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/connections/providers` | Readiness/configuration booleans, authorization types, supported imports |
+| GET | `/connections?limit=50&offset=0` | Paginated organization connections |
+| GET | `/connections/{id}` | Status, config, last sync, next attempt, safe error |
+| POST | `/connections/{id}/sync` | Queue a sync; 202 (idempotent while running) |
+| POST | `/connections/{id}/disconnect` | Stop syncing, clear credentials, deactivate imported sources |
+| GET | `/connections/{id}/items?limit=50&offset=0` | Imported item IDs, filenames, revisions, source IDs, partial/removal status |
+| GET | `/connections/{id}/items/{item_id}/original` | Authenticated original file/provider record download |
+| GET | `/connections/{id}/syncs?limit=20` | Recent durable sync attempts |
+
+Public statuses: `authorizing`, `connected`, `authorization_failed`, `error`, `reauth_required`, `disconnected`. `connected` means authenticated and scheduled, not that all historical data is already imported. `last_synced_at` is set only when a full scan/update completes. Timestamp fields are UTC Unix milliseconds.
+
+Per-item statuses: `publishing`, `imported`, `partial`, `removed`. Item IDs in the API are hashes; `remote_id` preserves the provider identifier. `source_ids` can be opened through the existing `/sources/{id}` API and checked with `/sources/{id}/status` for indexing readiness.
+
+Imported structured datasets:
+- `ramp_bills`: `amount_minor`, currency, approval/payment status in raw evidence, vendor/order/invoice IDs.
+- `ramp_transactions`: documented entity or merchant minor-unit amount with `amount_basis`; no guessing units for deprecated scalar amount fields.
+- `plaid_transactions`: `amount_major`, currency, pending state, bank account/provider IDs and pending predecessor ID. Plaid positive amounts are outflows; negative amounts are inflows. Filter pending records when computing posted cash movement.
+
+Amounts retain source units. Currency groups remain separate in SQL. Do not sum Ramp payments and Plaid cash movements together as if they were separate expenses. Connection IDs namespace record IDs; connecting the same underlying bank account through multiple Plaid Items or a Ramp business through multiple developer apps requires reconciliation and can duplicate observations. The service rejects duplicate active provider account/Item/client IDs, not all possible cross-provider duplicates.
+
+## Recovery, deletion and limits
+
+- One leased sync per connection, renewed before provider calls and imports. Multiple workers can claim different connections. Crash recovery marks old attempts interrupted and resumes the saved cursor.
+- Cursor advances only after the batch is ingested. Repeated content is deduplicated; source changes create versions. A → B → A restores the content as a new version instead of returning an inactive old source.
+- Plaid collects a complete paginated update before publishing. Pagination mutation restarts from the original cursor, at most three attempts per job. Updates above 50000 changes fail visibly without advancing the cursor.
+- Gmail expired history triggers a full scan; at completion missing items/attachments are deactivated. Drive removed/trashed/out-of-folder files and Plaid removals are deactivated. Original history remains available for audit.
+- Retriable errors use bounded exponential backoff and respect numeric Retry-After values. Revoked/invalid credentials enter `reauth_required`. No automatic simulation fallback.
+- Supported searchable files: text/Markdown/JSON/CSV, text PDFs, XLSX/XLSM with up to 100000 cells. Raw files up to 20 MiB are retained. Scanned, encrypted, unsupported or malformed files produce a searchable metadata manifest and `partial` status. Oversized files retain metadata only, clearly labeled. XLSX expanded size is capped at 100 MiB.
+- Disconnect returns 409 while a sync has an active lease; retry when it finishes. Successful disconnect clears local credentials and excludes its imported sources from active financial queries/search. Originals remain downloadable to organization members. It does not revoke the provider-side app grant or remove a Plaid Item: manage that in the provider dashboard, including any billing implications.
+- Polling latency depends on schedule and provider availability. No push/webhook subscriptions, journal posting, supplier-response automation or Devin dispatcher is implied.
+
+## Verification
+
+```sh
+uv run --directory backend pytest tests/test_connectors.py -q
+RUN_DATA_INTEGRATION=1 uv run --directory backend pytest tests/test_data_integration.py -q
+```
+
+Provider contract tests use HTTP mocks, not actual customer accounts. The integration test uses real Postgres/S3/Elasticsearch with a mocked Plaid response. Live provider end-to-end verification requires the configured app credentials and user consent.
+
+## Primary documentation
+
+- [Google server OAuth](https://developers.google.com/identity/protocols/oauth2/web-server)
+- [Gmail synchronization](https://developers.google.com/workspace/gmail/api/guides/sync)
+- [Drive change tracking](https://developers.google.com/workspace/drive/api/guides/manage-changes)
+- [Ramp API reference](https://docs.ramp.com/llms-api.txt)
+- [Ramp API setup](https://support.ramp.com/accessing-the-developer-api)
+- [Plaid Link](https://plaid.com/docs/api/link/)
+- [Plaid transaction synchronization](https://plaid.com/docs/api/products/transactions/)

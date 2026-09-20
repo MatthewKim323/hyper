@@ -1,0 +1,36 @@
+---
+title: "Journal posting"
+description: "Drafts, the append-only ledger and reversals."
+---
+
+{/* Generated from backend/POSTING_API.md by docs/sync.py. Edit that file, not this one. */}
+
+Clerk authentication and organization isolation apply to every route. Entries are
+append-only; corrections happen only through reversal entries referencing the
+original. Integer minor units, USD/EUR/GBP.
+
+| Route | Purpose |
+| --- | --- |
+| `GET /accounting/journals` | List posted journal entries; filter account, currency, from_date, through; paginated. |
+| `GET /accounting/journals/trial-balance?through=&currency=` | Exact per-account debit/credit/net totals through a date for one currency. |
+| `GET /accounting/journals/drafts` | List manual journal drafts with status and approval. |
+| `GET /accounting/journals/drafts/{draft_id}` | Read one draft. |
+| `POST /accounting/journals/drafts/{draft_id}/approve` | Owner-only draft approval bound to the attestation. |
+| `POST /accounting/journals/drafts/{draft_id}/post` | Owner-only posting of an approved draft; revalidates balance and evidence freshness. |
+| `POST /accounting/journals/entries/{entry_id}/reverse` | Owner-only reversal; appends swapped-line entry with reverses_id; each entry reverses at most once. |
+
+Agent tools: `post_accrual_journal`, `prepare_manual_journal`, `list_journal_entries`,
+`get_journal_entry`, `trial_balance`. Agents can post the stored journal of an
+owner-approved accrual (the entry's lines come from the persisted accrual result,
+never from agent-supplied amounts) and prepare manual drafts. Agents cannot approve
+drafts, post manual journals, or reverse entries — those are owner-only routes.
+
+Journal shape: `{date, currency, lines: [{account, debit_minor, credit_minor}], memo}`.
+Validation requires balanced nonzero totals, exactly one nonzero side per line, and
+unique accounts per journal. `post_accrual_journal` and `request_key` are idempotent:
+replays return the persisted entry; reusing a key with different arguments is a
+conflict. Every entry records `origin {kind, ref_id, ref_hash}` binding it to the
+accrual, draft, or reversed entry it came from, plus `posted_by` and `posted_at`.
+
+Reversals reuse the original entry date so a reversal always nets inside any
+`through` window; `trial_balance` sums reversal entries as ordinary lines.

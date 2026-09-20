@@ -1,0 +1,75 @@
+---
+title: "Accounts payable"
+description: "Deterministic AP analysis, proposals and approval."
+---
+
+{/* Generated from backend/ACCOUNTING_API.md by docs/sync.py. Edit that file, not this one. */}
+
+The backend now uses `resolve/` directly. Agents choose what to investigate; Python calculates the amounts and determines whether the supporting records satisfy the rules. All routes use Clerk bearer authentication and organization scoping.
+
+## Evidence attestation
+
+Upload a structured JSON array via `POST /sources` with a `dataset` name. Each row must match one model in `resolve/src/mirror_resolve/schemas.py`. Monetary fields use integer cents; fractional numbers are rejected. Currency support for this bridge is USD/EUR/GBP, without FX conversion. Do not encode crypto token units as cents.
+
+An organization owner verifies a source row:
+
+```http
+POST /accounting/records/verify
+Content-Type: application/json
+
+{"source_id":"src_...","row_number":1,"record_type":"INVOICE","attestation":"I verified this structured record against its source"}
+```
+
+The payload cannot supply a trusted source label, record data, actor or company ID. The backend loads the immutable stored row, validates it, namespaces its IDs, and stores its source SHA-256, document link and verifying identity. Ordinary members and agent tokens cannot verify records. In engine provenance, `OWNER_VERIFIED` is the channel and the verifier is `human:<Clerk subject>`; ERP trust is granted by this explicit owner attestation, not claimed as an authenticated ERP connector import. Repeated verification of the same row is idempotent.
+
+Verify vendor master, agreement, purchase order and receipt before the invoice; deliver credit memos and cancellation evidence as they arrive. Replacing an existing credit memo's contents is rejected; explicit memo supersession is not modeled in this bridge.
+
+`GET /accounting/records` returns original record IDs and provenance. Raw source records are not automatically authoritative. Unmodeled fields such as taxes or payment allocations are rejected rather than discarded.
+
+## Investigation and proposals
+
+| HTTP | Agent tool | Meaning |
+|---|---|---|
+| `GET /accounting/records` | `list_accounting_records` | Discover verified records and original IDs |
+| `POST /accounting/cases` `{invoice_id}` | `open_payable_case` | Open/resume the engine case |
+| `GET /accounting/cases/{case_id}` | `analyze_payable` `{case_id}` | Recompute amounts, issues and source references |
+| `POST /accounting/credits/inspect` `{case_id,credit_id}` | `inspect_payable_credit` | Verify applicability and cumulative credit coverage |
+| `POST /accounting/proposals` `{case_id,based_on_revision}` | `prepare_payable_proposal` | Create a hash-bound draft and run independent code validation |
+
+`invoice_id` and `credit_id` inputs are original IDs from the inventory; internal engine IDs in results are namespaced. `case_id` and `proposal_id` are returned opaque identifiers. Case APIs are distinct from the conversational `/agents/cases` records.
+
+Analysis reports both invoice-minus-verified-credits and received-quantity-at-supported-price. Both must agree. Each blocking issue carries requirements, figures and document references; the evidence mapping resolves those references to backend source IDs, row numbers and content hashes. A price credit does not satisfy a quantity issue. Unsupported multiple-invoice receipt allocation is blocked, not guessed.
+
+Preparation returns `proposal`, deterministic `validation`, nullable `approval`, and `committed:false`. Failed checks remain visible. The review actor `engine:deterministic_validator` means a code validator, not a second human or independent model opinion. A passing proposal creates a PENDING approval packet; it never approves itself.
+
+## Workspace listings
+
+Read-only, organization scoped, for the dashboard. Neither is an agent tool.
+
+- `GET /accounting/cases` returns `{cases:[{case_id, invoice_id, revision, work_status, authorization_status, payment_status, updated_at, calculation, blocking_issues}]}`. `calculation` is recomputed on every read (`invoice_face_cents`, `verified_credits_total_cents`, `net_after_credits_cents`, `independently_supported_cents`, `residual_cents`, `ties`). A case that cannot be evaluated returns `calculation: null` with `error` instead of a guessed number.
+- `GET /accounting/proposals` returns `{proposals:[{proposal_id, case_id, hash, status, based_on_revision, created_by, created_at, payload, checks, approval}]}`. `checks` are re-run now, so a proposal whose evidence changed shows its failing check. `approval` is the latest request (`PENDING`, `APPROVED`, `REJECTED`, `INVALIDATED`) or null.
+
+IDs in these two responses are the original record IDs with the tenant namespace removed. Use `case_id`, `proposal_id` and `hash` exactly as returned for follow-up calls.
+
+## Human approval
+
+Only an organization owner may call:
+
+```http
+POST /accounting/approvals
+Content-Type: application/json
+
+{"proposal_id":"prop_...","proposal_hash":"exact hash shown to the owner","decision":"APPROVED"}
+```
+
+`REJECTED` is also supported. The server derives human identity and authority, revalidates current evidence, and binds the decision to the exact proposal hash. No agent tool exposes this operation. A concern-card response is not accounting approval. Approval does not commit a journal entry or move money; no commit route is exposed.
+
+A changed verified record advances case revision, invalidates drafts/reviews/approvals and returns previously verified credits to RECEIVED for reinspection. Replacement of a raw source invalidates dependent drafts immediately, before the replacement is attested. Analysis fails closed while active promoted evidence references withdrawn/superseded sources (conservatively across the organization's active accounting records).
+
+## Runtime and limitations
+
+`uv sync --directory backend` installs the local engine dependency. Restart the API and Devin dispatcher after upgrading; accounting tables are created additively on startup. Both Deepgram and Devin share the five analysis tools. The existing object store retains originals; accounting results and event history live in the relational database.
+
+Policy is still `demo-policy-v1`, not learned company policy. This bridge handles whole-unit tax-exclusive invoices and scoped price/quantity credits, not all AP accounting. Historical policy inference, counterparties, benchmark registration, partial payments, taxes/fees and external posting are not implemented. Core engine assertions are not a substitute for evidence-source verification.
+
+Tests: `uv run --directory backend pytest -q` and `uv run --directory resolve pytest -q`.

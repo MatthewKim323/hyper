@@ -254,3 +254,14 @@ def test_worker_tools_are_listed_executable_and_real():
     assert WORKER_TOOLS <= real, sorted(WORKER_TOOLS - real)
     # Posting to the ledger is owner authority and must never be reachable by an agent.
     assert not [name for name in WORKER_TOOLS if name.startswith(('post_', 'approve_', 'commit_', 'reverse_'))]
+
+def test_docs_match_the_backend_markdown_they_are_generated_from():
+    """docs/ mirrors backend/*.md rather than duplicating it. If a source file changed
+    without running docs/sync.py, the published API reference is quietly stale."""
+    import subprocess, sys
+    from pathlib import Path
+    sync = Path(__file__).resolve().parents[2] / 'docs' / 'sync.py'
+    if not sync.exists():
+        return  # docs are optional; nothing to check
+    result = subprocess.run([sys.executable, str(sync), '--check'], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr or result.stdout

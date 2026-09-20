@@ -1,0 +1,74 @@
+---
+title: "World agent"
+description: "The workspace CFO agent."
+---
+
+{/* Generated from backend/WORLD_AGENT_API.md by docs/sync.py. Edit that file, not this one. */}
+
+The world page uses Deepgram for both typed chat and voice. It is separate from onboarding: no readiness gate and no forced interview. The assistant shares organization financial tools, can read Devin coordinator/case/task status, and returns concern/artifact tool results to the frontend. It queues user-requested Devin investigations through `start_investigation` and reads their results through `get_investigation`. It cannot make payments or post ledger entries.
+
+## Open or resume
+
+`POST /world/agent` with `Authorization: Bearer <Clerk JWT>`. No body needed.
+
+Returns `{session: {id, mode: "dashboard", organization_id, context, revision, transcript, transcript_count, stream_url, transcript_url, ...}}`. The same user in the same organization always gets the same session. Conversation access is private to that member; underlying financial records and saved company context are shared through organization authorization. Only the latest 50 messages are included here.
+
+`GET /world/agent/transcript?after=0&limit=100` uses the same auth. Returns `{session_id, messages, next_after, has_more}`. `after` is the last received sequence number; persist your cursor and deduplicate live/replayed messages by `id`. The archive survives API restarts. Maximum page size is 500.
+
+## Connect once for chat and voice
+
+Open `WS /world/agent/stream` (`wss://` when using HTTPS). Immediately send:
+
+```json
+{"token":"<Clerk JWT>"}
+```
+
+The server emits `session` with the bounded snapshot, then `agent.state`. The WebSocket also creates/resumes the conversation if POST was omitted. Only one active connection per conversation is allowed; a second connection closes with 1008. The existing backend requires one Uvicorn worker.
+
+Typed input:
+
+```json
+{"type":"text","id":"client-generated-unique-id","text":"What needs my attention?"}
+```
+
+Voice input:
+
+1. Send `{"type":"voice.start"}` and wait for `voice.ready`.
+2. Send binary mono PCM signed 16-bit little-endian audio at 16 kHz; maximum 32,000 bytes per frame.
+3. Send `{"type":"voice.stop"}` to stop accepting microphone input. Chat remains connected.
+
+Refresh expiring Clerk tokens on the same connection with `{"type":"auth.refresh","token":"<fresh JWT>"}`. The user must remain the same. Expired auth or removed organization membership closes with 1008. Configure the world page's exact origin in both `ALLOWED_ORIGINS` and `CLERK_AUTHORIZED_PARTIES`.
+
+## Server events
+
+- `transcript`: `id`, `sequence`, `role`, `text`, `source`, `created_at`, `final`, `generation`. Voice and typed turns share one archive.
+- `reply`: compatibility alias for the assistant transcript; same ID, not a second message.
+- `audio`: base64 `pcm`, `sample_rate: 24000`, `generation`. Mono signed 16-bit PCM. A text-only UI can ignore audio; Deepgram still produces it.
+- `audio.done`: stop/buffer playback appropriately; contains `next_state`.
+- `interrupt`: discard queued playback from earlier generations.
+- `agent.state`: `idle`, `listening`, `thinking`, `researching`, `speaking`, or `error` for the orb. Browser playback completion should determine when the orb stops speaking.
+- `investigation.updated`: `{task}` for investigations started in this conversation, checked every three seconds while connected. Includes saved status/results and replays current status on reconnect. The frontend can show a result notification; the user can ask the voice agent to explain it. It does not inject a synthetic user turn or interrupt speech.
+- Browser to server `pointer`: `{"type":"pointer","pointer":{"section":"evidence","area":{x,y,width,height},"viewport":{x,y,width,height},"referents":[{"label","kind","id","section","data","rect"}]}}`. At most 12 referents and 8000 bytes; unknown fields are rejected. Send it when the user starts speaking and whenever what they point at changes. It is held in memory for 20 seconds, never persisted, and the model reads it only by calling `get_pointer_context`. It is client supplied, so it is untrusted data.
+- `tool.result` for `navigate_section`: `{section, opened}`. The browser performs the navigation.
+- `tool.result`: `{id, name, result, generation}`. Render successful concern/artifact results using their existing schemas; inspect status and errors before claiming success. Replay durable cards using the existing concerns/artifacts APIs after reconnect.
+- `connection.reconnect_required`: provider's two-hour limit is approaching. Reconnect at the next quiet point.
+- `connection.closed`, followed by close code 1012: provider disconnected; reconnect with backoff and a fresh JWT.
+- `error`: display the error without claiming a result.
+
+Do not blindly retry auth failures (1008). For transient disconnections, close the old socket before reconnecting, resume the same route, and fetch missing transcript entries. Do not automatically replay an already accepted user message: its ID is deduplicated, but a provider failure after acceptance can leave a saved user turn without an assistant reply. Show that interrupted turn and let the user explicitly retry with a new ID.
+
+## Persistence and runtime
+
+There is no onboarding-style 200-message cap. Full text and tool history are stored in the existing database session; the latest bounded 64k characters of complete history entries are loaded into Deepgram on reconnect, alongside current company context. `read_conversation_history` retrieves older messages. This is a context window, not an automatic summary of the full archive.
+
+A conversation is durable; an individual provider connection is not immortal. Deepgram closes connections after two hours, despite keep-alives. The frontend must implement the reconnect contract above. Closing the page closes its live Deepgram connection. Background financial investigations run in the separate durable dispatcher (`uv run --directory backend python -m app.devin_worker`). Deepgram coordinates the conversation; no Devin coordinator is launched by default.
+
+Requires `DEEPGRAM_API_KEY`. Start the existing API as usual; no new worker or schema migration is required. Current JSON-session storage rewrites the conversation on each save and is appropriate for the demo. A production-scale archive should move turns into paginated message rows. Horizontal WebSocket ownership also requires distributed leases before using multiple API workers.
+
+## Validation
+
+`uv run --directory backend pytest tests/test_dashboard.py tests/test_onboarding.py tests/test_auth_storage.py -q`
+
+Tests use a fake Deepgram transport: persistence, per-member privacy, organization scoping, text/audio, reconnect history, duplicate socket rejection, message deduplication, long history, orb/reconnect events, and onboarding isolation. Real provider validation requires a Deepgram key.
+
+References: [Deepgram context](https://developers.deepgram.com/docs/voice-agent-conversation-context), [text injection](https://developers.deepgram.com/docs/voice-agent-inject-user-message), [session limits](https://developers.deepgram.com/docs/voice-agent-errors-warnings).
