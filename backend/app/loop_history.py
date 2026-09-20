@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / '.env')
 
-from sqlalchemy import select  # noqa: E402
+from sqlalchemy import func, select, update  # noqa: E402
 
 from .database import (adversary_controls, agent_lessons, agent_usage, cfo_narrations, counterparty_messages,  # noqa: E402
                        counterparty_scenarios, insert_ignore, organizations, workflow_events, workflow_stream_heads)
@@ -61,14 +61,30 @@ def load(store, path, adversary_off=False):
     counts = {}
     with store.engine.begin() as db:
         for org in bundle['organizations']: insert_ignore(db, organizations, dict(id=org['id'], name=org['name']))
+        # A company's event stream is numbered by the database it lives in, one number per event, no repeats.
+        # Where this database already has events for a company, the arriving ones go after them in their own order.
+        # Keeping the laptop's numbers would collide, and leaving the counter behind would make the next live event throw.
+        present = set(db.execute(select(workflow_events.c.id)).scalars())
+        shift = {}
+        for org in {r['organization_id'] for r in bundle['tables'].get('workflow_events', []) if r['id'] not in present}:
+            shift[org] = db.execute(select(func.coalesce(func.max(workflow_events.c.sequence), 0)).where(workflow_events.c.organization_id == org)).scalar()
         for name, table in TABLES:
+            if name == 'workflow_stream_heads': continue
             columns, added = {c.name for c in table.columns}, 0
-            for row in bundle['tables'].get(name, []):
+            rows = bundle['tables'].get(name, [])
+            if name == 'workflow_events': rows = sorted(rows, key=lambda r: (r['organization_id'], r['sequence']))
+            for row in rows:
                 row = {k: v for k, v in row.items() if k in columns}
-                # The stream's sequence is assigned by this database: keep the source's order, never its autoincrement.
                 if name == 'adversary_controls' and adversary_off: row['enabled'] = False
+                if name == 'workflow_events' and row['id'] not in present and shift.get(row['organization_id']):
+                    row['sequence'] += shift[row['organization_id']]
+                    row['event'] = {**row['event'], 'sequence': row['sequence']}
                 added += insert_ignore(db, table, row).rowcount or 0
             counts[name] = added
+        # The counter ends at the last number in use, whatever was there before.
+        for org, last in db.execute(select(workflow_events.c.organization_id, func.max(workflow_events.c.sequence)).group_by(workflow_events.c.organization_id)).all():
+            insert_ignore(db, workflow_stream_heads, {'organization_id': org, 'sequence': 0})
+            db.execute(update(workflow_stream_heads).where(workflow_stream_heads.c.organization_id == org, workflow_stream_heads.c.sequence < last).values(sequence=last))
     return counts
 
 

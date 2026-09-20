@@ -47,3 +47,25 @@ def test_a_credential_in_the_data_stops_the_export(tmp_path):
         db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == done['id']).values(state={'agent': {'trace': [{'result': 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123456789'}]}}))
     with pytest.raises(SystemExit): loop_history.export(store, tmp_path / 'leak.json.gz', [oid])
     assert not (tmp_path / 'leak.json.gz').exists()
+
+
+def test_history_lands_after_events_the_destination_already_has_and_the_next_live_event_still_works(tmp_path):
+    from app import workflow
+    from app.database import workflow_stream_heads
+    store, oid, done, _ = laptop(tmp_path)
+    path = tmp_path / 'bundle.json.gz'
+    loop_history.export(store, path, [oid])
+    production = Store(str(tmp_path / 'production.db'))
+    from app.database import insert_ignore, organizations
+    with production.engine.begin() as db:
+        insert_ignore(db, organizations, dict(id=oid, name='Already here'))
+        for index in range(3):  # production already narrated three things for this company
+            workflow.emit(db, oid, f'prod-{index}', 'work.started', workflow_id='invoice:PROD-1', facts={'invoiceId': 'PROD-1'})
+    loop_history.load(production, path); loop_history.load(production, path)
+    with production.engine.connect() as db:
+        numbers = list(db.execute(select(workflow_events.c.sequence).where(workflow_events.c.organization_id == oid).order_by(workflow_events.c.sequence)).scalars())
+        head = db.execute(select(workflow_stream_heads.c.sequence).where(workflow_stream_heads.c.organization_id == oid)).scalar()
+    assert numbers == list(range(1, len(numbers) + 1)) and len(numbers) > 3 and head == numbers[-1], 'no gaps, no repeats, counter at the end'
+    with production.engine.begin() as db:
+        live = workflow.emit(db, oid, 'after-import', 'work.started', workflow_id='invoice:PROD-2', facts={'invoiceId': 'PROD-2'})
+    assert live['sequence'] == head + 1
