@@ -119,6 +119,8 @@ function CommandSession() {
       await session.connect();
       lastSent.current = "";
       sharePointer();
+      // Show what "this" resolved to for a moment, then clear it: typed commands have no listening state.
+      window.setTimeout(() => { if (!mic.current) setTarget(null); }, 2600);
       if (!(await session.sendText(text))) setError("Your message could not be sent. Try again.");
     } catch {
       setError("Your agent is unavailable. Try again in a moment.");
@@ -165,7 +167,7 @@ function CommandSession() {
 
   const line = error || (listening ? heard || status || "Listening. Point at something and ask." : said || "Ask about what you are pointing at");
   return (
-    <div className="cmd bench-tokens" data-listening={listening} data-connection={connection}>
+    <div className="cmd" data-listening={listening} data-connection={connection}>
       {target && target.rect.width > 0 && (
         <div className="cmd-target" style={{ left: target.rect.x, top: target.rect.y, width: target.rect.width, height: target.rect.height }} aria-hidden="true">
           <span>{target.label.slice(0, 60)}</span>

@@ -5,18 +5,19 @@
    Scoped utilities outrank those inside the workspace and do not exist outside it. */
 @layer theme;
 @import "tailwindcss/theme.css" layer(theme);
-.bench, .workspace {
+.bench, .workspace, .cmd {
     @tailwind utilities source(none);
 }
 @source "../../components/charts";
 @source "../../components/ui";
 @source "../../components/benchmarks";
 @source "../../components/workspace";
+@source "../../components/command";
 
 /* Chart tokens live on the workspace root, never on :root, so the engine's own
    variables cannot collide. Series order is fixed and validated for CVD on this surface
    (validate_palette.js, light, #f6f2f0): identity always ships with a label or the table view. */
-.bench, .workspace {
+.bench, .workspace, .cmd {
     --background: #f6f2f0;
     --foreground: #252321;
     --muted: #efe8e4;
