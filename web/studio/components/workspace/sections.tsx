@@ -17,6 +17,7 @@ import { createSubmissionGuard } from "./submission-guard";
 import { EngineCases, PayableApprovals } from "./accounting";
 import { CoverageGauge } from "./charts";
 import OriginalSourceDownload from "@/components/atrium/workspaces/OriginalSourceDownload";
+import SourceUpload from "./SourceUpload";
 
 type RelicSectionProps = { active: boolean; embedded?: boolean; onMotion?: (state: { busy?: boolean; selectedIndex?: number }) => void };
 
@@ -214,6 +215,7 @@ export function Evidence({ active, embedded = false, onMotion }: RelicSectionPro
 
   return <>
     {!embedded && <Heading eyebrow="Evidence" title={<>Every claim traces to a <em>source</em>.</>} />}
+    <SourceUpload onUploaded={() => { sources.refresh(); datasets.refresh(); }} />
     <form className="ws-inline ws-inline--search" onSubmit={search}>
       <input value={text} maxLength={2000} onChange={(e) => setText(e.target.value)} placeholder="Search" aria-label="Search evidence" />
       <button type="submit" disabled={searching || !text.trim()}>{searching ? "Searching…" : "Search"}</button>

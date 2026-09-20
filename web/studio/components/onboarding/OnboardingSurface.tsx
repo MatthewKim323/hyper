@@ -6,6 +6,7 @@ import { VoiceBeam } from "voice-glow";
 import { useSceneGlass } from "./useSceneGlass";
 import { createDialogue, type DialogueState } from "@/lib/onboarding/dialogue";
 import DialogueCaptions from "./DialogueCaptions";
+import AttachSources from "./AttachSources";
 
 export type OnboardingOrbState = OrbState;
 
@@ -139,6 +140,7 @@ export default function OnboardingSurface({
             <label className="hyper-onboarding__sr-only" htmlFor="onboarding-message">
               Type a message instead
             </label>
+            <AttachSources />
             <input
               id="onboarding-message"
               type="text"
