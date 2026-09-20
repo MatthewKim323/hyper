@@ -164,7 +164,7 @@ export function createAtriumSideLight(metadata?: AtriumSideLightMetadata) {
         float phase=min(1.15,.6354/pow(max(.08,1.0225-.30*cosine),1.5));
         float density=.87+.13*airNoise(vWorld*.43+vec3(uTime*.008,-uTime*.004,0.));
         float alpha=edge*lengthFade*vWeight*phase*density*cone*keyVisibility();
-        gl_FragColor=vec4(uColor,alpha*.13*uStrength);
+        gl_FragColor=vec4(uColor,alpha*.26*uStrength);
         #include <tonemapping_fragment>
         #include <encodings_fragment>
       }`,

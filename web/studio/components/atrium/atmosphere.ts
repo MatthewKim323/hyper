@@ -22,12 +22,12 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
         vec3 direction = normalize(vDirection);
         float height = smoothstep(-.04,.42,direction.y);
         vec3 color = mix(vec3(1.02,.68,.64), vec3(.30,.46,.86),height);
-        // Stretch the cloud field along the horizon. The reference has sparse
-        // sunlit wisps, with enough open blue sky to separate the architecture.
-        vec3 cloudPoint=direction*vec3(5.5,38.,5.5)+vec3(uTime*.001,1.8,0.);
+        // Broad, irregular cloud banks preserve the reference's airy sky.
+        // A nearly isotropic field avoids horizontal bands between the arches.
+        vec3 cloudPoint=direction*vec3(9.,12.,9.)+vec3(uTime*.001,1.8,0.);
         float mass=atriumCloud(cloudPoint);
         float curls=atriumCloud(cloudPoint*3.4+vec3(7.1,2.4,8.));
-        float cloudCover=smoothstep(.55,.76,mass+(curls-.5)*.18);
+        float cloudCover=smoothstep(.52,.71,mass+(curls-.5)*.14);
         cloudCover*=1.-smoothstep(.55,.9,direction.y);
         float litRim=smoothstep(.52,.64,mass)*(1.-smoothstep(.64,.78,mass));
         vec3 cloudColor=mix(vec3(.92,.81,.90),vec3(1.55,1.36,1.36),smoothstep(.48,.68,mass));

@@ -76,7 +76,7 @@ export function createAtriumSunlight(sunDirection: Vector3, apertures?: Aperture
         float phase=.9775/pow(max(.08,1.0225-.30*cosine),1.5);
         phase=clamp(phase*.45,.28,.85);
         float scattering=edge*lengthFade*density*vWeight*phase*rearSunVisibility();
-        gl_FragColor=vec4(vec3(1.,.77,.58),scattering*.085);
+        gl_FragColor=vec4(vec3(1.,.77,.58),scattering*.11);
         #include <tonemapping_fragment>
         #include <encodings_fragment>
       }`,
