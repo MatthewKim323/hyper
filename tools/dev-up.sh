@@ -32,6 +32,10 @@ start artifact-worker "" uv run python -m app.artifact_worker
 start simulator-worker "" uv run python -m app.simulator_worker
 start connector-worker "" uv run python -m app.connectors.worker
 start counterparty-worker "" uv run python -m app.counterparty_worker
-# The unattended AP worker. It spends model tokens whenever the sandbox has open exceptions.
-start auto-agent "" uv run python -m app.auto_agent
+# Who works the sandbox exceptions. Exactly one of these per machine: two workers on one invoice
+# double every request to the supplier.
+#   EXCEPTION_WORKER=devin (default)  queue each exception as a Devin task. Needs tools/devin-up.sh too.
+#   EXCEPTION_WORKER=openai           the in-process worker on OPENAI_API_KEY. Spends tokens while exceptions are open.
+if [ "${EXCEPTION_WORKER:-devin}" = "openai" ]; then start auto-agent "" uv run python -m app.auto_agent
+else start devin-exceptions "" uv run python -m app.devin_exceptions; fi
 echo "frontend: cd web/studio && bun run dev   (http://localhost:3888)"
