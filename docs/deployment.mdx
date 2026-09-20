@@ -121,6 +121,27 @@ vercel alias set <deployment-url> hyper.stephenhung.me
 Then add the same origin to the backend's `ALLOWED_ORIGINS` and `CLERK_AUTHORIZED_PARTIES`,
 and to the authorized origins in the Clerk dashboard.
 
+## Docs
+
+The docs are hosted by Mintlify and reverse-proxied at `/docs` by the Next rewrite in
+`web/studio/next.config.ts`.
+
+<Warning>
+Do **not** add Mintlify's CNAME for this domain. It sends every path to them, which would
+take the product offline. The apex already serves the app; only `/docs` is proxied.
+</Warning>
+
+Mintlify's domain validation needs two TXT records, which live on the Vercel-managed zone:
+
+```sh
+vercel dns add stephenhung.me _acme-challenge.hyper TXT "<acme token>"
+vercel dns add stephenhung.me _cf-custom-hostname.hyper TXT "<hostname id>"
+```
+
+The existing CAA on the apex already allows `pki.goog` and `letsencrypt.org`, which covers
+the issuers Mintlify's edge uses, so it needs no change. A zone with a stricter CAA would
+have to add one before a certificate could be issued.
+
 ## Checks
 
 ```sh
