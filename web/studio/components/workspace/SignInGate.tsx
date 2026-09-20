@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { getAuthState, openSignIn, signOut } from "@/lib/backend/auth";
 import { store as storeRaw } from "@/lib/engine/core/store";
 import { ONBOARDING_PATH, WORLD_PATH } from "@/lib/engine/router/routes";
+import { isOnboardingComplete } from "@/lib/onboarding/interface";
 import { useAuth } from "./useBackend";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,7 +45,11 @@ export default function SignInGate() {
     if (auth.signedIn && !wasSignedIn.current) {
       // The voice session's owner reconnects on "online"; reuse that after a sign-in on a product route.
       window.dispatchEvent(new Event("online"));
-      if (wantsWorkspace.current && !PROTECTED.has(pathname)) store.Highway?.redirect?.(ONBOARDING_PATH, "toProjectMenu");
+      // Someone who has already onboarded goes straight to the world. Sending them to
+      // /onboarding instead made OnboardingWorkspace bounce them with location.replace,
+      // a full reload that tears down the WebGL context and replays the whole loader.
+      if (wantsWorkspace.current && !PROTECTED.has(pathname))
+        store.Highway?.redirect?.(isOnboardingComplete() ? WORLD_PATH : ONBOARDING_PATH, "toProjectMenu");
       wantsWorkspace.current = false;
     }
     wasSignedIn.current = auth.signedIn;

@@ -224,11 +224,18 @@ export default function OnboardingWorkspace() {
   const visible = hydrated && onOnboarding && sceneReady;
   // Finishing a live session hands off through the wipe; a returning user skips it.
   const [sessionShown, setSessionShown] = useState(false);
+  // Whether onboarding was already done when this mounted, as opposed to completing here.
+  const arrivedComplete = useRef(savedComplete);
   const [covered, setCovered] = useState(false);
   // On /world the world is simply shown: there is no session to hand off from.
   const showDashboard = onWorld || (complete && (!sessionShown || covered));
 
-  if (visible && !complete && !sessionShown) setSessionShown(true);
+  // Latched in an effect, not during render: a render-phase setState here runs before the
+  // external-store subscriptions settle, and `visible` depends on sceneReady, which
+  // ProjectsRenderer.onLeave clears on every navigation away.
+  useEffect(() => {
+    if (visible && !complete && !sessionShown) setSessionShown(true);
+  }, [visible, complete, sessionShown]);
 
   useEffect(() => {
     const onOut = (event: Event) => {
@@ -259,8 +266,10 @@ export default function OnboardingWorkspace() {
 
   // A returning visitor who lands on /onboarding with it already done belongs in the world.
   useEffect(() => {
-    if (onOnboarding && hydrated && savedComplete && !sessionShown) location.replace(WORLD_PATH);
-  }, [onOnboarding, hydrated, savedComplete, sessionShown]);
+    // `arrivedComplete` is captured on mount, so finishing a live session here runs the wipe
+    // instead of racing it with a hard reload when the completion event lands in the same tick.
+    if (onOnboarding && hydrated && arrivedComplete.current && !sessionShown) location.replace(WORLD_PATH);
+  }, [onOnboarding, hydrated, sessionShown]);
 
   useEffect(() => {
     document.documentElement.dataset.onboarding = showDashboard ? "complete" : "required";

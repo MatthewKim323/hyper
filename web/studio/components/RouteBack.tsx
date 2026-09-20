@@ -37,9 +37,15 @@ export default function RouteBack() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [loaderCleared, setLoaderCleared] = useState(false);
   const target = BACK[pathname];
+  // Keep the last real destination so the label and href do not change mid fade-out.
+  // Committed in an effect, not during render: a render React discards would otherwise
+  // leave this holding a value that was never shown.
   const last = useRef(target);
-  if (target) last.current = target;
   const shown = !!target && !leaving && !panelOpen && loaderCleared;
+
+  useEffect(() => {
+    if (target) last.current = target;
+  }, [target]);
 
   useEffect(() => {
     const onOut = (event: Event) => {
