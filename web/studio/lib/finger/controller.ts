@@ -46,13 +46,14 @@ const TIP_WEIGHT = 0.3;
 // Filter tuned for coordinates where 1 is a full screen width.
 // A low minCutoff smooths a still hand hard; a high beta opens the filter back up as soon as
 // it moves, so this is steadier at rest AND quicker on a flick than a milder pair would be.
-// Landmark noise at rest is roughly 0.35% of the frame, which these settle to under ~1px.
-const MIN_CUTOFF = 0.25;
-const BETA = 0.4;
+// Tuned against the noise the filter actually sees: landmark jitter is about 0.35% of the
+// frame, but `raw` below divides by BOX_WIDTH, so it arrives here at roughly twice that.
+const MIN_CUTOFF = 0.09;
+const BETA = 0.8;
 // Display-rate glide: the drawn cursor eases toward the target, heavily when slow and barely when fast.
 const GLIDE_SLOW_S = 0.14;
 const GLIDE_FAST_S = 0.022;
-const REST_PX = 2.2;
+const REST_PX = 3.2;
 // Pointer events go out on their own fast clock (browser timers floor at 4 ms, so about 250 Hz),
 // independent of both the camera and the display.
 const POLL_MS = 4;
