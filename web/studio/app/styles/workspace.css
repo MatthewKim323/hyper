@@ -160,3 +160,4 @@
 .ws-ring.chart-scope { width: 132px; }
 .ws-hero { margin: 0 0 1.4rem; } .ws-chart--volume { height: 170px; margin-top: 0.5rem; }
 .ws-gauge { max-width: 300px; margin: 0.4rem auto 0.8rem; } .ws-rings { width: 150px; height: 150px; margin: 0 auto; }
+.ws-chart--arms { height: 190px; margin-top: 0.6rem; }

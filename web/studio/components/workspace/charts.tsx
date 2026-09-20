@@ -2,7 +2,7 @@
 
 // Workspace charts, built from the bklit components as documented (bklit.com/docs/components): the
 // library's own caps, tokens, glow and entrance animation are left alone. Each chart replaces a paragraph.
-import { Area, AreaChart, Bar, BarChart, BarYAxis, ChartTooltip, FunnelChart, Gauge, Grid, Ring, RingCenter, RingChart, XAxis } from "@/components/charts";
+import { Area, AreaChart, Bar, BarChart, BarYAxis, ChartTooltip, FunnelChart, Gauge, Grid, Line, LineChart, Ring, RingCenter, RingChart, XAxis } from "@/components/charts";
 
 const money = (currency: string) => (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency, notation: "compact", maximumFractionDigits: 1 }).format(value);
 
@@ -90,5 +90,30 @@ export function OutcomeRings({ passed, failed, needsInput }: { passed: number; f
       {data.map((item, index) => <Ring key={item.label} index={index} />)}
       <RingCenter defaultLabel="Runs" />
     </RingChart>
+  </div>;
+}
+
+/** Two arms over time on one axis. bklit LineChart. */
+export function ArmLines({ points, label }: { points: { date: Date; with: number; without: number }[]; label: string }) {
+  return <div className="chart-scope ws-chart--arms" role="img" aria-label={label}>
+    <LineChart data={points} xDataKey="date" aspectRatio="auto" className="h-full" margin={{ left: 8, right: 8, top: 12, bottom: 28 }}>
+      <Grid horizontal />
+      <Line dataKey="with" stroke="var(--chart-line-primary)" />
+      <Line dataKey="without" stroke="var(--chart-line-secondary)" />
+      <XAxis />
+      <ChartTooltip />
+    </LineChart>
+  </div>;
+}
+
+/** One measure per mode. bklit BarChart, horizontal. */
+export function ModeBars({ rows, label }: { rows: { mode: string; recall: number }[]; label: string }) {
+  return <div className="chart-scope ws-chart--modes" role="img" aria-label={label} style={{ height: rows.length * 34 + 16 }}>
+    <BarChart data={rows} xDataKey="mode" orientation="horizontal" aspectRatio="auto" className="h-full" barGap={0.4} margin={{ left: 108, right: 16, top: 4, bottom: 4 }}>
+      <Grid vertical horizontal={false} />
+      <Bar dataKey="recall" fill="var(--chart-5)" />
+      <BarYAxis showAllLabels />
+      <ChartTooltip showCrosshair={false} />
+    </BarChart>
   </div>;
 }

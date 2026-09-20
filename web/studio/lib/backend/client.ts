@@ -4,6 +4,7 @@
 // Requests go through the existing same-origin rewrite (/api/onboarding/* -> backend root).
 // Nothing here is pushed from the server. Use `poll` for anything that changes.
 import { SKILL_ATTESTATION } from "./types";
+import type { LoopTimeline } from "@/lib/benchmarks/loop-timeline";
 import type {
   SkillDetail, SkillSummary,
   AccountingRecord, EngineCase, PayableProposal,
@@ -97,6 +98,9 @@ export const backend = {
   activateSkill: (skill: { id: string; package_hash: string }, run_id: string) =>
     post<SkillSummary>(`/skills/${encodeURIComponent(skill.id)}/activate`, { skill_id: skill.id, package_hash: skill.package_hash, run_id, attestation: SKILL_ATTESTATION }),
   retireSkill: (id: string, reason: string) => post<{ status: string }>(`/skills/${encodeURIComponent(id)}/retire`, { skill_id: id, reason }),
+
+  // The adversary and memory loop, recorded every few minutes. Development runs, nothing held out.
+  benchTimeline: (since?: number) => call<LoopTimeline>(`/benchmarks/timeline${query({ since })}`),
 
   // Activity.
   simulations: () => call<{ simulations: Simulation[]; has_more: boolean }>("/simulations"),
