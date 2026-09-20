@@ -10,6 +10,12 @@
 import gsap from "gsap";
 import { store as storeRaw } from "@/lib/engine/core/store";
 
+import { CanvasTexture, LinearFilter, ShaderMaterial } from "three";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { captureWarmFrame } from "@/components/atrium/warm-frame";
+import { homeTransitionWipeVert } from "@/lib/engine/shaders/home-transition-wipe.vert.glsl";
+import { homeTransitionWipeZoomFrag } from "@/lib/engine/shaders/home-transition-wipe-zoom.frag.glsl";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const store: any = storeRaw;
 
@@ -157,7 +163,7 @@ function worldReady(): Promise<HTMLCanvasElement | null> {
 }
 
 /** Same contract as the slab handoff: `onCovered` fires while the page is hidden, the promise resolves when the world is revealed. */
-export async function runOnboardingWipeHandoff(onCovered: () => void): Promise<void> {
+async function runOverlayFallback(onCovered: () => void): Promise<void> {
   if (running) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { onCovered(); return; }
   running = true;
@@ -196,4 +202,75 @@ export async function runOnboardingWipeHandoff(onCovered: () => void): Promise<v
     if (document.documentElement.dataset.handoff !== "capture-failed") delete document.documentElement.dataset.handoff;
     running = false;
   }
+}
+
+
+/**
+ * The landing-to-gallery transition, reused as is: the engine's own wipe-zoom shader in the engine's
+ * own composer, the same 3 s power4.inOut timeline, the same outgoing camera drop and the same
+ * water cue. The outgoing scene is the live gallery. The incoming scene is one frame of the
+ * preloaded world, drawn just before the blend starts, so the blend runs at the gallery's frame
+ * rate instead of the world's. When it lands, the live world is revealed over an identical image.
+ */
+async function runEngineTransition(onCovered: () => void): Promise<boolean> {
+  const menu = store.ProjectMenu, gl = store.Gl;
+  const noise = gl?.assets?.textures?.gradientNoise;
+  if (!menu?.savePass || !menu.renderPass || !gl?.composerPasses || !noise) return false;
+  const frame = captureWarmFrame();
+  if (!frame) return false;
+
+  const incoming = new CanvasTexture(frame);
+  incoming.minFilter = incoming.magFilter = LinearFilter;
+  incoming.generateMipmaps = false;
+  const pass = new ShaderPass(new ShaderMaterial({
+    vertexShader: homeTransitionWipeVert,
+    fragmentShader: homeTransitionWipeZoomFrag,
+    uniforms: {
+      u_fromScene: { value: menu.savePass.renderTarget.texture },
+      u_toScene: { value: incoming },
+      u_noise: { value: noise },
+      u_progress: { value: 0 },
+      u_time: gl.globalUniforms.u_time,
+    },
+  }));
+  const surface = document.querySelector<HTMLElement>(".hyper-onboarding");
+  const control = menu.allowControl;
+  try {
+    if (surface) await gsap.to(surface, { autoAlpha: 0, y: 12, duration: 0.5, ease: "power2.in" });
+    document.documentElement.dataset.handoff = "revealing";
+    menu.allowControl = false;
+    menu.savePass.enabled = true;
+    gl.composerPasses.add(pass, 30); // the slot the landing transition uses
+    await gsap.timeline({ defaults: { duration: DURATION, ease: EASE } })
+      .fromTo(pass.uniforms.u_progress, { value: 0 }, { value: 1 }, 0)
+      .fromTo(menu.tweenParams, { cameraYOffset: 0 }, { cameraYOffset: -store.window.h / 2 }, "<")
+      .call(() => {
+        store.Audio?.play?.({ key: "audio.new_water_projects", isInteraction: true });
+      }, [], 0.6);
+    // The engine canvas now shows the same image the world is about to show.
+    onCovered();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    return true;
+  } finally {
+    gl.composerPasses.remove(pass);
+    menu.savePass.enabled = false;
+    menu.tweenParams.cameraYOffset = 0;
+    menu.allowControl = control;
+    pass.material.dispose();
+    incoming.dispose();
+    delete document.documentElement.dataset.handoff;
+  }
+}
+
+/** Same contract as before: `onCovered` reveals the world, the promise resolves when the handoff is over. */
+export async function runOnboardingWipeHandoff(onCovered: () => void): Promise<void> {
+  if (running) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { onCovered(); return; }
+  running = true;
+  let done = false;
+  try { done = await runEngineTransition(onCovered); }
+  catch { done = false; }
+  finally { running = false; }
+  // Engine passes missing (for example the scene never booted): fall back to the standalone overlay.
+  if (!done) await runOverlayFallback(onCovered);
 }

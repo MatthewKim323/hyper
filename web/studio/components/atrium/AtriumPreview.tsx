@@ -6,6 +6,7 @@ import type { AgentBounds, AtriumManifest, AtriumRenderer, FocusFrame, StationBo
 import { store } from "@/lib/engine/core/store";
 import RelicOrbit, { type OrbitHandle } from "./RelicOrbit";
 import RelicExperience, { EXPERIENCE_SECTIONS, type ExperienceHandle, type RelicMotionState } from "./RelicExperience";
+import { setWarmFrameProvider } from "./warm-frame";
 import styles from "./AtriumPreview.module.css";
 
 const motionSnapshot = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -185,6 +186,8 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
           const share = scroller.current && plane.current ? Math.min(1, scroller.current.clientWidth / Math.max(1, plane.current.clientWidth)) : 1;
           instance.setFocus(selected, share);
           setFailed(false);
+          // A paused renderer draws when its pressed state is set, which is exactly one fresh frame.
+          setWarmFrameProvider(() => { instance?.setPressed(null); return element; });
           // The intro loader and the handoff both wait on this.
           document.documentElement.dataset.atriumReady = "true";
           window.dispatchEvent(new Event("hyper:atrium-ready"));
@@ -201,6 +204,7 @@ export default function AtriumPreview({ warm = false }: { warm?: boolean }) {
       active = false;
       clearTimeout(timeout);
       controller.abort();
+      setWarmFrameProvider(null);
       instance?.dispose();
       renderer.current = null;
       element?.removeEventListener("webglcontextlost", fail);
