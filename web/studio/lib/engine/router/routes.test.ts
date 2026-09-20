@@ -82,6 +82,51 @@ describe("route table", () => {
     assert.deepEqual(offenders, []);
   });
 
+  test("the route-level back link outranks every full-viewport overlay it shares a page with", () => {
+    // .hyper-onboarding (80) and .ws-signin (90) are fixed, inset:0 and take pointer events,
+    // so a lower .route-back renders underneath them and cannot be clicked.
+    const css = (name: string) => readFileSync(join(import.meta.dirname, "../../../app/styles", name), "utf8");
+    const zOf = (text: string, selector: string) => {
+      const at = text.indexOf(selector);
+      assert.ok(at >= 0, `missing ${selector}`);
+      const block = text.slice(at, text.indexOf("}", at));
+      return Number(/z-index:\s*(\d+)/.exec(block)?.[1]);
+    };
+    const back = zOf(css("workspace.css"), ".route-back {");
+    assert.ok(back > zOf(css("onboarding.css"), ".hyper-onboarding {"), "back link is under the onboarding surface");
+    assert.ok(back > zOf(css("workspace.css"), ".ws-signin {"), "back link is under the sign-in overlay");
+    // ...and stays under the loading layer, which must cover everything.
+    assert.ok(back < 12000, "back link would show through the loading screen");
+  });
+
+
+  test("the back link is reachable without waiting for an animation", () => {
+    // It used to be hidden with autoAlpha, so visibility and pointer-events only became
+    // correct once the tween ran. GSAP's ticker is rAF-driven, so a background tab (or any
+    // interrupted tween) left the link permanently invisible and unclickable while React
+    // believed it was shown. CSS now owns reachability via data-shown; GSAP only fades.
+    const css = readFileSync(join(import.meta.dirname, "../../../app/styles/workspace.css"), "utf8");
+    assert.match(css, /\.route-back\[data-shown="true"\]\s*{[^}]*visibility:\s*visible/,
+      "data-shown must make the link visible in CSS, not via the tween");
+    assert.match(css, /\.route-back\[data-shown="true"\]\s*{[^}]*pointer-events:\s*auto/,
+      "data-shown must make the link clickable in CSS, not via the tween");
+
+    const component = readFileSync(join(import.meta.dirname, "../../../components/RouteBack.tsx"), "utf8");
+    assert.ok(component.includes('data-shown='), "RouteBack must publish data-shown");
+    assert.ok(!component.includes("autoAlpha"),
+      "autoAlpha writes visibility, which would put reachability back under the tween");
+    // It used to listen for navigate-out itself to know a transition had started, because
+    // usePathname() commits too early. useNavigation owns that reconciliation now.
+    assert.ok(component.includes("useNavigation"),
+      "RouteBack must read the settled route, not usePathname, which updates too early");
+    assert.ok(!component.includes("usePathname"), "RouteBack should no longer read usePathname");
+
+    // A CSS opacity transition would still fight the tween.
+    const block = css.slice(css.indexOf(".route-back {"), css.indexOf("}", css.indexOf(".route-back {")));
+    assert.ok(!(/transition:([^;]*)/.exec(block)?.[1] ?? "").includes("opacity"),
+      "CSS still transitions .route-back opacity");
+  });
+
   test("normalizePath adds exactly one trailing slash", () => {
     assert.equal(normalizePath("/world"), "/world/");
     assert.equal(normalizePath("/world/"), "/world/");

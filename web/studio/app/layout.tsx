@@ -21,6 +21,7 @@ import OnboardingWorkspace from "@/components/onboarding/OnboardingWorkspace";
 import FingerCursor from "@/components/finger/FingerCursor";
 import CommandLayer from "@/components/command/CommandLayer";
 import HomeLinks from "@/components/HomeLinks";
+import RouteBack from "@/components/RouteBack";
 
 export const metadata: Metadata = {
   title: "hyper. | HackMIT 2026",
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <OnboardingWorkspace />
         <CommandLayer />
         <HomeLinks />
+        <RouteBack />
         <FingerCursor />
         <EngineRoot />
       </body>
