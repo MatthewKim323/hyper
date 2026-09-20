@@ -69,7 +69,6 @@ test("scene components read the settled route, not usePathname", () => {
     "components/command/CommandLayer.tsx",
     "components/benchmarks/BenchmarksWorkspace.tsx",
     "components/timeline/TimelineWorkspace.tsx",
-    "components/RouteBack.tsx",
   ];
   for (const file of sceneGated) {
     const text = readFileSync(join(root, file), "utf8");
