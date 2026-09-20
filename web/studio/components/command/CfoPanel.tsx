@@ -9,6 +9,7 @@ import { openSignIn } from "@/lib/backend/auth";
 import { MAX_SWARM_EVENTS, MAX_SWARM_TASKS, type SwarmEvent, type SwarmSection, type SwarmTask } from "@/lib/command/cfo-feed";
 import { useCfoSwarm } from "./useCfoSwarm";
 import styles from "./CfoPanel.module.css";
+import type { NarrationRecord } from "@/lib/command/cfo-commentary";
 
 const SECTION_LABELS: Record<SwarmSection, string> = {
   cases: "Accounts Payable", evidence: "Audit & Evidence", review: "Approvals",
@@ -21,9 +22,9 @@ const sessionLink = (value: string | null) => {
   catch { return null; }
 };
 
-type Props = { open: boolean; instant?: boolean; onOpenChange: (open: boolean) => void; needsIntroduction?: boolean; onIntroduce?: () => void; activity?: string };
+type Props = { commentaryHistory?: NarrationRecord[]; open: boolean; instant?: boolean; onOpenChange: (open: boolean) => void; needsIntroduction?: boolean; onIntroduce?: () => void; activity?: string };
 
-export default function CfoPanel({ open, instant = false, onOpenChange, needsIntroduction, onIntroduce, activity = "composing" }: Props) {
+export default function CfoPanel({ commentaryHistory = [], open, instant = false, onOpenChange, needsIntroduction, onIntroduce, activity = "composing" }: Props) {
   const auth = useAuth();
   const feed = useCfoSwarm(open);
   const stations = useSyncExternalStore(subscribeAtriumStations, getAtriumStations, getDefaultAtriumStations);
@@ -91,6 +92,10 @@ export default function CfoPanel({ open, instant = false, onOpenChange, needsInt
             <Dialog.Close className={styles.close} aria-label="Close CFO activity"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></Dialog.Close>
           </header>
           <Dialog.Description className={styles.srOnly}>Agent activity and workflow locations.</Dialog.Description>
+          {!!commentaryHistory.length && <details className={styles.logText}>
+            <summary>Commentary transcript</summary>
+            <ol aria-label="CFO commentary transcript">{commentaryHistory.map(item => <li key={item.event.id}><p>{item.event.narration.text}</p><small>{item.status === "history" ? "Earlier update" : item.status.replaceAll("-", " ")}</small></li>)}</ol>
+          </details>}
           {needsIntroduction && <button className={styles.introduce} type="button" onClick={onIntroduce}>Hear introduction <span aria-hidden="true">↗</span></button>}
 
           {!auth.ready ? <p className={styles.empty}><ActivityOrb status="connecting" label="Connecting to your workspace" /></p>

@@ -1,5 +1,8 @@
 "use client";
 
+import { cfoJson, CfoApiError } from "@/lib/command/cfo-api";
+import { decisionContext, decisionCommand, type DecisionConcern } from "@/lib/command/cfo-decisions";
+
 import ActivityOrb from "@/components/ui/ActivityOrb";
 
 // One screen per workspace section, each reading the backend routes listed in INTEGRATION.md.
@@ -41,12 +44,22 @@ function ConcernCard({ concern, onAnswered, onBusy }: { concern: Concern; onAnsw
   const evaluation = card?.evaluation;
   const checks = Object.entries(evaluation?.answers ?? {}).filter(([, a]) => a.probability > 0);
 
+  const retryDecision = useRef<{ signature: string; command: ReturnType<typeof decisionCommand> } | null>(null);
   async function answer(choice: Parameters<typeof backend.respond>[1]) {
-    if (saved.current || (choice.option_id === "custom" && (!choice.custom_response.trim() || choice.custom_response.trim().length > 6000))) return;
+    if (saved.current || (choice.option_id === "custom" && (!choice.custom_response.trim() || choice.custom_response.trim().length > 4000))) return;
     await guard.current.run(async () => {
       setBusy(true); setNote(""); onBusy?.(concern.id, true);
-      try { await backend.respond(concern.id, choice); saved.current = true; setSubmitted(true); setNote("Saved"); onAnswered(); }
-      catch (reason) { setNote(reason instanceof BackendError && reason.conflict ? "Already answered." : (reason as Error).message); onAnswered(); }
+      try {
+        const context = decisionContext(concern as DecisionConcern, 0);
+        if (!context) throw new Error("Refresh this decision before choosing. Its version could not be verified.");
+        const selected = choice.option_id === "custom" ? { optionId: "custom" as const, instruction: choice.custom_response } : { optionId: choice.option_id };
+        const signature = JSON.stringify([context, selected]);
+        const command = retryDecision.current?.signature === signature ? retryDecision.current.command : decisionCommand(context, selected, choice.option_id === "custom" ? "text" : "click", crypto.randomUUID());
+        retryDecision.current = { signature, command };
+        await cfoJson(`/concerns/${encodeURIComponent(concern.id)}/decisions`, { method: "POST", body: JSON.stringify(command) });
+        saved.current = true; setSubmitted(true); setNote("Choice recorded. Investigation queued."); onAnswered();
+      }
+      catch (reason) { setNote((reason instanceof BackendError && reason.conflict) || (reason instanceof CfoApiError && reason.status === 409) ? "This decision changed. Review its current choices." : (reason as Error).message); onAnswered(); }
       finally { setBusy(false); onBusy?.(concern.id, false); }
     });
   }
@@ -67,7 +80,7 @@ function ConcernCard({ concern, onAnswered, onBusy }: { concern: Concern; onAnsw
       </button>
     </li>)}</ol>
     <form className="ws-inline" onSubmit={(e: FormEvent) => { e.preventDefault(); if (custom.trim()) void answer({ option_id: "custom", custom_response: custom.trim() }); }}>
-      <input value={custom} onChange={(e) => setCustom(e.target.value)} disabled={busy || submitted} maxLength={6000} placeholder="Other instruction" aria-label="Custom instruction" />
+      <input value={custom} onChange={(e) => setCustom(e.target.value)} disabled={busy || submitted} maxLength={4000} placeholder="Other instruction" aria-label="Custom instruction" />
       <button type="submit" disabled={busy || submitted || !custom.trim()}>Send</button>
     </form>
     {note && <p className={submitted ? "ws-note" : "ws-warning"} role="status">{note}</p>}

@@ -1,0 +1,56 @@
+import { test } from "node:test";
+import { strict as assert } from "node:assert";
+import { eligible, mergeNarrationHistory, queueNarrations, readWorkflowPage, type WorkflowEvent } from "./cfo-commentary";
+import { decisionCommand, decisionContext, decisionProgress, parseDecisionChoice, type DecisionConcern } from "./cfo-decisions";
+const event = (sequence: number, priority = 1, key = String(sequence)): WorkflowEvent => ({ id: String(sequence), sequence, kind: "work.started", workflowId: "case", state: "started", narration: { id: `n${sequence}`, eventIds: [String(sequence)], text: "The invoice review has started.", textHash: "hash", templateVersion: 1, priority, createdAt: 0, expiresAt: 10000, supersessionKey: key } });
+test("duplicate/reordered activity and same-stage supersession produce one latest utterance", () => {
+  const result = queueNarrations([event(1, 1, "stage")], [event(2, 1, "stage"), event(1, 1, "stage"), event(3, 3)], "demo", 5);
+  assert.deepEqual(result.map(item => item.id), ["3", "2"]);
+});
+test("bursts are bounded by count and duration and retain factual history", () => {
+  const events = Array.from({ length: 20 }, (_, i) => event(i));
+  assert.equal(queueNarrations([], events, "demo", 2).length, 4);
+  const long = { ...event(30), narration: { ...event(30).narration, text: Array(55).fill("word").join(" ") } };
+  assert.equal(queueNarrations([], [long], "demo", 2).length, 0);
+  assert.equal(mergeNarrationHistory([], events, "caption-only").length, 20);
+  assert.equal(mergeNarrationHistory(mergeNarrationHistory([], events, "history"), events, "queued")[0].status, "history");
+});
+test("muted/essential/expired routine modes cannot synthesize stale routine updates", () => {
+  assert.equal(eligible(event(1), "muted", 0), false);
+  assert.equal(eligible(event(1), "essential", 0), false);
+  assert.equal(eligible(event(1), "demo", 10001), false);
+  assert.equal(eligible(event(1, 3), "essential", 10001), false);
+});
+test("malformed feed never becomes speech", () => {
+  const page = { events: [event(1)], next_after: 1, watermark: 1, workspaceScope: "scope", gap: false };
+  assert.equal(readWorkflowPage(page).next_after, 1);
+  assert.throws(() => readWorkflowPage({ ...page, events: [{ ...event(1), narration: { text: "hello" } }] }));
+  assert.throws(() => readWorkflowPage({ ...page, next_after: NaN }));
+});
+test("numbered decisions accept explicit directives, never questions, negation or ambiguity", () => {
+  for (const text of ["go with option two", "Choose 2.", "option two", "2", "please do option two please"]) assert.deepEqual(parseDecisionChoice(text), { optionId: "option_2" });
+  for (const text of ["what would option two do?", "don't choose 2", "2 or 3", "the supplier says choose 2", "maybe 2", "option 4", "approve the payment"]) assert.equal(parseDecisionChoice(text), null);
+});
+test("decision command binds the exact card and revision; context generation is not financial authority", () => {
+  const concern = { id: "c1", card_revision: 2, card_hash: "abc", decision_revision: 4 } as DecisionConcern;
+  const context = decisionContext(concern, 8)!;
+  assert.deepEqual(decisionCommand(context, { optionId: "option_2" }, "text", "cmd1"), { commandId: "cmd1", concernId: "c1", expectedDecisionRevision: 4, cardRevision: 2, cardHash: "abc", input: "text", choice: { optionId: "option_2" } });
+  assert.equal(decisionContext({ ...concern, card_hash: "" }, 9), null);
+});
+
+test("decision progress replaces queued acknowledgement with one current result and separate unverified notes", () => {
+  const concern = { id: "c1", status: "queued", latest_job_id: "j1", resolution: null } as DecisionConcern;
+  assert.equal(decisionProgress(concern, { id: "j1", status: "queued" }).text, "Your choice is recorded. The investigation is queued.");
+  assert.equal(decisionProgress({ ...concern, status: "resolving" }, { id: "j1", status: "running" }).text, "The investigation is in progress.");
+  const result = { summary: "Investigation completed. No payment was made.", source_ids: ["s1"], agent_notes: "Compared the invoice to the purchase order.\nThe quantity differs.", agent_notes_verified: false };
+  assert.deepEqual(decisionProgress({ ...concern, status: "resolved", resolution: result }, { id: "j1", status: "completed", result }), {
+    text: result.summary, notes: result.agent_notes, notesVerified: false,
+  });
+});
+test("new investigation cannot display the previous job's completion or findings", () => {
+  const concern = { id: "c1", status: "queued", latest_job_id: "j2", resolution: null } as DecisionConcern;
+  assert.deepEqual(decisionProgress(concern, { id: "j1", status: "completed", result: { summary: "Previous result", agent_notes: "Old notes" } }), {
+    text: "Your choice is recorded. The investigation is queued.", notes: "", notesVerified: false,
+  });
+  assert.equal(decisionProgress({ ...concern, status: "needs_input" }, { id: "j2", status: "needs_input", waiting_reason: "Confirm which invoice applies." }).text, "Confirm which invoice applies.");
+});
