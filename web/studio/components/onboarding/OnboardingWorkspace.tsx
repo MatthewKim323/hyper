@@ -215,7 +215,12 @@ export default function OnboardingWorkspace() {
   const complete = savedComplete || skipped;
   const sceneReady = useSyncExternalStore(subscribeScene, sceneSnapshot, serverSnapshot);
   const onOnboarding = pathname === ONBOARDING_PATH;
-  const onWorld = pathname === WORLD_PATH;
+  // Next updates pathname the moment a navigation starts, but the engine's out transition runs
+  // after that and blends from a still of the live world. Re-warming on the new pathname would
+  // clear body[data-atriumActive] first, so to-home would find no world and cut instead of
+  // animating. Hold the world open from navigate-out until navigate-end.
+  const [leavingWorld, setLeavingWorld] = useState(false);
+  const onWorld = pathname === WORLD_PATH || leavingWorld;
   const visible = hydrated && onOnboarding && sceneReady;
   // Finishing a live session hands off through the wipe; a returning user skips it.
   const [sessionShown, setSessionShown] = useState(false);
@@ -224,6 +229,22 @@ export default function OnboardingWorkspace() {
   const showDashboard = onWorld || (complete && (!sessionShown || covered));
 
   if (visible && !complete && !sessionShown) setSessionShown(true);
+
+  useEffect(() => {
+    const onOut = (event: Event) => {
+      const { from, to } = (event as CustomEvent<{ from?: string; to?: string }>).detail ?? {};
+      const leaving = (from ?? "").replace(/\/+$/, "") || "/";
+      const arriving = (to ?? "").replace(/\/+$/, "") || "/";
+      if (leaving === WORLD_PATH && arriving !== WORLD_PATH) setLeavingWorld(true);
+    };
+    const onEnd = () => setLeavingWorld(false);
+    window.addEventListener("hyper:navigate-out", onOut);
+    window.addEventListener("hyper:navigate-end", onEnd);
+    return () => {
+      window.removeEventListener("hyper:navigate-out", onOut);
+      window.removeEventListener("hyper:navigate-end", onEnd);
+    };
+  }, []);
 
   useEffect(() => {
     if (onOnboarding && complete && sessionShown && !covered) void runOnboardingWipeHandoff(() => setCovered(true));
