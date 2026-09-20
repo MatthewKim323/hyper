@@ -203,6 +203,27 @@ async def stream(ws: WebSocket, sid: str):
                         break
                     identity = refreshed
                     await emit({'type':'auth.refreshed','expires_at':identity.expires_at})
+                elif kind == 'agent.introduce' and state.get('mode') == 'dashboard':
+                    entry_id = msg.get('id')
+                    if not isinstance(entry_id, str) or not 1 <= len(entry_id) <= 128 or not all(c.isalnum() or c in '-_' for c in entry_id):
+                        raise ValueError('Invalid introduction ID')
+                    introductions = state.setdefault('cfo_introductions', [])
+                    status = 'already-introduced' if entry_id in introductions else 'conversation-active' if started else 'started'
+                    if status == 'started':
+                        # Persist before provider startup: an uncertain reconnect must never replay a greeting.
+                        # This only requests provider speech, never injects a user turn or executes a tool.
+                        state['cfo_introductions'] = (introductions + [entry_id])[-32:]
+                        authorize()
+                        store.save(state)
+                        try:
+                            await bridge.start(introduce_cfo=True)
+                            started = True
+                        except Exception:
+                            state['cfo_introductions'].remove(entry_id)
+                            authorize()
+                            store.save(state)
+                            raise
+                    await emit({'type':'agent.introduction', 'id':entry_id, 'status':status})
                 elif kind in ('text','voice.start'):
                     typed = TextInput.model_validate(msg) if kind == 'text' else None
                     if not started:
@@ -296,3 +317,6 @@ app.include_router(counterparty_router)
 
 from .graph_api import router as graph_router
 app.include_router(graph_router)
+
+from .swarm_feed import router as swarm_router
+app.include_router(swarm_router)

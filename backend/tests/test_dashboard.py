@@ -116,6 +116,70 @@ def test_world_text_voice_reconnect_and_exclusion(client,monkeypatch):
     assert any(m.get('content')=='What needs my attention?' for m in history)
     assert b'\x00\x00' in providers[0].sent
 
+def test_cfo_introduction_is_real_provider_speech_without_a_user_turn(client, monkeypatch):
+    providers = []
+    class GreetingProvider(Provider):
+        async def send(self, raw):
+            await super().send(raw)
+            message = json.loads(raw) if isinstance(raw, str) else {}
+            if message.get('type') == 'Settings' and message['agent'].get('greeting'):
+                await self.queue.put(json.dumps({'type':'ConversationText', 'role':'assistant', 'content':message['agent']['greeting']}))
+                await self.queue.put(b'\x00\x00')
+                await self.queue.put(json.dumps({'type':'AgentAudioDone'}))
+    async def connect(*args, **kwargs):
+        provider = GreetingProvider(); providers.append(provider); return provider
+    monkeypatch.setattr(voice, 'connect', connect)
+    with client.websocket_connect('/world/agent/stream') as ws:
+        ws.send_json({'token':'alice'}); until(ws, 'session')
+        ws.send_json({'type':'agent.introduce', 'id':'world-entry-1'})
+        events = {}
+        while not {'agent.introduction', 'audio.done'} <= events.keys():
+            event = ws.receive_json(); events[event['type']] = event
+        assert events['agent.introduction']['status'] == 'started'
+        assert events['transcript']['text'] == voice.CFO_GREETING
+        assert events['audio']['pcm'] == 'AAA='
+        ws.send_json({'type':'agent.introduce', 'id':'world-entry-1'})
+        assert until(ws, 'agent.introduction')['status'] == 'already-introduced'
+        # Microphone bytes remain ignored until an explicit voice.start.
+        ws.send_bytes(b'\x01\x00')
+        ws.send_json({'type':'auth.refresh', 'token':'alice'}); until(ws, 'auth.refreshed')
+    assert len(providers) == 1
+    assert [m['type'] for m in providers[0].sent] == ['Settings']
+    state = main.store.dashboard('alice')
+    assert state['revision'] == 0
+    assert [entry['role'] for entry in state['transcript']] == ['assistant']
+    assert not state.get('investigation_ids')
+    assert state['cfo_introductions'] == ['world-entry-1']
+    # Reconnecting after an acknowledgement was lost must not replay the introduction.
+    with client.websocket_connect('/world/agent/stream') as ws:
+        ws.send_json({'token':'alice'}); until(ws, 'session')
+        ws.send_json({'type':'agent.introduce', 'id':'world-entry-1'})
+        assert until(ws, 'agent.introduction')['status'] == 'already-introduced'
+    assert len(providers) == 1
+
+def test_cfo_intro_does_not_interrupt_a_conversation_and_normal_world_start_has_no_greeting(client, monkeypatch):
+    providers = []
+    async def connect(*args, **kwargs):
+        provider = Provider(); providers.append(provider); return provider
+    monkeypatch.setattr(voice, 'connect', connect)
+    with client.websocket_connect('/world/agent/stream') as ws:
+        ws.send_json({'token':'alice'}); until(ws, 'session')
+        ws.send_json({'type':'text', 'id':'question', 'text':'Show my open work'})
+        until(ws, 'audio')
+        ws.send_json({'type':'agent.introduce', 'id':'late-entry'})
+        assert until(ws, 'agent.introduction')['status'] == 'conversation-active'
+    assert 'greeting' not in providers[0].sent[0]['agent']
+    assert len(providers) == 1
+
+def test_cfo_intro_does_not_replace_saved_context_or_onboarding_greeting(client):
+    state = main.store.dashboard('alice')
+    state['history'] = [{'type':'History','role':'user','content':'Saved financial task'}]
+    config = voice.settings(state, introduce_cfo=True)
+    assert config['agent']['greeting'] == voice.CFO_GREETING
+    assert config['agent']['context']['messages'][0]['content'] == 'Saved financial task'
+    assert 'greeting' not in voice.settings(state)['agent']
+    assert voice.settings(main.store.create('alice'), introduce_cfo=True)['agent']['greeting'].startswith('Hi, I’m Hyper.')
+
 async def test_dashboard_tools_cannot_complete_onboarding(client):
     state=main.store.dashboard('alice')
     events=[];sent=[]

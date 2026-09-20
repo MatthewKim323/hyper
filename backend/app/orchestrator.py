@@ -186,7 +186,7 @@ def authenticate(store,token):
 MODELS={'list_events':Page,'ack_events':EventAck,'list_cases':Page,'get_case':CaseID,'update_case':PutCase,
         'delegate_task':Delegate,'get_task':TaskID,'list_tasks':Page,'report_task_result':Report,'checkpoint':Checkpoint}
 
-def execute(store,identity,name,args):
+def _execute(store,identity,name,args):
     from . import data_tools
     oid=identity['organization_id'];svc=AgentService(store,oid)
     if identity['role']=='worker':
@@ -201,3 +201,22 @@ def execute(store,identity,name,args):
     if name=='get_case':return svc.get_case(parsed.case_id)
     if name=='get_task':return svc.get_task(parsed.task_id)
     return getattr(svc,methods.get(name,name))(parsed)
+
+
+def execute(store,identity,name,args):
+    result = _execute(store,identity,name,args)
+    # UI-only telemetry contains tool names and scope, never arguments/results.
+    # Acknowledged events cannot feed back into the coordinator's work queue.
+    if identity.get('role') == 'worker':
+        from sqlalchemy.exc import SQLAlchemyError
+        try:
+            with store.engine.begin() as db:
+                db.execute(events.insert().values(id=uid('evt'), organization_id=identity['organization_id'],
+                    event_key=uid('tool'), kind='agent.tool.completed',
+                    payload={'tool':name, 'task_id':identity['task_id'], 'case_id':identity.get('case_id')},
+                    acknowledged=True, created_at=now()))
+        except SQLAlchemyError:
+            # A display-feed failure must not invite a retry of completed external work.
+            import logging
+            logging.getLogger(__name__).warning('Agent activity telemetry could not be saved')
+    return result
