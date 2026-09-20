@@ -34,7 +34,7 @@ export type LoopView = {
 
 /** Correct out of n, as a rate only once there are enough cases for a rate to mean something. */
 export function outcome(arm: ArmTotals | undefined): string {
-  if (!arm || !arm.n) return "0";
+  if (!arm || !arm.n) return "0/0";
   return arm.n >= MIN_CASES_FOR_RATE && arm.accuracy !== null ? `${Math.round(arm.accuracy * 100)}%` : `${arm.correct}/${arm.n}`;
 }
 const seconds = (value: number | null | undefined) => value == null ? "–" : `${value.toFixed(1)}s`;
@@ -48,8 +48,10 @@ export function shapeLoopTimeline(doc: LoopTimeline): LoopView | null {
   const chosen = hard ?? overall;
   if (!chosen) return null;
   const subject = chosen.subject;
-  const latest = chosen.points[chosen.points.length - 1];
-  const totals = (overall?.points[overall.points.length - 1]) ?? latest;
+  // Hard-tier figures come from the hard-tier series or not at all. The overall series is mostly
+  // open-book cases, so its numbers must never appear under a hard-tier label.
+  const hardLatest = hard?.points[hard.points.length - 1];
+  const totals = (overall?.points[overall.points.length - 1]) ?? hardLatest!;
 
   const arms = doc.series.filter((s): s is ExceptionSeries => s.id === "exceptions");
   const on = arms.find(s => s.role === "memory_on" && s.subject === subject);
@@ -61,7 +63,7 @@ export function shapeLoopTimeline(doc: LoopTimeline): LoopView | null {
     const a = p.rolling.median_seconds_released, b = twin?.rolling.median_seconds_released;
     return a != null && b != null ? [{ date: new Date(p.at), with: a, without: b }] : [];
   });
-  const level = usable(on).flatMap(p => { const l = p.level ?? p.rolling.top_tier ?? p.bucket.top_tier; return l ? [{ date: new Date(p.at), level: l }] : []; });
+  const level = usable(on).flatMap(p => { const l = p.level; return l ? [{ date: new Date(p.at), level: l }] : []; });
 
   const state = doc.series.find((s): s is StateSeries => s.id === "loop_state" && s.subject === subject);
   const retrievalPoint = doc.series.find(s => s.id === "retrieval")?.points.slice(-1)[0] as Record<string, Record<string, number> | undefined> | undefined;
@@ -69,8 +71,8 @@ export function shapeLoopTimeline(doc: LoopTimeline): LoopView | null {
 
   return {
     subject,
-    pairs: latest.pairs,
-    hardTier: { with: outcome(latest.with_memory), without: outcome(latest.without_memory) },
+    pairs: totals.pairs,
+    hardTier: hardLatest ? { with: outcome(hardLatest.with_memory), without: outcome(hardLatest.without_memory) } : { with: "0/0", without: "0/0" },
     seconds: { with: seconds(totals.with_memory.median_seconds_released), without: seconds(totals.without_memory.median_seconds_released) },
     cost: { with: dollars(totals.with_memory.median_usd_per_case), without: dollars(totals.without_memory.median_usd_per_case) },
     speed, level,

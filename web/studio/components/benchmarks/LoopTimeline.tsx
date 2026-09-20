@@ -17,7 +17,7 @@ export default function LoopTimeline({ active }: { active: boolean }) {
     { label: "Hard tier", ...view.hardTier },
     { label: "Seconds", ...view.seconds },
     { label: "Per case", ...view.cost },
-  ];
+  ].filter(figure => figure.with !== "0/0" || figure.without !== "0/0");
   return <section className={styles.loop} aria-label="Live loop" data-pointable="group:loop-timeline" data-pointable-label="Memory on versus memory off"
     data-pointable-data={JSON.stringify({ subject: view.subject, pairs: view.pairs, hardTier: view.hardTier, seconds: view.seconds, cost: view.cost, lessons: view.lessons })}>
     <header className={styles.head}>
