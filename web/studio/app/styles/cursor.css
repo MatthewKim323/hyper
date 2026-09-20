@@ -5,6 +5,9 @@ html.native-cursor-off * {
 }
 
 .cursor {
+  /* Keep the pointer above portaled cards and the hand-tracking controls. */
+  z-index: 2147483647;
+  pointer-events: none;
   opacity: 0;
   visibility: hidden;
 }
