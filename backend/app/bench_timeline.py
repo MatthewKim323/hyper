@@ -44,6 +44,7 @@ EVENTS = [
     {'at': 1789888077210, 'label': 'adversary leans on the newest tier'},
     {'at': 1789889366247, 'label': 'tier 6 live; memory keeps lessons from misses'},
     {'at': 1789890592692, 'label': 'sandbox fix: opening warnings delivered at spawn'},
+    {'at': 1789892311179, 'label': 'tier 7 live: facts with no instruction, and who may lift a hold; a worked hold with no question counts as correct'},
 ]
 # Tiers where every engine check passes while the right answer is to hold: the only ones a wrong release can happen in.
 HARD_TIERS = tuple(t for t in TIERS if t >= 5)

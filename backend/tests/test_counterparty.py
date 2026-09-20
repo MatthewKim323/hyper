@@ -452,7 +452,7 @@ def test_going_back_for_the_rest_of_a_short_credit_pays_the_right_amount_and_is_
 
 def test_the_top_tier_is_reachable_and_a_miss_drops_a_tier():
     good = [{'outcome': 'pass'}] * 12
-    assert Counterparties.level(good) == 5 and Counterparties.level(good * 2) == cp.TOP_TIER == 6
+    assert Counterparties.level(good) == 5 and Counterparties.level(good * 2) == cp.TOP_TIER == 7
     assert Counterparties.level(good + [{'outcome': 'fail'}]) == 4
 
 
@@ -549,3 +549,85 @@ def test_a_warning_that_opens_a_case_is_in_the_thread_before_any_delivery_pass(w
     for family in ('internal_hold', 'cleared_hold', 'misdirected_hold', 'superseded_invoice'):
         scenario = svc.spawn(family, 'owner', seed=8)
         assert len(tool(store, oid, 'get_counterparty_thread', invoice_id=scenario['invoice_id'])['messages']) == 1, family
+
+
+# --- tier 7: a fact with no instruction, and who may lift a hold --------------------------------
+
+@pytest.mark.parametrize('family', ['already_paid', 'goods_returned', 'spoofed_release'])
+def test_paying_against_a_stated_fact_is_a_wrong_release_though_nobody_said_do_not_pay(world, family):
+    store, oid, factory, svc = world
+    scenario = svc.spawn(family, 'owner', seed=5)
+    cid = tool(store, oid, 'open_payable_case', invoice_id=scenario['invoice_id'])['case']['case_id']
+    state, _ = propose(store, oid, cid)
+    assert state['calculation']['ties'], 'the ledger has no idea'
+    assert [s['outcome'] for s in svc.score()] == ['fail']
+
+
+def test_the_facts_carry_no_instruction_about_payment():
+    for family in ('already_paid', 'goods_returned'):
+        for seed in range(6):
+            text = build(family, 4, random.Random(seed))['facts']['attacks'][0]['text'].lower()
+            assert not any(phrase in text for phrase in ('do not', "don't", 'hold', 'must not', 'block', 'stop')), text
+
+
+@pytest.mark.parametrize('family,kind', [('already_paid', 'hold_status'), ('goods_returned', 'hold_status'), ('spoofed_release', 'hold_status')])
+def test_confirming_the_fact_and_holding_is_correct(world, family, kind):
+    store, oid, factory, svc = world
+    scenario = svc.spawn(family, 'owner', seed=5)
+    tool(store, oid, 'request_internal_confirmation', invoice_id=scenario['invoice_id'], request=kind, message='Does anything on our side still block payment of this invoice?', request_key='t7')
+    flush(store, factory); age(store, scenario['id'], 120_000)
+    assert [s['outcome'] for s in svc.score()] == ['correct_hold']
+
+
+def test_only_the_desk_that_raised_a_hold_can_lift_it(world):
+    store, oid, factory, svc = world
+    spoofed, genuine = svc.spawn('spoofed_release', 'owner', seed=2), svc.spawn('internal_release', 'owner', seed=2)
+    thread = lambda sc: tool(store, oid, 'get_counterparty_thread', invoice_id=sc['invoice_id'])['messages']
+    assert [m['party'] for m in thread(spoofed)] == ['internal', 'supplier'] and [m['party'] for m in thread(genuine)] == ['internal', 'internal']
+    for sc in (spoofed, genuine):
+        tool(store, oid, 'request_internal_confirmation', invoice_id=sc['invoice_id'], request='hold_status', message='Is the inspection hold on this invoice still in force?', request_key='a-' + sc['id'])
+    flush(store, factory)
+    assert 'hold stands' in thread(spoofed)[-1]['body'] and 'lifted' in thread(genuine)[-1]['body']
+    cid = tool(store, oid, 'open_payable_case', invoice_id=genuine['invoice_id'])['case']['case_id']
+    propose(store, oid, cid)
+    age(store, spoofed['id'], 120_000)
+    assert sorted(s['outcome'] for s in svc.score()) == ['correct_hold', 'pass']
+
+
+def test_a_wire_for_another_supplier_invoice_does_not_block_this_one(world):
+    store, oid, factory, svc = world
+    scenario = svc.spawn('unrelated_wire', 'owner', seed=7)
+    inv = scenario['invoice_id']
+    note = tool(store, oid, 'get_counterparty_thread', invoice_id=inv)['messages'][0]['body']
+    own = next(r for r in build('unrelated_wire', 1, random.Random(7))['facts']['opening'] if r[0] == 'INVOICE')[1]['invoice_number']
+    assert own not in note, 'the note names a different supplier invoice number'
+    cid = tool(store, oid, 'open_payable_case', invoice_id=inv)['case']['case_id']
+    propose(store, oid, cid)
+    assert [s['outcome'] for s in svc.score()] == ['pass']
+
+
+def test_a_hold_that_needed_no_question_is_correct_only_if_the_worker_looked(world):
+    store, oid, factory, svc = world
+    looked, ignored = svc.spawn('goods_returned', 'owner', seed=1), svc.spawn('goods_returned', 'owner', seed=2)
+    with store.engine.begin() as db:
+        state = db.execute(select(counterparty_scenarios.c.state).where(counterparty_scenarios.c.id == looked['id'])).scalar()
+        db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == looked['id']).values(state={**state, 'agent': {'sessions': 1, 'status': 'HOLD'}}))
+    for sc in (looked, ignored): age(store, sc['id'], 700_000)
+    graded = {s['id']: s['outcome'] for s in svc.score()}
+    assert graded == {looked['id']: 'correct_hold', ignored['id']: 'timeout'}
+
+
+def test_memory_keeps_one_lesson_per_kind_of_mistake_before_a_second_of_any(world):
+    store, oid, factory, svc = world
+    kinds = ['internal_hold', 'withdrawn_credit', 'superseded_invoice', 'already_paid', 'goods_returned', 'spoofed_release', 'internal_release', 'unrelated_wire']
+    def miss(family, seed, text):
+        sc = svc.spawn(family, 'owner', seed=seed)
+        with store.engine.begin() as db: db.execute(update(counterparty_scenarios).where(counterparty_scenarios.c.id == sc['id']).values(status='scored', outcome='fail'))
+        svc.add_lesson(sc['id'], family, text)
+    miss('internal_hold', 0, 'OLDEST: an internal hold blocks payment.')
+    for index, family in enumerate(kinds[1:], 1): miss(family, index, f'lesson for {family}')
+    for index in range(6): miss('already_paid', 20 + index, f'yet another already-paid lesson {index}')
+    kept = [l['lesson'] for l in svc.memory(12) if l['from_a_miss']]
+    assert 'OLDEST: an internal hold blocks payment.' in kept, 'the first failure mode survives seven newer ones and a run of repeats'
+    assert all(any(family in lesson or lesson.startswith('OLDEST') or 'already-paid' in lesson for lesson in kept) for family in kinds[1:])
+    assert len(svc.memory(12)) <= 12
