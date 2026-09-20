@@ -28,9 +28,10 @@ def color(rgb, variation=1.0):
 
 def height_at(x, y):
     """Two soft shoulder ridges frame a lower opening behind the hero sphere."""
-    shoulders = 3.0 * math.exp(-((abs(x) - 13.0) / 9.0) ** 2)
+    shoulders = 3.8 * math.exp(-((abs(x) - 13.0) / 9.0) ** 2)
     depth = 0.30 + 0.72 * math.sin(y * 0.095 + 0.3) ** 2
-    folds = 0.24 * math.sin(x * 0.30 + y * 0.14) + 0.15 * math.cos(x * 0.18 - y * 0.22)
+    folds = 0.38 * math.sin(x * 0.30 + y * 0.14) + 0.28 * math.cos(x * 0.18 - y * 0.22)
+    shoulders += 0.85 * math.exp(-((x - 17.0) / 8.0) ** 2) * math.sin(y * 0.12 + 0.5) ** 2
     detail = 0.10 * noise.fractal(Vector((x * 0.18, y * 0.18, 8.3)), 1.0, 2.0, 3)
     shore = min(1.0, max(0.0, (y - 10.0) / 18.0))
     shore = shore * shore * (3.0 - 2.0 * shore)
@@ -101,11 +102,11 @@ def mesh(name, vertices, faces, colors, surface):
 def _patch_tint(x, y, rng, leaf=False):
     """Low-frequency color families avoid random candy-colored confetti."""
     mix = 0.5 + 0.5 * noise.noise(Vector((x * 0.12, y * 0.10, 3.7)))
-    rose = (0.91, 0.72, 0.78) if not leaf else (0.59, 0.46, 0.51)
-    lilac = (0.78, 0.69, 0.84) if not leaf else (0.54, 0.48, 0.60)
+    rose = (0.97, 0.67, 0.76) if not leaf else (0.62, 0.42, 0.50)
+    lilac = (0.84, 0.64, 0.82) if not leaf else (0.57, 0.43, 0.59)
     tint = tuple(a * (1 - mix) + b * mix for a, b in zip(rose, lilac))
     depth = min(0.62, max(0.0, (y - 23.0) / 75.0))
-    horizon = (0.87, 0.80, 0.85) if not leaf else (0.73, 0.66, 0.73)
+    horizon = (0.92, 0.74, 0.82) if not leaf else (0.76, 0.60, 0.70)
     tint = tuple(a * (1 - depth) + b * depth for a, b in zip(tint, horizon))
     variation = rng.uniform(0.94, 1.055)
     return tuple(min(1.0, channel * variation) for channel in tint)

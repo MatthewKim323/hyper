@@ -1,4 +1,4 @@
-import { BackSide, CircleGeometry, Color, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PMREMGenerator, Scene, ShaderChunk, ShaderMaterial, SphereGeometry, Vector3, WebGLRenderer } from "three";
+import { BackSide, CircleGeometry, Color, CubeCamera, HalfFloatType, LinearFilter, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PMREMGenerator, Points, Scene, ShaderChunk, ShaderMaterial, SphereGeometry, Vector3, WebGLCubeRenderTarget, WebGLRenderer, type WebGLRenderTarget } from "three";
 
 const noise = `
   float atriumHash(vec3 p) { p = fract(p * .3183099 + vec3(.1,.2,.3)); p *= 17.; return fract(p.x * p.y * p.z * (p.x+p.y+p.z)); }
@@ -20,13 +20,21 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
     fragmentShader: `varying vec3 vDirection; uniform float uTime; uniform vec3 uSunDirection; ${noise}
       void main() {
         vec3 direction = normalize(vDirection);
-        float height = smoothstep(-.03,.38,direction.y);
-        vec3 color = mix(vec3(.88,.61,.61), vec3(.30,.45,.80),height);
-        float clouds = atriumCloud(direction*vec3(4.0,8.,4.)+vec3(uTime*.0015,0.,0.));
-        clouds = smoothstep(.43,.69,clouds) * (1.-smoothstep(.35,.95,direction.y));
-        color = mix(color,vec3(1.,.92,.85),clouds*.72);
-        float sunlight=pow(max(0.,dot(direction,uSunDirection)),32.);
-        color += vec3(.5,.31,.18)*sunlight;
+        float height = smoothstep(-.04,.42,direction.y);
+        vec3 color = mix(vec3(1.02,.68,.64), vec3(.30,.46,.86),height);
+        // Two angular cloud scales keep visible cumulus structure above the
+        // openings and in the pool, rather than a featureless pastel wash.
+        vec3 cloudPoint=direction*vec3(13.,24.,13.)+vec3(uTime*.002,1.8,0.);
+        float mass=atriumCloud(cloudPoint);
+        float curls=atriumCloud(cloudPoint*3.4+vec3(7.1,2.4,8.));
+        float cloudCover=smoothstep(.47,.65,mass+(curls-.5)*.22);
+        cloudCover*=1.-smoothstep(.55,.9,direction.y);
+        float litRim=smoothstep(.47,.58,mass)*(1.-smoothstep(.58,.72,mass));
+        vec3 cloudColor=mix(vec3(.70,.67,.78),vec3(1.7,1.42,1.30),smoothstep(.42,.66,mass));
+        cloudColor+=vec3(.28,.18,.10)*litRim;
+        color=mix(color,cloudColor,cloudCover*.90);
+        float sunlight=pow(max(0.,dot(direction,uSunDirection)),48.);
+        color += vec3(1.0,.61,.32)*sunlight;
         gl_FragColor=vec4(color,1.);
         #include <tonemapping_fragment>
         #include <encodings_fragment>
@@ -45,18 +53,74 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
   }
   const generator = new PMREMGenerator(renderer);
   const target = generator.fromScene(lightingScene, .025, .1, 200);
-  generator.dispose(); panelGeometry.dispose(); panelMaterial.dispose();
+  panelGeometry.dispose(); panelMaterial.dispose();
+  const roomCube = new WebGLCubeRenderTarget(256, { type: HalfFloatType, generateMipmaps: false, minFilter: LinearFilter, magFilter: LinearFilter });
+  const roomCamera = new CubeCamera(.1, 200, roomCube);
+  let roomEnvironment: WebGLRenderTarget | null = null;
+  let disposed = false;
+  const usesRoomReflections = (material: MeshStandardMaterial) => /Portals \||graduated rose quartz|luminous ivory pearl/.test(material.name);
+
+  function captureRoomReflections(scene: Scene, position: Vector3, excluded: readonly Object3D[] = []) {
+    if (disposed) return;
+    const hidden = new Map<Object3D, boolean>();
+    const reflective = new Set<MeshStandardMaterial>();
+    const hide = (object: Object3D) => {
+      if (hidden.has(object)) return;
+      hidden.set(object, object.visible);
+      object.visible = false;
+    };
+    excluded.forEach(hide);
+    scene.traverse(object => {
+      if (object instanceof Points) { hide(object); return; }
+      if (!(object instanceof Mesh)) return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      for (const material of materials) {
+        if (material instanceof MeshStandardMaterial && usesRoomReflections(material)) { reflective.add(material); hide(object); }
+        // Exclude refraction and translucent effect passes, including light
+        // shafts. Actual lamps remain in the capture to illuminate the room.
+        if (material instanceof MeshPhysicalMaterial && material.transmission > 0 || material instanceof ShaderMaterial && material.transparent) hide(object);
+      }
+    });
+    const previousTarget = renderer.getRenderTarget();
+    const previousFace = renderer.getActiveCubeFace();
+    const previousLevel = renderer.getActiveMipmapLevel();
+    const previousToneMapping = renderer.toneMapping;
+    const previousXr = renderer.xr.enabled;
+    const previousShadows = renderer.shadowMap.autoUpdate;
+    try {
+      scene.updateMatrixWorld(true);
+      roomCamera.position.copy(position);
+      // The preceding beauty frame provides the shadow maps. Six cube faces
+      // must not trigger six new shadow-map renders or recursive water captures.
+      renderer.shadowMap.autoUpdate = false;
+      roomCamera.update(renderer, scene);
+      roomEnvironment = generator.fromCubemap(roomCube.texture, roomEnvironment);
+      for (const material of reflective) {
+        if (material.envMap !== roomEnvironment.texture) {
+          material.envMap = roomEnvironment.texture;
+          material.needsUpdate = true;
+        }
+      }
+    } finally {
+      hidden.forEach((visible, object) => { object.visible = visible; });
+      renderer.setRenderTarget(previousTarget, previousFace, previousLevel);
+      renderer.toneMapping = previousToneMapping;
+      renderer.xr.enabled = previousXr;
+      renderer.shadowMap.autoUpdate = previousShadows;
+    }
+  }
   const decorated = new WeakSet<MeshStandardMaterial>();
   function decorate(root: Object3D) {
     root.traverse(object => {
       if (!(object instanceof Mesh)) return;
       object.receiveShadow = true;
-      object.castShadow = !/clear|glass|rim|light|reveal|satellite/i.test(object.name);
+      const name = object.name.replaceAll("_", " ");
+      object.castShadow = !/clear|glass|rim|light seam|seam light|floating pearl light|reveal|satellite/i.test(name);
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       for (const material of materials) {
         if (!(material instanceof MeshStandardMaterial) || decorated.has(material)) continue;
         decorated.add(material);
-        material.envMapIntensity = .48;
+        material.envMapIntensity = usesRoomReflections(material) ? .85 : .48;
         if (/porous warm limestone/.test(material.name)) {
           material.color.setRGB(1, 1, 1);
           material.roughness = .78;
@@ -71,6 +135,7 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
           material.customProgramCacheKey = () => "hyper-weathered-limestone-v1";
         } else if (/limestone|travertine|stone floor/i.test(material.name)) {
           material.color.setRGB(.739, .562, .499);
+          material.envMapIntensity = .28;
           material.roughness = .46;
           material.onBeforeCompile = shader => {
             shader.uniforms.uStoneTime = time;
@@ -100,10 +165,10 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
         } else if (/graduated rose quartz|luminous ivory pearl/.test(material.name)) {
           material.color.setRGB(.933, .787, .721);
           material.roughness = .23;
-          material.metalness = .025;
+          material.metalness = 0;
           if (material instanceof MeshPhysicalMaterial) {
-            material.clearcoat = .55;
-            material.clearcoatRoughness = .12;
+            material.clearcoat = .22;
+            material.clearcoatRoughness = .17;
             material.transmission = /graduated/.test(material.name) ? .70 : .16;
             material.thickness = 2;
             material.attenuationColor = new Color(.98, .83, .75);
@@ -157,5 +222,14 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
       }
     });
   }
-  return { sky, environment: target.texture, decorate, update(seconds: number) { time.value = seconds; }, dispose() { target.dispose(); skyGeometry.dispose(); skyMaterial.dispose(); } };
+  return {
+    sky, environment: target.texture, decorate, captureRoomReflections,
+    update(seconds: number) { time.value = seconds; },
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      roomCube.dispose(); roomEnvironment?.dispose();
+      target.dispose(); generator.dispose(); skyGeometry.dispose(); skyMaterial.dispose();
+    },
+  };
 }

@@ -60,19 +60,48 @@ describe("live atrium water", () => {
     let disposals = 0;
     for (const surface of surfaces) {
       const target = surface.getRenderTarget();
-      assert.equal(target.width, 512);
-      assert.equal(target.height, 288);
+      assert.equal(target.width, 1024);
+      assert.equal(target.height, 576);
       target.addEventListener("dispose", () => { disposals++; });
       surface.geometry.addEventListener("dispose", () => { disposals++; });
       material(surface).addEventListener("dispose", () => { disposals++; });
       material(surface).uniforms.uRipples.value.addEventListener("dispose", () => { disposals++; });
     }
     water.resize(NaN, 0);
-    assert.equal(surfaces[0].getRenderTarget().width, 512);
+    assert.equal(surfaces[0].getRenderTarget().width, 1024);
     water.dispose();
     water.dispose();
     assert.equal(disposals, 8);
     assert.equal(water.group.children.length, 0);
+  });
+
+  test("honors a smaller mobile reflection budget in either orientation without upscaling", () => {
+    const water = createAtriumWater({ reflectionSize: 512 });
+    const surfaces = water.group.children as Reflector[];
+    for (const [width, height, expectedWidth, expectedHeight] of [[1920, 1080, 512, 288], [1080, 1920, 288, 512], [240, 160, 240, 160]]) {
+      water.resize(width, height);
+      for (const surface of surfaces) {
+        const target = surface.getRenderTarget();
+        assert.equal(target.width, expectedWidth);
+        assert.equal(target.height, expectedHeight);
+        assert.equal(material(surface).uniforms.uReflectionTexel.value.x, 1 / expectedWidth);
+        assert.equal(material(surface).uniforms.uReflectionTexel.value.y, 1 / expectedHeight);
+      }
+    }
+    water.dispose();
+  });
+
+  test("keeps default and malformed reflection requests inside the resource limits", () => {
+    for (const [requested, expected] of [[undefined, 1024], [NaN, 1024], [Infinity, 1024], [-100, 64], [0, 64], [512.2, 512]] as const) {
+      const water = createAtriumWater({ reflectionSize: requested });
+      water.resize(4096, 4096);
+      for (const surface of water.group.children as Reflector[]) {
+        const target = surface.getRenderTarget();
+        assert.equal(target.width, expected);
+        assert.equal(target.height, expected);
+      }
+      water.dispose();
+    }
   });
 
   test("hides both water surfaces during reflection and restores renderer state after a failed pass", () => {

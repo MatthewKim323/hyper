@@ -30,6 +30,8 @@ From `web/studio`, using Blender 4.5:
 
 The preview writes an ignored `review.png` at 1280×720 and 32 samples. The final render writes `hyper-atrium.png` at 2560×1441 and 96 samples. Rendering does not save temporary resolution, sample count, or output-path changes into the source. All five main stations render together; the template library stays hidden.
 
+Add `--cpu` after `--` if the local macOS Metal shader compiler fails. This selects the same Cycles scene on the CPU, with a longer render time. Use `--python-exit-code 1` for automated commands so Python failures return a nonzero process status.
+
 ## Rebuild and export
 
 ```sh
@@ -42,6 +44,8 @@ The preview writes an ignored `review.png` at 1280×720 and 32 samples. The fina
 Rebuilding replaces the authored source, so export the station library afterward to repopulate all ten templates. `update_landscape.py` replaces only the garden and updates directional lighting in the existing saved scene, preserving all stations and templates. Run the environment exporter after changes to the source geometry. No command generates backplates or water masks.
 
 `refine_reference.py` reapplies measured composition, botanical geometry, and physical materials to an existing source. It writes fresh aperture measurements. `refine_fidelity_materials.apply(scene)` is also callable in memory; it never saves or renders on its own. Source volumetric haze, actual portal uplights, limestone pores, and cloudy pearl transmission are editable node graphs.
+
+`side_light.apply(scene)` adds the right clerestory baffle and a warm 240 kW key through three real openings. It is entirely off camera. `verify.py` checks both the side-light aperture paths and rear sun visibility at the pearl and basin. The side-light geometry and lamp metadata are exported together for the browser renderer.
 
 Use the full macOS executable path. A Homebrew symlink can prevent Blender from locating its bundled Python and color-management resources. Fonts are packed into the blend file; materials and landscape details are procedural.
 

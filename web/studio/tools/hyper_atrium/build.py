@@ -22,6 +22,7 @@ from landscape import build_landscape, refine_arch_lighting
 from composition import apply as compose_reference, STATIONS
 from refine_fidelity_materials import apply as refine_materials
 from rocks import apply as refine_rocks
+from side_light import apply as add_side_light
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--preview', action='store_true')
@@ -185,6 +186,7 @@ scene.camera=camera
 compose_reference(scene)
 refine_materials(scene)
 refine_rocks(scene)
+add_side_light(scene)
 props_data['portals'] = [{'name': name, 'center': (x,y,.48+height/2), 'width': width, 'height': height} for key,name,x,y,width,height,label,icon in STATIONS]
 
 # The environment carries no decorative copy. Keep only functional station labels.

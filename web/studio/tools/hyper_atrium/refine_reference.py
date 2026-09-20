@@ -11,6 +11,7 @@ from composition import apply as compose, REFERENCE_BOUNDS, STATIONS
 from landscape import replace_landscape
 from refine_fidelity_materials import apply as refine_materials
 from rocks import apply as refine_rocks
+from side_light import apply as add_side_light
 
 OUT = HERE.parents[1] / "assets/blender/hyper-atrium"
 bpy.ops.wm.open_mainfile(filepath=str(OUT / "hyper-atrium.blend"))
@@ -19,6 +20,7 @@ compose(scene)
 replace_landscape(wall_y=27, camera_y=-21, opening_scale=48/29, height_scale=1.65)
 refine_materials(scene)
 refine_rocks(scene)
+add_side_light(scene)
 bpy.context.view_layer.update()
 graph = bpy.context.evaluated_depsgraph_get()
 measurements = []

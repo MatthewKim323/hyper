@@ -14,7 +14,14 @@ const shadowFragment = `
   #include <packing>
   #include <logdepthbuf_pars_fragment>
   #include <shadowmap_pars_fragment>
-  #include <shadowmask_pars_fragment>
+  float rearSunVisibility() {
+    #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 0
+      DirectionalLightShadow light=directionalLightShadows[0];
+      return receiveShadow ? getShadow(directionalShadowMap[0],light.shadowMapSize,light.shadowBias,light.shadowRadius,vDirectionalShadowCoord[0]) : 1.;
+    #else
+      return 1.;
+    #endif
+  }
 `;
 
 /** Layered scattering follows the exported sun through the carved apertures. */
@@ -67,7 +74,7 @@ export function createAtriumSunlight(sunDirection: Vector3, apertures?: Aperture
         // Forward scattering shares the source volume's anisotropy of .52.
         float phase=.7296/pow(max(.08,1.2704-1.04*cosine),1.5);
         phase=clamp(phase*.36,.28,1.35);
-        float scattering=edge*lengthFade*density*vWeight*phase*getShadowMask();
+        float scattering=edge*lengthFade*density*vWeight*phase*rearSunVisibility();
         gl_FragColor=vec4(vec3(1.,.77,.58),scattering*.085);
         #include <tonemapping_fragment>
         #include <encodings_fragment>
@@ -139,7 +146,7 @@ export function createAtriumSunlight(sunDirection: Vector3, apertures?: Aperture
       void main() {
         #include <logdepthbuf_fragment>
         float point=1.-smoothstep(.06,.5,length(gl_PointCoord-.5));
-        gl_FragColor=vec4(1.,.86,.72,point*vLight*getShadowMask());
+        gl_FragColor=vec4(1.,.86,.72,point*vLight*rearSunVisibility());
         #include <tonemapping_fragment>
         #include <encodings_fragment>
       }`,

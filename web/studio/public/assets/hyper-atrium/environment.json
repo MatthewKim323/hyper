@@ -44,7 +44,7 @@
         0.6100000143051147,
         0.47999998927116394
       ],
-      "blenderEnergy": 1400.0,
+      "blenderEnergy": 2100.0,
       "size": 14.0
     },
     {
@@ -280,24 +280,24 @@
     },
     {
       "name": "Fidelity | warm side aperture",
-      "type": "area",
+      "type": "spot",
       "position": [
-        28.831893920898438,
-        -5.0,
-        18.0
+        45.33189392089844,
+        -15.0,
+        25.8875675201416
       ],
       "direction": [
-        -0.7016704678535461,
-        0.6548923254013062,
-        -0.28066787123680115
+        -0.8152394890785217,
+        0.4815625250339508,
+        -0.3216862678527832
       ],
       "colorLinear": [
         1.0,
-        0.7099999785423279,
-        0.6000000238418579
+        0.7900000214576721,
+        0.6499999761581421
       ],
-      "blenderEnergy": 4500.0,
-      "size": 5.0
+      "blenderEnergy": 240000.0,
+      "size": null
     }
   ],
   "sky": {
@@ -1267,6 +1267,13 @@
       "materials": [
         "Ground | porous warm limestone"
       ]
+    },
+    {
+      "name": "Right clerestory | three carved light apertures",
+      "sourceType": "MESH",
+      "materials": [
+        "Hyper | blush ivory honed limestone"
+      ]
     }
   ],
   "excluded": {
@@ -1296,12 +1303,12 @@
     "typography": "All non-station FONT objects and decorative rules are excluded. Station labels and icons are preserved in the original source/library."
   },
   "stats": {
-    "objects": 85,
-    "meshes": 85,
-    "primitives": 85,
-    "vertices": 1238432,
-    "triangles": 615670,
-    "bytes": 12811676
+    "objects": 86,
+    "meshes": 86,
+    "primitives": 86,
+    "vertices": 1238680,
+    "triangles": 615934,
+    "bytes": 12864704
   },
   "compression": {
     "codec": "KHR_draco_mesh_compression",
@@ -1396,6 +1403,7 @@
     "Ground | weathered marble 02",
     "Ground | weathered marble 03",
     "Ground | weathered marble 04",
-    "Ground | weathered marble 05"
+    "Ground | weathered marble 05",
+    "Right clerestory | three carved light apertures"
   ]
 }

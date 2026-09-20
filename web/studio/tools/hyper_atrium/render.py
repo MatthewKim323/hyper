@@ -42,6 +42,8 @@ scene.render.resolution_percentage = 100
 scene.cycles.samples = 32 if args.preview else 96
 scene.cycles.adaptive_threshold = 0.04 if args.preview else 0.025
 scene.cycles.use_denoising = True
+scene.cycles.use_auto_tile = True
+scene.cycles.tile_size = 512
 scene.render.filepath = str(OUT / ("review.png" if args.preview else "hyper-atrium.png"))
 try:
     preferences = bpy.context.preferences.addons["cycles"].preferences

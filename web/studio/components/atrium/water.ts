@@ -1,4 +1,4 @@
-import { Color, Group, Matrix4, PlaneGeometry, RingGeometry, ShaderMaterial, UniformsLib, Vector2, Vector3, Vector4, type BufferGeometry } from "three";
+import { Color, Group, HalfFloatType, Matrix4, PlaneGeometry, RingGeometry, ShaderMaterial, UniformsLib, Vector2, Vector3, Vector4, type BufferGeometry } from "three";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { createWaterRipples, type WaterRipples } from "./ripples";
 
@@ -90,6 +90,7 @@ const fragmentShader = `
   uniform vec3 color;
   uniform float uTime;
   uniform float uAmplitude;
+  uniform float uDepth;
   uniform vec3 uSunDirection;
   uniform bool receiveShadow;
   uniform vec2 uReflectionTexel;
@@ -100,9 +101,17 @@ const fragmentShader = `
   #include <packing>
   #include <logdepthbuf_pars_fragment>
   #include <shadowmap_pars_fragment>
-  #include <shadowmask_pars_fragment>
 
   ${waveFunction}
+  float directionalSunVisibility() {
+    #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 0
+      if (receiveShadow) {
+        DirectionalLightShadow sun = directionalLightShadows[0];
+        return getShadow(directionalShadowMap[0], sun.shadowMapSize, sun.shadowBias, sun.shadowRadius, vDirectionalShadowCoord[0]);
+      }
+    #endif
+    return 1.0;
+  }
   float hash(vec2 point) {
     vec3 p = fract(vec3(point.xyx) * 0.1031);
     p += dot(p, p.yzx + 33.33);
@@ -119,13 +128,16 @@ const fragmentShader = `
   vec2 capillaryGradient(vec2 point) {
     mat2 turn = mat2(0.8, -0.6, 0.6, 0.8);
     mat2 inverseTurn = mat2(0.8, 0.6, -0.6, 0.8);
-    vec2 p = point * 3.7;
+    vec2 p = point * 6.4;
     vec2 drift = vec2(uTime * 0.12, -uTime * 0.08);
-    vec2 fine = noiseGradient(p + drift) * 0.014;
+    // Fade wavelengths smaller than a pixel instead of letting distant glints
+    // flicker. These normals add millimeter detail without changing wave height.
+    float footprint = max(length(dFdx(p)), length(dFdy(p)));
+    vec2 fine = noiseGradient(p + drift) * 0.022 * (1.0 - smoothstep(0.3, 1.0, footprint));
     p = turn * p * 2.03 + vec2(17.1, 8.4);
-    fine += inverseTurn * noiseGradient(p - drift * 1.37) * 0.007;
+    fine += inverseTurn * noiseGradient(p - drift * 1.37) * 0.010 * (1.0 - smoothstep(0.3, 1.0, footprint * 2.03));
     p = turn * p * 2.11 + vec2(3.8, 29.2);
-    fine += inverseTurn * inverseTurn * noiseGradient(p + drift * 1.83) * 0.0035;
+    fine += inverseTurn * inverseTurn * noiseGradient(p + drift * 1.83) * 0.0045 * (1.0 - smoothstep(0.3, 1.0, footprint * 4.2833));
     return fine;
   }
   void main() {
@@ -138,7 +150,7 @@ const fragmentShader = `
     // Air/water IOR 1.333 gives a normal-incidence reflectance of 0.02037.
     float fresnel = 0.02037 + 0.97963 * pow(1.0 - facing, 5.0);
     vec2 projected = vReflection.xy / max(vReflection.w, 0.0001);
-    vec2 distortion = normal.xz * vec2(0.035, 0.045);
+    vec2 distortion = normal.xz * vec2(0.030, 0.038);
     vec2 sampleUv = clamp(projected + distortion, uReflectionTexel, vec2(1.0) - uReflectionTexel);
     // Three r143 writes ordinary render targets in linear encoding, regardless
     // of Reflector's texture.encoding label. Decode again and reflections darken.
@@ -147,20 +159,32 @@ const fragmentShader = `
     vec3 halfDirection = normalize(light + view);
     float halfFacing = max(dot(normal, halfDirection), 0.0);
     float lightFacing = max(dot(normal, light), 0.0);
-    // A narrow microfacet lobe retains a soft tail instead of a binary sun dot.
-    float alphaSquared = 0.0016;
+    // A tighter GGX lobe gives the sun small crisp glints. Normal variance
+    // broadens only subpixel highlights, preserving stable light at distance.
+    vec3 normalDx = dFdx(normal), normalDy = dFdy(normal);
+    float normalVariance = 0.25 * (dot(normalDx, normalDx) + dot(normalDy, normalDy));
+    float alphaSquared = clamp(0.000625 + normalVariance, 0.000625, 0.015);
     float denominator = halfFacing * halfFacing * (alphaSquared - 1.0) + 1.0;
-    float distribution = alphaSquared / max(PI * denominator * denominator, 0.00001);
+    float distribution = alphaSquared / max(PI * denominator * denominator, 0.0000001);
     float sunFresnel = 0.02037 + 0.97963 * pow(1.0 - max(dot(view, halfDirection), 0.0), 5.0);
-    float highlight = distribution * sunFresnel * lightFacing / max(4.0 * facing * lightFacing, 0.15);
-    float shadow = getShadowMask();
+    float maskingView = lightFacing * sqrt(facing * facing * (1.0 - alphaSquared) + alphaSquared);
+    float maskingLight = facing * sqrt(lightFacing * lightFacing * (1.0 - alphaSquared) + alphaSquared);
+    float visibility = 0.5 / max(maskingView + maskingLight, 0.0001);
+    float highlight = distribution * visibility * sunFresnel * lightFacing;
+    // The aperture spotlight is a separate light. Its shadow must not erase
+    // this directional sun's glints or multiply into the ambient floor light.
+    float shadow = directionalSunVisibility();
     // Occlusion removes direct floor illumination and the sun lobe. Reflected
     // light comes from the captured scene and already contains its own shadows.
-    vec3 shallow = color * 0.9 * mix(0.52, 1.0, shadow);
-    vec3 surface = mix(shallow, reflected, 0.48 + fresnel * 0.52);
-    surface += vec3(1.0, 0.82, 0.70) * min(highlight, 2.0) * 0.55 * shadow;
-    // Some floor light passes through the water; grazing angles become reflective.
-    gl_FragColor = vec4(surface, 0.70 + fresnel * 0.24);
+    float refractedCosine = sqrt(1.0 - (1.0 - facing * facing) / (1.333 * 1.333));
+    float absorption = 1.0 - exp(-0.42 * uDepth / refractedCosine);
+    float opacity = fresnel + (1.0 - fresnel) * absorption;
+    vec3 shallow = color * mix(0.52, 1.0, shadow);
+    vec3 surface = reflected * fresnel + shallow * ((1.0 - fresnel) * absorption);
+    surface += vec3(1.0, 0.82, 0.70) * min(highlight, 3.0) * 0.45 * shadow;
+    // Blend the actual submerged floor through once. Unpremultiplying here
+    // prevents alpha from attenuating the Fresnel reflection a second time.
+    gl_FragColor = vec4(surface / max(opacity, 0.0001), opacity);
     #include <encodings_fragment>
   }
 `;
@@ -171,8 +195,8 @@ type Surface = { reflector: Reflector; material: ShaderMaterial; ripples: WaterR
 export function createAtriumWater(options: { reflectionSize?: number; sunDirection?: Vector3 } = {}): AtriumWater {
   const group = new Group();
   group.name = "Hyper live reflective water";
-  const requestedSize = options.reflectionSize ?? 512;
-  const maximumSize = Number.isFinite(requestedSize) ? Math.max(64, Math.min(512, Math.round(requestedSize))) : 512;
+  const requestedSize = options.reflectionSize ?? 1024;
+  const maximumSize = Number.isFinite(requestedSize) ? Math.max(64, Math.min(1024, Math.round(requestedSize))) : 1024;
   const sunDirection = options.sunDirection?.clone() ?? new Vector3(-9, 11, -3);
   if (![sunDirection.x, sunDirection.y, sunDirection.z].every(Number.isFinite) || sunDirection.lengthSq() < 1e-8) sunDirection.set(-9, 11, -3);
   sunDirection.normalize();
@@ -181,7 +205,7 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
   let paused = false;
   let disposed = false;
 
-  function addSurface(name: string, geometry: BufferGeometry, y: number, z: number, bounds: Vector4, amplitude: number) {
+  function addSurface(name: string, geometry: BufferGeometry, y: number, z: number, bounds: Vector4, amplitude: number, depth: number) {
     const ripples = createWaterRipples();
     const reflector = new Reflector(geometry, {
       textureWidth: maximumSize,
@@ -194,6 +218,7 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
           ...UniformsLib.lights,
           color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: new Matrix4() },
           uTime: { value: 0 }, uAmplitude: { value: amplitude }, uRippleAmplitude: { value: amplitude * 0.07 },
+          uDepth: { value: depth },
           uSunDirection: { value: sunDirection },
           uBounds: { value: bounds }, uRipples: { value: null },
           uRippleTexel: { value: new Vector2(1 / 128, 1 / 72) },
@@ -203,6 +228,9 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
         fragmentShader,
       },
     });
+    // Preserve light intensity above display white until the final scene tone
+    // mapping pass. The r143 Reflector otherwise allocates an 8-bit target.
+    reflector.getRenderTarget().texture.type = HalfFloatType;
     reflector.name = name;
     reflector.rotation.x = -Math.PI / 2;
     reflector.position.set(0, y, z);
@@ -213,6 +241,7 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
     material.uniforms.uRipples.value = ripples.texture;
     material.toneMapped = false;
     material.lights = true;
+    material.extensions.derivatives = true;
     material.transparent = true;
     material.depthWrite = false;
     const surface = { reflector, material, ripples, bounds };
@@ -245,8 +274,8 @@ export function createAtriumWater(options: { reflectionSize?: number; sunDirecti
     return surface;
   }
 
-  const flooded = addSurface("Water | flooded atrium", new PlaneGeometry(50, 63, 192, 240), 0.015, -3.5, new Vector4(-25, -35, 50, 63), 0.82);
-  const basin = addSurface("Water | central reflecting basin", new RingGeometry(0, 4.42, 128, 40), 0.61, 0, new Vector4(-4.42, -4.42, 8.84, 8.84), 0.55);
+  const flooded = addSurface("Water | flooded atrium", new PlaneGeometry(50, 63, 192, 240), 0.015, -3.5, new Vector4(-25, -35, 50, 63), 1.0, 0.435);
+  const basin = addSurface("Water | central reflecting basin", new RingGeometry(0, 4.42, 128, 40), 0.61, 0, new Vector4(-4.42, -4.42, 8.84, 8.84), 0.68, 0.31);
 
   return {
     group,

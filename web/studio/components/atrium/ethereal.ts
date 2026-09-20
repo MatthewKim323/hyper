@@ -1,6 +1,6 @@
 import { AdditiveBlending, BufferGeometry, Float32BufferAttribute, Group, Mesh, Points, ShaderMaterial, Vector2, Vector3 } from "three";
 
-export type EtherealStation = { id: string; position: Vector3; width: number; height: number };
+export type EtherealStation = { id: string; position: Vector3; width: number; height: number; baseHeight: number };
 export type EtherealInteraction = {
   group: Group;
   setStations(entries: EtherealStation[]): void;
@@ -191,7 +191,7 @@ export function createEtherealInteraction(): EtherealInteraction {
         stations.set(entry.id, accent);
         accent.group.name = "Hover accents | " + entry.id;
         accent.group.position.copy(entry.position);
-        const base = Math.min(entry.height * 0.115, entry.width * 0.25);
+        const base = entry.baseHeight;
         accent.sparkMaterial.uniforms.uWidth.value = entry.width;
         accent.sparkMaterial.uniforms.uHeight.value = entry.height;
         accent.sparkMaterial.uniforms.uBase.value = base;

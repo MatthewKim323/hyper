@@ -1,10 +1,11 @@
-import { ACESFilmicToneMapping, AmbientLight, Box3, Color, DirectionalLight, Fog, Group, HemisphereLight, Material, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, Plane, PointLight, Raycaster, Scene, ShaderChunk, sRGBEncoding, Texture, Vector2, Vector3, WebGLRenderer } from "three";
+import { AmbientLight, Box3, Color, DirectionalLight, Fog, Group, HemisphereLight, LinearEncoding, Material, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, NoToneMapping, Object3D, PCFShadowMap, PerspectiveCamera, Plane, PointLight, Raycaster, Scene, ShaderChunk, Texture, Vector2, Vector3, WebGLRenderer } from "three";
 import { createAtriumGeometryLoader } from "./geometry-loader";
 import { createAtriumAtmosphere } from "./atmosphere";
 import { createAtriumWater } from "./water";
 import { createAtriumSunlight } from "./sunlight";
 import { createAtriumPipeline } from "./rendering";
 import { createEtherealInteraction } from "./ethereal";
+import { createAtriumSideLight, type AtriumSideLightMetadata } from "./side-light";
 import { layoutAtriumStations } from "./layout";
 import type { AtriumStation } from "./configuration";
 
@@ -13,6 +14,7 @@ export type AtriumManifest = {
   camera: { position: [number, number, number]; target: [number, number, number]; lens: number; sensorWidth: number };
   sunDirection?: [number, number, number];
   windows?: { position: [number, number, number]; width: number }[];
+  sideLight?: AtriumSideLightMetadata;
   templates: { id: string; url: string; width?: number; height?: number; labelHeight?: number; labelSize?: number; arrowHeight?: number }[];
 };
 export type StationBounds = { station: AtriumStation; depth: number; left: number; top: number; width: number; height: number; labelLeft: number; labelTop: number; arrowTop: number; fontWidth: number };
@@ -30,12 +32,13 @@ const objectName = (object: Object3D) => String(object.userData.name ?? object.n
 
 export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: AtriumManifest, onBounds: (bounds: StationBounds[]) => void, signal?: AbortSignal): Promise<AtriumRenderer> {
   const renderer = new WebGLRenderer({ canvas, alpha: false, antialias: false, powerPreference: "high-performance" });
-  renderer.outputEncoding = sRGBEncoding;
-  renderer.toneMapping = ACESFilmicToneMapping;
-  renderer.toneMappingExposure = .83;
+  // Keep scene and reflection passes linear; the composer owns the display transform.
+  renderer.outputEncoding = LinearEncoding;
+  renderer.toneMapping = NoToneMapping;
+  renderer.toneMappingExposure = 1;
   renderer.setPixelRatio(1);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.shadowMap.type = PCFShadowMap;
   const scene = new Scene();
   scene.fog = new Fog(0xe8d8d7, 38, 115);
   const ratio = manifest.width / manifest.height;
@@ -46,7 +49,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   camera.position.copy(homePosition);
   camera.lookAt(homeTarget);
   camera.updateMatrixWorld();
-  scene.add(new AmbientLight(0xffe9dd, .04), new HemisphereLight(0xf2ecff, 0x9f7769, .22));
+  scene.add(new AmbientLight(0xffe9dd, .025), new HemisphereLight(0xf2ecff, 0x9f7769, .14));
   const sun = new DirectionalLight(0xffe6d5, 3.1);
   sun.target.position.set(1, 0, -3);
   sun.position.copy(manifest.sunDirection ? fromBlender(manifest.sunDirection).normalize().multiplyScalar(65).add(sun.target.position) : new Vector3(8, 13, -12));
@@ -61,7 +64,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const atmosphere = createAtriumAtmosphere(renderer, sunDirection);
   scene.add(atmosphere.sky);
   scene.environment = atmosphere.environment;
-  const fill = new DirectionalLight(0xffd8c2, .42);
+  const fill = new DirectionalLight(0xffd8c2, .28);
   fill.position.set(8, 5, 10);
   scene.add(fill);
   const rim = new DirectionalLight(0xffdccc, .4);
@@ -70,10 +73,12 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
   const pearlLight = new PointLight(0xffe9d1, .65, 6, 2);
   pearlLight.position.set(0, 1.7, -1.5);
   scene.add(pearlLight);
-  const water = createAtriumWater({ reflectionSize: 512, sunDirection });
+  const water = createAtriumWater({ reflectionSize: matchMedia("(pointer: coarse)").matches ? 512 : 1024, sunDirection });
   scene.add(water.group);
   const sunlight = createAtriumSunlight(sunDirection, manifest.windows);
   scene.add(sunlight.group);
+  const sideLight = createAtriumSideLight(manifest.sideLight);
+  scene.add(sideLight.group);
   const ethereal = createEtherealInteraction();
   scene.add(ethereal.group);
   const stationsGroup = new Group();
@@ -139,13 +144,13 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
             float rim = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 2.8);
             float phase = vCrystalWorld.y * 1.4 + vCrystalWorld.x * 0.28 - uCrystalTime * 0.38;
             float caustic = pow(0.5 + 0.5 * sin(phase), 18.0);
-            outgoingLight += vec3(1.0, 0.88, 0.78) * rim * (0.095 + uCrystalHover * 0.22 + caustic * 0.05);
+            outgoingLight += vec3(1.0, 0.88, 0.78) * rim * (0.32 + uCrystalHover * 0.22 + caustic * 0.05);
             outgoingLight += vec3(1.0,.79,.66) * exp(-max(0.,vCrystalWorld.y-.48)*2.1) * .20;
             #include <output_fragment>
           `);
           if (/optically clear/.test(material.name)) {
             shader.fragmentShader = shader.fragmentShader.replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor=mix(.095,.028,smoothstep(.48,1.6,vCrystalWorld.y));");
-            shader.fragmentShader = shader.fragmentShader.replace("#include <transmission_fragment>", ShaderChunk.transmission_fragment.replace("float transmissionFactor = transmission;", "float transmissionFactor = transmission * mix(.65,1.,smoothstep(.48,2.4,vCrystalWorld.y));"));
+            shader.fragmentShader = shader.fragmentShader.replace("#include <transmission_fragment>", ShaderChunk.transmission_fragment.replace("float transmissionFactor = transmission;", "float transmissionFactor = transmission * mix(.85,1.,smoothstep(.48,2.4,vCrystalWorld.y));"));
           }
         };
         material.customProgramCacheKey = () => /optically clear/.test(material.name) ? "hyper-crystal-glass-v3" : "hyper-crystal-edge-v3";
@@ -239,6 +244,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
     water.update(elapsed, delta);
     atmosphere.update(elapsed);
     sunlight.update(elapsed);
+    sideLight.update(elapsed);
     ethereal.update(elapsed, delta);
     animateCrystals(delta);
     animateRoom(delta);
@@ -282,13 +288,13 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
           if (/\| (title|enter)/i.test(objectName(object))) object.visible = false;
           const tune = (material: Material) => {
             if (material instanceof MeshPhysicalMaterial && (material.transmission > 0.7 || /optically clear/.test(material.name))) {
-              material.transmission = .90;
+              material.transmission = .97;
               material.roughness = 0.065;
               material.ior = 1.46;
-              material.thickness = 0.35;
+              material.thickness = /polished clear edge/.test(material.name) ? .023 : .16;
               material.attenuationColor = new Color(0xffe5d6);
               material.attenuationDistance = 2.5;
-              material.clearcoat = 0.5;
+              material.clearcoat = 0.16;
               material.envMapIntensity = 0.7;
               material.color = new Color(0xfff7f1);
             } else if (material instanceof MeshStandardMaterial) material.envMapIntensity = 0.8;
@@ -324,10 +330,13 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       });
       ethereal.setStations(instances.map(instance => {
         const template = manifest.templates.find(entry => entry.id === instance.station.template);
-        return { id: instance.station.id, position: instance.model.position.clone(), width: (template?.width ?? 2.2) * instance.scale, height: (template?.height ?? 4) * instance.scale };
+        return { id: instance.station.id, position: instance.model.position.clone(), width: (template?.width ?? 2.2) * instance.scale, height: (template?.height ?? 4) * instance.scale, baseHeight: .48 * instance.scale };
       }));
       scene.updateMatrixWorld(true);
       bounds();
+      render();
+      const pearl = floating.find(item => /floating pearl marble sphere/.test(objectName(item.object)))?.object;
+      atmosphere.captureRoomReflections(scene, pearl?.getWorldPosition(new Vector3()) ?? new Vector3(0, 3.16, -1.5), [water.group]);
       render();
       canvas.dataset.ready = "true";
     },
@@ -378,6 +387,7 @@ export async function createAtriumRenderer(canvas: HTMLCanvasElement, manifest: 
       atmosphere.dispose();
       water.dispose();
       sunlight.dispose();
+      sideLight.dispose();
       ethereal.dispose();
       pipeline.dispose();
       renderer.dispose();

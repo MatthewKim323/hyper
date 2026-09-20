@@ -3,6 +3,7 @@ import bpy
 import json
 from pathlib import Path
 from mathutils import Vector
+from bpy_extras.object_utils import world_to_camera_view
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'assets/blender/hyper-atrium'
 PUBLIC=ROOT/'public/assets/hyper-atrium'
@@ -41,5 +42,16 @@ for name,point in {'pearl center':(0,1.5,3.16),'pearl left':(-1.2,1.5,3.16),'pea
     assert not blocked, f'The rear wall blocks direct sunlight from {name}'
 result={'blender':bpy.app.version_string,'station_templates':variants,'water_vertices':len(surface.data.vertices),'water_animation_verified':True,'camera':list(scene.camera.location),'resolution':[scene.render.resolution_x,scene.render.resolution_y],'packed_fonts':sum(1 for font in bpy.data.fonts if font.packed_file),'glb_assets_verified':10}
 result['aperture_sunlight_verified']=illumination
+side=json.loads(scene.get('atrium_side_light','null'))
+if side:
+    baffle=bpy.data.objects[side['occluder']['name']].evaluated_get(bpy.context.evaluated_depsgraph_get())
+    inverse=baffle.matrix_world.inverted()
+    source=Vector(side['position'])
+    for aperture in side['apertures']:
+        target=Vector(aperture['target'])
+        assert not baffle.ray_cast(inverse @ target,(inverse.to_3x3() @ (source-target)).normalized(),distance=200)[0], aperture['name']
+    projections=[world_to_camera_view(scene,scene.camera,baffle.matrix_world @ vertex.co) for vertex in baffle.data.vertices]
+    assert all(point.x>1 for point in projections), 'Side baffle enters the reference camera frame'
+    result['side_aperture_verified']={'targets':[a['name'] for a in side['apertures']],'off_camera':True,'blender_type':bpy.data.objects['Fidelity | warm side aperture'].data.type}
 (OUT/'verification.json').write_text(json.dumps(result,indent=2)+'\n')
 print(json.dumps(result))

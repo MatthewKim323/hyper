@@ -2,7 +2,13 @@
 
 The post-onboarding workspace is one live Three.js scene. `environment.glb` contains the Blender architecture, garden, central basin, pearl, and rocks. Configurable crystal GLBs use the same lights, shadows, camera, and water reflections. No rendered image or video is used as the room backdrop.
 
+`/dev/atrium` renders these public scene assets in development for visual work independent of onboarding and sign-in. It returns 404 in production and does not expose workspace data or change authentication.
+
 The rendering pipeline uses physical glass, procedural limestone, a live cloud sky, directional shadows, depth-tested window light shafts, and restrained highlight bloom. Two real water meshes evaluate dispersive waves and cursor disturbances, with bounded planar reflection targets. The pearl, orbit, floating minerals, and crystal icons have restrained idle motion. Cursor position eases the camera and tilts hovered glass. Reduced motion freezes displacement while preserving all navigation and actual geometry. Hidden tabs and open full-screen workspace sections stop the render loop.
+
+Beauty, water reflections, and bloom stay in linear half-float targets. ACES tone mapping runs once after bloom, followed by the display conversion. Water reflections are capped at 1024 pixels on desktop and 512 on coarse pointers. A reusable 256-pixel cubemap captures the actual opaque room at the pearl for glass and pearl reflections only when station configuration changes. It excludes water and transmission surfaces to avoid recursive captures; architecture keeps its sky illumination.
+
+The source also includes an off-camera right clerestory with three actual carved apertures. Its warm spotlight and shadow-casting baffle illuminate the pearl and piers. Runtime side-light scattering samples that spotlight's shadow map, while rear sunlight and water glints use their independent directional shadow map. This keeps one light's occlusion from incorrectly extinguishing another light.
 
 Surface shading is optimized for WebGL. It is not the same renderer as Blender Cycles: browser light shafts approximate volumetric scattering, environment lighting is prefiltered, and water uses analytical waves rather than a fluid simulation.
 

@@ -245,7 +245,7 @@ def apply(scene):
     sun = _light(scene, "Light | sun shadows", "SUN", (room["x"] + 12 * sx, rear + 10, 15 * sz + z_offset), 3.1, (1, 0.84, 0.75), direction)
     sun.data.angle = math.radians(0.85)
     _light(scene, "Light | warm diagonal sun", "AREA", (room["x"] + 7.5 * sx, rear + 1.5, 11 * sz + z_offset), 2200 * window_power, (1, 0.83, 0.74), direction, 1.4 * sx)
-    _light(scene, "Light | broad ivory sky fill", "AREA", (0, -8, 10), 1400, (1, 0.61, 0.48), (0, 10, -8), 14)
+    _light(scene, "Light | broad ivory sky fill", "AREA", (0, -8, 10), 2100, (1, 0.61, 0.48), (0, 10, -8), 14)
     _light(scene, "Fidelity | warm side aperture", "AREA", (room["half_width"], -5, 18), 4500, (1, 0.71, 0.60), (-30, 28, -12), 5)
     # Discs give soft window illumination without rectangular highlights inside
     # the pearl. All sources remain behind the actual carved rear wall.
@@ -287,9 +287,9 @@ def apply(scene):
             elif node.type == "BACKGROUND":
                 # Preserve the existing procedural cloud environment and its
                 # separate camera/reflection background, with calmer fill light.
-                node.inputs["Strength"].default_value = 0.35 if node.inputs["Strength"].default_value < 1 else 3.2
+                node.inputs["Strength"].default_value = 0.15 if node.inputs["Strength"].default_value < 1 else 3.2
     scene.cycles.volume_bounces = max(scene.cycles.volume_bounces, 3)
     scene.cycles.transmission_bounces = max(scene.cycles.transmission_bounces, 10)
-    scene.view_settings.exposure = -0.9
+    scene.view_settings.exposure = -0.55
     scene["hyper_material_fidelity"] = "2026-09-19: bounded sunlit air; dielectric cloudy pearl; physical base-lit rose glass"
     return {"materials": 4, "direction": tuple(direction), "room": room, "volume": "Atmosphere | atrium air"}

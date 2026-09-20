@@ -25,6 +25,7 @@ function ensureEngineDom() {
 
 export default function EngineRoot() {
   useEffect(() => {
+    if (process.env.NODE_ENV === "development" && window.location.pathname === "/dev/atrium") return;
     if (started) return;
     started = true;
     ensureEngineDom();
