@@ -1,4 +1,4 @@
-import { BackSide, CircleGeometry, Color, CubeCamera, HalfFloatType, LinearFilter, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PMREMGenerator, Points, Scene, ShaderChunk, ShaderMaterial, SphereGeometry, Vector3, WebGLCubeRenderTarget, WebGLRenderer, type WebGLRenderTarget } from "three";
+import { BackSide, CircleGeometry, Color, CubeCamera, HalfFloatType, LinearFilter, Mesh, MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, Object3D, PMREMGenerator, Points, Scene, ShaderChunk, ShaderMaterial, SphereGeometry, Vector3, WebGLCubeRenderTarget, WebGLRenderer, type Texture, type WebGLRenderTarget } from "three";
 
 const noise = `
   float atriumHash(vec3 p) { p = fract(p * .3183099 + vec3(.1,.2,.3)); p *= 17.; return fract(p.x * p.y * p.z * (p.x+p.y+p.z)); }
@@ -59,11 +59,20 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
   let roomEnvironment: WebGLRenderTarget | null = null;
   let disposed = false;
   const usesRoomReflections = (material: MeshStandardMaterial) => /Portals \||graduated rose quartz|luminous ivory pearl/.test(material.name);
+  const isSubmergedStone = (material: MeshStandardMaterial) => /submerged.*limestone/i.test(material.name);
+  const isRoomStone = (material: MeshStandardMaterial) => /limestone|travertine|stone floor/i.test(material.name) && !/porous|submerged/i.test(material.name);
+  const setEnvironment = (material: MeshStandardMaterial, environment: Texture | null) => {
+    if (material.envMap !== environment) {
+      material.envMap = environment;
+      material.needsUpdate = true;
+    }
+  };
 
   function captureRoomReflections(scene: Scene, position: Vector3, excluded: readonly Object3D[] = []) {
     if (disposed) return;
     const hidden = new Map<Object3D, boolean>();
     const reflective = new Set<MeshStandardMaterial>();
+    const stoneEnvironments = new Map<MeshStandardMaterial, Texture | null>();
     const hide = (object: Object3D) => {
       if (hidden.has(object)) return;
       hidden.set(object, object.visible);
@@ -76,6 +85,10 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       for (const material of materials) {
         if (material instanceof MeshStandardMaterial && usesRoomReflections(material)) { reflective.add(material); hide(object); }
+        else if (material instanceof MeshStandardMaterial && isRoomStone(material)) {
+          reflective.add(material);
+          stoneEnvironments.set(material, material.envMap);
+        }
         // Exclude refraction and translucent effect passes, including light
         // shafts. Actual lamps remain in the capture to illuminate the room.
         if (material instanceof MeshPhysicalMaterial && material.transmission > 0 || material instanceof ShaderMaterial && material.transparent) hide(object);
@@ -87,7 +100,11 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
     const previousToneMapping = renderer.toneMapping;
     const previousXr = renderer.xr.enabled;
     const previousShadows = renderer.shadowMap.autoUpdate;
+    let captured = false;
     try {
+      // Keep architecture visible, illuminated by the original sky. Feeding
+      // the previous room capture into a new one would accumulate reflections.
+      for (const material of stoneEnvironments.keys()) setEnvironment(material, target.texture);
       scene.updateMatrixWorld(true);
       roomCamera.position.copy(position);
       // The preceding beauty frame provides the shadow maps. Six cube faces
@@ -95,13 +112,10 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
       renderer.shadowMap.autoUpdate = false;
       roomCamera.update(renderer, scene);
       roomEnvironment = generator.fromCubemap(roomCube.texture, roomEnvironment);
-      for (const material of reflective) {
-        if (material.envMap !== roomEnvironment.texture) {
-          material.envMap = roomEnvironment.texture;
-          material.needsUpdate = true;
-        }
-      }
+      for (const material of reflective) setEnvironment(material, roomEnvironment.texture);
+      captured = true;
     } finally {
+      if (!captured) for (const [material, environment] of stoneEnvironments) setEnvironment(material, environment);
       hidden.forEach((visible, object) => { object.visible = visible; });
       renderer.setRenderTarget(previousTarget, previousFace, previousLevel);
       renderer.toneMapping = previousToneMapping;
@@ -133,7 +147,22 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
             `).replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor=.68+atriumNoise(vRockPosition*88.)*.22;");
           };
           material.customProgramCacheKey = () => "hyper-weathered-limestone-v1";
-        } else if (/limestone|travertine|stone floor/i.test(material.name)) {
+        } else if (isSubmergedStone(material)) {
+          // Preserve the source's cool lavender floor beneath the warm room.
+          // One mineral field supplies color and roughness without wall veins.
+          material.onBeforeCompile = shader => {
+            shader.vertexShader = "varying vec3 vFloorPosition;\n" + shader.vertexShader.replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvFloorPosition=(modelMatrix*vec4(transformed,1.)).xyz;");
+            shader.fragmentShader = `varying vec3 vFloorPosition; ${noise}\n` + shader.fragmentShader.replace("#include <color_fragment>", `
+              #include <color_fragment>
+              float floorMineral=atriumNoise(vFloorPosition*1.7);
+              diffuseColor.rgb*=.94+floorMineral*.12;
+            `).replace("#include <roughnessmap_fragment>", `
+              #include <roughnessmap_fragment>
+              roughnessFactor=clamp(roughnessFactor+(floorMineral-.5)*.06,.28,.52);
+            `);
+          };
+          material.customProgramCacheKey = () => "hyper-submerged-lavender-stone-v1";
+        } else if (isRoomStone(material)) {
           material.color.setRGB(.739, .562, .499);
           material.envMapIntensity = .28;
           material.roughness = .40;
@@ -256,11 +285,18 @@ export function createAtriumAtmosphere(renderer: WebGLRenderer, sunDirection: Ve
             if (/petals|canopies/.test(material.name)) shader.fragmentShader = shader.fragmentShader.replace("#include <output_fragment>", `
               vec3 gardenSun=normalize(mat3(viewMatrix)*uGardenSunDirection);
               float backlight=pow(max(0.,dot(-normal,gardenSun)),1.5);
-              outgoingLight+=diffuseColor.rgb*vec3(1.0,.80,.69)*backlight*.8;
+              float gardenSunVisibility=1.;
+              #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 0
+                if(receiveShadow) {
+                  DirectionalLightShadow gardenShadow=directionalLightShadows[0];
+                  gardenSunVisibility=getShadow(directionalShadowMap[0],gardenShadow.shadowMapSize,gardenShadow.shadowBias,gardenShadow.shadowRadius,vDirectionalShadowCoord[0]);
+                }
+              #endif
+              outgoingLight+=diffuseColor.rgb*vec3(1.0,.80,.69)*backlight*.8*gardenSunVisibility;
               #include <output_fragment>
             `);
           };
-          material.customProgramCacheKey = () => /petals|canopies/.test(material.name) ? "hyper-live-botanical-translucency-v2" : "hyper-live-garden-earth-v2";
+          material.customProgramCacheKey = () => /petals|canopies/.test(material.name) ? "hyper-live-botanical-translucency-v3" : "hyper-live-garden-earth-v2";
         } else if (/Hills/.test(material.name)) {
           material.color.setRGB(.52,.36,.43);
           material.roughness = .95;

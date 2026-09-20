@@ -37,6 +37,9 @@ function room() {
   const scene = new Scene();
   const wall = new Mesh(new BufferGeometry(), new MeshStandardMaterial());
   wall.material.name = "Hyper | blush ivory honed limestone";
+  const floor = new Mesh(new BufferGeometry(), new MeshStandardMaterial({ roughness: .4 }));
+  floor.material.name = "Hyper | submerged pale lavender limestone";
+  floor.material.color.setRGB(.554, .523, .538);
   const pearl = new Mesh(new BufferGeometry(), new MeshPhysicalMaterial());
   pearl.material.name = "Hero | graduated rose quartz and pearl";
   const crystal = new Mesh(new BufferGeometry(), new MeshPhysicalMaterial({ transmission: .9 }));
@@ -45,18 +48,21 @@ function room() {
   const shaft = new Mesh(new BufferGeometry(), new ShaderMaterial({ transparent: true }));
   const particles = new Points(); particles.visible = false;
   const light = new SpotLight();
-  scene.add(wall, pearl, crystal, water, shaft, particles, light);
-  return { scene, wall, pearl, crystal, water, shaft, particles, light };
+  scene.add(wall, floor, pearl, crystal, water, shaft, particles, light);
+  return { scene, wall, floor, pearl, crystal, water, shaft, particles, light };
 }
 
 describe("atrium local room reflections", { concurrency: false }, () => {
-  test("captures once per explicit refresh without recursion and assigns only optical materials", t => {
+  test("keeps stone visible and sky-lit during repeated captures, then assigns its room reflections", t => {
     const { atmosphere, renderer, state, reused, captures, skyTarget, roomTarget } = harness(t);
-    const { scene, wall, pearl, crystal, water, shaft, particles, light } = room();
+    const { scene, wall, floor, pearl, crystal, water, shaft, particles, light } = room();
     atmosphere.decorate(scene);
     scene.environment = atmosphere.environment;
     state.inspect = () => {
       assert.equal(wall.visible, true);
+      assert.equal(wall.material.envMap, skyTarget.texture);
+      assert.equal(floor.visible, true);
+      assert.equal(floor.material.envMap, null);
       assert.equal(light.visible, true);
       for (const object of [pearl, crystal, water, shaft, particles]) assert.equal(object.visible, false);
       assert.equal(renderer.toneMapping, NoToneMapping);
@@ -70,7 +76,8 @@ describe("atrium local room reflections", { concurrency: false }, () => {
     assert.equal(capture.height, 256);
     assert.equal(pearl.material.envMap, roomTarget.texture);
     assert.equal(crystal.material.envMap, roomTarget.texture);
-    assert.equal(wall.material.envMap, null);
+    assert.equal(wall.material.envMap, roomTarget.texture);
+    assert.equal(floor.material.envMap, null);
     assert.equal(scene.environment, skyTarget.texture);
     assert.ok(crystal.material.envMapIntensity > wall.material.envMapIntensity);
     assert.equal(particles.visible, false);
@@ -79,6 +86,7 @@ describe("atrium local room reflections", { concurrency: false }, () => {
     assert.equal(state.frames, 6);
     atmosphere.captureRoomReflections(scene, new Vector3(0, 3.16, -1.5), [water]);
     assert.equal(state.frames, 12);
+    assert.equal(wall.material.envMap, roomTarget.texture);
     assert.deepEqual(reused, [null, roomTarget]);
     let disposals = 0;
     for (const target of [capture, roomTarget, skyTarget]) target.addEventListener("dispose", () => { disposals++; });
@@ -89,11 +97,16 @@ describe("atrium local room reflections", { concurrency: false }, () => {
   });
 
   test("restores hidden objects and all renderer capture state when a cube face fails", t => {
-    const { atmosphere, renderer, state, initialTarget } = harness(t);
-    const { scene, pearl, crystal, water, shaft, particles } = room();
+    const { atmosphere, renderer, state, initialTarget, skyTarget } = harness(t);
+    const { scene, wall, pearl, crystal, water, shaft, particles } = room();
     const priorEnvironment = new Texture();
     scene.environment = priorEnvironment;
-    state.inspect = () => { throw new Error("Cube face failed"); };
+    wall.material.envMap = priorEnvironment;
+    state.inspect = () => {
+      assert.equal(wall.visible, true);
+      assert.equal(wall.material.envMap, skyTarget.texture);
+      throw new Error("Cube face failed");
+    };
     assert.throws(() => atmosphere.captureRoomReflections(scene, new Vector3(), [water]), /Cube face failed/);
     for (const object of [pearl, crystal, water, shaft]) assert.equal(object.visible, true);
     assert.equal(particles.visible, false);
@@ -104,6 +117,21 @@ describe("atrium local room reflections", { concurrency: false }, () => {
     assert.equal(renderer.xr.enabled, true);
     assert.equal(renderer.shadowMap.autoUpdate, true);
     assert.equal(scene.environment, priorEnvironment);
+    assert.equal(wall.material.envMap, priorEnvironment);
     assert.equal(crystal.material.envMap, null);
+  });
+
+  test("preserves the submerged floor's exported lavender color and roughness", t => {
+    const { atmosphere } = harness(t);
+    const { scene, floor, wall } = room();
+    const color = floor.material.color.clone();
+    const roughness = floor.material.roughness;
+    atmosphere.decorate(scene);
+    assert.ok(floor.material.color.equals(color));
+    assert.equal(floor.material.roughness, roughness);
+    assert.ok(!wall.material.color.equals(color));
+    atmosphere.decorate(scene);
+    assert.ok(floor.material.color.equals(color));
+    assert.equal(floor.material.roughness, roughness);
   });
 });
