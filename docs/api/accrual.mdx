@@ -56,4 +56,4 @@ Upload a fourth normalized packet (replace identifiers with the real returned ac
 
 Wrap it in `[{"id":"lifecycle-report","packet": ...}]` and import it like the other reports. Invoice amounts must represent only the part explicitly allocated to this accrual's scope; the tool does not guess allocation. Track returns `matched_in_supplied_evidence`, `awaiting_invoice`, `exceptions`, or `stale` under `tracking`, while the original proposal retains its approval status. A matched observation does not assert that this application posted anything. Reports are retained as successive observations. Superseded evidence becomes stale on read.
 
-Complete Pydantic source contracts are in `app/accruals.py`; [the plan](plans/expense-accruals.md) explains boundaries and follow-on work.
+Complete Pydantic source contracts are in `app/accruals.py`; the plan explains boundaries and follow-on work.

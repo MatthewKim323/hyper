@@ -146,12 +146,12 @@ Ignore audio/state events from outdated generations. Use the readiness event for
 
 The actual orb component is maintained by a teammate and is not in this checkout; these are integration events, not a completed frontend orb hookup.
 
-For organization-owned uploads, financial SQL queries, evidence search, original downloads, and source indexing status, see [DATA_API.md](DATA_API.md).
+For organization-owned uploads, financial SQL queries, evidence search, original downloads, and source indexing status, see [DATA_API.md](/api/data).
 
 ## Scheduled company simulator
 
-See [SIMULATOR_API.md](SIMULATOR_API.md) for `/simulations` create/list/status/start/pause/tick/events, scheduling semantics, and source retrieval. These routes use the same organization-scoped bearer authentication as the data API.
+See SIMULATOR_API.md for `/simulations` create/list/status/start/pause/tick/events, scheduling semantics, and source retrieval. These routes use the same organization-scoped bearer authentication as the data API.
 
 ## Real provider connections
 
-See [CONNECTORS.md](CONNECTORS.md) for `/connections` OAuth, Plaid Link, Ramp credentials, status, sync, disconnect, item originals and job history. These use the same organization-scoped bearer authentication. Google callbacks authenticate their one-use state instead of requiring a Clerk header.
+See [CONNECTORS.md](/api/connectors) for `/connections` OAuth, Plaid Link, Ramp credentials, status, sync, disconnect, item originals and job history. These use the same organization-scoped bearer authentication. Google callbacks authenticate their one-use state instead of requiring a Clerk header.

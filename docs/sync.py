@@ -29,8 +29,31 @@ PAGES = {
 }
 
 
+# Sibling markdown links resolve on GitHub but 404 once published, so rewrite the ones
+# that have a page here and drop the link on the ones that do not ship (plans/ is internal).
+LINKS = {src.rsplit('/', 1)[-1]: '/' + page for page, (src, _t, _d) in {}.items()}
+
+
+def rewrite_links(body: str, pages: dict) -> str:
+    known = {src.rsplit('/', 1)[-1]: '/' + page for page, (src, _t, _d) in pages.items()}
+
+    def swap(match):
+        text, target = match.group(1), match.group(2)
+        name = target.rsplit('/', 1)[-1]
+        if target.startswith(('http://', 'https://', '#', '/')):
+            return match.group(0)
+        if name in known:
+            return f'[{text}]({known[name]})'
+        # Internal-only documents (plans/, notes) have no published page: keep the prose,
+        # lose the link, rather than publish a 404.
+        return text
+
+    return re.sub(r'\[([^\]]+)\]\(([^)]+\.md)\)', swap, body)
+
+
 def render(source: pathlib.Path, title: str, description: str) -> str:
     body = re.sub(r'^#\s+.*\n', '', source.read_text(), count=1)
+    body = rewrite_links(body, PAGES)
     return (f'---\ntitle: "{title}"\ndescription: "{description}"\n---\n\n'
             f'{{/* Generated from {source.relative_to(REPO)} by docs/sync.py. '
             f'Edit that file, not this one. */}}\n\n' + body.lstrip())
