@@ -3,6 +3,22 @@
 How the five parts of this repo connect today, what is actually wired, and the order to wire the rest.
 Written 2026-09-19 against backend commit `8089ee0`. Backend claims are read from code, with `file:line` where it matters.
 
+> **Update 2026-09-20.** The product gap below is now built. The backend has the AP
+> engine bridge (`accounting.py` + `/accounting`), expense accruals, settlement
+> reconciliation, learned skills with owner activation, an Elastic A2A adapter,
+> and a preparation-first eval framework (`eval/scripts/preparation.py`). New
+> since: a journal **posting layer** (`posting.py` + `/accounting/journals`,
+> append-only entries, owner-approved drafts, reversal-only corrections, trial
+> balance), **deterministic anomaly scanners** (`anomalies.py` +
+> `/accounting/anomalies`, findings escalate into concern cards, owner-confirmed
+> dismissal), **skill extraction** (`skill_extraction.py` +
+> `/accounting/skills/extract`, completed tasks/cases become evidence-bound draft
+> packages), and **processor/bank adapters** (`processor_adapters.py` +
+> `/accounting/adapters`, Stripe/Adyen/generic rows normalized into settlement
+> packets). The agent tool bridge now exposes 56 tools; owner-only actions
+> (approve, post drafts, reverse, dismiss) stay on HTTP routes. 352 backend and
+> 334 eval tests pass.
+
 ## The parts
 
 | Part | What it is | State |
