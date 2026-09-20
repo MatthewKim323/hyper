@@ -1,0 +1,61 @@
+.preview {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482000;
+  color: #2b242c;
+  font: 14px/1.45 system-ui, sans-serif;
+  pointer-events: none;
+}
+.controls {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: min(560px, calc(100vw - 40px));
+  padding: 17px;
+  border: 1px solid rgb(255 255 255 / 80%);
+  border-radius: 16px;
+  background: rgb(252 246 243 / 96%);
+  pointer-events: auto;
+}
+.controls strong { font-size: 14px; font-weight: 600; }
+.controls p { margin: 7px 0 13px; font-size: 12px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 7px; }
+.buttons button {
+  border: 1px solid rgb(43 36 44 / 25%);
+  border-radius: 8px;
+  padding: 8px 11px;
+  font: inherit;
+  background: #fff9f7;
+  color: inherit;
+}
+.buttons button:disabled { opacity: .4; }
+.preference { display: flex; align-items: center; gap: 8px; margin-top: 13px; }
+.preference input { width: 16px; height: 16px; accent-color: #355b68; }
+.controls .step { margin-bottom: 0; }
+.variants {
+  position: absolute;
+  inset: auto 30px 9vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 32px;
+}
+.variant { width: min(460px, 44vw); }
+.variant h1 { margin: 0 0 10px 24px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.card {
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 70%);
+  border-radius: 26px;
+  background: linear-gradient(130deg, rgb(255 255 255 / 65%), rgb(255 250 248 / 36%));
+  box-shadow: 0 16px 50px rgb(57 30 37 / 9%), inset 0 1px 0 #fff;
+}
+.composer { display: flex; justify-content: space-between; padding: 20px 24px; color: #61575b; }
+.empty { height: clamp(148px, 19vh, 196px); display: grid; place-items: center; color: #6a6062; }
+.compactEmpty { height: clamp(130px, 17vh, 172px); }
+@media (max-width: 700px) {
+  .variants { inset: auto 20px 25px; flex-direction: column; gap: 20px; align-items: center; }
+  .variant { width: min(100%, 460px); }
+  .composer { padding-block: 13px; }
+  .controls { top: 12px; left: 12px; width: calc(100vw - 24px); padding: 12px; }
+  .controls strong { font-size: 12px; }
+}

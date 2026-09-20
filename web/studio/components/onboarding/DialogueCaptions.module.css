@@ -1,0 +1,59 @@
+.viewport {
+  position: relative;
+  height: clamp(148px, 19vh, 196px);
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent, #000 28%, #000);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%, #000);
+  border-bottom: 1px solid rgb(36 29 35 / 10%);
+  text-align: left;
+  contain: layout paint;
+}
+
+.stack {
+  position: absolute;
+  bottom: 22px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+}
+
+.turn {
+  flex: 0 0 auto;
+  color: #27202a;
+}
+
+.turn[data-speaker="user"] { color: #355b68; }
+
+.speaker {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.text {
+  margin: 0;
+  font-size: clamp(17px, 1.4vw, 22px);
+  font-weight: 400;
+  line-height: 1.38;
+  letter-spacing: -.03em;
+  overflow-wrap: anywhere;
+}
+
+.compact {
+  height: clamp(130px, 17vh, 172px);
+}
+.compact .text { font-size: clamp(16px, 1.15vw, 19px); }
+.compact .stack { gap: 15px; bottom: 18px; left: 23px; right: 23px; }
+
+@media (max-width: 600px) {
+  .viewport { height: 148px; }
+  .stack { left: 22px; right: 22px; }
+  .compact { height: 128px; }
+  .compact .stack { left: 20px; right: 20px; }
+}

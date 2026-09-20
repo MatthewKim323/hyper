@@ -4,6 +4,8 @@ import { useRef, useState, type FormEvent } from "react";
 import { ThinkingOrb, type OrbState } from "thinking-orbs";
 import { VoiceBeam } from "voice-glow";
 import { useSceneGlass } from "./useSceneGlass";
+import { createDialogue, type DialogueState } from "@/lib/onboarding/dialogue";
+import DialogueCaptions from "./DialogueCaptions";
 
 export type OnboardingOrbState = OrbState;
 
@@ -11,6 +13,7 @@ export interface OnboardingSurfaceProps {
   orbState: OnboardingOrbState;
   status: string;
   transcript?: string;
+  dialogue?: DialogueState;
   microphoneState: "idle" | "requesting" | "live" | "error";
   microphoneError?: string | null;
   stream: MediaStream | null;
@@ -27,6 +30,7 @@ export default function OnboardingSurface({
   orbState,
   status,
   transcript,
+  dialogue,
   microphoneState,
   microphoneError,
   stream,
@@ -130,11 +134,7 @@ export default function OnboardingSurface({
           scale={1.1}
         >
           <div ref={glass} className="hyper-onboarding__voice-card">
-            {transcript && (
-              <p className="hyper-onboarding__transcript" aria-live="polite">
-                {transcript}
-              </p>
-            )}
+            <DialogueCaptions dialogue={dialogue ?? createDialogue(transcript)} agentLabel="Hyper" paused={paused} />
             <form className="hyper-onboarding__composer" onSubmit={sendText} aria-busy={sending}>
             <label className="hyper-onboarding__sr-only" htmlFor="onboarding-message">
               Type a message instead

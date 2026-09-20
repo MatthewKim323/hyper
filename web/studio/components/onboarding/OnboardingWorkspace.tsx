@@ -7,6 +7,7 @@ import { store } from "@/lib/engine/core/store";
 import { isOnboardingComplete, isOnboardingPresentation, ONBOARDING_EVENTS, setOnboardingComplete, subscribeOnboardingCompletion, type OnboardingPresentation } from "@/lib/onboarding/interface";
 import { OnboardingVoiceClient, type VoiceConnection } from "@/lib/onboarding/voice-client";
 import { runOnboardingWipeHandoff } from "@/lib/onboarding/handoff-wipe";
+import { createDialogue, reduceDialogueEvent } from "@/lib/onboarding/dialogue";
 import OnboardingSurface from "./OnboardingSurface";
 import AtriumPreview from "../atrium/AtriumPreview";
 
@@ -23,6 +24,7 @@ const INTRODUCTION = "Hi, I’m your Hyper onboarding agent. Let’s get to know
 function OnboardingSession({ onSkip }: { onSkip: () => void }) {
   const mic = useMicrophone({ constraints: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
   const [presentation, setPresentation] = useState<OnboardingPresentation>({});
+  const [dialogue, setDialogue] = useState(() => createDialogue(INTRODUCTION));
   const [connection, setConnection] = useState<VoiceConnection>("idle");
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [paused, setPaused] = useState(false);
@@ -58,6 +60,9 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
       },
       onPlaybackStream: next => {
         if (active) setAgentStream(next);
+      },
+      onEvent: event => {
+        if (active) setDialogue(previous => reduceDialogueEvent(previous, event));
       },
     });
     client.current = session;
@@ -188,6 +193,7 @@ function OnboardingSession({ onSkip }: { onSkip: () => void }) {
     orbState={connection === "connecting" || mic.state === "requesting" ? "connecting" : presentation.orbState ?? (mic.state === "live" ? "listening" : "composing")}
     status={status}
     transcript={presentation.transcript ?? INTRODUCTION}
+    dialogue={dialogue}
     microphoneState={microphoneError || connectionError ? "error" : mic.state === "live" || mic.state === "requesting" ? mic.state : "idle"}
     microphoneError={microphoneError ?? connectionError}
     stream={stream}

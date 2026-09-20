@@ -3,6 +3,8 @@
 import { useSyncExternalStore, type FormEvent } from "react";
 import { VoiceBeam } from "voice-glow";
 import styles from "./WorldVoiceBox.module.css";
+import DialogueCaptions from "@/components/onboarding/DialogueCaptions";
+import type { DialogueState } from "@/lib/onboarding/dialogue";
 
 const pausedSnapshot = () => document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches;
 const subscribePaused = (update: () => void) => {
@@ -22,6 +24,7 @@ type Props = {
   processing: boolean;
   sending: boolean;
   transcript: string;
+  dialogue?: DialogueState;
   status: string;
   error: string;
   draft: string;
@@ -32,10 +35,10 @@ type Props = {
 };
 
 /** The world session owns capture and transport. This surface only observes its mic. */
-export default function WorldVoiceBox({ stream, listening, requesting, processing, sending, transcript, status, error, draft, visible, onDraft, onSend, onMicrophone }: Props) {
+export default function WorldVoiceBox({ stream, listening, requesting, processing, sending, transcript, dialogue, status, error, draft, visible, onDraft, onSend, onMicrophone }: Props) {
   const paused = useSyncExternalStore(subscribePaused, pausedSnapshot, () => true);
-  const line = error || transcript || (listening || requesting || processing ? status : "");
-  const microphoneLabel = requesting ? "Cancel microphone request" : listening ? "Stop listening" : "Speak to Hyper";
+  const line = error || (!dialogue?.entries.length ? transcript || (listening || requesting || processing ? status : "") : "");
+  const microphoneLabel = requesting ? "Cancel microphone request" : listening ? "Stop listening" : "Speak to your CFO";
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (draft.trim() && !sending) onSend();
@@ -44,7 +47,7 @@ export default function WorldVoiceBox({ stream, listening, requesting, processin
   return (
     <section
       className={styles.dock}
-      aria-label="Talk to Hyper"
+      aria-label="Talk to your CFO"
       hidden={!visible}
       data-listening={listening}
       data-requesting={requesting}
@@ -69,15 +72,16 @@ export default function WorldVoiceBox({ stream, listening, requesting, processin
         release={.55}
       >
         <div className={styles.glass}>
+          {dialogue && <DialogueCaptions dialogue={dialogue} agentLabel="CFO" compact paused={paused || !visible} />}
           {line && <p className={styles.transcript} role={error ? "alert" : "status"}>{line}</p>}
           <form className={styles.composer} onSubmit={submit} aria-busy={sending}>
             <input
               className={styles.input}
               type="text"
-              aria-label="Message Hyper"
+              aria-label="Message your CFO"
               value={draft}
               onChange={event => onDraft(event.target.value)}
-              placeholder={listening ? "Listening, or type here..." : "Ask Hyper..."}
+              placeholder={listening ? "Listening, or type here..." : "Ask your CFO..."}
               autoComplete="off"
               enterKeyHint="send"
               maxLength={2000}
