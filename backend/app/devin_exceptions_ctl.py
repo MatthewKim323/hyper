@@ -5,8 +5,10 @@
     uv run --directory backend python -m app.devin_exceptions_ctl skills ORG
     uv run --directory backend python -m app.devin_exceptions_ctl moved NEW_BASE_URL
 
-`on` enables both halves: the adversary that sends new exceptions and the Devin dispatcher that
-works them. `off` stops new exceptions and new sessions; sessions already running finish.
+`on` starts the adversary that sends new exceptions, creating the organization if it is new (a lab
+organization keeps the high-volume sandbox out of the demo company's evidence). With --devin it also
+enables the Devin dispatcher; without it, whichever worker is running picks the cases up.
+`off` stops new exceptions and new Devin sessions; sessions already running finish.
 """
 import argparse
 from pathlib import Path
@@ -18,7 +20,7 @@ load_dotenv(Path(__file__).resolve().parents[1] / '.env')
 from sqlalchemy import select  # noqa: E402
 
 from .counterparty import Counterparties  # noqa: E402
-from .database import counterparty_scenarios as scenarios, learned_skills, learned_skill_runs  # noqa: E402
+from .database import counterparty_scenarios as scenarios, insert_ignore, learned_skills, learned_skill_runs, organizations  # noqa: E402
 from .data_service import DataService  # noqa: E402
 from .orchestrator import AgentService  # noqa: E402
 from .store import Store  # noqa: E402
@@ -80,6 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--open', type=int, default=2)
     # compare: only cases created at or after this epoch-millisecond mark, e.g. when the worker or model changed.
     parser.add_argument('--since', type=int, default=0)
+    parser.add_argument('--devin', action='store_true', help='also switch the Devin dispatcher')
     args = parser.parse_args()
     store = Store()
     if args.action == 'compare': compare(store, args.organization, args.control or args.organization + '-control', args.since); raise SystemExit
@@ -88,8 +91,9 @@ if __name__ == '__main__':
     adversary, agents = Counterparties(DataService(store, args.organization)), AgentService(store, args.organization)
     if args.action != 'status':
         on = args.action == 'on'
+        with store.engine.begin() as db: insert_ignore(db, organizations, dict(id=args.organization, name='Sandbox lab'))
         adversary.control({'enabled': on, **({'interval_seconds': args.every, 'max_open': args.open} if on else {})})
-        agents.enable(on)
+        if args.devin or not on: agents.enable(on)
     board = adversary.scoreboard()
     print('adversary:', adversary.control())
     print('dispatcher:', {k: agents.controller().get(k) for k in ('enabled', 'status', 'launch_count', 'error')})
