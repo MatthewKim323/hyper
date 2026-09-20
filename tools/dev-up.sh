@@ -41,11 +41,13 @@ start counterparty-worker "" uv run python -m app.counterparty_worker
 export DEVIN_CONTROL_PAIRS="${DEVIN_CONTROL_PAIRS-demo-meridian:demo-meridian-control}"
 if [ "${EXCEPTION_WORKER:-devin}" = "openai" ]; then
   # Several workers, each owning a fixed slice of the cases (AUTO_AGENT_SHARD), so none ever share an invoice.
-  WORKERS="${AUTO_AGENT_WORKERS:-4}"
+  WORKERS="${AUTO_AGENT_WORKERS:-2}"
   if pgrep -f "app.auto_agent" >/dev/null 2>&1; then echo "auto-agent: already running"; else
     k=0; while [ $k -lt $WORKERS ]; do
       AUTO_AGENT_SHARD="$k/$WORKERS" AUTO_AGENT_MODEL="${AUTO_AGENT_MODEL:-gpt-5.6-terra}" nohup uv run python -m app.auto_agent > "var/auto-agent-$k.log" 2>&1 &
       k=$((k+1)); done; echo "auto-agent: started $WORKERS workers (backend/var/auto-agent-N.log)"; fi
   DEVIN_EXCEPTION_TASKS=false start devin-exceptions "" uv run python -m app.devin_exceptions  # mirroring only
+  # Paces new exceptions so measured model spend settles at SPEND_CAP dollars an hour.
+  start spend-guard "" uv run python -m app.spend_guard --cap "${SPEND_CAP:-5}" ${SPEND_GUARD_ORGS:-hyper-lab}
 else start devin-exceptions "" uv run python -m app.devin_exceptions; fi
 echo "frontend: cd web/studio && bun run dev   (http://localhost:3888)"
